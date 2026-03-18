@@ -1,0 +1,13 @@
+name: osr11
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - netcdf4
+  - xarray
+  - numpy
+  - pyyaml
+  - pip:
+      - copernicusmarine>=2.0

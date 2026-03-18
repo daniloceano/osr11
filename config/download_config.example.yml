@@ -1,0 +1,38 @@
+# Example download configuration for OSR11 compound flooding project
+# Copy to download_config.yml and adjust as needed.
+# This file is safe to commit. Never put credentials here.
+
+# Spatial bounding box [lon_min, lat_min, lon_max, lat_max]
+# Default: South Atlantic Eastern Coast of Brazil (test subset)
+bbox:
+  lon_min: -50.0
+  lon_max: -40.0
+  lat_min: -30.0
+  lat_max: -20.0
+
+# Time period for download
+period:
+  start: "1993-01-01"
+  end:   "1993-03-31"
+
+# Output directory (relative to project root)
+output_dir: "data/raw"
+
+# CMEMS product configuration
+# NOTE: variable names and dataset_id are resolved programmatically
+# at runtime from the CMEMS catalog. The product IDs below are the
+# stable product identifiers; the script will inspect the catalog
+# to find the correct dataset_id and variable names within each product.
+
+glorys:
+  product_id: "GLOBAL_MULTIYEAR_PHY_001_030"
+  # Variables to download. Use null to trigger catalog inspection and
+  # prompt the user, or specify a list of known variable names.
+  # Sea surface height above geoid is typically "zos" in GLORYS.
+  variables: ["zos"]
+
+waverys:
+  product_id: "GLOBAL_MULTIYEAR_WAV_001_032"
+  # Significant wave height is typically "VHM0";
+  # mean wave direction is "VMDR".
+  variables: ["VHM0", "VMDR"]
