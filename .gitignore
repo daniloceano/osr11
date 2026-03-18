@@ -21,7 +21,11 @@ data/interim/
 
 # Logs
 logs/*.log
+logs/download_status.json
 !logs/.gitkeep
+
+# User config (never commit — only the .example.yml is versioned)
+config/download_config.yml
 
 # Credentials
 .copernicusmarine-credentials
