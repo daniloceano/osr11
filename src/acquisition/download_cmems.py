@@ -88,7 +88,7 @@ def _get_dataset_id(product_id: str) -> str:
     options so the user can override via config if needed.
     """
     log.info("Inspecting catalog for product '%s' …", product_id)
-    catalogue = copernicusmarine.describe(product_id=product_id, include_datasets=True)
+    catalogue = copernicusmarine.describe(product_id=product_id)
 
     dataset_ids: list[str] = []
     for product in catalogue.products:
@@ -116,7 +116,7 @@ def _get_dataset_id(product_id: str) -> str:
 
 def inspect_variables(product_id: str) -> None:
     """Print all variables available in a product (for reference)."""
-    catalogue = copernicusmarine.describe(product_id=product_id, include_datasets=True)
+    catalogue = copernicusmarine.describe(product_id=product_id)
     print(f"\nProduct: {product_id}")
     for product in catalogue.products:
         for dataset in product.datasets:

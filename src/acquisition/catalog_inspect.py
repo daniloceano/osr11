@@ -24,7 +24,7 @@ def inspect_product(product_id: str) -> None:
     """Print all datasets and their variables for a CMEMS product."""
     log.info("Fetching catalog for product: %s", product_id)
 
-    catalogue = copernicusmarine.describe(product_id=product_id, include_datasets=True)
+    catalogue = copernicusmarine.describe(product_id=product_id)
 
     print(f"\n{'='*60}")
     print(f"Product: {product_id}")
@@ -36,18 +36,18 @@ def inspect_product(product_id: str) -> None:
 
         for dataset in product.datasets:
             print(f"\n    Dataset ID : {dataset.dataset_id}")
-            print(f"    Title      : {dataset.title}")
+            print(f"    Name       : {dataset.dataset_name}")
 
             for version in dataset.versions:
                 for part in version.parts:
                     srv = part.services[0] if part.services else None
                     if srv is None:
                         continue
-                    print(f"\n      Service: {srv.service_type.short_name}")
+                    print(f"\n      Service: {srv.service_name}")
                     for var in srv.variables:
-                        short = var.short_name
-                        std   = getattr(var, "standard_name", "—")
-                        units = getattr(var, "units", "—")
+                        short = var.short_name or "—"
+                        std   = getattr(var, "standard_name", None) or "—"
+                        units = getattr(var, "units", None) or "—"
                         print(f"        var: {short:20s}  std_name: {std:40s}  units: {units}")
 
 

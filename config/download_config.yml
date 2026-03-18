@@ -27,19 +27,11 @@ output_dir: "data/raw"
 glorys:
   product_id: "GLOBAL_MULTIYEAR_PHY_001_030"
   # dataset_id verified from catalog on 2026-03-18.
-  # Use daily (P1D) for temporal analysis of extremes.
-  # Other available: P1M-m (monthly), 0.083deg-climatology_P1M-m (climatology)
   dataset_id: "cmems_mod_glo_phy_my_0.083deg_P1D-m"
-  # Variable verified from catalog: zos = sea_surface_height_above_geoid
   variables: ["zos"]
 
 waverys:
   product_id: "GLOBAL_MULTIYEAR_WAV_001_032"
   # dataset_id verified from catalog on 2026-03-18.
-  # PT3H-i is the 3-hourly instantaneous analysis dataset (main product).
-  # Other available: 0.2deg-climatology_P1M-m (climatology only, no VHM0_SW*/VMDR)
   dataset_id: "cmems_mod_glo_wav_my_0.2deg_PT3H-i"
-  # Variables verified from catalog:
-  #   VHM0   = sea_surface_wave_significant_height (total Hs)
-  #   VMDR   = sea_surface_wave_from_direction
   variables: ["VHM0", "VMDR"]
