@@ -28,6 +28,10 @@ nohup.out
 
 # User config (never commit — only the .example.yml is versioned)
 config/download_config.yml
+config/test_fixture.yml
+
+# Test fixtures: commit only the small NC files, not provenance JSON
+data/test/fixture_provenance.json
 
 # Credentials
 .copernicusmarine-credentials

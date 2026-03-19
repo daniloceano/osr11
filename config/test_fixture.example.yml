@@ -1,0 +1,47 @@
+# Test fixture configuration for OSR11
+# Copy to test_fixture.yml (gitignored) if you need to adjust paths.
+# This example file IS committed and serves as documentation.
+
+# Source file patterns — adjust to point at local or remote data.
+# Glob patterns are expanded relative to the project root (or as absolute paths).
+sources:
+  glorys:
+    pattern: "data/raw/glorys/glorys_zos_*.nc"
+    variables: ["zos"]
+  waverys:
+    pattern: "data/raw/waverys/waverys_VHM0_VMDR_*.nc"
+    variables: ["VHM0", "VMDR"]
+
+# Short test period (keep to 1–3 months to stay small)
+test_period:
+  start: "2010-07-01"
+  end:   "2010-07-31"
+
+# Spatial selection mode: "bbox" or "points"
+# Both may be present; the active mode is set by `spatial_mode`.
+spatial_mode: "bbox"
+
+# bbox mode: extract all grid points inside the box
+bbox:
+  lon_min: -50.0
+  lon_max: -48.0
+  lat_min: -29.5
+  lat_max: -27.5
+
+# points mode: extract the nearest grid point to each named location
+points:
+  - name: "Laguna_SC"
+    lat: -28.48
+    lon: -48.77
+  - name: "Imbituba_SC"
+    lat: -28.23
+    lon: -48.66
+  - name: "Florianopolis_SC"
+    lat: -27.60
+    lon: -48.55
+  - name: "Torres_RS"
+    lat: -29.33
+    lon: -49.73
+
+# Output directory (relative to project root)
+output_dir: "data/test"

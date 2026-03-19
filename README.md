@@ -106,6 +106,42 @@ Output files are saved under `data/raw/glorys/` and `data/raw/waverys/` as NetCD
 
 ---
 
+## Test fixtures
+
+Small, versionable NetCDF subsets are stored in `data/test/` and committed
+directly to the repository (~100–500 KB each). They cover a short period and
+a few coastal points in southern Santa Catarina — enough to run analysis
+scripts without downloading the full dataset.
+
+### Generate fixtures from existing data
+
+```bash
+# Using the default config (bbox mode, July 2010, southern SC)
+python src/acquisition/build_test_fixture.py
+
+# Custom config (e.g., points mode or different period)
+cp config/test_fixture.example.yml config/test_fixture.yml
+# edit test_fixture.yml as needed
+python src/acquisition/build_test_fixture.py --config config/test_fixture.yml
+
+# Remote/custom source paths
+python src/acquisition/build_test_fixture.py \
+    --glorys-pattern "/mnt/storage/glorys/glorys_zos_*.nc" \
+    --waverys-pattern "/mnt/storage/waverys/waverys_VHM0_VMDR_*.nc"
+
+# Inspect without writing
+python src/acquisition/build_test_fixture.py --dry-run
+```
+
+Output files:
+- `data/test/glorys_sc_sul_test.nc`
+- `data/test/waverys_sc_sul_test.nc`
+
+Both are committed to the repository and can be used directly in notebooks
+and analysis scripts without any data download.
+
+---
+
 ## CMEMS products used
 
 | Product | ID | Variables |
