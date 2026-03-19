@@ -14,8 +14,8 @@ sources:
 
 # Short test period (keep to 1–3 months to stay small)
 test_period:
-  start: "2010-07-01"
-  end:   "2010-07-31"
+  start: "1993-01-01"
+  end:   "2025-12-31"
 
 # Spatial selection mode: "bbox" or "points"
 # Both may be present; the active mode is set by `spatial_mode`.
