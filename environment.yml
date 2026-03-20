@@ -9,5 +9,10 @@ dependencies:
   - xarray
   - numpy
   - pyyaml
+  - matplotlib
+  - pandas
+  - scipy
+  - openpyxl       # .xlsx reading (reported events spreadsheet)
+  - cartopy        # geographic maps (PlateCarree, NaturalEarth features)
   - pip:
       - copernicusmarine>=2.0
