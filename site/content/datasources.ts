@@ -15,7 +15,7 @@ export const dataSources: DataSource[] = [
     period: '1993–2025',
     role: 'Primary source for wave extreme characterisation and compound event detection.',
     stage: 'Data acquisition and exploratory analysis (Phases 0–1)',
-    status: 'in-progress',
+    status: 'done',
   },
   {
     id: 'glorys',
@@ -30,7 +30,7 @@ export const dataSources: DataSource[] = [
     period: '1993–2025',
     role: 'Primary source for sea-level extreme characterisation, including storm surge and meteorological tide signals.',
     stage: 'Data acquisition and exploratory analysis (Phases 0–1)',
-    status: 'in-progress',
+    status: 'done',
   },
   {
     id: 'era5',
@@ -66,7 +66,7 @@ export const dataSources: DataSource[] = [
     period: '1998–2023',
     role: 'Threshold calibration: validate extreme thresholds by maximizing correspondence with reported events. Pragmatic validation strategy acknowledging regional bias when extrapolated.',
     stage: 'Exploratory analysis (Step 1), Threshold calibration (Step 2), Validation (Step 4)',
-    status: 'in-progress',
+    status: 'done',
   },
   {
     id: 's2id',
@@ -122,7 +122,7 @@ export const dataSources: DataSource[] = [
     period: 'Current (census data ~2010, 2022)',
     role: 'Municipality–grid association for spatial analysis; social vulnerability indicators (population, income, infrastructure) for risk integration.',
     stage: 'Exploratory analysis (Step 1); Vulnerability (Step 6)',
-    status: 'in-progress',
+    status: 'planned',
   },
   {
     id: 'natural-earth',

@@ -80,11 +80,17 @@ export default function Hero() {
 
         {/* Authors */}
         <div className="mt-12 border-t border-gray-200 pt-6">
-          <p className="text-xs text-gray-500 mb-1">Authors</p>
-          <p className="text-sm text-gray-700">
-            {projectMeta.authors.join(' · ')}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">{projectMeta.institution}</p>
+          <p className="text-xs text-gray-500 mb-3">Authors</p>
+          <div className="space-y-3">
+            {projectMeta.authors.map((author, i) => (
+              <div key={i}>
+                <p className="text-sm font-medium text-gray-700">{author.name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {author.affiliations.join(' · ')}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

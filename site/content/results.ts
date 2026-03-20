@@ -5,7 +5,7 @@ export const resultCards: ResultCard[] = [
     id: 'south-sc-eda',
     title: 'Exploratory Analysis — South Santa Catarina',
     subtitle: 'Test-domain EDA: spatial maps, time series, events, statistics',
-    status: 'in-progress',
+    status: 'done',
     description:
       'First systematic look at the WAVERYS and GLORYS12 test datasets for the southern sector of Santa Catarina (~29.4°S to 27.6°S). This analysis constitutes the sanity-check and pipeline-validation phase of the project, verifying that data loading, coastal point selection, and analysis routines behave correctly before scaling to the full domain.',
     rationale:

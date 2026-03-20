@@ -24,8 +24,8 @@ export default function Footer() {
             </p>
             <ul className="space-y-1">
               {projectMeta.authors.map((author) => (
-                <li key={author} className="text-xs text-gray-600">
-                  {author}
+                <li key={author.name} className="text-xs text-gray-600">
+                  {author.name}
                 </li>
               ))}
             </ul>

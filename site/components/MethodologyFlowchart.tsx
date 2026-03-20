@@ -3,7 +3,7 @@ import StatusBadge from './StatusBadge';
 
 export default function MethodologyFlowchart() {
   return (
-    <section id="methodology" className="border-b border-gray-200 bg-[#0a0f1e] py-20">
+    <section id="methodology" className="border-b border-gray-200 bg-white py-20">
       <div className="mx-auto max-w-5xl px-6">
         {/* Section header */}
         <div className="mb-12">
@@ -11,7 +11,7 @@ export default function MethodologyFlowchart() {
             Analytical Framework
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Methodology Pipeline</h2>
-          <p className="mt-3 max-w-2xl text-sm text-gray-600">
+          <p className="mt-3 max-w-2xl text-sm text-gray-700">
             The analysis follows a sequential pipeline from data acquisition to risk integration.
             Steps are colour-coded by status. The current active stage is highlighted.
           </p>
@@ -50,10 +50,10 @@ export default function MethodologyFlowchart() {
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-sm font-bold transition-all ${
                         isCurrent
-                          ? 'border-sky-400 bg-sky-400/20 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.3)]'
+                          ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-lg'
                           : isDone
-                          ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400'
-                          : 'border-gray-300 bg-gray-50 text-gray-400'
+                          ? 'border-emerald-500 bg-emerald-100 text-emerald-700'
+                          : 'border-gray-300 bg-gray-50 text-gray-500'
                       }`}
                     >
                       {isDone ? (
@@ -71,22 +71,22 @@ export default function MethodologyFlowchart() {
                     <div
                       className={`rounded-xl border p-5 transition-all ${
                         isCurrent
-                          ? 'border-sky-500/40 bg-blue-50 shadow-[0_0_30px_rgba(56,189,248,0.07)]'
+                          ? 'border-blue-300 bg-blue-50 shadow-md'
                           : isDone
-                          ? 'border-emerald-500/20 bg-gray-50'
-                          : 'border-gray-200 bg-gray-50/50'
+                          ? 'border-emerald-300 bg-emerald-50'
+                          : 'border-gray-200 bg-gray-50'
                       }`}
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <h3
                           className={`text-sm font-semibold ${
                             isCurrent
-                              ? 'text-sky-300'
+                              ? 'text-blue-700'
                               : isDone
-                              ? 'text-emerald-300'
+                              ? 'text-emerald-700'
                               : isPlanned
                               ? 'text-gray-500'
-                              : 'text-gray-700'
+                              : 'text-gray-800'
                           }`}
                         >
                           {step.label}
@@ -98,7 +98,7 @@ export default function MethodologyFlowchart() {
                         )}
                         <StatusBadge status={step.status} size="sm" />
                       </div>
-                      <p className={`text-xs leading-relaxed ${isPlanned ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p className={`text-xs leading-relaxed ${isPlanned ? 'text-gray-500' : 'text-gray-700'}`}>
                         {step.description}
                       </p>
                     </div>

@@ -6,10 +6,26 @@ export const projectMeta = {
   shortTitle: 'OSR11 — Compound Flooding',
   institution: 'Institute of Astronomy, Geophysics and Atmospheric Sciences — IAG-USP',
   authors: [
-    'Danilo Couto de Souza',
-    'Carolina Barnez Gramcianinov',
-    'Ricardo de Camargo',
-    'Karine Bastos Leal',
+    { 
+      name: 'Danilo Couto de Souza',
+      affiliations: [
+        'Institute of Astronomy, Geophysics and Atmospheric Sciences, University of São Paulo (IAG-USP)',
+        'IRB(P&D)',
+        'Brazilian Center of Risk and Resilience Studies'
+      ]
+    },
+    {
+      name: 'Carolina Barnez Gramcianinov',
+      affiliations: ['Helmholtz-Zentrum Hereon']
+    },
+    {
+      name: 'Ricardo de Camargo',
+      affiliations: ['Institute of Astronomy, Geophysics and Atmospheric Sciences, University of São Paulo (IAG-USP)']
+    },
+    {
+      name: 'Karine Bastos Leal',
+      affiliations: ['Instituto Nacional de Pesquisas Espaciais (INPE)']
+    },
   ],
   status: 'in-progress' as const,
   statusLabel: 'Methodology Development and Exploratory Analysis',
@@ -81,19 +97,28 @@ export const stakeholders = [
   { name: 'Civil Protection Agencies', description: 'Early warning systems and disaster risk reduction' },
 ];
 
-export const conceptualFramework = `
-The project adopts the standard risk assessment chain:
-
-**COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK**
-
-- **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
-
-- **Exposure:** The spatial frequency, intensity, and duration of compound events at coastal locations, quantifying where and when hazards occur.
-
-- **Vulnerability:** The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.
-
-- **Risk:** The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.
-`;
+export const conceptualFramework = {
+  title: 'Risk Assessment Chain',
+  chain: 'COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK',
+  components: [
+    {
+      term: 'Compound hazard',
+      definition: 'The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.'
+    },
+    {
+      term: 'Exposure',
+      definition: 'The spatial frequency, intensity, and duration of compound events at coastal locations, quantifying where and when hazards occur.'
+    },
+    {
+      term: 'Vulnerability',
+      definition: 'The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.'
+    },
+    {
+      term: 'Risk',
+      definition: 'The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.'
+    }
+  ]
+};
 
 export const currentScope = `
 The current implementation is restricted to the southern sector of Santa Catarina (SC), using test-domain subsets of GLORYS12 and WAVERYS (~29.4°S to 27.6°S; ~50°W to 48°W). This constitutes the exploratory and data familiarization phase of the project, aimed at validating the data pipeline, sanity-checking methodological choices, and testing analysis workflows before extension to the full Brazilian coastal domain.
