@@ -19,6 +19,9 @@ data/interim/
 !data/raw/**/.gitkeep
 !data/processed/.gitkeep
 
+# Unified test data can be created from raw data, so we ignore the large NC file but keep the provenance JSON
+data/test/metocean_sc_sul_unified_waverys_grid.nc
+
 # Figures and outputs
 outputs/south_sc_test_data_exploratory/*
 

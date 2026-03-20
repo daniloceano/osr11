@@ -1,0 +1,27 @@
+# Configuration: GLORYS → WAVERYS grid interpolation (test domain)
+# Script: python -m src.preprocessing.interpolate_glorys_to_waverys_grid --config config/preprocessing/glorys_to_waverys_test.yaml
+
+input:
+  glorys: data/test/glorys_sc_sul_test.nc
+  waverys: data/test/waverys_sc_sul_test.nc
+
+output:
+  file: data/test/metocean_sc_sul_unified_waverys_grid.nc
+
+interpolation:
+  # Spatial interpolation method passed to xarray.interp (bilinear approximation via 'linear')
+  method: linear
+
+temporal:
+  # WAVERYS is 3-hourly; resample to daily before merging with GLORYS (daily).
+  # Strategy: keep only the temporal intersection (days present in both datasets).
+  # resample_method options: mean | max
+  #   - mean: preserves mean wave conditions; appropriate for climatological studies
+  #   - max: captures peak conditions per day; preferred for compound-event extremes
+  resample_method: mean
+
+variables:
+  # Real variable names as found in the NetCDF files (do not change unless files change)
+  glorys_sea_level: zos
+  waverys_wave_height: VHM0
+  waverys_wave_direction: VMDR
