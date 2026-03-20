@@ -1,112 +1,261 @@
-# OSR11 — Compound Coastal Flooding on Brazil's Eastern Coast
+# OSR11 — Compound Flooding Events in the South Atlantic Eastern Coast
 
-**Joint wave–surge extreme events along the South Atlantic eastern coast of Brazil**
+**The Joint Effect of Meteorological Tides and Extreme Wave Events**
 
-**Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal
-**Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)
-**Status:** Research in progress · Current focus: southern Santa Catarina (test domain)
+**Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
+**Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
+**Status:** Methodology development and exploratory analysis phase  
+**Current implementation:** Southern Santa Catarina test domain
 
 ---
 
-## Scientific Problem
+## Abstract
 
-Compound coastal flooding events — characterised by the simultaneous or near-simultaneous
-occurrence of extreme significant wave heights (Hₛ) and elevated sea surface levels
-associated with meteorological tides and storm surges — represent a disproportionate share
-of observed coastal disasters along the Brazilian coast. Despite the documented socioeconomic
-impact of these events, their joint statistical behaviour, physical drivers, and geographic
-distribution remain poorly quantified at regional scales.
+Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast are increasingly exposed to compound coastal flooding, where meteorological tides (storm surges) coincide with extreme wave events. These compound hazards can amplify inundation, overtopping, erosion, and port disruption, producing severe socioeconomic impacts that are still poorly quantified at regional scale in Brazil. 
 
-Isolated wave or surge extremes already impose severe hazards. When they co-occur, their
-compound nature amplifies coastal flooding, erosion, and infrastructure damage in ways that
-cannot be captured by single-variable analyses. A compound-event framework is therefore
-essential for credible coastal risk assessment, hazard mapping, and climate-informed
-adaptation planning along the Brazilian coast.
+This project assesses the joint behavior of sea-level surges and significant wave height using CMEMS multiyear reanalyses (GLORYS12 for sea level and WAVERYS for waves), complemented by ERA5 atmospheric forcing to characterize synoptic drivers and seasonality. We identify compound events through a storm-based threshold approach validated against official disaster records, evaluate spatial patterns and temporal trends, and integrate hazard exposure with coastal vulnerability layers to produce risk maps and identify priority hotspots for adaptation planning.
+
+---
+
+## Stakeholders
+
+The expected outcomes of this research are designed to support:
+
+- **Port Authorities** — Risk assessment for port infrastructure and operations
+- **Local Governments** — Coastal adaptation planning and emergency preparedness
+- **Brazilian Navy** — Maritime operations and coastal zone management
+- **Academia** — Compound hazard research and climate services development
+- **Civil Protection Agencies** — Early warning systems and disaster risk reduction
+
+---
+
+## Conceptual Framework
+
+The project follows the standard risk assessment chain:
+
+```
+COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
+```
+
+**Definitions:**
+
+- **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
+
+- **Exposure:** The spatial frequency, intensity, and duration of compound events at coastal locations, quantifying where and when hazards occur.
+
+- **Vulnerability:** The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.
+
+- **Risk:** The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.
 
 ---
 
 ## Research Objectives
 
-**General objective:** Quantify the joint occurrence, intensity, and temporal structure of
-sea-level extremes and significant wave height extremes along the eastern coast of Brazil,
-using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS), and assess their association with
-observed coastal disaster events.
+**General Objective:**
 
-**Specific objectives:**
+Quantify the joint occurrence, intensity, and temporal structure of sea-level extremes and significant wave height extremes along the eastern coast of Brazil using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS), validate the compound event framework against observed coastal disaster events, and integrate hazard characterization with exposure and vulnerability data to produce coastal risk maps.
 
-1. Characterise the marginal distributions of Hₛ and SSH at nearshore grid points along the Brazilian coast.
-2. Detect compound wave–surge events: joint exceedances within a temporal coincidence window.
-3. Validate the compound event catalog against the Leal et al. (2024) Santa Catarina database and the S2ID national disaster registry.
-4. Produce municipality-scale hotspot maps of compound event frequency and intensity.
-5. Integrate exposure (IBGE) and vulnerability indicators to derive compound coastal risk products.
-6. Interpret the synoptic and mesoscale atmospheric drivers (ERA5) of high-intensity compound events.
+**Specific Objectives:**
+
+1. Compile, harmonize, and quality-check CMEMS oceanographic reanalyses, ERA5 atmospheric forcing, and Brazilian coastal disaster databases (S2ID, Atlas Digital, SC Civil Defense).
+
+2. Calibrate extreme event thresholds for sea level and significant wave height by comparing detected storms with historically reported disasters in Santa Catarina, establishing a validated detection framework.
+
+3. Construct independent storm catalogs for sea-level extremes and wave extremes, recording event characteristics (start, end, duration, peak intensity, integrated intensity) in structured JSON format.
+
+4. Identify compound wave–surge events based on temporal overlap of independent storms, quantifying co-occurrence statistics, peak time lags, and overlap durations.
+
+5. Produce spatial exposure maps of compound event frequency, intensity, and temporal trends along the Brazilian coast.
+
+6. Integrate exposure layers with coastal vulnerability data (social indicators from IBGE, physical-territorial variables from Macrodiagnóstico da Zona Costeira e Marinha, and historical damage records) to construct a Vulnerability Index.
+
+7. Generate coastal risk maps by combining hazard, exposure, and vulnerability components, identifying priority hotspots for targeted adaptation measures.
+
+8. Characterize the synoptic and mesoscale atmospheric conditions (ERA5) associated with the most severe compound events, linking statistical hazard products to physical drivers.
 
 ---
 
 ## Data Sources
 
-| Source | Product | Variables | Period | Resolution |
-|--------|---------|-----------|--------|------------|
-| CMEMS | WAVERYS (`GLOBAL_MULTIYEAR_WAV_001_032`) | VHM0 (Hₛ), VMDR (direction) | 1993–2025 | ~0.2°, 3-hourly |
-| CMEMS | GLORYS12 (`GLOBAL_MULTIYEAR_PHY_001_030`) | zos (sea surface height) | 1993–2025 | 1/12°, daily |
-| ECMWF | ERA5 | MSLP, 10 m wind, SST, upper levels | 1993–2025 | ~0.25°, hourly |
-| Leal et al. (2024) | SC coastal disaster database | Event date, municipality, Hₛ, damage | 1998–2023 | Event-level |
-| S2ID / Atlas Digital | Brazilian disaster registry | Declared disasters, impact data | 1991–present | Municipal |
-| IBGE | Localidades / Malhas APIs | Municipality coordinates, boundaries | Current | Municipal |
+| Source | Product | Variables | Period | Resolution | Purpose |
+|--------|---------|-----------|--------|------------|---------|
+| CMEMS | WAVERYS<br>`GLOBAL_MULTIYEAR_WAV_001_032` | VHM0 (Hₛ), VMDR | 1993–2025 | ~0.2°, 3-hourly | Wave extremes |
+| CMEMS | GLORYS12<br>`GLOBAL_MULTIYEAR_PHY_001_030` | zos (SSH) | 1993–2025 | 1/12°, daily | Sea-level extremes |
+| ECMWF | ERA5 | MSLP, 10 m wind, SST | 1993–2025 | ~0.25°, hourly | Synoptic drivers |
+| SC Civil Defense | Reported coastal disasters<br>(Leal et al. 2024) | Event date, municipality, impacts | 1998–2023 | Event-level | Threshold validation |
+| S2ID / Atlas Digital | Brazilian disaster registry | Declared disasters, affected population, damages | 1991–present | Municipal | Impact quantification |
+| IBGE | Localidades / Malhas APIs | Coordinates, boundaries, census | Current | Municipal | Exposure indicators |
+| MMA | Macrodiagnóstico da Zona<br>Costeira e Marinha | Geomorphology, erosion,<br>occupation, barriers | — | Coastal segments | Vulnerability layers |
 
-All CMEMS products are accessed via the `copernicusmarine` Python toolbox.
+**Data acknowledgments:**  
+CMEMS products are accessed via the `copernicusmarine` Python toolbox. Disaster records from S2ID and Atlas Digital acknowledge incomplete reporting and serve as minimum-estimate indicators. The Macrodiagnóstico da Zona Costeira e Marinha is a key source for physical-territorial vulnerability components.
 
 ---
 
 ## Methodological Framework
 
-The project follows a sequential pipeline from data acquisition to risk integration:
+The project implements an 8-step execution algorithm aligned with the conceptual risk chain:
 
-```
-Phase 0  ·  Data acquisition, organisation, and QC
-             └─ CMEMS downloads, test fixtures, preprocessing
-             └─ STATUS: complete
+### **STEP 1 — Data Preparation**
 
-Phase 1  ·  Exploratory data analysis (south SC test domain)
-             └─ Spatial maps, time series, events EDA, statistics
-             └─ STATUS: in progress  ← current stage
+Compile, harmonize, and quality-check all datasets. Standardize spatial reference systems and temporal coverage. Remove inconsistent records and document data quality limitations.
 
-Phase 2  ·  Threshold calibration and storm event cataloging
-             └─ POT/GPD thresholds, event segmentation
-
-Phase 3  ·  Compound event detection
-             └─ Joint exceedance framework, co-occurrence statistics
-
-Phase 4  ·  Validation against observed disasters
-             └─ Cross-referencing with Leal et al. (2024) and S2ID
-
-Phase 5  ·  Regional scaling to full Brazilian coastal domain
-
-Phase 6  ·  Exposure, vulnerability, and risk integration
-```
-
-**Compound event definition (exploratory):** an event is classified as compound if Hₛ and SSH
-each exceed their respective extreme thresholds within a ±3-day coincidence window. Thresholds
-are currently empirical (q90 of domain means) and will be replaced by physically motivated
-estimates in Phase 2.
+**Status:** ✅ Partially complete (test domain only)  
+**Implementation:** `src/acquisition/`, `src/preprocessing/`
 
 ---
 
-## Current Results
+### **STEP 2 — Threshold Calibration**
 
-The currently implemented analysis is the **exploratory EDA for the southern SC test domain**
-(`src/explore_test_data_south_sc/`), which covers:
+Select candidate extreme thresholds for sea level (N) and significant wave height (Hₛ). For each threshold combination, detect storms in Santa Catarina and compare with reported coastal disasters from the SC Civil Defense database. Compute matching statistics (hit rate, false alarm rate, critical success index). Select the threshold combination with the best performance.
 
-- **Part A** — Spatial maximum maps of Hₛ and SSH (1993–2025)
-- **Part B** — Time series at peak-value grid points (±15-day window)
-- **Part D** — Reported events EDA: counts, Hₛ/SSH boxplots at event dates, monthly seasonality
-- **Part E** — Municipality–grid association via IBGE API and Natural Earth coastline
-- **Part F** — Sector overview figure: map + Hₛ + SSH boxplots per municipality
-- **Part G** — Descriptive statistics, scatter plots, seasonal cycle, compound quick-look, distributions
+**Rationale:** Threshold definition is inherently subjective. Validation against observed disasters provides an empirical, pragmatic calibration strategy that grounds the analysis in real-world impacts. Although this introduces regional bias (SC-based thresholds extrapolated to other sectors), it represents the most defensible approach given uneven disaster record availability along the Brazilian coast.
 
-Outputs (figures and tables) are written to `outputs/south_sc_test_data_exploratory/`.
-See `src/explore_test_data_south_sc/README.md` for full documentation and `RUN.md` for
-quick-start instructions.
+**Status:** 🔄 Planned (Phase 2)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 3 — Storm Catalog Generation**
+
+For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances and merging consecutive exceedances into single storm events. For each identified storm, record:
+
+- Start time
+- End time  
+- Duration
+- Peak value
+- Full time series of values during the event
+- Integrated intensity (time-integrated magnitude)
+
+Generate separate catalogs for sea-level storms and wave storms. Save catalogs in structured JSON format for reproducibility and downstream analysis.
+
+**Status:** 🔄 Planned (Phase 2)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 4 — Compound Event Detection**
+
+Compare sea-level storm catalogs and wave storm catalogs at each grid point. Classify a **compound event** when a sea-level storm and a wave storm overlap in time. Record:
+
+- Overlap duration
+- Peak time lag (time difference between Hₛ peak and SSH peak)
+- Joint peak intensity
+
+Optionally impose a minimum overlap duration threshold. From the resulting compound event catalog, compute:
+
+- Annual frequency of compound events
+- Mean and upper-percentile joint intensity
+- Mean, minimum, and maximum overlap duration
+- Time between successive compound events
+- Seasonality (monthly climatology)
+- Spatial distribution
+
+**Status:** 🔄 Planned (Phase 3)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 5 — Exposure Analysis**
+
+Quantify compound hazard exposure using indicators derived from the compound event catalog:
+
+- Mean annual frequency
+- Temporal trend (linear or non-parametric)
+- Mean compound peak intensity
+- Mean overlap duration
+- Upper percentile (p90, p95) of overlap duration
+- Recurrence interval and intermittency characteristics
+
+Normalize indicators to a common scale and optionally combine into a **Compound Exposure Hazard Index** for mapping purposes.
+
+**Status:** 🔄 Planned (Phase 5)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 6 — Vulnerability Analysis**
+
+Construct a coastal vulnerability index by integrating:
+
+**Social vulnerability:**
+- Population density
+- Income and poverty indicators
+- Infrastructure quality (housing, sanitation, access)
+- IBGE census data and socioeconomic indices
+
+**Physical-territorial vulnerability:**
+- Low-lying terrain and inundation susceptibility
+- Erosional sectors and shoreline retreat rates
+- Natural barriers (dunes, mangroves, reefs)
+- Coastal occupation and urbanization intensity
+- Macrodiagnóstico da Zona Costeira e Marinha indicators
+
+**Historical damage sensitivity:**
+- S2ID and Atlas Digital reported impacts (material damages, affected population, economic losses) used as auxiliary layer where available, acknowledging incomplete reporting
+
+Standardize variables, apply weighting schemes, and combine into a spatially explicit **Vulnerability Index** at municipal or coastal segment scale.
+
+**Status:** 🔄 Planned (Phase 6)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 7 — Risk Integration**
+
+Produce the main applied outcome: a **coastal risk map of compound wave–surge events** for Brazil.
+
+**Procedure:**
+1. Rescale exposure and vulnerability indices to the same range [0, 1]
+2. Combine via weighted mean, multiplicative approach, or class-based matrix
+3. Generate final risk classes (e.g., Low / Moderate / High / Very High)
+4. Identify priority hotspots
+5. Cross-reference hotspots with municipalities presenting reported impacts in S2ID/Atlas Digital
+6. Produce maps, tables, and summary statistics for stakeholder communication
+
+**Status:** 🔄 Planned (Phase 6)  
+**Implementation:** To be developed
+
+---
+
+### **STEP 8 — Optional Physical Interpretation**
+
+As an optional validation and interpretation stage:
+
+- Select the most severe compound events from the catalog
+- Analyze seasonality (monthly/seasonal distribution)
+- Characterize synoptic conditions using ERA5 (MSLP, winds, atmospheric circulation patterns)
+- Discuss dominant atmospheric mechanisms (extratropical cyclones, frontal systems, blocking patterns)
+- Assess uncertainties in threshold choices, grid resolution effects, and reanalysis biases
+
+This stage strengthens the physical interpretation and overall robustness of the study.
+
+**Status:** 🔄 Planned (Phase 8)  
+**Implementation:** To be developed
+
+---
+
+## Current Implementation Status
+
+The repository currently contains:
+
+✅ **Phase 0 — Data acquisition pipeline** (complete for test domain)
+- CMEMS download scripts (`src/acquisition/`)
+- Test fixture generation for south SC sector
+- Reported events preprocessing (Excel → CSV)
+
+🔄 **Phase 1 — Exploratory data analysis** (in progress, test domain only)
+- Implemented in `src/explore_test_data_south_sc/`
+- Spatial maximum maps of Hₛ and SSH (Part A)
+- Time series at peak grid points (Part B)
+- Reported events EDA: counts, boxplots, seasonality (Part D)
+- Municipality–grid association via IBGE API (Part E)
+- Per-sector overview figures (Part F)
+- Descriptive statistics, scatter plots, seasonal cycle, compound quick-look (Part G)
+
+**Important:** The current exploratory analysis (Phase 1) is **not** the full compound event detection framework described in Steps 2–7. It is a preliminary sanity-check and data familiarization phase using the south SC test domain. The exploratory "compound quick-look" uses empirical q90 thresholds as a placeholder and does not constitute the validated threshold calibration or storm-based catalog approach described in the scientific framework.
+
+🔄 **Phases 2–8** — Planned, not yet implemented
 
 ---
 
@@ -114,120 +263,191 @@ quick-start instructions.
 
 ```
 osr11/
-├── README.md
-├── environment.yml                           # Conda environment
+├── README.md                                 # This file: project overview and scientific framework
+├── environment.yml                           # Conda environment specification
 ├── config/
-│   ├── plot_config.py                        # Shared FigureStyle dataclass
-│   ├── download_config.example.yml           # Template for CMEMS downloads
-│   └── test_fixture.example.yml              # Template for test fixture builds
+│   ├── plot_config.py                        # Shared figure styling (FigureStyle dataclass)
+│   ├── download_config.example.yml           # Template for CMEMS download configuration
+│   └── test_fixture.example.yml              # Template for test fixture generation
 ├── data/
-│   ├── README.md
-│   ├── test/                                 # Committed test-domain NetCDF subsets
+│   ├── README.md                             # Data directory documentation
+│   ├── test/                                 # Committed test-domain NetCDF subsets (south SC)
+│   │   ├── README.md                         # Test data description and limitations
 │   │   ├── waverys_sc_sul_test.nc            # VHM0, VMDR · 3-hourly · 1993–2025
 │   │   └── glorys_sc_sul_test.nc             # zos · daily · 1993–2025
 │   ├── reported events/
-│   │   └── reported_events_Karine_sc.csv     # Leal et al. (2024)
-│   ├── ne_10m_coastline/                     # Natural Earth coastline shapefile
-│   └── raw/                                  # Full CMEMS downloads (not committed)
+│   │   ├── README.md                         # Reported events database documentation
+│   │   └── reported_events_Karine_sc.csv     # SC Civil Defense disaster database (Leal et al. 2024)
+│   ├── ne_10m_coastline/                     # Natural Earth 10m coastline shapefile
+│   └── raw/                                  # Full CMEMS downloads (not committed, .gitignore)
 ├── src/
 │   ├── acquisition/
 │   │   ├── download_cmems.py                 # Main CMEMS download script
 │   │   ├── download_cmems_parallel.py        # Parallel download variant
 │   │   ├── catalog_inspect.py                # CMEMS catalog inspection utility
-│   │   └── build_test_fixture.py             # Build test NetCDF subsets
+│   │   └── build_test_fixture.py             # Build test-domain NetCDF subsets
 │   ├── preprocessing/
-│   │   └── convert_reported_events.py        # Excel → CSV for reported events
-│   └── explore_test_data_south_sc/           # Phase 1: EDA of south SC test data
-│       ├── main.py                           # CLI orchestrator
-│       ├── io.py                             # Dataset loaders
-│       ├── coastal.py                        # Coastal grid point selection (NE)
-│       ├── maps.py                           # Part A: spatial maxima maps
-│       ├── timeseries.py                     # Part B: time series
-│       ├── reported_events.py                # Part D: events EDA
-│       ├── municipalities.py                 # Part E: municipality–grid association
-│       ├── boxplots.py                       # Part F: sector boxplot figure
-│       ├── statistics.py                     # Part G: statistical analyses
-│       ├── utils.py                          # Shared utilities
-│       ├── config/analysis_config.py         # File paths and parameters
-│       ├── README.md
-│       └── RUN.md
-├── outputs/                                  # Analysis outputs (not committed)
+│   │   ├── README.md                         # Preprocessing pipeline documentation
+│   │   └── convert_reported_events.py        # Excel → CSV conversion for reported events
+│   └── explore_test_data_south_sc/           # Phase 1: Exploratory EDA (test domain)
+│       ├── main.py                           # CLI orchestrator (--all, --maps, --timeseries, etc.)
+│       ├── io.py                             # Dataset loaders and South sector filtering
+│       ├── coastal.py                        # Coastal grid point selection (Natural Earth)
+│       ├── maps.py                           # Part A: Spatial maxima maps
+│       ├── timeseries.py                     # Part B: Time series at peak grid points
+│       ├── reported_events.py                # Part D: Reported events EDA
+│       ├── municipalities.py                 # Part E: Municipality–grid association (IBGE API)
+│       ├── boxplots.py                       # Part F: Sector boxplot figures
+│       ├── statistics.py                     # Part G: Statistical analyses and distributions
+│       ├── utils.py                          # Shared utilities (logging, I/O helpers)
+│       ├── config/analysis_config.py         # Configuration: file paths, parameters, output dirs
+│       ├── README.md                         # Detailed module documentation
+│       └── RUN.md                            # Quick-start command reference
+├── outputs/                                  # Analysis outputs (not committed, .gitignore)
 │   └── south_sc_test_data_exploratory/
-│       ├── figures/                          # PNG figures (300 dpi)
+│       ├── figures/                          # PNG figures (300 dpi, publication-ready)
 │       └── tables/                           # CSV summary tables
-└── site/                                     # Scientific results website (Next.js)
+├── logs/                                     # Execution logs (not committed, .gitignore)
+└── site/                                     # Scientific results website (Next.js + Tailwind CSS)
+    ├── README.md                             # Site documentation
+    ├── DEPLOYMENT.md                         # Vercel deployment guide
+    ├── app/                                  # Next.js App Router pages
+    ├── components/                           # React components
+    ├── content/                              # Project metadata and figure definitions
+    ├── public/                               # Static assets (figures, etc.)
+    └── ...
 ```
 
 ---
 
-## Environment Setup
+## Quick Start
 
-### 1. Create the Conda environment
+### 1. Environment Setup
 
 ```bash
+# Clone repository
+git clone <repository-url>
+cd osr11
+
+# Create conda environment
 conda env create -f environment.yml
 conda activate osr11
-```
 
-### 2. Authenticate with Copernicus Marine (CMEMS)
-
-```bash
+# Authenticate with CMEMS (required for full-domain downloads)
 copernicusmarine login
-# Follow the prompt to enter credentials (stored in ~/.copernicusmarine/)
+# Enter credentials (stored in ~/.copernicusmarine/)
 ```
 
-### 3. Run the exploratory analysis (test data — no download required)
+### 2. Run Exploratory Analysis (Test Data)
 
-The test fixtures are already committed to the repository. Run directly:
+The test fixtures (`data/test/`) are already committed. No download required.
 
 ```bash
-# Full analysis
+# Full exploratory analysis (all parts)
 python -m src.explore_test_data_south_sc.main --all
 
 # Individual parts
-python -m src.explore_test_data_south_sc.main --maps          # Part A
-python -m src.explore_test_data_south_sc.main --timeseries    # Part B
-python -m src.explore_test_data_south_sc.main --statistics    # Part G
+python -m src.explore_test_data_south_sc.main --maps          # Part A: Spatial maxima
+python -m src.explore_test_data_south_sc.main --timeseries    # Part B: Time series
+python -m src.explore_test_data_south_sc.main --events        # Part D: Reported events EDA
+python -m src.explore_test_data_south_sc.main --municipalities # Part E: Municipality–grid
+python -m src.explore_test_data_south_sc.main --boxplots      # Part F: Sector overview
+python -m src.explore_test_data_south_sc.main --statistics    # Part G: Statistical analyses
 ```
 
-See `src/explore_test_data_south_sc/RUN.md` for the complete command reference.
+Outputs written to: `outputs/south_sc_test_data_exploratory/`
 
----
+See `src/explore_test_data_south_sc/RUN.md` for complete command reference.
 
-## Data Acquisition (Full Domain)
+### 3. Download Full-Domain Data (Optional)
+
+**Note:** Full GLORYS12 and WAVERYS downloads are large (~100 GB+ for full Brazilian coast, 1993–2025). Test fixtures are sufficient for exploratory work.
 
 ```bash
 # Inspect CMEMS catalog (recommended before downloading)
 python src/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_PHY_001_030
 python src/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_WAV_001_032
 
-# Configure download (copy and edit)
+# Configure download parameters
 cp config/download_config.example.yml config/download_config.yml
+# Edit config/download_config.yml with desired spatial/temporal extent
 
-# Download GLORYS and WAVERYS
-python src/acquisition/download_cmems.py
+# Download GLORYS12 and/or WAVERYS
 python src/acquisition/download_cmems.py --product glorys
 python src/acquisition/download_cmems.py --product waverys
+# Or both: python src/acquisition/download_cmems.py
 ```
+
+Downloaded files saved to `data/raw/` (not committed to Git).
 
 ---
 
 ## Results Website
 
-A scientific results site is available in `site/` (Next.js + Tailwind CSS, deployable to Vercel).
+A scientific results website is available in `site/` (Next.js, deployable to Vercel).
 
 ```bash
 cd site
 npm install
-npm run dev          # Local development server at http://localhost:3000
+npm run dev          # Local development server → http://localhost:3000
 npm run build        # Production build
-vercel --prod        # Deploy to Vercel
+vercel --prod        # Deploy to Vercel (requires Vercel account)
 ```
+
+See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` for site documentation.
 
 ---
 
-## Notes
+## Notes and Limitations
 
-- `data/raw/` is listed in `.gitignore` and is never committed to version control.
-- All analysis outputs (`outputs/`) are regeneratable from the test fixtures and are not committed.
-- Results are preliminary and subject to revision. Do not cite without consulting the authors.
+### Data Limitations
+
+- **GLORYS12 and WAVERYS resolution:** Reanalysis products have finite spatial resolution (~0.2° for WAVERYS, 1/12° for GLORYS12). Nearshore processes at scales < 10 km may not be fully resolved.
+
+- **Disaster records:** S2ID and Atlas Digital databases have incomplete and uneven reporting. Not all coastal flooding events are officially declared or documented. Reported impacts (damages, affected population) are minimum estimates and subject to underreporting bias.
+
+- **SC Civil Defense database:** The Leal et al. (2024) database provides high-quality event-level data for Santa Catarina (1998–2023) but is geographically limited. Threshold calibration based on SC events introduces regional bias when extrapolated to other coastal sectors—an acknowledged methodological limitation justified by data availability constraints.
+
+### Current Implementation Status
+
+- **Phase 0 (Data preparation):** Complete for south SC test domain; full-domain downloads require large storage and processing time.
+
+- **Phase 1 (Exploratory analysis):** Implemented for south SC test domain. This is **not** the final compound event detection framework—it is a preliminary EDA phase using empirical thresholds (q90) for data familiarization and pipeline validation.
+
+- **Phases 2–8 (Threshold calibration, storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
+
+### Reproducibility
+
+- All test fixtures (`data/test/`) are version-controlled and committed to the repository.
+- Analysis outputs (`outputs/`, `logs/`) are regeneratable from test fixtures and are excluded from version control (`.gitignore`).
+- Full-domain CMEMS downloads (`data/raw/`) are excluded from version control due to size.
+- Python environment fully specified in `environment.yml`.
+
+### Data Retention Policy
+
+- **Committed to Git:** Configuration files, scripts, test fixtures, documentation, preprocessing outputs (CSVs).
+- **Not committed:** Full CMEMS downloads (`data/raw/`), analysis outputs (`outputs/`), execution logs (`logs/`), site build artifacts (`site/.next/`, `site/node_modules/`).
+
+---
+
+## Citation and Acknowledgments
+
+**Preliminary results.** This is an ongoing research project. Results presented are subject to revision and should not be cited without consulting the authors.
+
+**Data sources:**
+- CMEMS GLORYS12 and WAVERYS products: Copernicus Marine Environment Monitoring Service
+- ERA5: ECMWF / Copernicus Climate Change Service
+- Reported events (Santa Catarina): Leal, K. B., et al. (2024). Identification of coastal natural disasters using official databases to provide support for the coastal management: the case of Santa Catarina, Brazil.
+- S2ID / Atlas Digital de Desastres: Brazilian Federal Government
+- IBGE: Instituto Brasileiro de Geografia e Estatística
+- Natural Earth coastline data: naturalearthdata.com
+- Macrodiagnóstico da Zona Costeira e Marinha: Ministério do Meio Ambiente (MMA)
+
+**Contact:**
+Danilo Couto de Souza  
+Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
+University of São Paulo, Brazil
+
+---
+
+**Last updated:** March 2026

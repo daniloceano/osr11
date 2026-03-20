@@ -26,21 +26,19 @@ export default function Hero() {
 
         {/* Title */}
         <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
-          Compound{' '}
+          Compound Flooding Events{' '}
           <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-            Coastal Flooding
+            South Atlantic
           </span>
         </h1>
 
         <p className="mb-6 text-lg text-gray-600 md:text-xl max-w-3xl">
-          Joint wave–surge extremes on the South Atlantic eastern coast of Brazil
+          The joint effect of meteorological tides and extreme wave events
         </p>
 
         {/* Abstract */}
         <p className="mb-8 max-w-3xl text-base leading-relaxed text-gray-600">
-          This project characterises compound coastal flooding events — defined by the simultaneous or near-simultaneous
-          occurrence of extreme significant wave heights and elevated storm surge / meteorological tides — along the
-          Brazilian coast, using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS). Current focus: southern Santa Catarina.
+          Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast face compound coastal flooding—where meteorological tides (storm surges) coincide with extreme wave events. This project quantifies these joint hazards using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS), validates detection frameworks against observed disasters, and integrates exposure and vulnerability data to produce coastal risk maps for adaptation planning.
         </p>
 
         {/* Stat chips */}
