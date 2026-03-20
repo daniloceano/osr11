@@ -86,10 +86,10 @@ export default function SouthSCPage() {
       <Navigation />
       <main className="pt-16">
         {/* Page header */}
-        <div className="border-b border-slate-800 bg-slate-950 py-16">
+        <div className="border-b border-gray-200 bg-white py-16">
           <div className="mx-auto max-w-5xl px-6">
-            <div className="mb-4 flex items-center gap-2 text-xs text-slate-500">
-              <Link href="/" className="hover:text-slate-300 transition-colors">
+            <div className="mb-4 flex items-center gap-2 text-xs text-gray-500">
+              <Link href="/" className="hover:text-gray-700 transition-colors">
                 Overview
               </Link>
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,25 +99,25 @@ export default function SouthSCPage() {
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-slate-400">South SC — Exploratory Analysis</span>
+              <span className="text-gray-600">South SC — Exploratory Analysis</span>
             </div>
 
             <div className="flex flex-wrap items-start gap-3 mb-4">
               <StatusBadge status="in-progress" />
-              <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-400">
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
                 Phase 1
               </span>
-              <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-400">
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
                 Test domain · South SC
               </span>
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-100 md:text-4xl">
+            <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
               Exploratory Analysis
               <br />
-              <span className="text-sky-400">Southern Santa Catarina</span>
+              <span className="text-blue-600">Southern Santa Catarina</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-400">
+            <p className="mt-3 max-w-2xl text-sm text-gray-600">
               First-look EDA on WAVERYS and GLORYS12 test datasets for the south SC sector
               (~−29.4° to −27.6°S, ~−50° to −48°W). Seven analysis blocks covering spatial
               maps, time series, reported events, municipality–grid association, sector
@@ -136,10 +136,10 @@ export default function SouthSCPage() {
               ].map((m) => (
                 <div
                   key={m.label}
-                  className="rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2"
+                  className="rounded-lg border border-gray-300/60 bg-gray-50 px-3 py-2"
                 >
-                  <div className="text-xs text-slate-500">{m.label}</div>
-                  <div className="text-xs font-medium text-slate-200">{m.value}</div>
+                  <div className="text-xs text-gray-500">{m.label}</div>
+                  <div className="text-xs font-medium text-gray-800">{m.value}</div>
                 </div>
               ))}
             </div>
@@ -147,29 +147,29 @@ export default function SouthSCPage() {
         </div>
 
         {/* Analysis modules */}
-        <div className="border-b border-slate-800 bg-[#0a0f1e] py-16">
+        <div className="border-b border-gray-200 bg-[#0a0f1e] py-16">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="mb-8 text-xl font-bold text-slate-100">Analysis Modules</h2>
+            <h2 className="mb-8 text-xl font-bold text-gray-900">Analysis Modules</h2>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {analysisModules.map((mod) => (
                 <div
                   key={mod.part}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-5 flex flex-col gap-3"
+                  className="rounded-xl border border-gray-200 bg-gray-50 p-5 flex flex-col gap-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-xs font-semibold text-sky-400">
+                    <span className="rounded border border-gray-300 bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-blue-600">
                       {mod.part}
                     </span>
-                    <h3 className="text-xs font-semibold text-slate-200">{mod.title}</h3>
+                    <h3 className="text-xs font-semibold text-gray-800">{mod.title}</h3>
                   </div>
-                  <p className="text-xs leading-relaxed text-slate-400">{mod.description}</p>
-                  <div className="mt-auto border-t border-slate-800 pt-3">
+                  <p className="text-xs leading-relaxed text-gray-600">{mod.description}</p>
+                  <div className="mt-auto border-t border-gray-200 pt-3">
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-600">
                       Outputs
                     </p>
                     <ul className="space-y-0.5">
                       {mod.outputs.map((o) => (
-                        <li key={o} className="flex items-start gap-1.5 text-xs text-slate-500">
+                        <li key={o} className="flex items-start gap-1.5 text-xs text-gray-500">
                           <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-sky-600" />
                           {o}
                         </li>
@@ -183,9 +183,9 @@ export default function SouthSCPage() {
         </div>
 
         {/* Design decisions */}
-        <div className="border-b border-slate-800 bg-slate-950 py-16">
+        <div className="border-b border-gray-200 bg-white py-16">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="mb-6 text-xl font-bold text-slate-100">
+            <h2 className="mb-6 text-xl font-bold text-gray-900">
               Key Methodological Decisions
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -209,10 +209,10 @@ export default function SouthSCPage() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-5"
+                  className="rounded-xl border border-gray-200 bg-gray-50 p-5"
                 >
-                  <h3 className="mb-2 text-xs font-semibold text-sky-400">{item.title}</h3>
-                  <p className="text-xs leading-relaxed text-slate-400">{item.body}</p>
+                  <h3 className="mb-2 text-xs font-semibold text-blue-600">{item.title}</h3>
+                  <p className="text-xs leading-relaxed text-gray-600">{item.body}</p>
                 </div>
               ))}
             </div>
@@ -220,11 +220,11 @@ export default function SouthSCPage() {
         </div>
 
         {/* Figure gallery */}
-        <div className="border-b border-slate-800 bg-[#0a0f1e] py-16">
+        <div className="border-b border-gray-200 bg-[#0a0f1e] py-16">
           <div className="mx-auto max-w-5xl px-6">
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-slate-100">Figure Gallery</h2>
-              <p className="mt-2 text-sm text-slate-400">
+              <h2 className="text-xl font-bold text-gray-900">Figure Gallery</h2>
+              <p className="mt-2 text-sm text-gray-600">
                 All figures generated by the analysis pipeline (Parts A–G). Click any figure
                 to expand and read the full caption. Filter by analysis group using the tabs.
               </p>
@@ -234,7 +234,7 @@ export default function SouthSCPage() {
         </div>
 
         {/* Limitations */}
-        <div className="border-b border-slate-800 bg-slate-950 py-16">
+        <div className="border-b border-gray-200 bg-white py-16">
           <div className="mx-auto max-w-5xl px-6">
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -245,7 +245,7 @@ export default function SouthSCPage() {
               </div>
               <ul className="space-y-2">
                 {limitations.map((lim, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-400">
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
                     <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500/60" />
                     {lim}
                   </li>
@@ -256,10 +256,10 @@ export default function SouthSCPage() {
         </div>
 
         {/* Next steps */}
-        <div className="bg-slate-950 py-16">
+        <div className="bg-white py-16">
           <div className="mx-auto max-w-5xl px-6">
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-6">
-              <h2 className="mb-3 text-base font-bold text-sky-300">Next Steps</h2>
+            <div className="rounded-xl border border-sky-500/20 bg-blue-600/5 p-6">
+              <h2 className="mb-3 text-base font-bold text-blue-500">Next Steps</h2>
               <ul className="space-y-2">
                 {[
                   'Run the full pipeline with complete CMEMS downloads for the entire SC coast (all sectors).',
@@ -269,7 +269,7 @@ export default function SouthSCPage() {
                   'Extend to the full Brazilian coastal domain.',
                   'Integrate ERA5 atmospheric data for physical interpretation of compound events.',
                 ].map((step, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-400">
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
                     <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border border-sky-500/40 text-xs font-bold text-sky-500">
                       {i + 1}
                     </span>
@@ -282,7 +282,7 @@ export default function SouthSCPage() {
             <div className="mt-6 flex items-center justify-between">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

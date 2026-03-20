@@ -3,44 +3,41 @@ import { projectMeta } from '@/content/project';
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 pt-24 pb-20">
+    <section className="relative overflow-hidden border-b border-gray-200 bg-gradient-to-b from-gray-50 to-white pt-24 pb-20">
       {/* Background grid */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
-            'linear-gradient(to right, #38bdf8 1px, transparent 1px), linear-gradient(to bottom, #38bdf8 1px, transparent 1px)',
+            'linear-gradient(to right, #2563eb 1px, transparent 1px), linear-gradient(to bottom, #2563eb 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
 
-      {/* Radial gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(56,189,248,0.06),transparent)]" />
-
       <div className="relative mx-auto max-w-5xl px-6">
         {/* Status pill */}
         <div className="mb-6 flex items-center gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
             Research in Progress
           </span>
-          <span className="text-xs text-slate-500">IAG-USP · {projectMeta.dataRange}</span>
+          <span className="text-xs text-gray-500">IAG-USP · {projectMeta.dataRange}</span>
         </div>
 
         {/* Title */}
-        <h1 className="mb-4 text-4xl font-bold tracking-tight text-slate-100 md:text-5xl lg:text-6xl">
+        <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
           Compound{' '}
-          <span className="bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
             Coastal Flooding
           </span>
         </h1>
 
-        <p className="mb-6 text-lg text-slate-400 md:text-xl max-w-3xl">
+        <p className="mb-6 text-lg text-gray-600 md:text-xl max-w-3xl">
           Joint wave–surge extremes on the South Atlantic eastern coast of Brazil
         </p>
 
         {/* Abstract */}
-        <p className="mb-8 max-w-3xl text-base leading-relaxed text-slate-400">
+        <p className="mb-8 max-w-3xl text-base leading-relaxed text-gray-600">
           This project characterises compound coastal flooding events — defined by the simultaneous or near-simultaneous
           occurrence of extreme significant wave heights and elevated storm surge / meteorological tides — along the
           Brazilian coast, using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS). Current focus: southern Santa Catarina.
@@ -56,10 +53,10 @@ export default function Hero() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-lg border border-slate-700/60 bg-slate-900 px-4 py-2"
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm"
             >
-              <div className="text-xs text-slate-500">{stat.label}</div>
-              <div className="text-sm font-medium text-slate-200">{stat.value}</div>
+              <div className="text-xs text-gray-500">{stat.label}</div>
+              <div className="text-sm font-medium text-gray-900">{stat.value}</div>
             </div>
           ))}
         </div>
@@ -68,7 +65,7 @@ export default function Hero() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/results/south-sc"
-            className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-400 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
           >
             View Preliminary Results
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,19 +74,19 @@ export default function Hero() {
           </Link>
           <a
             href="#methodology"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Methodology
           </a>
         </div>
 
         {/* Authors */}
-        <div className="mt-12 border-t border-slate-800 pt-6">
-          <p className="text-xs text-slate-500 mb-1">Authors</p>
-          <p className="text-sm text-slate-400">
+        <div className="mt-12 border-t border-gray-200 pt-6">
+          <p className="text-xs text-gray-500 mb-1">Authors</p>
+          <p className="text-sm text-gray-700">
             {projectMeta.authors.join(' · ')}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{projectMeta.institution}</p>
+          <p className="mt-1 text-xs text-gray-500">{projectMeta.institution}</p>
         </div>
       </div>
     </section>

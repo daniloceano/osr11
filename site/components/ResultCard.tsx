@@ -9,8 +9,8 @@ export default function ResultCard({ card }: { card: ResultCardType }) {
     <div
       className={`group h-full rounded-xl border p-6 flex flex-col gap-4 transition-all duration-200 ${
         isClickable
-          ? 'border-sky-500/30 bg-slate-900 hover:border-sky-500/50 hover:bg-sky-500/5 cursor-pointer'
-          : 'border-slate-800 bg-slate-900'
+          ? 'border-sky-500/30 bg-gray-50 hover:border-sky-500/50 hover:bg-blue-600/5 cursor-pointer'
+          : 'border-gray-200 bg-gray-50'
       }`}
     >
       {/* Header */}
@@ -23,7 +23,7 @@ export default function ResultCard({ card }: { card: ResultCardType }) {
                 {card.parts.map((p) => (
                   <span
                     key={p}
-                    className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-xs text-slate-500"
+                    className="rounded border border-gray-300 bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500"
                   >
                     {p}
                   </span>
@@ -31,37 +31,37 @@ export default function ResultCard({ card }: { card: ResultCardType }) {
               </div>
             )}
           </div>
-          <h3 className={`text-base font-semibold ${isClickable ? 'text-sky-300 group-hover:text-sky-200' : 'text-slate-200'}`}>
+          <h3 className={`text-base font-semibold ${isClickable ? 'text-sky-300 group-hover:text-sky-200' : 'text-gray-800'}`}>
             {card.title}
           </h3>
-          <p className="mt-0.5 text-xs text-slate-500">{card.subtitle}</p>
+          <p className="mt-0.5 text-xs text-gray-500">{card.subtitle}</p>
         </div>
         {isClickable && (
-          <svg className="h-4 w-4 flex-shrink-0 text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 flex-shrink-0 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         )}
       </div>
 
       {/* Description */}
-      <p className="text-sm leading-relaxed text-slate-400">{card.description}</p>
+      <p className="text-sm leading-relaxed text-gray-600">{card.description}</p>
 
       {/* Rationale */}
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+      <div className="rounded-lg border border-gray-200 bg-white/50 px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
           Scientific Rationale
         </p>
-        <p className="text-xs leading-relaxed text-slate-500">{card.rationale}</p>
+        <p className="text-xs leading-relaxed text-gray-500">{card.rationale}</p>
       </div>
 
       {/* Outputs */}
       <div className="flex-1">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
           Outputs
         </p>
         <ul className="space-y-1">
           {card.outputs.map((output, i) => (
-            <li key={i} className="flex items-start gap-2 text-xs text-slate-400">
+            <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
               <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-emerald-500" />
               {output}
             </li>
@@ -71,8 +71,8 @@ export default function ResultCard({ card }: { card: ResultCardType }) {
 
       {/* CTA */}
       {isClickable && (
-        <div className="border-t border-slate-800 pt-3">
-          <span className="text-xs font-medium text-sky-400 group-hover:text-sky-300">
+        <div className="border-t border-gray-200 pt-3">
+          <span className="text-xs font-medium text-blue-600 group-hover:text-sky-300">
             View detailed results →
           </span>
         </div>
