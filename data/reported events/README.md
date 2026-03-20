@@ -1,4 +1,4 @@
-# data/test/reported events/
+# data/reported events/
 
 ## `reported_events_Karine_sc.csv`
 

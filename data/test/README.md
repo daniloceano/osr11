@@ -3,8 +3,9 @@
 Test datasets for the OSR11 project, used for exploratory development and
 validation of the coastal risk analysis pipeline.
 
-These are small domain cutouts of the operational datasets, covering the southern
-Santa Catarina coast (approx. −29.4 to −27.6°S, −50 to −48°W) for the full 1993–2025 period.
+These are small domain cutouts of the operational CMEMS datasets, covering the
+southern Santa Catarina coast (approx. −29.4 to −27.6°S, −50 to −48°W) for
+the full 1993–2025 period.
 
 ## Files
 
@@ -40,14 +41,20 @@ Longitude: −50.0°W to −48.0°W
 This domain covers the southern portion of the Santa Catarina coast, roughly from
 the Florianópolis–Palhoça area southward to near the border with Rio Grande do Sul.
 
-> ⚠️ **Important**: Municipalities in the northern and central-north sectors of SC
+> **Important**: Municipalities in the northern and central-north sectors of SC
 > (e.g. Itapoá, São Francisco do Sul, Balneário Camboriú, Navegantes) are **outside**
 > this test domain. Grid-based statistics are therefore unavailable for those municipalities.
+
+> **Analysis scope**: The exploratory module `explore_test_data_south_sc` filters the
+> reported events dataset to **South sector municipalities only**, to match this
+> limited domain. This is documented in `io.py` and logged at runtime.
 
 ## Known limitations
 
 - Test cutouts only — they do not replace the full operational datasets.
 - The domain does not cover the entire Santa Catarina coastline.
+- Exploratory analyses (Parts A–B) use a single nearshore point (closest to coast)
+  for co-located Hs and SSH evaluation, rather than independent spatial maxima.
 - Results from these files are exploratory and should not be interpreted as final.
 
 ## Subdirectories

@@ -20,8 +20,7 @@ data/interim/
 !data/processed/.gitkeep
 
 # Figures and outputs
-outputs/figures/testdata_exploration/*
-outputs/tables/testdata_exploration/*
+outputs/south_sc_test_data_exploratory/*
 
 # Logs
 logs/*.log
