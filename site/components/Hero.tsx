@@ -63,7 +63,7 @@ export default function Hero() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/results/south-sc"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-md"
+            className="inline-flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 hover:border-blue-700 transition-colors shadow-sm"
           >
             View Preliminary Results
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

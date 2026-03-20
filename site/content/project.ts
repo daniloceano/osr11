@@ -144,7 +144,7 @@ export const timelinePhases: TimelinePhase[] = [
     id: 'step-1b',
     label: 'Exploratory Analysis — South SC Test Domain',
     description: 'Preliminary EDA on test data to validate pipelines and familiarize with datasets. Not the final compound detection framework.',
-    status: 'in-progress',
+    status: 'done',
     tasks: [
       'Spatial maxima maps (Hₛ and SSH) — Part A ✓',
       'Time series at peak grid points — Part B ✓',
