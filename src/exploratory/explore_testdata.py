@@ -4,7 +4,8 @@ Exploratory Data Analysis of test datasets: WAVERYS + GLORYS + SC reported event
 Datasets:
   waverys_sc_sul_test.nc          — Significant wave height + direction (WAVERYS, 3-hourly, 1993–2025)
   glorys_sc_sul_test.nc           — Sea surface height (GLORYS12, daily, 1993–2025)
-  reported_events_Karine_sc.xlsx  — 105 declared coastal disasters in SC, Brazil (1998–2023)
+  reported_events_Karine_sc.csv   — 105 declared coastal disasters in SC, Brazil (1998–2023)
+                                     (converted from .xlsx via src/preprocessing/convert_reported_events.py)
 
 Reference for the events spreadsheet:
   Leal, K.B., Robaina, L.E.S., Körting, T.S. et al. Identification of coastal natural
@@ -16,21 +17,24 @@ Outputs:
   outputs/figures/testdata_exploration/   (PNG, 300 dpi)
   outputs/tables/testdata_exploration/    (CSV)
   data/test/README.md
-  data/test/reported events/README.md
+  data/reported events/README.md
 
 Run from project root:
   python src/exploratory/explore_testdata.py
 
 Documented assumptions:
-  - Spatial maximum: index of global maximum value in the field (not spatial mean).
+  - **TEST DATA SCOPE**: Analysis restricted to South sector municipalities and nearshore 
+    grid point only, to match the limited spatial coverage of test datasets.
+  - **Single-point analysis**: Hs and SSH maxima are evaluated at the SAME nearshore point
+    (nearest to coast), not separately. This ensures co-located wave-surge analysis.
+  - Nearshore point selection: grid cell closest to the coastline (minimum longitude).
   - Peak coincidence: window defined in CFG["coincidence_window_days"] (default 3 days).
   - City ordering in boxplots: by latitude (south to north), consistent with SC coastline.
   - Compound quick-look (Part G): empirical quantile thresholds for exploratory EDA only,
     NOT a final definition of compound events for the study.
   - Municipal coordinates: centroid of outer polygon ring (IBGE malhas v2 API).
   - Composite municipality names (e.g. "Içara/Balneário Rincão"): match tried per part.
-  - Fig A: explicit xlim set to event window to prevent out-of-window vlines from
-    distorting axis scale when the two variable peaks are not coincident.
+  - Time axis format: days (not months) for Figures A and B to show short-term event detail.
 """
 
 from __future__ import annotations
@@ -72,7 +76,7 @@ CFG = {
     # File paths
     "wave_file":   ROOT / "data/test/waverys_sc_sul_test.nc",
     "glorys_file": ROOT / "data/test/glorys_sc_sul_test.nc",
-    "events_file": ROOT / "data/test/reported events/reported_events_Karine_sc.xlsx",
+    "events_file": ROOT / "data/reported events/reported_events_Karine_sc.csv",
     "fig_dir":     ROOT / "outputs/figures/testdata_exploration",
     "tab_dir":     ROOT / "outputs/tables/testdata_exploration",
     # Variable names (as inspected from NetCDF files)
@@ -84,6 +88,8 @@ CFG = {
     "timeseries_window_days":  15,   # days around peak for time series panels
     "compound_hs_quantile":    0.90,  # quantile threshold for compound EDA
     "compound_zos_quantile":   0.90,
+    # Test data scope (limited domain)
+    "target_sector":           "South",  # Only analyze South sector municipalities
     # Figure parameters
     "fig_dpi":   300,
     "cmap_hs":   "YlOrRd",
@@ -186,16 +192,16 @@ def _check_vars(ds: xr.Dataset, required: set, path: Path) -> None:
 
 def load_reported_events() -> pd.DataFrame:
     """
-    Load and clean the reported events spreadsheet.
-
-    File structure: row 0 = table caption string; row 1 = actual column headers.
-    Missing data marker in original file: asterisk (*).
+    Load and clean the reported events CSV.
+    
+    TEST DATA MODIFICATION: Filters to South sector municipalities only,
+    as the test domain covers only the southern portion of SC coast.
     """
     path = CFG["events_file"]
     if not path.exists():
         raise FileNotFoundError(f"Events file not found: {path}")
 
-    df = pd.read_excel(path, header=1)
+    df = pd.read_csv(path)
 
     # Rename columns to snake_case
     rename = {
@@ -244,9 +250,20 @@ def load_reported_events() -> pd.DataFrame:
     # Drop rows without event ID or municipality
     df = df.dropna(subset=["disaster_id", "municipality"]).reset_index(drop=True)
 
+    # FILTER: Keep only target sector municipalities (test data scope)
+    target_sector = CFG["target_sector"]
+    n_before = len(df)
+    df = df[df["coastal_sector"] == target_sector].copy().reset_index(drop=True)
+    n_after = len(df)
+    
     log.info(
-        "Reported events: %d records | %d municipalities | %d sectors | %s to %s",
-        len(df), df["municipality"].nunique(), df["coastal_sector"].nunique(),
+        "Filtered to %s sector: %d → %d events (%d removed)",
+        target_sector, n_before, n_after, n_before - n_after
+    )
+
+    log.info(
+        "Reported events: %d records | %d municipalities | %s to %s",
+        len(df), df["municipality"].nunique(),
         df["date"].min().date(), df["date"].max().date(),
     )
     return df
@@ -272,6 +289,34 @@ def find_spatial_max(da: xr.DataArray) -> dict:
         "lat":     float(da.latitude.values[i_lat]),
         "lon":     float(da.longitude.values[i_lon]),
         "t_idx":   t_idx,
+        "lat_idx": int(i_lat),
+        "lon_idx": int(i_lon),
+    }
+
+
+def find_nearshore_point(da: xr.DataArray) -> dict:
+    """
+    Find the nearshore grid point (closest to coast = minimum longitude).
+    
+    Returns a dict with the coordinates and indices of the nearshore point.
+    This ensures wave and surge analyses are co-located at the same nearshore location.
+    """
+    lon_vals = da.longitude.values
+    lat_vals = da.latitude.values
+    
+    # Find the westernmost (minimum) longitude
+    i_lon = np.argmin(lon_vals)
+    # Use the middle latitude for this longitude
+    i_lat = len(lat_vals) // 2
+    
+    log.info(
+        "Nearshore point selected: (%+.2f, %+.2f) [closest to coast]",
+        lat_vals[i_lat], lon_vals[i_lon]
+    )
+    
+    return {
+        "lat":     float(lat_vals[i_lat]),
+        "lon":     float(lon_vals[i_lon]),
         "lat_idx": int(i_lat),
         "lon_idx": int(i_lon),
     }
@@ -482,11 +527,11 @@ SECTOR_COLORS = {
 
 
 def _fmt_time_ax(ax: plt.Axes, *, minor: bool = True) -> None:
-    """Apply clean date formatting to a time axis."""
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+    """Apply clean date formatting to a time axis (day-level precision)."""
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
     if minor:
-        ax.xaxis.set_minor_locator(mdates.MonthLocator())
+        ax.xaxis.set_minor_locator(mdates.DayLocator())
     plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right")
 
 
@@ -513,10 +558,13 @@ def run_spatial_analysis(
     ds_wave: xr.Dataset, ds_gl: xr.Dataset
 ) -> tuple[dict, dict]:
     """
-    Part A: identify global maxima of Hs and SSH.
+    Part A: identify maxima of Hs and SSH at the SAME nearshore point.
     Generate spatial maps (shading + contours) with time series panels.
+    
+    TEST DATA MODIFICATION: Uses a single nearshore point (closest to coast)
+    to ensure wave-surge co-location in this limited-domain exploratory analysis.
     """
-    log.info("== Part A: Spatial maximum analysis ==")
+    log.info("== Part A: Spatial maximum analysis (nearshore point) ==")
 
     da_hs  = ds_wave[CFG["wave_var"]]
     da_zos = ds_gl[CFG["ssl_var"]]
@@ -525,18 +573,44 @@ def run_spatial_analysis(
     hs_max_field  = da_hs.max("time")
     zos_max_field = da_zos.max("time")
 
-    max_hs  = find_spatial_max(da_hs)
-    max_zos = find_spatial_max(da_zos)
+    # Select the nearshore point (same for both variables)
+    nearshore = find_nearshore_point(da_hs)
+    
+    # Extract time series at this nearshore point
+    hs_at_point  = da_hs.sel(latitude=nearshore["lat"], longitude=nearshore["lon"], method="nearest")
+    zos_at_point = da_zos.sel(latitude=nearshore["lat"], longitude=nearshore["lon"], method="nearest")
+    
+    # Find temporal maxima at this single point
+    hs_t_idx  = int(np.nanargmax(hs_at_point.values))
+    zos_t_idx = int(np.nanargmax(zos_at_point.values))
+    
+    max_hs = {
+        "value":   float(hs_at_point.values[hs_t_idx]),
+        "time":    pd.Timestamp(hs_at_point.time.values[hs_t_idx]),
+        "lat":     nearshore["lat"],
+        "lon":     nearshore["lon"],
+        "t_idx":   hs_t_idx,
+        "lat_idx": nearshore["lat_idx"],
+        "lon_idx": nearshore["lon_idx"],
+    }
+    
+    max_zos = {
+        "value":   float(zos_at_point.values[zos_t_idx]),
+        "time":    pd.Timestamp(zos_at_point.time.values[zos_t_idx]),
+        "lat":     nearshore["lat"],
+        "lon":     nearshore["lon"],
+        "t_idx":   zos_t_idx,
+        "lat_idx": nearshore["lat_idx"],
+        "lon_idx": nearshore["lon_idx"],
+    }
 
     log.info(
-        "VHM0 global max: %.2f m at (%+.2f, %+.2f) — %s",
-        max_hs["value"], max_hs["lat"], max_hs["lon"],
-        max_hs["time"].strftime("%Y-%m-%d %H:%M"),
+        "VHM0 max at nearshore point: %.2f m — %s",
+        max_hs["value"], max_hs["time"].strftime("%Y-%m-%d %H:%M"),
     )
     log.info(
-        "zos  global max: %.4f m at (%+.2f, %+.2f) — %s",
-        max_zos["value"], max_zos["lat"], max_zos["lon"],
-        max_zos["time"].strftime("%Y-%m-%d"),
+        "zos  max at nearshore point: %.4f m — %s",
+        max_zos["value"], max_zos["time"].strftime("%Y-%m-%d"),
     )
 
     coincident = peaks_coincident(
@@ -552,20 +626,20 @@ def run_spatial_analysis(
             hs_max_field, zos_max_field, da_hs, da_zos,
             max_hs, max_zos, t_ref=max_hs["time"],
             fname="fig_A1_spatial_max_combined",
-            subtitle="Coincident peaks — combined figure",
+            subtitle="Coincident peaks — combined figure (nearshore point)",
         )
     else:
         _spatial_event_fig(
             hs_max_field, zos_max_field, da_hs, da_zos,
             max_hs, max_zos, t_ref=max_hs["time"],
             fname="fig_A1a_spatial_max_Hs_event",
-            subtitle=f"Centred on Hs peak — {max_hs['time'].strftime('%Y-%m-%d')}",
+            subtitle=f"Centred on Hs peak — {max_hs['time'].strftime('%Y-%m-%d')} (nearshore point)",
         )
         _spatial_event_fig(
             hs_max_field, zos_max_field, da_hs, da_zos,
             max_hs, max_zos, t_ref=max_zos["time"],
             fname="fig_A1b_spatial_max_SSH_event",
-            subtitle=f"Centred on SSH peak — {max_zos['time'].strftime('%Y-%m-%d')}",
+            subtitle=f"Centred on SSH peak — {max_zos['time'].strftime('%Y-%m-%d')} (nearshore point)",
         )
 
     return max_hs, max_zos
@@ -593,9 +667,15 @@ def _spatial_event_fig(
     t0  = t_ref - pd.Timedelta(days=win // 2)
     t1  = t_ref + pd.Timedelta(days=win // 2)
 
-    # Domain maximum time series within the event window
-    hs_ts  = da_hs.sel(time=slice(t0, t1)).max(["latitude", "longitude"])
-    zos_ts = da_zos.sel(time=slice(t0, t1)).max(["latitude", "longitude"])
+    # Time series at the nearshore point (not domain max) within the event window
+    hs_ts  = da_hs.sel(
+        latitude=max_hs["lat"], longitude=max_hs["lon"], 
+        method="nearest", time=slice(t0, t1)
+    )
+    zos_ts = da_zos.sel(
+        latitude=max_zos["lat"], longitude=max_zos["lon"], 
+        method="nearest", time=slice(t0, t1)
+    )
 
     fig = plt.figure(figsize=(10, 12))
     gs  = GridSpec(3, 1, figure=fig, height_ratios=[2.6, 1, 1], hspace=0.5)
@@ -656,42 +736,33 @@ def _spatial_event_fig(
     )
     ax_map.clabel(cs, inline=True, fontsize=7, fmt="%.3f m")
 
-    # Peak markers
+    # Nearshore point marker (same for both variables)
     ax_map.plot(
-        max_hs["lon"], max_hs["lat"], "v",
-        color="#d62728", ms=11, mec="white", mew=0.9, zorder=5,
-        label=f"Max $H_s$ = {max_hs['value']:.2f} m",
-        transform=_CRS,
-    )
-    ax_map.plot(
-        max_zos["lon"], max_zos["lat"], "^",
-        color="steelblue", ms=11, mec="white", mew=0.9, zorder=5,
-        label=f"Max SSH = {max_zos['value']:.3f} m",
+        max_hs["lon"], max_hs["lat"], "o",
+        color="purple", ms=12, mec="white", mew=1.2, zorder=5,
+        label=f"Nearshore point: $H_s$ = {max_hs['value']:.2f} m, SSH = {max_zos['value']:.3f} m",
         transform=_CRS,
     )
     ax_map.legend(loc="upper right", fontsize=8)
     ax_map.set_title(
-        "Period maxima (1993–2025)\n"
-        "Shading: max $H_s$  ·  Contours: max SSH",
+        "Period maxima (1993–2025) — Nearshore point analysis\n"
+        "Shading: max $H_s$  ·  Contours: max SSH  ·  Marker: analysis point",
         fontsize=10,
     )
 
-    # Text annotation at Hs peak location
+    # Text annotation at analysis point
     ax_map.text(
         max_hs["lon"] + 0.05, max_hs["lat"] - 0.12,
-        f"({max_hs['lat']:.2f}°S, {max_hs['lon']:.2f}°W)\n"
-        f"{max_hs['time'].strftime('%Y-%m-%d %H:%M')}",
-        fontsize=6.5, color="#d62728",
+        f"Nearshore point\n({max_hs['lat']:.2f}°S, {max_hs['lon']:.2f}°W)",
+        fontsize=6.5, color="purple", fontweight="bold",
         transform=_CRS, zorder=6,
     )
 
     # ── Hs time series ────────────────────────────────────────────────
-    # xlim is explicitly set to [t0, t1] to prevent axis distortion from
-    # out-of-window markers (e.g. SSH peak marker in fig A1a, which is centred
-    # on the Hs peak).
+    # Time series at the nearshore point
     t_hs = pd.to_datetime(hs_ts.time.values)
     ax_hs.plot(t_hs, hs_ts.values, color="#d62728", lw=1.4,
-               label="Domain max $H_s$")
+               label="$H_s$ at nearshore point")
     _vline(ax_hs, max_hs["time"], "#d62728",
            label=f"Hs peak {max_hs['time'].strftime('%Y-%m-%d')}")
     if t0 <= t_ref <= t1 and t_ref != max_hs["time"]:
@@ -711,7 +782,7 @@ def _spatial_event_fig(
     # ── SSH time series ───────────────────────────────────────────────
     t_zos = pd.to_datetime(zos_ts.time.values)
     ax_zos.plot(t_zos, zos_ts.values, color="steelblue", lw=1.4,
-                label="Domain max SSH")
+                label="SSH at nearshore point")
     _vline(ax_zos, max_zos["time"], "steelblue",
            label=f"SSH peak {max_zos['time'].strftime('%Y-%m-%d')}")
     if t0 <= t_ref <= t1 and t_ref != max_zos["time"]:
@@ -1626,10 +1697,16 @@ the Florianópolis–Palhoça area southward to near the border with Rio Grande 
 > (e.g. Itapoá, São Francisco do Sul, Balneário Camboriú, Navegantes) are **outside**
 > this test domain. Grid-based statistics are therefore unavailable for those municipalities.
 
+> 📊 **Analysis scope**: The exploratory script `explore_testdata.py` filters the 
+> reported events dataset to **South sector municipalities only**, to match this 
+> limited domain. This is clearly documented in the code and outputs.
+
 ## Known limitations
 
 - Test cutouts only — they do not replace the full operational datasets.
 - The domain does not cover the entire Santa Catarina coastline.
+- **Exploratory analyses (Parts A–B) use a single nearshore point** (closest to coast)
+  for co-located Hs and SSH evaluation, rather than independent spatial maxima.
 - Results from these files are exploratory and should not be interpreted as final.
 
 ## Subdirectories
@@ -1642,15 +1719,18 @@ the Florianópolis–Palhoça area southward to near the border with Rio Grande 
 
 
 def _write_events_readme() -> None:
-    path = ROOT / "data/test/reported events/README.md"
+    path = ROOT / "data/reported events/README.md"
     path.write_text(
         """\
 # data/test/reported events/
 
-## `reported_events_Karine_sc.xlsx`
+## `reported_events_Karine_sc.csv`
 
 Table of 105 coastal disasters declared by municipalities in Santa Catarina (SC), Brazil,
 covering the period 1998–2023.
+
+**Note**: This CSV file is generated from the original `reported_events_Karine_sc.xlsx`
+using the preprocessing script `src/preprocessing/convert_reported_events.py`.
 
 ## Source
 
@@ -1666,11 +1746,13 @@ forcing events.
 
 ## File structure
 
-The spreadsheet has two header rows:
+The original Excel spreadsheet has two header rows:
 - **Row 0**: full table caption (long string)
 - **Row 1**: actual column names
 
-Correct reading: `pd.read_excel(path, header=1)`.
+The CSV file is generated with `skiprows=1` to use row 1 as the header.
+
+Correct reading: `pd.read_csv(path)`.
 
 ## Column descriptions
 
@@ -1714,7 +1796,7 @@ The loading script converts `*` to `NaN`.
 """,
         encoding="utf-8",
     )
-    log.info("  -> data/test/reported events/README.md")
+    log.info("  -> data/reported events/README.md")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────

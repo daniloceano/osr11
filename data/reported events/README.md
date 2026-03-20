@@ -1,9 +1,12 @@
 # data/test/reported events/
 
-## `reported_events_Karine_sc.xlsx`
+## `reported_events_Karine_sc.csv`
 
 Table of 105 coastal disasters declared by municipalities in Santa Catarina (SC), Brazil,
 covering the period 1998–2023.
+
+**Note**: This CSV file is generated from the original `reported_events_Karine_sc.xlsx`
+using the preprocessing script `src/preprocessing/convert_reported_events.py`.
 
 ## Source
 
@@ -19,11 +22,13 @@ forcing events.
 
 ## File structure
 
-The spreadsheet has two header rows:
+The original Excel spreadsheet has two header rows:
 - **Row 0**: full table caption (long string)
 - **Row 1**: actual column names
 
-Correct reading: `pd.read_excel(path, header=1)`.
+The CSV file is generated with `skiprows=1` to use row 1 as the header.
+
+Correct reading: `pd.read_csv(path)`.
 
 ## Column descriptions
 
