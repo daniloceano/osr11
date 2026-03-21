@@ -46,9 +46,11 @@ export default function Navigation() {
 
         <Link
           href="/results/south-sc"
-          className="hidden md:inline-flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+          className="hidden md:inline-flex items-center gap-1.5 rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
           South SC Results
         </Link>
       </div>
