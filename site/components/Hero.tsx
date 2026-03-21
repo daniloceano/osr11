@@ -65,7 +65,7 @@ export default function Hero() {
             href="/results/south-sc"
             className="inline-flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 hover:border-blue-700 transition-colors shadow-sm"
           >
-            View Preliminary Results
+            View Exploratory Results
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

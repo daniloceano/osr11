@@ -48,7 +48,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Estimated completion: pipeline and data acquisition phases done · exploratory analysis ongoing
+            Estimated completion: pipeline, data acquisition, and exploratory analysis phases complete
           </p>
         </div>
 

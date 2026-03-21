@@ -12,8 +12,8 @@ export default function ResultsGrid() {
           <h2 className="text-3xl font-bold text-gray-900">Preliminary Results</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-700">
             The cards below summarise the analytical blocks in this project — what has been
-            implemented, what is in progress, and what is planned. Completed and in-progress
-            analyses can be accessed for detailed results and figures.
+            completed, what is in progress, and what is planned. The exploratory analysis for the 
+            South SC test domain is now complete. Click on completed analyses to view detailed results and figures.
           </p>
         </div>
 
