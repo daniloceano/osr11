@@ -41,6 +41,21 @@ def run_summary(
         log.warning("  No event metrics; skipping summary outputs.")
         return
 
+    # Load sector information from events file
+    events_path = CFG["events_file"]
+    df_events_raw = pd.read_csv(events_path)
+    df_events_raw = df_events_raw.rename(columns={
+        "Disaster ID": "disaster_id",
+        "Municipalities": "municipality",
+        "Coastal Sectors": "coastal_sector",
+    })
+    # Merge sector info into metrics
+    metrics_df = metrics_df.merge(
+        df_events_raw[["disaster_id", "municipality", "coastal_sector"]].drop_duplicates(),
+        on=["disaster_id", "municipality"],
+        how="left"
+    )
+
     # ── Table ────────────────────────────────────────────────────────────────
     _save_table(metrics_df)
 
@@ -48,10 +63,16 @@ def run_summary(
     _save_threshold_table(thresholds)
 
     # ── Figures ───────────────────────────────────────────────────────────────
+    # Original all-sector figures
     _fig_s1_normalised_bars(metrics_df)
     _fig_s2_scatter(metrics_df)
     _fig_s3_concomitance_bars(metrics_df)
     _fig_s4_heatmap(metrics_df)
+    
+    # New: per-sector figures with subplots per municipality
+    _fig_s1_per_sector(metrics_df)
+    _fig_s3_per_sector(metrics_df)
+    _fig_s4_per_sector(metrics_df)
 
     log.info("Summary outputs complete.")
 
@@ -286,3 +307,212 @@ def _muni_colormap(municipalities: list[str]) -> dict[str, str]:
         rgba = cmap(i % 10)
         colors[muni] = f"#{int(rgba[0]*255):02x}{int(rgba[1]*255):02x}{int(rgba[2]*255):02x}"
     return colors
+
+
+# ── Per-sector figures ────────────────────────────────────────────────────────
+
+def _fig_s1_per_sector(df: pd.DataFrame) -> None:
+    """Generate S1 figure (normalised maxima bars) per sector with subplots per municipality."""
+    if "coastal_sector" not in df.columns:
+        log.warning("  No sector information; skipping per-sector S1 figures.")
+        return
+    
+    sectors = sorted(df["coastal_sector"].dropna().unique())
+    
+    for sector in sectors:
+        sector_df = df[df["coastal_sector"] == sector].copy()
+        if sector_df.empty:
+            continue
+        
+        municipalities = sorted(sector_df["municipality"].unique())
+        n_munis = len(municipalities)
+        
+        # Create subplots: one per municipality
+        n_cols = min(2, n_munis)
+        n_rows = (n_munis + n_cols - 1) // n_cols
+        
+        fig, axes = plt.subplots(
+            n_rows, n_cols,
+            figsize=(STYLE.fig_width_wide * 0.9, 3.5 * n_rows),
+            squeeze=False
+        )
+        
+        q = CFG["threshold_quantile"]
+        w = 0.38
+        
+        for idx, muni in enumerate(municipalities):
+            row = idx // n_cols
+            col = idx % n_cols
+            ax = axes[row, col]
+            
+            muni_df = sector_df[sector_df["municipality"] == muni].copy()
+            muni_df = muni_df.sort_values("date").reset_index(drop=True)
+            muni_df["event_label"] = muni_df["date"].apply(
+                lambda d: pd.Timestamp(d).strftime('%Y-%m-%d')
+            )
+            
+            x = np.arange(len(muni_df))
+            
+            ax.bar(x - w/2, muni_df["hs_max_norm"], width=w, 
+                   color=STYLE.color_hs, label="Hₛ / mean", alpha=0.85)
+            ax.bar(x + w/2, muni_df["ssh_max_norm"], width=w,
+                   color=STYLE.color_ssh, label="SSH / mean", alpha=0.85)
+            
+            ax.axhline(1.0, color="0.5", lw=0.8, ls=":", alpha=0.7)
+            ax.set_xticks(x)
+            ax.set_xticklabels(muni_df["event_label"], fontsize=7, rotation=45, ha="right")
+            ax.set_ylabel("Normalised value", fontsize=9)
+            ax.set_title(muni, fontsize=10, fontweight="bold")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.grid(axis="y", alpha=0.3)
+            
+            if idx == 0:
+                ax.legend(fontsize=8, framealpha=0.9, loc="upper left")
+        
+        # Hide unused subplots
+        for idx in range(n_munis, n_rows * n_cols):
+            row = idx // n_cols
+            col = idx % n_cols
+            axes[row, col].axis("off")
+        
+        sector_slug = sector.lower().replace(" ", "_").replace("-", "_")
+        fig.suptitle(
+            f"Normalised Hₛ and SSH maxima — {sector} Sector",
+            fontsize=STYLE.font_size_title + 1,
+            fontweight="bold",
+            y=0.998
+        )
+        fig.tight_layout(rect=[0, 0, 1, 0.99])
+        save_fig(fig, f"fig_TC_S1_normalised_maxima_{sector_slug}_sector", subdir="summary")
+
+
+def _fig_s3_per_sector(df: pd.DataFrame) -> None:
+    """Generate S3 figure (concomitance bars) per sector with subplots per municipality."""
+    if "coastal_sector" not in df.columns:
+        log.warning("  No sector information; skipping per-sector S3 figures.")
+        return
+    
+    sectors = sorted(df["coastal_sector"].dropna().unique())
+    q = CFG["threshold_quantile"]
+    
+    for sector in sectors:
+        sector_df = df[df["coastal_sector"] == sector].copy()
+        if sector_df.empty:
+            continue
+        
+        municipalities = sorted(sector_df["municipality"].unique())
+        n_munis = len(municipalities)
+        
+        # Create subplots: one per municipality
+        n_cols = min(2, n_munis)
+        n_rows = (n_munis + n_cols - 1) // n_cols
+        
+        fig, axes = plt.subplots(
+            n_rows, n_cols,
+            figsize=(STYLE.fig_width_wide * 0.9, 3.0 * n_rows),
+            squeeze=False
+        )
+        
+        for idx, muni in enumerate(municipalities):
+            row = idx // n_cols
+            col = idx % n_cols
+            ax = axes[row, col]
+            
+            muni_df = sector_df[sector_df["municipality"] == muni].copy()
+            muni_df = muni_df.sort_values("date").reset_index(drop=True)
+            muni_df["event_label"] = muni_df["date"].apply(
+                lambda d: pd.Timestamp(d).strftime('%Y-%m-%d')
+            )
+            
+            y = np.arange(len(muni_df))
+            colors = [STYLE.color_hs if v > 0 else "0.80" 
+                      for v in muni_df["concurrent_fraction"]]
+            
+            ax.barh(y, muni_df["concurrent_fraction"], color=colors, alpha=0.85)
+            ax.set_yticks(y)
+            ax.set_yticklabels(muni_df["event_label"], fontsize=7)
+            ax.set_xlabel("Concurrent fraction", fontsize=9)
+            ax.set_title(muni, fontsize=10, fontweight="bold")
+            ax.axvline(0, color="0.5", lw=0.5)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.set_xlim([0, 1.0])
+            
+            # Annotations
+            for i, (_, event_row) in enumerate(muni_df.iterrows()):
+                frac = event_row["concurrent_fraction"]
+                if frac > 0.01:
+                    ax.text(frac + 0.02, i, f"{frac:.0%}", va="center", 
+                            fontsize=6, color="black")
+        
+        # Hide unused subplots
+        for idx in range(n_munis, n_rows * n_cols):
+            row = idx // n_cols
+            col = idx % n_cols
+            axes[row, col].axis("off")
+        
+        sector_slug = sector.lower().replace(" ", "_").replace("-", "_")
+        fig.suptitle(
+            f"Concomitance Fraction (both > q{int(q*100)}) — {sector} Sector",
+            fontsize=STYLE.font_size_title + 1,
+            fontweight="bold",
+            y=0.998
+        )
+        fig.tight_layout(rect=[0, 0, 1, 0.99])
+        save_fig(fig, f"fig_TC_S3_concomitance_{sector_slug}_sector", subdir="summary")
+
+
+def _fig_s4_per_sector(df: pd.DataFrame) -> None:
+    """Generate S4 figure (heatmap) per sector."""
+    if "coastal_sector" not in df.columns:
+        log.warning("  No sector information; skipping per-sector S4 figures.")
+        return
+    
+    sectors = sorted(df["coastal_sector"].dropna().unique())
+    q = CFG["threshold_quantile"]
+    
+    for sector in sectors:
+        sector_df = df[df["coastal_sector"] == sector].copy()
+        if sector_df.empty:
+            continue
+        
+        pivot = sector_df.pivot_table(
+            index="municipality",
+            columns="date",
+            values="concurrent_fraction",
+            aggfunc="first",
+        )
+        if pivot.empty:
+            continue
+        
+        pivot.columns = [pd.Timestamp(c).strftime("%Y-%m-%d") for c in pivot.columns]
+        
+        fig, ax = plt.subplots(
+            figsize=(max(8, len(pivot.columns) * 0.4 + 2),
+                     max(3.0, len(pivot.index) * 0.5 + 1))
+        )
+        
+        im = ax.imshow(
+            pivot.values, aspect="auto", cmap="Reds",
+            vmin=0, vmax=1.0, interpolation="nearest"
+        )
+        
+        ax.set_xticks(np.arange(len(pivot.columns)))
+        ax.set_xticklabels(pivot.columns, rotation=45, ha="right", fontsize=7)
+        ax.set_yticks(np.arange(len(pivot.index)))
+        ax.set_yticklabels(pivot.index, fontsize=9)
+        
+        cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
+        cbar.set_label(f"Concurrent fraction\n(both > q{int(q*100)})",
+                       fontsize=9)
+        
+        ax.set_title(
+            f"Concomitance Heatmap — {sector} Sector",
+            fontsize=STYLE.font_size_title,
+            fontweight="bold"
+        )
+        
+        fig.tight_layout()
+        sector_slug = sector.lower().replace(" ", "_").replace("-", "_")
+        save_fig(fig, f"fig_TC_S4_heatmap_{sector_slug}_sector", subdir="summary")

@@ -333,5 +333,7 @@ def _add_metrics_box(
 def _fmt_time_ax(ax: plt.Axes) -> None:
     """Apply clean date formatting to the shared x-axis (day precision)."""
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-    ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+    # Use AutoDateLocator to avoid generating too many ticks
+    # For a 7-day window, this will intelligently pick appropriate intervals
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=3, maxticks=8))
     plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right")

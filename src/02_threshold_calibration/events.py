@@ -158,20 +158,27 @@ def build_event_records(
 
         # Grid point for this municipality
         if muni in muni_grid:
-            grid_lat, grid_lon = muni_grid[muni]
-            dist_km = 0.0
+            target_lat, target_lon = muni_grid[muni]
         else:
-            # Domain-centre fallback
-            grid_lat = float(lat_grid[len(lat_grid) // 2])
-            grid_lon = float(lon_grid[len(lon_grid) // 2])
-            dist_km  = -1.0
+            # Use hardcoded coordinates if available
+            target_lat = float(lat_grid[len(lat_grid) // 2])
+            target_lon = float(lon_grid[len(lon_grid) // 2])
             log.warning(
-                "  Municipality '%s' not in grid map; using domain centre.", muni
+                "  Municipality '%s' not in grid map; will search for nearest valid point.", muni
             )
 
-        # Snap to nearest actual grid cell
-        grid_lat = float(lat_grid[np.argmin(np.abs(lat_grid - grid_lat))])
-        grid_lon = float(lon_grid[np.argmin(np.abs(lon_grid - grid_lon))])
+        # Find nearest grid cell with BOTH variables having valid data
+        grid_lat, grid_lon, dist_km = _find_nearest_valid_point(
+            ds, target_lat, target_lon, hs_var, ssh_var
+        )
+        
+        if grid_lat is None:
+            log.warning(
+                "  Skipping event %s / %s: no valid grid point found with both variables",
+                idx, muni,
+            )
+            skipped += 1
+            continue
 
         # ── Full climatological series ─────────────────────────────────────
         hs_clim  = _extract_series(ds, hs_var,  grid_lat, grid_lon)
@@ -257,6 +264,62 @@ def _load_from_part_e_table(
             result[muni] = (lat, lon)
     log.info("Part E grid table loaded: %d municipalities mapped", len(result))
     return result
+
+
+def _find_nearest_valid_point(
+    ds: xr.Dataset,
+    target_lat: float,
+    target_lon: float,
+    hs_var: str,
+    ssh_var: str,
+) -> tuple[float | None, float | None, float]:
+    """Find the nearest grid point that has valid data for BOTH variables.
+    
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset with VHM0 and zos variables
+    target_lat, target_lon : float
+        Target coordinates (municipality location)
+    hs_var, ssh_var : str
+        Variable names for significant wave height and sea surface height
+    
+    Returns
+    -------
+    (grid_lat, grid_lon, distance_km) or (None, None, -1) if no valid point found
+    """
+    lat_grid = ds.latitude.values
+    lon_grid = ds.longitude.values
+    
+    # Get one time slice to check data validity
+    hs_sample = ds[hs_var].isel(time=0).values
+    ssh_sample = ds[ssh_var].isel(time=0).values
+    
+    # Find points where BOTH variables are valid (not NaN)
+    both_valid = ~np.isnan(hs_sample) & ~np.isnan(ssh_sample)
+    
+    if not both_valid.any():
+        log.error("No grid points have both %s and %s data!", hs_var, ssh_var)
+        return None, None, -1.0
+    
+    # Calculate distances to all valid points
+    min_dist = np.inf
+    best_lat, best_lon = None, None
+    
+    for i, lat_g in enumerate(lat_grid):
+        for j, lon_g in enumerate(lon_grid):
+            if both_valid[i, j]:
+                # Simple Euclidean distance in degrees
+                dist = np.sqrt((lat_g - target_lat)**2 + (lon_g - target_lon)**2)
+                if dist < min_dist:
+                    min_dist = dist
+                    best_lat = lat_g
+                    best_lon = lon_g
+    
+    # Convert distance from degrees to km (approximate)
+    dist_km = min_dist * 111.0  # 1 degree ≈ 111 km
+    
+    return float(best_lat), float(best_lon), dist_km
 
 
 def _extract_series(
