@@ -1,0 +1,36 @@
+# Test fixture configuration for OSR11 — Full Santa Catarina coast
+# Covers all five coastal sectors of the Leal et al. (2024) database:
+# North, Central-north, Central, Central-south, South
+#
+# Usage:
+#   python src/acquisition/build_test_fixture.py --config config/test_fixture_sc_full.yml
+#
+# Outputs (in data/test/):
+#   glorys_sc_full_test.nc    — zos · daily · 1993–2025
+#   waverys_sc_full_test.nc   — VHM0, VMDR · 3-hourly · 1993–2025
+
+sources:
+  glorys:
+    pattern: "data/raw/glorys/glorys_zos_*.nc"
+    variables: ["zos"]
+  waverys:
+    pattern: "data/raw/waverys/waverys_VHM0_VMDR_*.nc"
+    variables: ["VHM0", "VMDR"]
+
+test_period:
+  start: "1993-01-01"
+  end:   "2025-12-31"
+
+spatial_mode: "bbox"
+
+# Full SC coast bbox
+# Latitudes: Passo de Torres (−29.36°S, southernmost) to Itapoá (−26.1°S, northernmost)
+# Adding buffer: −29.5 to −25.9°S
+# Longitudes: same as south SC — SC coast is bounded between −50° and −48°
+bbox:
+  lon_min: -50.0
+  lon_max: -48.0
+  lat_min: -29.5
+  lat_max: -25.9
+
+output_dir: "data/test"

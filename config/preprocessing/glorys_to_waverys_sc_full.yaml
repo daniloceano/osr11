@@ -1,0 +1,27 @@
+# Configuration: GLORYS → WAVERYS grid interpolation — full Santa Catarina coast
+# Covers all five coastal sectors of the Leal et al. (2024) database:
+# North, Central-north, Central, Central-south, South (~−29.5° to −25.9°S)
+#
+# Usage:
+#   python -m src.preprocessing.interpolate_glorys_to_waverys_grid \
+#       --config config/preprocessing/glorys_to_waverys_sc_full.yaml
+
+input:
+  glorys:  data/test/glorys_sc_full_test.nc
+  waverys: data/test/waverys_sc_full_test.nc
+
+output:
+  file: data/test/metocean_sc_full_unified_waverys_grid.nc
+
+interpolation:
+  method: linear
+
+temporal:
+  # WAVERYS is 3-hourly; resample to daily before merging with GLORYS (daily).
+  # max: captures peak conditions per day — preferred for compound-event extremes
+  resample_method: mean
+
+variables:
+  glorys_sea_level:       zos
+  waverys_wave_height:    VHM0
+  waverys_wave_direction: VMDR

@@ -16,7 +16,7 @@ export const methodologySteps: MethodStep[] = [
   {
     id: 'step-3',
     label: 'Threshold Calibration & QC',
-    description: 'Initial visual calibration of q90 thresholds for Hₛ and SSH against reported coastal events. Per-event time series inspection in ±3-day windows. Concomitance analysis using MagicA peaks-over-threshold. Cross-event summary metrics.',
+    description: 'Visual calibration of q90 thresholds for Hₛ and SSH against reported coastal disasters — full Santa Catarina coast (5 sectors, 22 municipalities, 91 events). Per-event time series inspection in ±3-day windows. Concomitance analysis via MagicA peaks-over-threshold. Cross-event summary metrics. Next: systematic threshold grid scan (hit rate, CSI).',
     status: 'in-progress',
     isCurrent: true,
   },

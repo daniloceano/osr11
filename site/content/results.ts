@@ -29,18 +29,18 @@ export const resultCards: ResultCard[] = [
   {
     id: 'threshold-calibration',
     title: 'Threshold Calibration',
-    subtitle: 'Visual calibration of q90 thresholds against reported coastal events',
+    subtitle: 'q90 visual calibration · Full SC coast · 5 sectors · 91 events',
     status: 'in-progress',
     description:
-      'Initial threshold calibration phase using the reported coastal disaster events (Leal et al., 2024) as ground-truth references. For each reported event, the nearest grid point in the unified daily dataset is identified, the full climatological series is used to compute a q90 threshold, and the ±3-day window around the event is inspected for exceedances and concomitance between Hₛ and SSH. MagicA (peaks-over-threshold, event_wise) is used to identify distinct exceedance episodes.',
+      'Initial threshold calibration phase using the Leal et al. (2024) reported coastal disaster database, now covering the full Santa Catarina coast (5 sectors, 22 municipalities, 91 events). For each event, the nearest ocean grid point in the unified daily dataset is identified, a q90 threshold is computed from the full 1993–2025 climatological series, and the ±3-day window around the disaster date is inspected for Hₛ and SSH exceedances. MagicA (peaks-over-threshold, event_wise) identifies distinct exceedance episodes. Key finding: only 2 of 91 events show concurrent q90 exceedances — driving the next phase of systematic threshold optimisation.',
     rationale:
-      'The threshold choice critically determines the sensitivity and specificity of the compound event catalog. Beginning with a simple q90 threshold and visual inspection against known disaster dates provides a first assessment of whether the reanalysis signals are consistent with observed hazardous conditions, before proceeding to systematic threshold optimisation (hit rate, CSI).',
+      'The threshold choice critically determines the sensitivity and specificity of the compound event catalog. Visual inspection against known disaster dates provides a first assessment of reanalysis signal quality and sets the empirical baseline for systematic hit-rate / CSI optimisation across a threshold grid.',
     outputs: [
-      'Per-event time series figures with MagicA exceedance shading (one per reported event)',
+      '91 per-event time series figures with MagicA exceedance shading',
       'Consolidated metrics table: raw maxima, normalised maxima, days above threshold, concomitance',
       'Threshold statistics table per municipality (q90, mean, std, p99)',
-      'fig_TC_S1 — Grouped bar chart: normalised Hₛ and SSH maxima per event',
-      'fig_TC_S2 — Scatter: normalised Hₛ vs SSH, concurrent events highlighted',
+      'fig_TC_S1 — Normalised Hₛ and SSH maxima per event (grouped bar chart)',
+      'fig_TC_S2 — Normalised Hₛ vs SSH scatter, concurrent events highlighted',
       'fig_TC_S3 — Concomitance fraction bar chart per event',
       'fig_TC_S4 — Concomitance heatmap: municipality × event date',
     ],

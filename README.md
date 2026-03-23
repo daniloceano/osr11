@@ -5,7 +5,7 @@
 **Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
 **Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
 **Status:** Methodology development and exploratory analysis phase  
-**Current implementation:** Southern Santa Catarina test domain
+**Current implementation:** Full Santa Catarina coast (threshold calibration phase)
 
 ---
 
@@ -111,8 +111,10 @@ Select candidate extreme thresholds for sea level (N) and significant wave heigh
 
 **Rationale:** Threshold definition is inherently subjective. Validation against observed disasters provides an empirical, pragmatic calibration strategy that grounds the analysis in real-world impacts. Although this introduces regional bias (SC-based thresholds extrapolated to other sectors), it represents the most defensible approach given uneven disaster record availability along the Brazilian coast.
 
-**Status:** 🔄 Planned (Phase 2)  
-**Implementation:** To be developed
+**Status:** 🔄 In progress — initial visual calibration complete (full SC domain)
+**Implementation:** `src/02_threshold_calibration/`
+**Current scope:** q90 thresholds applied to 91 reported events across 5 SC sectors and 22 municipalities. Results show low concurrent exceedances (2%) at q90 — systematic threshold grid scan is the next step.
+**Limitation:** Many northern SC municipalities have NaN data due to reanalysis grid coverage gaps over complex coastal geometries.
 
 ---
 
@@ -239,13 +241,13 @@ This stage strengthens the physical interpretation and overall robustness of the
 
 The repository currently contains:
 
-✅ **Phase 0 — Data acquisition pipeline** (complete for test domain)
+✅ **Phase 0 — Data acquisition pipeline** (complete)
 - CMEMS download scripts (`src/acquisition/`)
-- Test fixture generation for south SC sector
+- Test fixture generation for south SC sector and full SC coast
 - Reported events preprocessing (Excel → CSV)
 
-🔄 **Phase 1 — Exploratory data analysis** (in progress, test domain only)
-- Implemented in `src/explore_test_data_south_sc/`
+✅ **Step 1 — Exploratory data analysis** (complete for south SC test domain)
+- Implemented in `src/01_explore_test_data_south_sc/`
 - Spatial maximum maps of Hₛ and SSH (Part A)
 - Time series at peak grid points (Part B)
 - Reported events EDA: counts, boxplots, seasonality (Part D)
@@ -253,9 +255,16 @@ The repository currently contains:
 - Per-sector overview figures (Part F)
 - Descriptive statistics, scatter plots, seasonal cycle, compound quick-look (Part G)
 
-**Important:** The current exploratory analysis (Phase 1) is **not** the full compound event detection framework described in Steps 2–7. It is a preliminary sanity-check and data familiarization phase using the south SC test domain. The exploratory "compound quick-look" uses empirical q90 thresholds as a placeholder and does not constitute the validated threshold calibration or storm-based catalog approach described in the scientific framework.
+**Important:** The exploratory analysis is **not** the full compound event detection framework described in Steps 2–7. It is a preliminary sanity-check and data familiarization phase. The exploratory "compound quick-look" uses empirical q90 thresholds as a placeholder.
 
-🔄 **Phases 2–8** — Planned, not yet implemented
+🔄 **Step 2 — Threshold calibration** (in progress — full SC coast)
+- Implemented in `src/02_threshold_calibration/`
+- Domain extended from south SC to full SC (5 sectors, 22 municipalities, 91 events)
+- Initial visual calibration at q90 complete
+- Key finding: 2/91 concurrent exceedances at q90; systematic threshold optimisation planned
+- Limitation: ~50% of events have NaN data due to reanalysis grid gaps over complex coasts
+
+🔄 **Steps 3–8** — Planned, not yet implemented
 
 ---
 
@@ -271,16 +280,21 @@ osr11/
 │   └── test_fixture.example.yml              # Template for test fixture generation
 ├── data/
 │   ├── README.md                             # Data directory documentation
-│   ├── test/                                 # Committed test-domain NetCDF subsets (south SC)
+│   ├── test/                                 # Committed test-domain NetCDF subsets
 │   │   ├── README.md                         # Test data description and limitations
-│   │   ├── waverys_sc_sul_test.nc            # VHM0, VMDR · 3-hourly · 1993–2025
-│   │   └── glorys_sc_sul_test.nc             # zos · daily · 1993–2025
+│   │   ├── waverys_sc_sul_test.nc            # VHM0, VMDR · 3-hourly · south SC
+│   │   ├── glorys_sc_sul_test.nc             # zos · daily · south SC
+│   │   ├── metocean_sc_sul_unified_waverys_grid.nc  # Unified daily · south SC
+│   │   ├── waverys_sc_full_test.nc           # VHM0, VMDR · 3-hourly · full SC
+│   │   ├── glorys_sc_full_test.nc            # zos · daily · full SC
+│   │   └── metocean_sc_full_unified_waverys_grid.nc # Unified daily · full SC (Step 2 input)
 │   ├── reported events/
 │   │   ├── README.md                         # Reported events database documentation
 │   │   └── reported_events_Karine_sc.csv     # SC Civil Defense disaster database (Leal et al. 2024)
 │   ├── ne_10m_coastline/                     # Natural Earth 10m coastline shapefile
 │   └── raw/                                  # Full CMEMS downloads (not committed, .gitignore)
 ├── src/
+│   ├── __init__.py                           # Import alias registry for numbered analysis dirs
 │   ├── acquisition/
 │   │   ├── download_cmems.py                 # Main CMEMS download script
 │   │   ├── download_cmems_parallel.py        # Parallel download variant
@@ -288,20 +302,32 @@ osr11/
 │   │   └── build_test_fixture.py             # Build test-domain NetCDF subsets
 │   ├── preprocessing/
 │   │   ├── README.md                         # Preprocessing pipeline documentation
-│   │   └── convert_reported_events.py        # Excel → CSV conversion for reported events
-│   └── explore_test_data_south_sc/           # Phase 1: Exploratory EDA (test domain)
-│       ├── main.py                           # CLI orchestrator (--all, --maps, --timeseries, etc.)
-│       ├── io.py                             # Dataset loaders and South sector filtering
-│       ├── coastal.py                        # Coastal grid point selection (Natural Earth)
-│       ├── maps.py                           # Part A: Spatial maxima maps
-│       ├── timeseries.py                     # Part B: Time series at peak grid points
-│       ├── reported_events.py                # Part D: Reported events EDA
-│       ├── municipalities.py                 # Part E: Municipality–grid association (IBGE API)
-│       ├── boxplots.py                       # Part F: Sector boxplot figures
-│       ├── statistics.py                     # Part G: Statistical analyses and distributions
-│       ├── utils.py                          # Shared utilities (logging, I/O helpers)
-│       ├── config/analysis_config.py         # Configuration: file paths, parameters, output dirs
-│       ├── README.md                         # Detailed module documentation
+│   │   ├── convert_reported_events.py        # Excel → CSV conversion for reported events
+│   │   └── interpolate_glorys_to_waverys_grid.py  # Spatial regridding pipeline
+│   ├── 01_explore_test_data_south_sc/        # Step 1: Exploratory EDA (south SC test domain)
+│   │   ├── main.py                           # CLI orchestrator (--all, --maps, --timeseries, etc.)
+│   │   ├── io.py                             # Dataset loaders and South sector filtering
+│   │   ├── coastal.py                        # Coastal grid point selection (Natural Earth)
+│   │   ├── maps.py                           # Part A: Spatial maxima maps
+│   │   ├── timeseries.py                     # Part B: Time series at peak grid points
+│   │   ├── reported_events.py                # Part D: Reported events EDA
+│   │   ├── municipalities.py                 # Part E: Municipality–grid association (IBGE API)
+│   │   ├── boxplots.py                       # Part F: Sector boxplot figures
+│   │   ├── statistics.py                     # Part G: Statistical analyses and distributions
+│   │   ├── utils.py                          # Shared utilities (logging, I/O helpers)
+│   │   ├── config/analysis_config.py         # Configuration: file paths, parameters, output dirs
+│   │   ├── README.md                         # Detailed module documentation
+│   │   └── RUN.md                            # Quick-start command reference
+│   └── 02_threshold_calibration/             # Step 2: Threshold calibration (full SC coast)
+│       ├── main.py                           # CLI orchestrator (--all, --event-figures, --summary)
+│       ├── io.py                             # Data loaders (all SC sectors, target_sector=None)
+│       ├── events.py                         # Event records (municipality→grid, all SC coords)
+│       ├── thresholds.py                     # q90 computation + per-event metrics
+│       ├── event_figures.py                  # Per-event visualisations (MagicA POT shading)
+│       ├── summary.py                        # Consolidated table + S1–S4 summary figures
+│       ├── utils.py                          # save_fig, make_output_dirs, muni_slug
+│       ├── config/analysis_config.py         # Configuration: paths, parameters, target_sector
+│       ├── README.md                         # Module documentation
 │       └── RUN.md                            # Quick-start command reference
 ├── outputs/                                  # Analysis outputs (not committed, .gitignore)
 │   └── south_sc_test_data_exploratory/
@@ -338,7 +364,7 @@ copernicusmarine login
 # Enter credentials (stored in ~/.copernicusmarine/)
 ```
 
-### 2. Run Exploratory Analysis (Test Data)
+### 2. Run Exploratory Analysis (Step 1 — South SC test domain)
 
 The test fixtures (`data/test/`) are already committed. No download required.
 
@@ -347,19 +373,36 @@ The test fixtures (`data/test/`) are already committed. No download required.
 python -m src.explore_test_data_south_sc.main --all
 
 # Individual parts
-python -m src.explore_test_data_south_sc.main --maps          # Part A: Spatial maxima
-python -m src.explore_test_data_south_sc.main --timeseries    # Part B: Time series
-python -m src.explore_test_data_south_sc.main --events        # Part D: Reported events EDA
+python -m src.explore_test_data_south_sc.main --maps           # Part A: Spatial maxima
+python -m src.explore_test_data_south_sc.main --timeseries     # Part B: Time series
+python -m src.explore_test_data_south_sc.main --events         # Part D: Reported events EDA
 python -m src.explore_test_data_south_sc.main --municipalities # Part E: Municipality–grid
-python -m src.explore_test_data_south_sc.main --boxplots      # Part F: Sector overview
-python -m src.explore_test_data_south_sc.main --statistics    # Part G: Statistical analyses
+python -m src.explore_test_data_south_sc.main --boxplots       # Part F: Sector overview
+python -m src.explore_test_data_south_sc.main --statistics     # Part G: Statistical analyses
 ```
 
 Outputs written to: `outputs/south_sc_test_data_exploratory/`
 
-See `src/explore_test_data_south_sc/RUN.md` for complete command reference.
+See `src/01_explore_test_data_south_sc/RUN.md` for complete command reference.
 
-### 3. Download Full-Domain Data (Optional)
+### 3. Run Threshold Calibration (Step 2 — Full SC coast)
+
+The full SC unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc`) is committed.
+
+```bash
+# Full analysis (per-event figures + summary)
+python src/02_threshold_calibration/main.py --all
+
+# Individual parts
+python src/02_threshold_calibration/main.py --event-figures   # TC-1: per-event figures
+python src/02_threshold_calibration/main.py --summary         # Summary: S1–S4 + tables
+```
+
+Outputs written to: `outputs/threshold_calibration/`
+
+See `src/02_threshold_calibration/RUN.md` for complete command reference.
+
+### 4. Download Full-Domain Data (Optional)
 
 **Note:** Full GLORYS12 and WAVERYS downloads are large (~100 GB+ for full Brazilian coast, 1993–2025). Test fixtures are sufficient for exploratory work.
 
@@ -412,9 +455,11 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 - **Phase 0 (Data preparation):** Complete for south SC test domain; full-domain downloads require large storage and processing time.
 
-- **Phase 1 (Exploratory analysis):** Implemented for south SC test domain. This is **not** the final compound event detection framework—it is a preliminary EDA phase using empirical thresholds (q90) for data familiarization and pipeline validation.
+- **Step 1 (Exploratory analysis):** Implemented for south SC test domain (`src/01_explore_test_data_south_sc/`). This is **not** the final compound event detection framework—it is a preliminary EDA phase using empirical thresholds (q90) for data familiarization and pipeline validation.
 
-- **Phases 2–8 (Threshold calibration, storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
+- **Step 2 (Threshold calibration):** Initial visual calibration complete for the full SC coast (`src/02_threshold_calibration/`). The analysis covers all 5 Leal et al. (2024) sectors (91 events, 22 municipalities) but has data gaps for many northern municipalities due to reanalysis grid coverage limitations. Systematic threshold optimisation (hit rate, CSI grid scan) is the immediate next step.
+
+- **Steps 3–8 (Storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
 
 ### Reproducibility
 
