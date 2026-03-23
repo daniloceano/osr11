@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 if TYPE_CHECKING:
     import matplotlib.axes
@@ -104,8 +105,15 @@ class FigureStyle:
     color_reference_span:  str = "gold"       # temporal window shading
 
     # ── Colormaps ─────────────────────────────────────────────────────────────
-    cmap_hs:         str = "YlOrRd"   # Hs spatial fields (yellow-orange-red)
-    cmap_ssh:        str = "YlGnBu"   # SSH spatial fields (diverging)
+
+    crameri_tofino = ['#DBD7FE', '#98A8E1', '#5777BA', '#19253D', '#0E1615', '#374030', '#899365', '#D9E49A']
+    eccharts_wave_height_10 = ['#E6F7FF', '#A6DEF7', '#4CBFE6', '#0099D1', '#007AB8', '#1AA64C', '#8CCC00', '#E6CC00', '#FF8000', '#D90000']
+
+    colors_hs = LinearSegmentedColormap.from_list('crameri-tofino', crameri_tofino)
+    colors_ssh = LinearSegmentedColormap.from_list('eccharts-wave-height-10', eccharts_wave_height_10)
+
+    cmap_hs: str = "crameri-tofino"  # colormap for Hs spatial fields
+    cmap_ssh: str = "eccharts-wave-height-10"  # colormap for SSH spatial fields
     cmap_sequential: str = "viridis"  # generic sequential (scatter colour by year)
 
     # ── Layout ────────────────────────────────────────────────────────────────
@@ -122,6 +130,16 @@ class FigureStyle:
 # ── Global default instance ───────────────────────────────────────────────────
 
 STYLE = FigureStyle()
+
+# ── Register custom colormaps ─────────────────────────────────────────────────
+
+# Register custom colormaps with matplotlib so they can be referenced by string name
+try:
+    plt.colormaps.register(STYLE.colors_hs)
+    plt.colormaps.register(STYLE.colors_ssh)
+except (ValueError, AttributeError):
+    # Already registered or using older matplotlib version
+    pass
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
