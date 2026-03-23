@@ -28,19 +28,23 @@ export const resultCards: ResultCard[] = [
   },
   {
     id: 'threshold-calibration',
-    title: 'Threshold Calibration & Storm Catalog',
-    subtitle: 'Physically motivated extreme thresholds and event segmentation',
-    status: 'planned',
+    title: 'Threshold Calibration',
+    subtitle: 'Visual calibration of q90 thresholds against reported coastal events',
+    status: 'in-progress',
     description:
-      'Definition of extreme thresholds for Hₛ and SSH using statistically rigorous approaches (POT/GPD or empirical percentiles validated against observational records). Construction of wave storm and surge event catalogs with explicit duration and intensity metrics.',
+      'Initial threshold calibration phase using the reported coastal disaster events (Leal et al., 2024) as ground-truth references. For each reported event, the nearest grid point in the unified daily dataset is identified, the full climatological series is used to compute a q90 threshold, and the ±3-day window around the event is inspected for exceedances and concomitance between Hₛ and SSH. MagicA (peaks-over-threshold, event_wise) is used to identify distinct exceedance episodes.',
     rationale:
-      'The threshold choice critically determines the sensitivity and specificity of the compound event catalog. Using well-calibrated, physically motivated thresholds — rather than simple percentiles — ensures that detected events correspond to genuinely hazardous conditions.',
+      'The threshold choice critically determines the sensitivity and specificity of the compound event catalog. Beginning with a simple q90 threshold and visual inspection against known disaster dates provides a first assessment of whether the reanalysis signals are consistent with observed hazardous conditions, before proceeding to systematic threshold optimisation (hit rate, CSI).',
     outputs: [
-      'Threshold selection methodology document',
-      'Hₛ and SSH extreme threshold maps (per coastal sector)',
-      'Wave storm event catalog (1993–2025)',
-      'Surge event catalog (1993–2025)',
+      'Per-event time series figures with MagicA exceedance shading (one per reported event)',
+      'Consolidated metrics table: raw maxima, normalised maxima, days above threshold, concomitance',
+      'Threshold statistics table per municipality (q90, mean, std, p99)',
+      'fig_TC_S1 — Grouped bar chart: normalised Hₛ and SSH maxima per event',
+      'fig_TC_S2 — Scatter: normalised Hₛ vs SSH, concurrent events highlighted',
+      'fig_TC_S3 — Concomitance fraction bar chart per event',
+      'fig_TC_S4 — Concomitance heatmap: municipality × event date',
     ],
+    href: '/results/threshold-calibration',
   },
   {
     id: 'compound-detection',

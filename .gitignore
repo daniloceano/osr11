@@ -22,8 +22,9 @@ data/interim/
 # Unified test data can be created from raw data, so we ignore the large NC file but keep the provenance JSON
 data/test/metocean_sc_sul_unified_waverys_grid.nc
 
-# Figures and outputs
+# Figures and outputs (regeneratable from scripts)
 outputs/south_sc_test_data_exploratory/*
+outputs/threshold_calibration/*
 
 # Logs
 logs/*.log

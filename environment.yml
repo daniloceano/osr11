@@ -16,3 +16,9 @@ dependencies:
   - cartopy        # geographic maps (PlateCarree, NaturalEarth features)
   - pip:
       - copernicusmarine>=2.0
+      # MagicA: extreme value analysis (POT, block maxima, return periods)
+      # Install from local source (not on PyPI):
+      #   pip install -e /path/to/MagicA
+      # Or from GitHub:
+      #   pip install git+https://github.com/daniloceano/MagicA.git
+      - magica @ file:///Users/danilocoutodesouza/Documents/Programs_and_scripts/MagicA

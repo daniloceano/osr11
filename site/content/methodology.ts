@@ -11,14 +11,14 @@ export const methodologySteps: MethodStep[] = [
     id: 'step-2',
     label: 'Exploratory Data Analysis',
     description: 'First-look inspection of spatial distributions, temporal variability, and events database. Coastal grid point selection via Natural Earth coastline. Municipality–grid association.',
-    status: 'in-progress',
-    isCurrent: true,
+    status: 'done',
   },
   {
     id: 'step-3',
     label: 'Threshold Calibration & QC',
-    description: 'Define physically motivated extreme thresholds for Hₛ and SSH. Evaluate POT (peaks-over-threshold) and percentile-based approaches. Quality control of reanalysis near the coast.',
-    status: 'planned',
+    description: 'Initial visual calibration of q90 thresholds for Hₛ and SSH against reported coastal events. Per-event time series inspection in ±3-day windows. Concomitance analysis using MagicA peaks-over-threshold. Cross-event summary metrics.',
+    status: 'in-progress',
+    isCurrent: true,
   },
   {
     id: 'step-4',
