@@ -121,7 +121,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). The exploratory analysis phase validated the data pipeline and methodology choices. The threshold calibration phase (Step 2) is now underway, comparing q90 exceedances with the full Leal et al. (2024) SC coastal disaster database (5 sectors, 22 municipalities, 91 events, 1998–2020). Storm catalog generation and compound event detection will follow once the threshold optimisation is complete.
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). The exploratory analysis phase validated the data pipeline and methodology choices. The preliminary compound event occurrence analysis (Step 2) is now complete, having inspected q90 exceedances for all 91 events in the Leal et al. (2024) SC disaster database (5 sectors, 22 municipalities, 1998–2020). The formal threshold calibration — systematic CSI grid scan across q50–q90 combinations — is the immediate next step. Storm catalog generation and compound event detection will follow.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -154,15 +154,15 @@ export const timelinePhases: TimelinePhase[] = [
   },
   {
     id: 'step-2',
-    label: 'STEP 2 — Threshold Calibration',
-    description: 'Calibrate extreme thresholds by comparing reanalysis signals with SC Civil Defense reported disasters. Initial visual calibration at q90 across full SC coast (5 sectors, 22 municipalities, 91 events).',
+    label: 'STEP 2 — Preliminary Compound Event Occurrence Analysis',
+    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). Establishes the empirical baseline for systematic threshold calibration (CSI grid scan, next step).',
     status: 'in-progress',
     tasks: [
       'Per-event time series analysis in ±3-day windows (MagicA POT) — 91 events ✓',
       'q90 thresholds from full 1993–2025 series per municipality ✓',
       'Concomitance metrics (Hₛ and SSH joint exceedances) ✓',
       'Cross-event summary figures and metrics table ✓',
-      'Systematic threshold grid scan (hit rate, CSI) — in progress',
+      'Systematic threshold grid scan (hit rate, CSI) — next step',
     ],
   },
   {

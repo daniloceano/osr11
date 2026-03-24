@@ -28,13 +28,13 @@ export const resultCards: ResultCard[] = [
   },
   {
     id: 'threshold-calibration',
-    title: 'Threshold Calibration',
-    subtitle: 'q90 visual calibration · Full SC coast · 5 sectors · 91 events',
+    title: 'Preliminary Compound Event Occurrence Analysis',
+    subtitle: 'Joint q90 exceedance inspection · Full SC coast · 5 sectors · 91 events',
     status: 'in-progress',
     description:
-      'Initial threshold calibration phase using the Leal et al. (2024) reported coastal disaster database, now covering the full Santa Catarina coast (5 sectors, 22 municipalities, 91 events). For each event, the nearest ocean grid point in the unified daily dataset is identified, a q90 threshold is computed from the full 1993–2025 climatological series, and the ±3-day window around the disaster date is inspected for Hₛ and SSH exceedances. MagicA (peaks-over-threshold, event_wise) identifies distinct exceedance episodes. Key finding: only 2 of 91 events show concurrent q90 exceedances — driving the next phase of systematic threshold optimisation.',
+      'Preliminary analysis of joint Hₛ and SSH exceedances during the 91 reported coastal disasters in the Leal et al. (2024) Santa Catarina database (5 sectors, 22 municipalities, 1998–2020). For each event, the ±3-day window at the nearest ocean grid point is inspected using a first-pass q90 threshold. MagicA peaks-over-threshold identifies distinct exceedance episodes. Key finding: only 2 of 91 events show concurrent q90 exceedances — a calibration signal that motivates the next step: a systematic threshold grid scan (hit rate / CSI optimisation across q50–q90 combinations).',
     rationale:
-      'The threshold choice critically determines the sensitivity and specificity of the compound event catalog. Visual inspection against known disaster dates provides a first assessment of reanalysis signal quality and sets the empirical baseline for systematic hit-rate / CSI optimisation across a threshold grid.',
+      'Before calibrating thresholds formally, it is essential to characterise how the reanalysis signal behaves during known disaster dates. This preliminary occurrence analysis documents the distribution of Hₛ and SSH anomalies during reported events and establishes the empirical baseline for the CSI-based threshold optimisation that follows.',
     outputs: [
       '91 per-event time series figures with MagicA exceedance shading',
       'Consolidated metrics table: raw maxima, normalised maxima, days above threshold, concomitance',

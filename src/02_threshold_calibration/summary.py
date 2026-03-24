@@ -155,7 +155,7 @@ def _fig_s2_scatter(df: pd.DataFrame) -> None:
     munis  = sorted(df["municipality"].unique())
     colors = _muni_colormap(munis)
 
-    fig, ax = plt.subplots(figsize=(STYLE.fig_width_single, STYLE.fig_height_default))
+    fig, ax = plt.subplots(figsize=(STYLE.fig_width_single + 3.0, STYLE.fig_height_default))
 
     for muni in munis:
         sub = df[df["municipality"] == muni]
@@ -201,7 +201,10 @@ def _fig_s2_scatter(df: pd.DataFrame) -> None:
         f"Normalised maxima per event — filled = concurrent (both > q{int(q*100)})",
         fontsize=STYLE.font_size_title,
     )
-    ax.legend(fontsize=6, framealpha=STYLE.legend_framealpha, ncol=1, loc="best")
+    ax.legend(
+        fontsize=6, framealpha=STYLE.legend_framealpha, ncol=1,
+        bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0,
+    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

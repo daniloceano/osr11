@@ -7,9 +7,9 @@ import EventFigureSelector from '@/components/EventFigureSelector';
 import SectorFigureTabs from '@/components/SectorFigureTabs';
 
 export const metadata = {
-  title: 'Threshold Calibration — OSR11',
+  title: 'Preliminary Compound Event Occurrence Analysis — OSR11',
   description:
-    'Initial visual calibration of q90 thresholds for Hₛ and SSH against reported Santa Catarina coastal disaster events. Full SC coast domain. MagicA peaks-over-threshold, per-event time series analysis, and concomitance metrics.',
+    'Preliminary analysis of joint Hₛ and SSH exceedances at q90 during reported Santa Catarina coastal disaster events. Full SC coast domain (5 sectors, 22 municipalities, 91 events). MagicA peaks-over-threshold, per-event time series inspection, and concomitance metrics. Precursor to systematic threshold calibration.',
 };
 
 // ── Summary figure data ─────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export default function ThresholdCalibrationPage() {
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-600">Threshold Calibration</span>
+              <span className="text-gray-600">Preliminary Compound Event Occurrence Analysis</span>
             </div>
 
             <div className="flex flex-wrap items-start gap-2 mb-4">
@@ -119,16 +119,17 @@ export default function ThresholdCalibrationPage() {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
-              Threshold Calibration
+              Preliminary Compound Event
               <br />
-              <span className="text-blue-600">Initial Visual Calibration — q90</span>
+              <span className="text-blue-600">Occurrence Analysis — q90 First Pass</span>
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-gray-600">
               Per-event time series inspection in ±3-day windows around each reported coastal
               disaster in the Leal et al. (2024) database — full Santa Catarina coast (5 sectors,
-              22 municipalities, 91 events, 1998–2020). q90 thresholds from the full 1993–2025
-              climatological series at the nearest coastal grid point. Exceedance identification
-              via MagicA peaks-over-threshold.
+              22 municipalities, 91 events, 1998–2020). A first-pass q90 threshold (top 10% of
+              the full 1993–2025 climatological series) is applied to identify joint Hₛ and SSH
+              exceedances. Exceedance episodes detected via MagicA peaks-over-threshold. The
+              systematic threshold calibration (hit rate / CSI grid scan) follows this step.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -153,27 +154,32 @@ export default function ThresholdCalibrationPage() {
         {/* ── What this step is about ──────────────────────────────────────── */}
         <div className="border-b border-gray-200 bg-gray-50 py-14">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="mb-4 text-xl font-bold text-gray-900">What this step is about</h2>
+            <h2 className="mb-4 text-xl font-bold text-gray-900">What this analysis is about</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <p className="text-sm text-gray-700 leading-relaxed">
-                Before building the compound event catalog, we need to decide at what intensity
-                level Hₛ and SSH count as "extreme." This choice — the threshold — is inherently
-                subjective, but can be grounded empirically: <em>do the reanalysis signals actually
-                behave as extremes on days when coastal disasters were officially reported?</em>
+                This is a <strong>preliminary occurrence analysis</strong>, not yet a threshold
+                calibration. The question being asked is simple: <em>during officially reported
+                coastal disasters in Santa Catarina, were Hₛ and SSH elevated relative to their
+                local climatology — and did they peak at the same time?</em>
                 <br /><br />
-                For each reported event in the Leal et al. (2024) database, we inspect what Hₛ and
-                SSH were doing in the 7 days around the disaster date, flag concurrent exceedances,
-                and track how strong the peaks were relative to the local climatology.
+                For each of the 91 reported events in the Leal et al. (2024) database, the nearest
+                ocean grid cell is identified, a q90 threshold is computed from the full
+                1993–2025 record, and the 7-day window around the disaster date is inspected for
+                individual and joint exceedances. The goal is to build intuition about reanalysis
+                signal quality before committing to a specific threshold.
               </p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                The current results use q90 as a first-pass threshold — it marks the top 10% of
-                daily values. Requiring both variables to simultaneously exceed q90 is strict, and
-                indeed only 2 of 91 events show any concurrent exceedance at this level.
+                The q90 threshold is a deliberately strict first pass — it marks the top 10% of
+                daily values. Only 2 of 91 events show concurrent Hₛ and SSH exceedances at this
+                level, which is informative rather than discouraging: it reveals that hazardous
+                compound conditions during SC disasters do not necessarily produce extreme values
+                in both variables simultaneously when measured at daily resolution and at the
+                nearest ocean grid point.
                 <br /><br />
-                This low concomitance rate is a calibration signal, not a failure. The next phase
-                will scan a grid of lower thresholds (e.g. p50–p85) and compute hit rate,
-                false-alarm rate, and critical success index to find the combination that best
-                discriminates hazardous days from background conditions.
+                The <strong>actual threshold calibration</strong> — the next step — will scan
+                q50–q85 combinations and compute hit rate, false-alarm rate, and Critical Success
+                Index (CSI) to identify the threshold pair that best discriminates disaster days
+                from background conditions.
               </p>
             </div>
           </div>
@@ -247,15 +253,21 @@ export default function ThresholdCalibrationPage() {
               <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">
                 Figure TC-S2
               </span>
-              <h2 className="text-xl font-bold text-gray-900">Normalised Hₛ vs SSH Scatter</h2>
+              <h2 className="text-xl font-bold text-gray-900">Joint Normalised Maxima Scatter</h2>
             </div>
             <p className="mb-6 text-sm text-gray-600 max-w-2xl">
-              Each point is one reported event. Filled circles mark events where both Hₛ and SSH
-              simultaneously exceeded q90 at the same daily time step (concurrent exceedances).
-              Open circles are events where the variables peaked at different times within the
-              7-day window. Only 2 of 10 events with valid joint data show concurrent exceedances —
-              both in Barra Velha (North sector). This low rate at q90 is expected and will drive
-              the next threshold optimisation phase.
+              Each point is one reported disaster event with valid joint Hₛ and SSH data. The
+              x-axis shows the maximum Hₛ in the 7-day window normalised by the local climatological
+              mean; the y-axis shows the same for SSH. Points in the upper-right quadrant (both
+              axes {">"} 1) experienced above-average peaks in both variables simultaneously.
+              <br /><br />
+              <strong>Filled circles</strong> mark events with at least one day of concurrent
+              q90 exceedance (both Hₛ and SSH above their respective q90 thresholds on the same
+              day); <strong>open circles</strong> are events where the variables peaked at different
+              times within the window. Colours distinguish municipalities (see legend). Only 2 of
+              10 events with valid joint data show concurrent q90 exceedances, both in Barra Velha
+              (North sector) — confirming that joint exceedances at this strict threshold are rare
+              even during documented disasters.
             </p>
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
               <div className="p-5">
@@ -270,9 +282,7 @@ export default function ThresholdCalibrationPage() {
               </div>
               <div className="border-t border-gray-100 px-5 py-4">
                 <p className="text-xs text-gray-500 leading-relaxed italic">
-                  Scatter of normalised Hₛ maximum vs normalised SSH maximum per event, coloured by
-                  municipality. Filled circles indicate concurrent exceedances (both variables above q90
-                  simultaneously). Reference lines at 1.0 mark the climatological mean.
+                  Joint scatter of normalised within-window maxima: peak Hₛ ÷ Hₛ_mean (x-axis) vs peak SSH ÷ SSH_mean (y-axis). Each point is one disaster event with valid data for both variables. Filled circles indicate at least one day of concurrent q90 exceedance; open circles indicate no concurrent exceedance within the 7-day window. Colours indicate municipality. Reference lines at 1.0 mark the climatological mean. Legend is shown to the right.
                 </p>
               </div>
             </div>
@@ -339,7 +349,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   part: 'Part TC-1',
                   title: 'Per-event Time Series',
-                  description: 'For each of the 91 reported coastal disaster events, the nearest ocean grid cell in the unified daily dataset is identified. A 7-day window (±3 days centred on the reported date) is extracted from the full 1993–2025 climatological series. Each figure shows two panels — Hₛ (top) and SSH (bottom) — with the q90 threshold, MagicA exceedance shading, reported event date marker, and within-window maximum. A text box summarises normalised maxima and concurrent exceedance.',
+                  description: 'For each of the 91 reported coastal disaster events, the nearest ocean grid cell in the unified daily dataset is identified. A 7-day window (±3 days centred on the reported date) is extracted. Each figure shows two panels — Hₛ (top) and SSH (bottom) — with the q90 threshold line, MagicA exceedance shading (one peak marker per contiguous exceedance block), the reported event date marker, and the within-window maximum. A text box summarises normalised maxima and concurrent exceedance status. This part characterises the reanalysis signal around known disaster dates — it is not yet a calibrated detection system.',
                   outputs: [
                     '91 PNGs — fig_TC_event_{id}_{municipality}_{date}.png',
                     'MagicA event_wise POT: one peak marker per contiguous exceedance episode',
@@ -348,7 +358,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   part: 'Part TC-Summary',
                   title: 'Cross-event Summary Figures',
-                  description: 'Four summary figure types (S1–S4) consolidate the per-event metrics across all 91 events and 22 municipalities, each available both for the full SC dataset and per coastal sector. S1 compares normalised maxima; S2 shows joint scatter; S3 shows concomitance fraction; S4 shows the municipality–event heatmap.',
+                  description: 'Four summary figure types (S1–S4) aggregate per-event metrics across all 91 events and 22 municipalities. S1: normalised Hₛ and SSH maxima grouped by event. S2: joint scatter of both normalised maxima, highlighting concurrent q90 exceedances. S3: concomitance fraction (days with both above q90 ÷ window length) per event. S4: municipality × event heatmap of concurrent fraction. All figures are available for the full SC coast and per coastal sector.',
                   outputs: [
                     '6 × S1 figures (overall + 5 sectors)',
                     '1 × S2 scatter (overall)',
@@ -425,13 +435,13 @@ export default function ThresholdCalibrationPage() {
             </ul>
 
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Immediate next steps</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Next step: Threshold Calibration</h3>
               <ul className="space-y-1.5">
                 {[
-                  'Threshold grid scan: compute hit rate, false-alarm rate, and CSI for q50–q90 × q50–q90 combinations.',
-                  'Seasonal threshold: test a seasonally stratified q90 (DJF/MAM/JJA/SON) to address the annual-cycle bias.',
-                  'Grid coverage audit: identify which municipalities have ocean grid cells within <20 km of their coastline.',
-                  'Extend the municipality–grid table to cover all SC sectors and replace hardcoded approximate coordinates.',
+                  'Systematic threshold grid scan: compute hit rate (HR), false-alarm rate (FAR), and Critical Success Index (CSI) for all q50–q90 × q50–q90 Hₛ–SSH threshold combinations.',
+                  'Identify the threshold pair that maximises CSI against the 91-event SC disaster database.',
+                  'Seasonal threshold: test a seasonally stratified threshold (DJF/MAM/JJA/SON) to address the annual-cycle bias in annual q90.',
+                  'Grid coverage audit: map which municipalities have valid ocean grid cells within <20 km of the coastline.',
                 ].map((s, i) => (
                   <li key={i} className="flex gap-2 text-xs text-gray-600">
                     <span className="text-blue-600 font-bold flex-shrink-0">→</span>
