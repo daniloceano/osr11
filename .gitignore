@@ -16,6 +16,7 @@ env/
 data/raw/
 data/processed/
 data/interim/
+data/tide_models_clipped_brasil/*
 !data/raw/**/.gitkeep
 !data/processed/.gitkeep
 
@@ -24,7 +25,8 @@ data/test/metocean_sc_sul_unified_waverys_grid.nc
 
 # Figures and outputs (regeneratable from scripts)
 outputs/south_sc_test_data_exploratory/*
-outputs/threshold_calibration/*
+outputs/preliminary_compound/*
+outputs/tidal_sensitivity/*
 
 # Logs
 logs/*.log

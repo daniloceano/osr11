@@ -27,7 +27,7 @@ export const resultCards: ResultCard[] = [
     parts: ['Part A', 'Part B', 'Part D', 'Part E', 'Part F', 'Part G'],
   },
   {
-    id: 'threshold-calibration',
+    id: 'preliminary-compound',
     title: 'Preliminary Compound Event Occurrence Analysis',
     subtitle: 'Joint q90 exceedance inspection · Full SC coast · 5 sectors · 91 events',
     status: 'in-progress',
@@ -44,7 +44,27 @@ export const resultCards: ResultCard[] = [
       'fig_TC_S3 — Concomitance fraction bar chart per event',
       'fig_TC_S4 — Concomitance heatmap: municipality × event date',
     ],
-    href: '/results/threshold-calibration',
+    href: '/results/preliminary-compound',
+  },
+  {
+    id: 'tidal-sensitivity',
+    title: 'Tidal Sensitivity Analysis',
+    subtitle: 'SSH vs SSH + FES2022 · Daily resolution · 91 events',
+    status: 'done',
+    description:
+      'Sensitivity test adding FES2022 astronomical tide (via eo-tides) to the GLORYS12 SSH signal to form total sea level (SSH_total = SSH + tide). Compound event detection is compared between SSH-only and SSH_total for all 91 reported SC coastal disasters. Key finding: at daily resolution, adding the tide reduces concurrent detections from 30 to 13 — the q90 threshold shift from the added tidal variance offsets any elevation gain, and no new events are detected. Confirms that hourly resolution is required for a meaningful tidal sensitivity test.',
+    rationale:
+      'GLORYS12 SSH (zos) is a tidal-residual product. Adding astronomical tides is physically necessary for a realistic total water level. This sensitivity test quantifies how much difference the tidal component makes at the current daily temporal resolution, before deciding whether to include tides in the formal threshold calibration step.',
+    outputs: [
+      '91 per-event 3-panel figures: Hₛ / SSH / SSH_total (with FES2022 tide overlay)',
+      'tab_TS_event_metrics.csv — SSH-only and SSH_total metrics per event with detection_change column',
+      'tab_TS_tidal_thresholds.csv — SSH_total q90 thresholds per municipality',
+      'fig_TS_C1 — Detection comparison grouped bar chart',
+      'fig_TS_C2 — SSH vs SSH_total normalised maxima scatter, coloured by detection change',
+      'fig_TS_C3 — Detection change counts by coastal sector',
+      'fig_TS_C4 — Tidal fraction of SSH_total max per event',
+    ],
+    href: '/results/tidal-sensitivity',
   },
   {
     id: 'compound-detection',

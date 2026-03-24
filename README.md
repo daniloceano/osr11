@@ -112,7 +112,7 @@ Select candidate extreme thresholds for sea level (N) and significant wave heigh
 **Rationale:** Threshold definition is inherently subjective. Validation against observed disasters provides an empirical, pragmatic calibration strategy that grounds the analysis in real-world impacts. Although this introduces regional bias (SC-based thresholds extrapolated to other sectors), it represents the most defensible approach given uneven disaster record availability along the Brazilian coast.
 
 **Status:** 🔄 In progress — initial visual calibration complete (full SC domain)
-**Implementation:** `src/02_threshold_calibration/`
+**Implementation:** `src/02_preliminary_compound/`
 **Current scope:** q90 thresholds applied to 91 reported events across 5 SC sectors and 22 municipalities. Results show low concurrent exceedances (2%) at q90 — systematic threshold grid scan is the next step.
 **Limitation:** Many northern SC municipalities have NaN data due to reanalysis grid coverage gaps over complex coastal geometries.
 
@@ -258,7 +258,7 @@ The repository currently contains:
 **Important:** The exploratory analysis is **not** the full compound event detection framework described in Steps 2–7. It is a preliminary sanity-check and data familiarization phase. The exploratory "compound quick-look" uses empirical q90 thresholds as a placeholder.
 
 🔄 **Step 2 — Threshold calibration** (in progress — full SC coast)
-- Implemented in `src/02_threshold_calibration/`
+- Implemented in `src/02_preliminary_compound/`
 - Domain extended from south SC to full SC (5 sectors, 22 municipalities, 91 events)
 - Initial visual calibration at q90 complete
 - Key finding: 2/91 concurrent exceedances at q90; systematic threshold optimisation planned
@@ -318,7 +318,7 @@ osr11/
 │   │   ├── config/analysis_config.py         # Configuration: file paths, parameters, output dirs
 │   │   ├── README.md                         # Detailed module documentation
 │   │   └── RUN.md                            # Quick-start command reference
-│   └── 02_threshold_calibration/             # Step 2: Threshold calibration (full SC coast)
+│   └── 02_preliminary_compound/             # Step 2: Threshold calibration (full SC coast)
 │       ├── main.py                           # CLI orchestrator (--all, --event-figures, --summary)
 │       ├── io.py                             # Data loaders (all SC sectors, target_sector=None)
 │       ├── events.py                         # Event records (municipality→grid, all SC coords)
@@ -391,16 +391,16 @@ The full SC unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc
 
 ```bash
 # Full analysis (per-event figures + summary)
-python src/02_threshold_calibration/main.py --all
+python src/02_preliminary_compound/main.py --all
 
 # Individual parts
-python src/02_threshold_calibration/main.py --event-figures   # TC-1: per-event figures
-python src/02_threshold_calibration/main.py --summary         # Summary: S1–S4 + tables
+python src/02_preliminary_compound/main.py --event-figures   # TC-1: per-event figures
+python src/02_preliminary_compound/main.py --summary         # Summary: S1–S4 + tables
 ```
 
-Outputs written to: `outputs/threshold_calibration/`
+Outputs written to: `outputs/preliminary_compound/`
 
-See `src/02_threshold_calibration/RUN.md` for complete command reference.
+See `src/02_preliminary_compound/RUN.md` for complete command reference.
 
 ### 4. Download Full-Domain Data (Optional)
 
@@ -457,7 +457,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 - **Step 1 (Exploratory analysis):** Implemented for south SC test domain (`src/01_explore_test_data_south_sc/`). This is **not** the final compound event detection framework—it is a preliminary EDA phase using empirical thresholds (q90) for data familiarization and pipeline validation.
 
-- **Step 2 (Threshold calibration):** Initial visual calibration complete for the full SC coast (`src/02_threshold_calibration/`). The analysis covers all 5 Leal et al. (2024) sectors (91 events, 22 municipalities) but has data gaps for many northern municipalities due to reanalysis grid coverage limitations. Systematic threshold optimisation (hit rate, CSI grid scan) is the immediate next step.
+- **Step 2 (Preliminary compound event occurrence analysis):** Initial visual calibration complete for the full SC coast (`src/02_preliminary_compound/`). The analysis covers all 5 Leal et al. (2024) sectors (91 events, 22 municipalities) but has data gaps for many northern municipalities due to reanalysis grid coverage limitations. Systematic threshold optimisation (hit rate, CSI grid scan) is the immediate next step.
 
 - **Steps 3–8 (Storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
 

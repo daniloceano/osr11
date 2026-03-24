@@ -18,7 +18,8 @@ _src_dir = Path(__file__).parent
 # alias (importable name) → real directory name (may start with digit)
 _MODULE_ALIASES: dict[str, str] = {
     "explore_test_data_south_sc": "01_explore_test_data_south_sc",
-    "threshold_calibration":      "02_threshold_calibration",
+    "preliminary_compound":       "02_preliminary_compound",
+    "tidal_sensitivity":          "03_tidal_sensitivity",
 }
 
 

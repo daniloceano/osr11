@@ -14,9 +14,14 @@ dependencies:
   - scipy
   - openpyxl       # .xlsx reading (reported events spreadsheet)
   - cartopy        # geographic maps (PlateCarree, NaturalEarth features)
+  - rasterio     # required by eo-tides (install via conda-forge to avoid build issues)
   - pip:
       - copernicusmarine>=2.0
       # MagicA: extreme value analysis (POT, block maxima, return periods)
       # Must be installed from GitHub (not on PyPI):
       #   pip install git+https://github.com/daniloceano/MagicA.git
       - magica @ git+https://github.com/daniloceano/MagicA.git
+      # eo-tides: astronomical tide modelling via FES2022, EOT20, etc.
+      # Requires rasterio (install via conda-forge first; see above).
+      # Tide model files must be in data/tide_models_clipped_brasil/
+      - eo-tides>=0.10

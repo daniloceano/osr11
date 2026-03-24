@@ -16,7 +16,13 @@ export const methodologySteps: MethodStep[] = [
   {
     id: 'step-3',
     label: 'Preliminary Compound Event Occurrence Analysis',
-    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database. Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. This step characterises the reanalysis signal during known disaster dates and motivates the formal threshold calibration (CSI grid scan) that follows.',
+    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database. Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 30 of 91 events show concurrent exceedances at q90 (full SC coast). Includes a tidal sensitivity sub-analysis: FES2022 astronomical tide (eo-tides) added to SSH to assess whether total sea level improves compound detection at daily resolution.',
+    status: 'done',
+  },
+  {
+    id: 'step-3b',
+    label: 'Threshold Calibration (CSI Grid Scan)',
+    description: 'Systematic optimisation of Hₛ and SSH exceedance thresholds by computing hit rate (HR), false-alarm rate (FAR), and Critical Success Index (CSI) for all q50–q90 × q50–q90 combinations against the 91-event SC disaster database. Identifies the threshold pair that maximises CSI and establishes the empirical detection framework.',
     status: 'in-progress',
     isCurrent: true,
   },
