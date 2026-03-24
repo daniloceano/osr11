@@ -16,8 +16,8 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. All results presented in
-            this site correspond to Phase 1 (exploratory analysis, south SC test domain).
+            Full pipeline from data acquisition to risk integration. Exploratory analysis and
+            initial threshold calibration are complete for the full Santa Catarina coast.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Estimated completion: pipeline, data acquisition, and exploratory analysis phases complete
+            Pipeline, data acquisition, exploratory analysis complete · Threshold calibration in progress
           </p>
         </div>
 

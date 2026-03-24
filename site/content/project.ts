@@ -31,7 +31,7 @@ export const projectMeta = {
   statusLabel: 'Methodology Development and Exploratory Analysis',
   dataRange: '1993–2025',
   region: 'South Atlantic Eastern Coast of Brazil',
-  focus: 'Santa Catarina (test domain: southern sector)',
+  focus: 'Santa Catarina coast — full domain (5 sectors)',
 };
 
 export const projectContext = `
@@ -121,9 +121,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation is restricted to the southern sector of Santa Catarina (SC), using test-domain subsets of GLORYS12 and WAVERYS (~29.4°S to 27.6°S; ~50°W to 48°W). This constitutes the exploratory and data familiarization phase of the project, aimed at validating the data pipeline, sanity-checking methodological choices, and testing analysis workflows before extension to the full Brazilian coastal domain.
-
-**Important:** The current exploratory analysis (Phase 1) is not the final compound event detection framework. It uses empirical q90 thresholds as placeholders and does not implement the validated threshold calibration or storm-based catalog approach described in the scientific methodology (Steps 2–4).
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). The exploratory analysis phase validated the data pipeline and methodology choices. The threshold calibration phase (Step 2) is now underway, comparing q90 exceedances with the full Leal et al. (2024) SC coastal disaster database (5 sectors, 22 municipalities, 91 events, 1998–2020). Storm catalog generation and compound event detection will follow once the threshold optimisation is complete.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -142,7 +140,7 @@ export const timelinePhases: TimelinePhase[] = [
   },
   {
     id: 'step-1b',
-    label: 'Exploratory Analysis — South SC Test Domain',
+    label: 'Exploratory Analysis — Full SC Coast',
     description: 'Preliminary EDA on test data to validate pipelines and familiarize with datasets. Not the final compound detection framework.',
     status: 'done',
     tasks: [
@@ -157,13 +155,14 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Threshold Calibration',
-    description: 'Calibrate extreme thresholds by comparing detected storms with SC Civil Defense reported disasters. Select best-performing threshold combination.',
-    status: 'planned',
+    description: 'Calibrate extreme thresholds by comparing reanalysis signals with SC Civil Defense reported disasters. Initial visual calibration at q90 across full SC coast (5 sectors, 22 municipalities, 91 events).',
+    status: 'in-progress',
     tasks: [
-      'Define candidate threshold ranges for Hₛ and SSH',
-      'For each combination, detect storms in SC and compute matching statistics',
-      'Select threshold with maximum hit rate and minimum false alarms',
-      'Document pragmatic validation strategy and regional bias',
+      'Per-event time series analysis in ±3-day windows (MagicA POT) — 91 events ✓',
+      'q90 thresholds from full 1993–2025 series per municipality ✓',
+      'Concomitance metrics (Hₛ and SSH joint exceedances) ✓',
+      'Cross-event summary figures and metrics table ✓',
+      'Systematic threshold grid scan (hit rate, CSI) — in progress',
     ],
   },
   {
