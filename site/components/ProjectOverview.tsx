@@ -55,7 +55,7 @@ export default function ProjectOverview() {
                   Analytical Framework
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  8-step algorithm from data to risk mapping
+                  9-step pipeline from exploratory analysis to risk mapping
                 </p>
               </div>
             </div>

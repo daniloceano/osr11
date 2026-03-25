@@ -47,7 +47,7 @@ export default function Hero() {
             { label: 'Study Period', value: '1993–2025' },
             { label: 'Wave Data', value: 'WAVERYS (CMEMS)' },
             { label: 'Sea-Level Data', value: 'GLORYS12 (CMEMS)' },
-            { label: 'Current Domain', value: 'South SC (test)' },
+            { label: 'Current Domain', value: 'Santa Catarina coast' },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -62,19 +62,13 @@ export default function Hero() {
         {/* CTAs */}
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/results/south-sc"
+            href="/results"
             className="inline-flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 hover:border-blue-700 transition-colors shadow-sm"
           >
-            View Exploratory Results
+            View Results
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </Link>
-          <Link
-            href="/methodology"
-            className="inline-flex items-center gap-2 rounded-lg border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-sm"
-          >
-            Methodology
           </Link>
         </div>
 

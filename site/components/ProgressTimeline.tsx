@@ -16,8 +16,8 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Exploratory analysis and
-            preliminary compound event occurrence analysis are complete for the full Santa Catarina coast.
+            Full pipeline from data acquisition to risk integration. Steps 1–3 (exploratory analysis,
+            preliminary compound event occurrence, and tidal sensitivity) are complete for the full Santa Catarina coast.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Pipeline, data acquisition, exploratory analysis complete · Preliminary compound occurrence analysis in progress
+            Data preparation, exploratory analysis, preliminary compound event occurrence, and tidal sensitivity analyses complete
           </p>
         </div>
 
