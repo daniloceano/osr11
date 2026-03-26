@@ -20,6 +20,7 @@ _MODULE_ALIASES: dict[str, str] = {
     "explore_test_data_south_sc": "01_explore_test_data_south_sc",
     "preliminary_compound":       "02_preliminary_compound",
     "tidal_sensitivity":          "03_tidal_sensitivity",
+    "threshold_calibration":      "04_threshold_calibration",
 }
 
 

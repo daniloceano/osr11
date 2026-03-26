@@ -22,8 +22,8 @@ export const methodologySteps: MethodStep[] = [
   {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration (CSI Grid Scan)',
-    description: 'Systematic optimisation of Hₛ and SSH exceedance thresholds by computing hit rate (HR), false-alarm rate (FAR), and Critical Success Index (CSI) for all q50–q90 × q50–q90 combinations against the 91-event SC disaster database. Identifies the threshold pair that maximises CSI and establishes the empirical detection framework.',
-    status: 'planned',
+    description: 'Systematic optimisation of Hₛ and SSH_total (= SSH + FES2022 tide) exceedance thresholds by computing POD, FAR, and CSI for all 81 combinations (q50–q90 × q50–q90) against the 91-event SC disaster database. Uses a causal/antecedent matching window [D-2, D-1, D, D+1 00Z]. Identifies the threshold pair that maximises CSI and establishes the empirical compound detection framework for Step 5.',
+    status: 'in-progress',
     isCurrent: true,
   },
   {

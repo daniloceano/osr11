@@ -67,6 +67,31 @@ export const resultCards: ResultCard[] = [
     href: '/results/tidal-sensitivity',
   },
   {
+    id: 'threshold-calibration',
+    title: 'Threshold Calibration (CSI Grid Scan)',
+    subtitle: 'q50–q90 × q50–q90 · 81 threshold pairs · causal window [D-2, D+1]',
+    status: 'in-progress',
+    description:
+      'Systematic optimisation of Hₛ and SSH_total (= SSH + FES2022 tide) exceedance thresholds against the 91-event SC coastal disaster database. For each of 81 threshold pair combinations (q50–q90 in steps of 0.05 for both variables), the analysis evaluates hits, misses, and false alarms using an asymmetric causal matching window [D-2, D-1, D, D+1 00Z]. The optimal threshold pair is selected by maximising CSI (Critical Success Index), with FAR (False Alarm Ratio) as tiebreaker.',
+    rationale:
+      'Steps 2–3 revealed that a fixed q90 threshold captures very few events (2–13 of 91 at concurrent exceedance). A systematic grid scan identifies which threshold pair best balances sensitivity (POD) against specificity (1-FAR), providing an empirically grounded detection framework rather than an arbitrary cut-off. The calibrated thresholds directly determine the event catalogs in Step 5.',
+    outputs: [
+      'tab_TC4_metrics_full.csv — CSI, POD, FAR for all 81 threshold pairs',
+      'tab_TC4_metrics_ranked.csv — ranked by optimal selection hierarchy (CSI → FAR → restrictiveness)',
+      'tab_TC4_event_hits_optimal.csv — per-event hit/miss at the optimal threshold pair',
+      'tab_TC4_lag_summary.csv — capture lag distribution (D-2 / D-1 / D / D+1)',
+      'tab_TC4_optimal_pair.csv — optimal pair reference for Step 5',
+      'fig_TC4_H1 — CSI heatmap (Hₛ × SSH_total threshold grid)',
+      'fig_TC4_H2 — FAR heatmap',
+      'fig_TC4_H3 — POD heatmap',
+      'fig_TC4_S1 — Ranking scatter: POD vs FAR (bubble = CSI)',
+      'fig_TC4_S2 — Per-event hit/miss bar chart at optimal pair',
+      'fig_TC4_S3 — Capture lag distribution',
+      'fig_TC4_S4 — POD by coastal sector at optimal pair',
+    ],
+    href: '/results/threshold-calibration',
+  },
+  {
     id: 'compound-detection',
     title: 'Compound Event Detection',
     subtitle: 'Joint wave–surge exceedances along the Brazilian coast',
