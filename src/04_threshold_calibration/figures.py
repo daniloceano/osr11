@@ -45,18 +45,18 @@ def plot_csi_heatmap(
     fig, ax = plt.subplots(figsize=(7, 6))
     im = ax.imshow(pivot.values, aspect="auto", cmap="YlGn", vmin=0, vmax=pivot.values.max())
     cbar = fig.colorbar(im, ax=ax, shrink=0.85)
-    cbar.set_label("CSI", fontsize=STYLE.label_fs)
+    cbar.set_label("CSI", fontsize=STYLE.font_size_axis_label)
 
     n_rows, n_cols = pivot.shape
     hs_labels  = [f"q{round(p*100)}" for p in pivot.index]
     ssh_labels = [f"q{round(p*100)}" for p in pivot.columns]
     ax.set_xticks(range(n_cols))
-    ax.set_xticklabels(ssh_labels, fontsize=STYLE.tick_fs)
+    ax.set_xticklabels(ssh_labels, fontsize=STYLE.font_size_tick)
     ax.set_yticks(range(n_rows))
-    ax.set_yticklabels(hs_labels, fontsize=STYLE.tick_fs)
-    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_title("TC4-H1 — CSI Grid Scan", fontsize=STYLE.title_fs, fontweight="bold")
+    ax.set_yticklabels(hs_labels, fontsize=STYLE.font_size_tick)
+    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_title("TC4-H1 — CSI Grid Scan", fontsize=STYLE.font_size_title, fontweight="bold")
 
     # Annotate values
     for i in range(n_rows):
@@ -94,18 +94,18 @@ def plot_far_heatmap(
     fig, ax = plt.subplots(figsize=(7, 6))
     im = ax.imshow(pivot.values, aspect="auto", cmap="YlOrRd", vmin=0, vmax=1)
     cbar = fig.colorbar(im, ax=ax, shrink=0.85)
-    cbar.set_label("FAR", fontsize=STYLE.label_fs)
+    cbar.set_label("FAR", fontsize=STYLE.font_size_axis_label)
 
     n_rows, n_cols = pivot.shape
     hs_labels  = [f"q{round(p*100)}" for p in pivot.index]
     ssh_labels = [f"q{round(p*100)}" for p in pivot.columns]
     ax.set_xticks(range(n_cols))
-    ax.set_xticklabels(ssh_labels, fontsize=STYLE.tick_fs)
+    ax.set_xticklabels(ssh_labels, fontsize=STYLE.font_size_tick)
     ax.set_yticks(range(n_rows))
-    ax.set_yticklabels(hs_labels, fontsize=STYLE.tick_fs)
-    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_title("TC4-H2 — FAR Grid Scan", fontsize=STYLE.title_fs, fontweight="bold")
+    ax.set_yticklabels(hs_labels, fontsize=STYLE.font_size_tick)
+    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_title("TC4-H2 — FAR Grid Scan", fontsize=STYLE.font_size_title, fontweight="bold")
 
     for i in range(n_rows):
         for j in range(n_cols):
@@ -135,18 +135,18 @@ def plot_pod_heatmap(
     fig, ax = plt.subplots(figsize=(7, 6))
     im = ax.imshow(pivot.values, aspect="auto", cmap="Blues", vmin=0, vmax=1)
     cbar = fig.colorbar(im, ax=ax, shrink=0.85)
-    cbar.set_label("POD", fontsize=STYLE.label_fs)
+    cbar.set_label("POD", fontsize=STYLE.font_size_axis_label)
 
     n_rows, n_cols = pivot.shape
     hs_labels  = [f"q{round(p*100)}" for p in pivot.index]
     ssh_labels = [f"q{round(p*100)}" for p in pivot.columns]
     ax.set_xticks(range(n_cols))
-    ax.set_xticklabels(ssh_labels, fontsize=STYLE.tick_fs)
+    ax.set_xticklabels(ssh_labels, fontsize=STYLE.font_size_tick)
     ax.set_yticks(range(n_rows))
-    ax.set_yticklabels(hs_labels, fontsize=STYLE.tick_fs)
-    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.label_fs)
-    ax.set_title("TC4-H3 — POD Grid Scan", fontsize=STYLE.title_fs, fontweight="bold")
+    ax.set_yticklabels(hs_labels, fontsize=STYLE.font_size_tick)
+    ax.set_xlabel("SSH_total threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel("Hₛ threshold (percentile)", fontsize=STYLE.font_size_axis_label)
+    ax.set_title("TC4-H3 — POD Grid Scan", fontsize=STYLE.font_size_title, fontweight="bold")
 
     for i in range(n_rows):
         for j in range(n_cols):
@@ -178,7 +178,7 @@ def plot_ranking_scatter(df_metrics: pd.DataFrame, optimal: dict) -> plt.Figure:
         alpha=0.7, edgecolors="gray", linewidths=0.4,
     )
     cbar = fig.colorbar(sc, ax=ax, shrink=0.85)
-    cbar.set_label("CSI", fontsize=STYLE.label_fs)
+    cbar.set_label("CSI", fontsize=STYLE.font_size_axis_label)
 
     # Highlight optimal
     ax.scatter(
@@ -189,9 +189,9 @@ def plot_ranking_scatter(df_metrics: pd.DataFrame, optimal: dict) -> plt.Figure:
         ),
     )
 
-    ax.set_xlabel("FAR (False Alarm Ratio)", fontsize=STYLE.label_fs)
-    ax.set_ylabel("POD (Probability of Detection)", fontsize=STYLE.label_fs)
-    ax.set_title("TC4-S1 — Threshold Ranking: POD vs FAR", fontsize=STYLE.title_fs, fontweight="bold")
+    ax.set_xlabel("FAR (False Alarm Ratio)", fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel("POD (Probability of Detection)", fontsize=STYLE.font_size_axis_label)
+    ax.set_title("TC4-S1 — Threshold Ranking: POD vs FAR", fontsize=STYLE.font_size_title, fontweight="bold")
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(-0.05, 1.05)
     ax.axhline(0.5, color="gray", ls="--", lw=0.8, alpha=0.5)
@@ -223,12 +223,12 @@ def plot_event_hits(df_event_hits: pd.DataFrame, optimal: dict) -> plt.Figure:
     ax.set_yticks(range(n))
     ax.set_yticklabels(labels, fontsize=6)
     ax.set_xticks([0, 1])
-    ax.set_xticklabels(["Miss", "Hit"], fontsize=STYLE.tick_fs)
+    ax.set_xticklabels(["Miss", "Hit"], fontsize=STYLE.font_size_tick)
     ax.set_title(
         f"TC4-S2 — Event capture at optimal pair\n"
         f"Hₛ=q{round(optimal['thr_hs_pct']*100)} / SSH_total=q{round(optimal['thr_ssh_pct']*100)}"
         f"  →  H={int(optimal['H'])}  M={int(optimal['M'])}  F={int(optimal['F'])}",
-        fontsize=STYLE.title_fs, fontweight="bold",
+        fontsize=STYLE.font_size_title, fontweight="bold",
     )
     ax.invert_yaxis()
     fig.tight_layout()
@@ -242,15 +242,15 @@ def plot_lag_distribution(lag_summary: pd.DataFrame, optimal: dict) -> plt.Figur
     fig, ax = plt.subplots(figsize=(5, 4))
     colors = ["#3498db" if lag <= 0 else "#e67e22" for lag in lag_summary["lag"]]
     ax.bar(lag_summary["lag_label"], lag_summary["count"], color=colors, width=0.6)
-    ax.set_xlabel("Lag relative to event day D", fontsize=STYLE.label_fs)
-    ax.set_ylabel("Number of captures", fontsize=STYLE.label_fs)
+    ax.set_xlabel("Lag relative to event day D", fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel("Number of captures", fontsize=STYLE.font_size_axis_label)
     ax.set_title(
         f"TC4-S3 — Capture lag distribution\n"
         f"Optimal: Hₛ=q{round(optimal['thr_hs_pct']*100)} / SSH=q{round(optimal['thr_ssh_pct']*100)}",
-        fontsize=STYLE.title_fs, fontweight="bold",
+        fontsize=STYLE.font_size_title, fontweight="bold",
     )
     ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
-    ax.tick_params(axis="both", labelsize=STYLE.tick_fs)
+    ax.tick_params(axis="both", labelsize=STYLE.font_size_tick)
     from matplotlib.patches import Patch
     ax.legend(
         handles=[
@@ -292,13 +292,13 @@ def plot_sector_metrics(df_event_hits: pd.DataFrame, optimal: dict) -> plt.Figur
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.bar(x, df_sec["POD"], width=0.5, color="#3498db", label="POD")
     ax.set_xticks(x)
-    ax.set_xticklabels(df_sec["sector"], fontsize=STYLE.tick_fs - 1, rotation=20, ha="right")
-    ax.set_ylabel("POD", fontsize=STYLE.label_fs)
+    ax.set_xticklabels(df_sec["sector"], fontsize=STYLE.font_size_tick - 1, rotation=20, ha="right")
+    ax.set_ylabel("POD", fontsize=STYLE.font_size_axis_label)
     ax.set_ylim(0, 1.1)
     ax.set_title(
         f"TC4-S4 — POD by coastal sector\n"
         f"Optimal: Hₛ=q{round(optimal['thr_hs_pct']*100)} / SSH=q{round(optimal['thr_ssh_pct']*100)}",
-        fontsize=STYLE.title_fs, fontweight="bold",
+        fontsize=STYLE.font_size_title, fontweight="bold",
     )
     for i, row in enumerate(df_sec.itertuples()):
         ax.text(i, (row.POD or 0) + 0.03, f"H={row.H}", ha="center", fontsize=7)

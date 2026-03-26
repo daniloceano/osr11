@@ -117,12 +117,15 @@ def _write_run_log(
         "=" * 70,
         "",
         "CONFIGURATION",
+        f"  Sweep             : q{round(CFG['pct_start']*100)}–q{round(CFG['pct_stop']*100)} "
+        f"in {round(CFG['pct_step']*100):.0f}% steps  "
+        f"(pct_start/pct_stop/pct_step in analysis_config.py)",
         f"  Hₛ percentiles    : {[f'q{round(p*100)}' for p in CFG['hs_percentiles']]}",
         f"  SSH percentiles   : {[f'q{round(p*100)}' for p in CFG['ssh_total_percentiles']]}",
         f"  Total pairs       : {len(df_metrics)}",
         f"  Match window      : {CFG['match_window_offsets']} days (D-2, D-1, D, D+1 00Z)",
         f"  Episode max gap   : {CFG['episode_max_gap_days']} day",
-        f"  SSH_total         : zos + FES2022 tide (daily 00:00 UTC)",
+        f"  SSH_total         : zos + FES2022 tide (instantaneous 00:00 UTC)",
         "",
         "OPTIMAL PAIR",
         f"  Hₛ threshold      : q{round(optimal['thr_hs_pct']*100)}",

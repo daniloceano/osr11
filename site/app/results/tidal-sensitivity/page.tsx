@@ -59,7 +59,7 @@ export default function TidalSensitivityPage() {
                 { label: 'Tide files',   value: 'data/tide_models_clipped_brasil' },
                 { label: 'Total level',  value: 'SSH_total = zos + FES2022' },
                 { label: 'Threshold',    value: 'q90 · full annual series (per variable)' },
-                { label: 'Resolution',   value: 'Daily (midnight UTC)' },
+                { label: 'Resolution',   value: 'Daily 00:00 UTC snapshots (instantaneous)' },
                 { label: 'Events',       value: '91 events · 22 municipalities' },
               ].map((m) => (
                 <div key={m.label} className="rounded-lg border border-gray-300/60 bg-gray-50 px-3 py-2">
@@ -90,16 +90,18 @@ export default function TidalSensitivityPage() {
                 exceedances at q90) when the tidal contribution is included?
               </p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                The key caveat is <strong>temporal resolution</strong>. Both the unified dataset
-                and the tidal prediction are evaluated daily (24-hour mean / midnight UTC). At
-                daily resolution, the tidal oscillation (~12.4 h for semi-diurnal tides) is
-                averaged out: the mean daily tide is close to zero, and the tidal range visible in
-                the daily signal reflects only the residual between the day&apos;s tidal cycle.
+                The key caveat is <strong>temporal sampling</strong>. Both the unified dataset
+                and the tidal prediction are instantaneous values at 00:00 UTC each day — not
+                24-hour averages. The FES2022 tide is evaluated at midnight UTC to match the
+                GLORYS12/WAVERYS time convention exactly.
                 <br /><br />
-                As a result, this test captures whether the <em>daily-mean</em> tidal level during
-                the event window shifts the total sea level meaningfully — but it does not resolve
-                sub-daily tidal peaks that may coincide with extreme wave arrival. A full tidal
-                sensitivity test would require hourly data and a different workflow.
+                Because we sample only one tidal phase per day (midnight UTC), the analysis
+                misses tidal peaks that occur at other times (e.g., a high tide at 06:00 UTC
+                is not captured). The tidal signal <em>is</em> present in the daily series
+                (it is not averaged out), but its phase is locked to midnight. Whether midnight
+                corresponds to a high or low tide on a given day depends on the tidal cycle at
+                that location. A full tidal sensitivity test would require hourly data to capture
+                the phasing of tidal peaks with wave and surge extremes.
               </p>
             </div>
           </div>
@@ -128,8 +130,8 @@ export default function TidalSensitivityPage() {
                 },
                 {
                   icon: '⏱️',
-                  title: 'Daily resolution is the critical limitation',
-                  text: 'Astronomical tides in SC have a typical range of ~0.4–0.8 m and period ~12.4 h. At daily resolution (midnight UTC mean), the tidal oscillation is averaged out and the residual daily tidal signal is small. The real compound hazard requires hourly resolution to capture tidal peaks aligning with surge/wave extremes.',
+                  title: 'Midnight UTC sampling, not a daily average',
+                  text: 'The tidal signal is computed as an instantaneous value at 00:00 UTC each day — it is not averaged out. The limitation is that only the midnight tidal phase is captured. Astronomical tides in SC (~0.4–0.8 m range, ~12.4 h semi-diurnal period) may peak at noon or late afternoon, completely missing the midnight snapshot. Hourly data would be needed to assess tidal phasing relative to wave/surge extremes.',
                 },
               ].map((f) => (
                 <div key={f.title} className="rounded-xl border border-gray-200 p-5">
@@ -325,9 +327,9 @@ export default function TidalSensitivityPage() {
             <h2 className="mb-5 text-xl font-bold text-gray-900">Assumptions &amp; Limitations</h2>
             <ul className="space-y-2.5 mb-8">
               {[
-                'Daily resolution is the main limitation. Astronomical tides in SC have a dominant semi-diurnal period (~12.4 h). A daily time step averages out most of the tidal oscillation. The residual daily-mean tidal signal is small, and the sensitivity test at this resolution underestimates the true role of astronomical tides in compound flooding.',
+        'Midnight UTC sampling captures one tidal phase per day. The FES2022 tidal signal is evaluated as an instantaneous value at 00:00 UTC — not a daily mean. The tidal oscillation is not averaged out, but the analysis is blind to tidal phases at other times of day. Astronomical tides in SC have a dominant semi-diurnal period (~12.4 h), so a tidal peak that occurs at noon or late afternoon will not appear in the midnight snapshot. The sensitivity test therefore underestimates the true role of astronomical tides in compound flooding.',
                 'The q90 threshold is computed from the full SSH_total distribution. Adding the tide shifts both the events and the threshold upward, partly cancelling the effect. For a threshold-based detection framework, the relevant quantity is the tide anomaly relative to its own seasonal cycle — not the raw tidal height.',
-                'FES2022 tides are evaluated at 00:00 UTC (midnight). SC reporting times in the Leal et al. (2024) database may not correspond to this time, which introduces timing uncertainty.',
+                'FES2022 tides are evaluated as instantaneous values at 00:00 UTC each day. SC reporting times in the Leal et al. (2024) database are civil dates (not UTC datetimes), so the actual event may have occurred when the tidal phase was very different from the midnight snapshot. This introduces timing uncertainty that is not quantifiable without sub-daily data.',
                 'No seasonal stratification. Tidal ranges and storm surge peaks have seasonality. Annual q90 thresholds treat all months equally.',
                 'Grid resolution: the nearest ocean grid cell is used for both SSH and tidal computation. Coastal geometry (estuaries, bays) is unresolved.',
               ].map((lim, i) => (
@@ -342,7 +344,7 @@ export default function TidalSensitivityPage() {
               <h3 className="text-sm font-semibold text-gray-900 mb-3">What this tells us for the next steps</h3>
               <ul className="space-y-1.5">
                 {[
-                  'For the formal threshold calibration (CSI grid scan), use SSH (zos) without the tidal correction — the daily-mean tidal signal adds noise at this resolution.',
+                  'For the formal threshold calibration (CSI grid scan), SSH_total = zos + FES2022 tide (00:00 UTC) is used, consistent with this sensitivity analysis. The midnight tidal signal contributes real variance — it is not noise — but the results confirm that adding the tide reduces concurrent detections at q90, so the CSI scan explores thresholds from q50 to q90 to find the best-performing pair.',
                   'When the pipeline moves to hourly data (if available), repeat this sensitivity test at hourly resolution to capture tidal phasing with wave/surge peaks.',
                   'Consider de-meaning the tidal signal (removing the daily mean) before adding to SSH, to isolate the sub-tidal tidal contribution at daily resolution.',
                   'The FES2022 model and eo-tides infrastructure are validated and ready for use with hourly data in future pipeline steps.',

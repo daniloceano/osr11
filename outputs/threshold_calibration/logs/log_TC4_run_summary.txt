@@ -1,0 +1,49 @@
+======================================================================
+OSR11 — Step 4: Threshold Calibration (CSI Grid Scan)
+======================================================================
+
+CONFIGURATION
+  Sweep             : q50–q90 in 5% steps  (pct_start/pct_stop/pct_step in analysis_config.py)
+  Hₛ percentiles    : ['q50', 'q55', 'q60', 'q65', 'q70', 'q75', 'q80', 'q85', 'q90']
+  SSH percentiles   : ['q50', 'q55', 'q60', 'q65', 'q70', 'q75', 'q80', 'q85', 'q90']
+  Total pairs       : 81
+  Match window      : [-2, -1, 0, 1] days (D-2, D-1, D, D+1 00Z)
+  Episode max gap   : 1 day
+  SSH_total         : zos + FES2022 tide (instantaneous 00:00 UTC)
+
+OPTIMAL PAIR
+  Hₛ threshold      : q90
+  SSH_total thr.    : q55
+  CSI               : 0.0120
+  POD               : 0.4615
+  FAR               : 0.9878
+  H (hits)          : 42
+  M (misses)        : 49
+  F (false alarms)  : 3406
+
+TOP 10 RANKED PAIRS
+ rank  thr_hs_pct  thr_ssh_pct      CSI      POD      FAR  H  M    F
+    1        0.90         0.55 0.012010 0.461538 0.987819 42 49 3406
+    2        0.90         0.50 0.011822 0.483516 0.988027 44 47 3631
+    3        0.85         0.55 0.010806 0.571429 0.989105 52 39 4721
+    4        0.85         0.50 0.010514 0.593407 0.989410 54 37 5045
+    5        0.90         0.60 0.010132 0.362637 0.989684 33 58 3166
+    6        0.85         0.60 0.009795 0.483516 0.990101 44 47 4401
+    7        0.90         0.65 0.009635 0.318681 0.990163 29 62 2919
+    8        0.80         0.55 0.009557 0.626374 0.990388 57 34 5873
+    9        0.80         0.60 0.009498 0.582418 0.990437 53 38 5489
+   10        0.80         0.50 0.009444 0.659341 0.990509 60 31 6262
+
+CAPTURE LAG DISTRIBUTION (optimal pair)
+lag_label  count  fraction
+      D-2      8  0.190476
+      D-1     13  0.309524
+        D     15  0.357143
+  D+1 00Z      6  0.142857
+
+EVENT-LEVEL SUMMARY (optimal pair)
+  Total events      : 91
+  Captured (hits)   : 42 (46.2%)
+  Missed            : 49 (53.8%)
+
+======================================================================

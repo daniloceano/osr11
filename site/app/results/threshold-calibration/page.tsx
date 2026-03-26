@@ -6,7 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 export const metadata = {
   title: 'Threshold Calibration (CSI Grid Scan) — OSR11',
   description:
-    'Systematic optimisation of Hₛ and SSH_total exceedance thresholds against the 91-event SC coastal disaster database. CSI grid scan over 81 threshold pairs (q50–q90 × q50–q90) with causal/antecedent matching window.',
+    'Systematic optimisation of Hₛ and SSH_total exceedance thresholds against the 91-event SC coastal disaster database. CSI grid scan over q50–q90 threshold pairs (every 5 percentile points) with causal/antecedent matching window.',
 };
 
 export default function ThresholdCalibrationPage() {
@@ -51,8 +51,8 @@ export default function ThresholdCalibrationPage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               {[
-                { label: 'Threshold grid',  value: 'q50–q90 in steps of 0.05 (9 × 9 = 81 pairs)' },
-                { label: 'SSH variable',    value: 'SSH_total = zos + FES2022 tide' },
+                { label: 'Threshold grid',  value: 'q50–q90, every 5 percentile points (9 × 9 = 81 pairs) · configurable via pct_step in analysis_config.py' },
+                { label: 'SSH variable',    value: 'SSH_total = zos + FES2022 tide (00:00 UTC instantaneous)' },
                 { label: 'Match window',    value: '[D-2, D-1, D, D+1 00Z] — causal/antecedent' },
                 { label: 'Primary metric',  value: 'CSI = H / (H + M + F)' },
                 { label: 'Local thresholds', value: 'Per grid point · full annual climatology' },
@@ -110,7 +110,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   step: '0',
                   title: 'Reuse infrastructure from Steps 2–3',
-                  text: 'The municipality→grid association, climatological Hₛ and SSH series, and FES2022 tidal cache from Steps 2 and 3 are reused without modification. No new grid matching is performed. SSH_total = SSH + FES2022 tide (daily 00:00 UTC) is computed for each unique grid point.',
+                  text: 'The municipality→grid association uses a centralised preprocessing reference (outputs/preprocessing/municipality_grid_ref.csv) that selects the nearest grid point with ≥80% valid data across the full time series — resolving NaN-coverage issues for northern SC municipalities. Climatological Hₛ and SSH series and the FES2022 tidal cache from Steps 2–3 are reused without modification. SSH_total = SSH + FES2022 tide (instantaneous 00:00 UTC) is computed for each unique grid point.',
                   tag: 'Reuse',
                   tagColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
                 },
@@ -124,7 +124,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   step: '2',
                   title: 'Build the threshold grid',
-                  text: 'Nine percentile levels are tested for each variable: q50, q55, q60, q65, q70, q75, q80, q85, q90. This produces 81 threshold pairs. Thresholds are computed locally at each municipality\'s grid point using the full annual climatological series (1993–2025), not seasonally.',
+                  text: 'Nine percentile levels are tested for each variable: q50, q55, q60, q65, q70, q75, q80, q85, q90 (every 5 percentile points). This produces 81 threshold pairs. The sweep range and step are controlled by three parameters in analysis_config.py (pct_start, pct_stop, pct_step), making it straightforward to change resolution (e.g., every 2%) or extend the range (e.g., to q95). Thresholds are computed locally at each municipality\'s grid point using the full annual climatological series (1993–2025), not seasonally.',
                   tag: 'Grid scan',
                   tagColor: 'text-violet-700 bg-violet-50 border-violet-200',
                 },
@@ -301,8 +301,8 @@ export default function ThresholdCalibrationPage() {
               {[
                 {
                   icon: '⚠️',
-                  title: 'Daily temporal resolution',
-                  text: 'WAVERYS and GLORYS12 are daily datasets. The compound condition is checked at daily 00Z snapshots, not at hourly resolution. Intra-day timing (e.g., whether a tidal peak coincides with the wave maximum) is not resolved. The D+1 00Z tolerance partially compensates for UTC midnight mismatches.',
+                  title: 'Daily temporal resolution — instantaneous 00:00 UTC snapshots',
+                  text: 'WAVERYS and GLORYS12 are daily datasets. Both SSH and Hₛ use their 00:00 UTC values, and the FES2022 tide is also evaluated at 00:00 UTC (instantaneous snapshot at midnight, not a daily average). Intra-day tidal peaks that occur at other times (e.g., afternoon high tide) are not captured. The D+1 00Z tolerance partially compensates for events whose peak occurred late on civil day D.',
                 },
                 {
                   icon: '⚠️',
@@ -321,8 +321,8 @@ export default function ThresholdCalibrationPage() {
                 },
                 {
                   icon: '⚠️',
-                  title: 'NaN coverage for northern SC municipalities',
-                  text: 'Approximately 50% of northern SC municipalities (Araquari, São Francisco do Sul, Itapoá, etc.) have partial or complete NaN coverage due to GLORYS12 and WAVERYS grid resolution limits near complex coastal geometries. These events are treated as misses and reported in the run log.',
+                  title: 'Data coverage near complex coastal geometries',
+                  text: 'Northern SC municipalities (Araquari, São Francisco do Sul, Itapoá, etc.) are near estuaries and embayments that may lie at or beyond the limit of the GLORYS12/WAVERYS grid resolution. The preprocessing reference (src/preprocessing/municipality_grid_ref.py) selects the nearest grid point with ≥80% valid data across the full series, which may be a few kilometres offshore. Municipalities where no grid point meets this threshold are flagged as insufficient_data in the reference table and logged at run time.',
                 },
                 {
                   icon: '⚠️',

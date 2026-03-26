@@ -2,22 +2,31 @@
 Event extraction for threshold calibration.
 
 For each reported event (municipality + date):
-1. Resolves the municipality to its nearest grid point in the unified dataset,
-   using either the pre-computed Part E grid-association table (if available)
-   or a fallback lookup of approximate coastal coordinates.
+1. Resolves the municipality to its nearest grid point in the unified dataset.
 2. Extracts the full climatological series at that point (for threshold
    computation).
 3. Extracts the 7-day window centred on the reported date
    (3 days before + event day + 3 days after).
 
-Design
-------
-Municipality coordinates are resolved in priority order:
-  (a) Pre-computed grid table from Part E (outputs/south_sc_test_data_exploratory/
-      tables/tab_municipality_grid_association.csv) — most accurate.
-  (b) Hardcoded approximate coastal positions for South SC municipalities
-      (known from IBGE / OpenStreetMap; suitable for this test domain).
-  (c) Domain-centre fallback (logs a warning).
+Municipality → grid resolution priority
+---------------------------------------
+  (a) Preprocessing reference table (outputs/preprocessing/municipality_grid_ref.csv)
+      — produced by src/preprocessing/municipality_grid_ref.py.  This table includes
+      valid-data fraction over the full time series and selects the nearest grid point
+      with sufficient coverage.  Recommended approach; run the preprocessing script
+      once before running any analysis step.
+  (b) Pre-computed Part E grid-association table (outputs/south_sc_test_data_exploratory/
+      tables/tab_municipality_grid_association.csv).
+  (c) Hardcoded approximate coastal positions for all SC municipalities.
+  (d) Domain-centre fallback (logs a warning).
+
+Grid validity check
+-------------------
+When using the hardcoded fallback (option c), ``_find_nearest_valid_point``
+selects the nearest grid cell where BOTH VHM0 and zos have valid data for at
+least ``MIN_VALID_FRACTION`` of all time steps.  This avoids matching events to
+land or near-coastal cells that are mostly NaN in the reanalysis products —
+the primary cause of northern-SC municipalities appearing as misses.
 
 Events whose reported date falls outside the dataset time range are skipped
 with a warning.
@@ -35,6 +44,11 @@ import xarray as xr
 from src.preliminary_compound.config.analysis_config import CFG
 
 log = logging.getLogger(__name__)
+
+# Minimum fraction of time steps that must be non-NaN for BOTH variables
+# at a candidate grid point.  Points below this threshold are skipped when
+# searching for the nearest valid grid point (hardcoded-fallback path).
+MIN_VALID_FRACTION: float = 0.80
 
 # ── Approximate coastal positions for all SC municipalities ──────────────────
 # Source: approximate coastal centroid derived from IBGE / OpenStreetMap.
@@ -78,7 +92,16 @@ _SOUTH_SC_COORDS: dict[str, tuple[float, float]] = {
     "Itapoá":                        (-26.11, -48.62),
 }
 
-# Path to the pre-computed Part E grid association table
+# ── Reference table paths (resolution priority order) ─────────────────────────
+
+# (a) Preprocessing reference — produced by src/preprocessing/municipality_grid_ref.py
+_PREPROCESSING_REF = (
+    Path(CFG["output_root"]).parents[0]  # outputs/
+    / "preprocessing"
+    / "municipality_grid_ref.csv"
+)
+
+# (b) Part E grid association table — from the exploratory step
 _PART_E_TABLE = (
     Path(CFG["output_root"]).parents[0]  # outputs/
     / "south_sc_test_data_exploratory"
@@ -223,13 +246,23 @@ def _build_muni_grid_map(
     ds: xr.Dataset,
     df_events: pd.DataFrame,
 ) -> tuple[dict[str, tuple[float, float]], str]:
-    """Return (muni→(lat, lon), source_label) for all unique municipalities."""
+    """Return (muni→(lat, lon), source_label) for all unique municipalities.
 
-    # (a) Try Part E pre-computed table
+    Resolution priority:
+      (a) Preprocessing reference (outputs/preprocessing/municipality_grid_ref.csv)
+      (b) Part E pre-computed table
+      (c) Hardcoded coastal coordinates
+    """
+
+    # (a) Preprocessing reference — preferred; includes valid-fraction filtering
+    if _PREPROCESSING_REF.exists():
+        return _load_from_preprocessing_ref(df_events), "preprocessing_ref"
+
+    # (b) Part E pre-computed table
     if _PART_E_TABLE.exists():
         return _load_from_part_e_table(df_events), "part_e"
 
-    # (b) Hardcoded coordinates
+    # (c) Hardcoded coordinates
     municipalities = df_events["municipality"].dropna().unique().tolist()
     result: dict[str, tuple[float, float]] = {}
     missing = []
@@ -248,6 +281,41 @@ def _build_muni_grid_map(
         len(result), len(municipalities),
     )
     return result, "hardcoded"
+
+
+def _load_from_preprocessing_ref(
+    df_events: pd.DataFrame,
+) -> dict[str, tuple[float, float]]:
+    """Load municipality→grid-point mapping from the preprocessing reference CSV.
+
+    The preprocessing reference is produced by
+    ``src/preprocessing/municipality_grid_ref.py`` and includes valid-data
+    fraction filtering across the full time series.  Only entries with
+    ``data_quality == 'ok'`` (or equivalent) are included.
+    """
+    df_ref = pd.read_csv(_PREPROCESSING_REF)
+    result: dict[str, tuple[float, float]] = {}
+    skipped = []
+    for _, row in df_ref.iterrows():
+        muni = str(row.get("municipality", ""))
+        lat  = float(row.get("grid_lat", np.nan))
+        lon  = float(row.get("grid_lon", np.nan))
+        quality = str(row.get("data_quality", "ok"))
+        if pd.notna(lat) and pd.notna(lon) and quality != "insufficient_data":
+            result[muni] = (lat, lon)
+        elif quality == "insufficient_data":
+            skipped.append(muni)
+    if skipped:
+        log.warning(
+            "Preprocessing ref: %d municipalities have insufficient data coverage "
+            "and will fall back to the nearest available valid point: %s",
+            len(skipped), skipped,
+        )
+    log.info(
+        "Preprocessing reference loaded: %d municipalities mapped (%d flagged)",
+        len(result), len(skipped),
+    )
+    return result
 
 
 def _load_from_part_e_table(
@@ -272,53 +340,61 @@ def _find_nearest_valid_point(
     target_lon: float,
     hs_var: str,
     ssh_var: str,
+    min_valid_fraction: float = MIN_VALID_FRACTION,
 ) -> tuple[float | None, float | None, float]:
-    """Find the nearest grid point that has valid data for BOTH variables.
-    
+    """Find the nearest grid point with sufficient valid data for BOTH variables.
+
+    A grid point is considered valid if both ``hs_var`` and ``ssh_var`` have
+    non-NaN data for at least ``min_valid_fraction`` of all time steps.  This
+    avoids matching events to near-coastal cells that are mostly NaN in the
+    GLORYS12/WAVERYS reanalysis products (common for northern SC municipalities).
+
     Parameters
     ----------
     ds : xr.Dataset
-        Dataset with VHM0 and zos variables
+        Dataset with VHM0 and zos variables.
     target_lat, target_lon : float
-        Target coordinates (municipality location)
+        Target coordinates (municipality location).
     hs_var, ssh_var : str
-        Variable names for significant wave height and sea surface height
-    
+        Variable names for significant wave height and sea surface height.
+    min_valid_fraction : float
+        Minimum fraction of time steps that must be non-NaN for BOTH variables.
+        Default: ``MIN_VALID_FRACTION`` (0.80).
+
     Returns
     -------
-    (grid_lat, grid_lon, distance_km) or (None, None, -1) if no valid point found
+    (grid_lat, grid_lon, distance_km) or (None, None, -1) if no valid point found.
     """
     lat_grid = ds.latitude.values
     lon_grid = ds.longitude.values
-    
-    # Get one time slice to check data validity
-    hs_sample = ds[hs_var].isel(time=0).values
-    ssh_sample = ds[ssh_var].isel(time=0).values
-    
-    # Find points where BOTH variables are valid (not NaN)
-    both_valid = ~np.isnan(hs_sample) & ~np.isnan(ssh_sample)
-    
-    if not both_valid.any():
-        log.error("No grid points have both %s and %s data!", hs_var, ssh_var)
+
+    # Compute valid fraction over the full time series for each grid point.
+    # Shape: (lat, lon).  Uses float32 mean to avoid loading the full array twice.
+    hs_valid_frac  = (~np.isnan(ds[hs_var].values)).mean(axis=0)
+    ssh_valid_frac = (~np.isnan(ds[ssh_var].values)).mean(axis=0)
+    both_sufficient = (hs_valid_frac >= min_valid_fraction) & (ssh_valid_frac >= min_valid_fraction)
+
+    if not both_sufficient.any():
+        log.error(
+            "No grid points have ≥%.0f%% valid data for both %s and %s!",
+            min_valid_fraction * 100, hs_var, ssh_var,
+        )
         return None, None, -1.0
-    
-    # Calculate distances to all valid points
+
+    # Find the nearest grid point that meets the validity threshold.
     min_dist = np.inf
     best_lat, best_lon = None, None
-    
+
     for i, lat_g in enumerate(lat_grid):
         for j, lon_g in enumerate(lon_grid):
-            if both_valid[i, j]:
-                # Simple Euclidean distance in degrees
-                dist = np.sqrt((lat_g - target_lat)**2 + (lon_g - target_lon)**2)
+            if both_sufficient[i, j]:
+                dist = np.sqrt((lat_g - target_lat) ** 2 + (lon_g - target_lon) ** 2)
                 if dist < min_dist:
                     min_dist = dist
                     best_lat = lat_g
                     best_lon = lon_g
-    
-    # Convert distance from degrees to km (approximate)
+
     dist_km = min_dist * 111.0  # 1 degree ≈ 111 km
-    
     return float(best_lat), float(best_lon), dist_km
 
 
