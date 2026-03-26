@@ -30,7 +30,7 @@ export const resultCards: ResultCard[] = [
     id: 'preliminary-compound',
     title: 'Preliminary Compound Event Occurrence Analysis',
     subtitle: 'Joint q90 exceedance inspection · Full SC coast · 5 sectors · 91 events',
-    status: 'in-progress',
+    status: 'done',
     description:
       'Preliminary analysis of joint Hₛ and SSH exceedances during the 91 reported coastal disasters in the Leal et al. (2024) Santa Catarina database (5 sectors, 22 municipalities, 1998–2020). For each event, the ±3-day window at the nearest ocean grid point is inspected using a first-pass q90 threshold. MagicA peaks-over-threshold identifies distinct exceedance episodes. Key finding: only 2 of 91 events show concurrent q90 exceedances — a calibration signal that motivates the next step: a systematic threshold grid scan (hit rate / CSI optimisation across q50–q90 combinations).',
     rationale:
