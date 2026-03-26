@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -31,7 +32,7 @@ export default function ThresholdCalibrationPage() {
             </div>
 
             <div className="flex flex-wrap items-start gap-2 mb-4">
-              <StatusBadge status="in-progress" />
+              <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 4</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 91 events</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">81 threshold pairs · CSI optimisation</span>
@@ -344,65 +345,285 @@ export default function ThresholdCalibrationPage() {
           </div>
         </div>
 
-        {/* ── Results placeholder ───────────────────────────────────────────── */}
+        {/* ── Key results summary ───────────────────────────────────────────── */}
         <div className="border-b border-gray-200 bg-white py-14">
           <div className="mx-auto max-w-5xl px-6">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <StatusBadge status="in-progress" />
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <StatusBadge status="done" />
               <h2 className="text-xl font-bold text-gray-900">Results</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6 max-w-2xl">
-              The grid scan is currently being executed. Results — including CSI heatmaps,
-              the optimal threshold pair, per-event hit/miss tables, and the capture lag
-              distribution — will appear here once the analysis is complete.
-            </p>
 
-            <div className="grid gap-5 md:grid-cols-2">
-              {[
-                {
-                  code: 'fig_TC4_H1',
-                  label: 'CSI Heatmap',
-                  desc: 'CSI across all 81 threshold combinations. The cell with the highest CSI (marked with ★) identifies the optimal pair. A broad plateau indicates robustness; a sharp peak suggests strong dependence on the exact threshold choice.',
-                },
-                {
-                  code: 'fig_TC4_H2 / H3',
-                  label: 'FAR and POD Heatmaps',
-                  desc: 'FAR increases toward the bottom-left (permissive thresholds). POD decreases toward the top-right (restrictive thresholds). Together with the CSI heatmap, these reveal the trade-off surface.',
-                },
-                {
-                  code: 'fig_TC4_S1',
-                  label: 'Ranking Scatter: POD vs FAR',
-                  desc: 'Scatter plot of all 81 threshold pairs in POD–FAR space, with bubble size proportional to CSI. The optimal pair is highlighted. Pairs in the upper-left quadrant (high POD, low FAR) are preferred.',
-                },
-                {
-                  code: 'fig_TC4_S2',
-                  label: 'Per-Event Hit/Miss Chart',
-                  desc: 'Horizontal bar chart showing which of the 91 events are captured (green) or missed (red) at the optimal threshold pair, sorted by sector and date. Useful for identifying systematic misses by sector or season.',
-                },
-                {
-                  code: 'fig_TC4_S3',
-                  label: 'Capture Lag Distribution',
-                  desc: 'Bar chart showing at which offset (D-2, D-1, D, D+1) the compound condition was first satisfied for each hit. Reveals whether the method captures events primarily via antecedent forcing or on the event day.',
-                },
-                {
-                  code: 'fig_TC4_S4',
-                  label: 'POD by Coastal Sector',
-                  desc: 'POD broken down by the five SC coastal sectors (North, Central-North, Central, Central-South, South). Reveals geographic heterogeneity in detection performance — expected given the NaN coverage differences.',
-                },
-              ].map((fig) => (
-                <div key={fig.code} className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-mono text-gray-600">
-                      {fig.code}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-700">{fig.label}</span>
+            {/* Optimal pair highlight */}
+            <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5 mb-8">
+              <h3 className="text-sm font-semibold text-emerald-900 mb-3">
+                Optimal threshold pair (maximum CSI)
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                {[
+                  { label: 'Hₛ threshold',       value: 'q90', sub: '90th percentile' },
+                  { label: 'SSH_total threshold', value: 'q55', sub: '55th percentile' },
+                  { label: 'Hits (H)',            value: '42',  sub: 'of 91 events captured' },
+                  { label: 'Misses (M)',          value: '49',  sub: 'events not captured' },
+                  { label: 'False alarms (F)',    value: '3 406', sub: 'spurious compound episodes' },
+                  { label: 'POD',                value: '0.46', sub: 'H / (H + M)' },
+                  { label: 'FAR',                value: '0.99', sub: 'F / (H + F)' },
+                  { label: 'CSI',                value: '0.012', sub: 'H / (H + M + F)' },
+                ].map((m) => (
+                  <div key={m.label} className="rounded-lg border border-emerald-200 bg-white px-4 py-3 min-w-[110px]">
+                    <div className="text-xs text-gray-500 mb-0.5">{m.label}</div>
+                    <div className="text-xl font-black text-gray-900">{m.value}</div>
+                    <div className="text-xs text-gray-400">{m.sub}</div>
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">{fig.desc}</p>
-                  <div className="mt-3 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
-                    <span className="text-xs text-gray-400 italic">Figure pending — analysis in progress</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Interpretation note */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-8">
+              <p className="text-xs font-semibold text-amber-800 mb-1">Interpreting these results</p>
+              <p className="text-xs text-amber-700 leading-relaxed">
+                The optimal pair (Hₛ=q90, SSH_total=q55) captures <strong>42 of 91 events (POD=0.46)</strong> but
+                produces <strong>3 406 false alarms</strong> — compound episodes in the full 32-year series with no
+                matching reported disaster. This leads to a very low CSI (0.012) and FAR near 1. The dominant driver
+                is the low SSH_total threshold (q55), which causes the compound condition to fire very frequently
+                at all grid points. The CSI grid scan confirms that no threshold pair in the q50–q90 range achieves
+                a meaningful balance between POD and FAR at daily resolution with the current 91-event database.
+                This is an important result: it indicates that the compound signal as defined here (simultaneous
+                daily exceedances) is too common relative to the reporting density, motivating either a stricter
+                compound definition, episodic clustering, or a move to sub-daily data.
+              </p>
+            </div>
+
+            {/* Capture lag summary table */}
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Capture lag distribution at optimal pair</h3>
+            <div className="mb-8 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-100">
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Offset</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Label</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Captures</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Fraction</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { offset: 'D-2', label: 'Early antecedent', count: 8,  frac: '19%' },
+                    { offset: 'D-1', label: 'Late antecedent',  count: 13, frac: '31%' },
+                    { offset: 'D',   label: 'Event day',        count: 15, frac: '36%' },
+                    { offset: 'D+1 00Z', label: 'Operational tolerance', count: 6, frac: '14%' },
+                  ].map((r, i) => (
+                    <tr key={r.offset} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                      <td className="px-4 py-2.5 font-mono font-semibold text-gray-800">{r.offset}</td>
+                      <td className="px-4 py-2.5 text-gray-600">{r.label}</td>
+                      <td className="px-4 py-2.5 text-center font-bold text-gray-800">{r.count}</td>
+                      <td className="px-4 py-2.5 text-center text-gray-600">{r.frac}</td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-gray-300 bg-gray-100">
+                    <td className="px-4 py-2.5 font-semibold text-gray-800" colSpan={2}>Total hits</td>
+                    <td className="px-4 py-2.5 text-center font-black text-gray-900">42</td>
+                    <td className="px-4 py-2.5 text-center font-semibold text-gray-700">100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figure TC4-H1: CSI heatmap ────────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-gray-50 py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_H1</span>
+              <h2 className="text-xl font-bold text-gray-900">CSI Grid Scan</h2>
+            </div>
+            <p className="mb-6 text-sm text-gray-600 max-w-2xl">
+              CSI across all 81 threshold pairs (Hₛ × SSH_total, q50–q90). The ★ marks the optimal pair
+              (Hₛ=q90, SSH_total=q55). A broad plateau would indicate robustness; the absence of one
+              confirms the sensitivity of CSI to the false-alarm structure in this dataset.
+            </p>
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+              <div className="p-5">
+                <Image
+                  src="/figures/tc4_summary/fig_TC4_H1_csi_heatmap.png"
+                  alt="Figure TC4-H1 — CSI heatmap"
+                  width={900} height={750}
+                  className="w-full h-auto rounded-lg"
+                  unoptimized
+                />
+              </div>
+              <div className="border-t border-gray-100 px-5 py-4">
+                <p className="text-xs text-gray-500 italic leading-relaxed">
+                  CSI = H / (H + M + F) for each (Hₛ, SSH_total) percentile pair. Optimal pair marked with ★.
+                  Values annotated in each cell. Colourmap: YlGn (0 = white, higher = darker green).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figures TC4-H2 and TC4-H3 side by side ───────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="mb-6 text-xl font-bold text-gray-900">FAR and POD Heatmaps</h2>
+            <div className="grid gap-8 md:grid-cols-2">
+              <div>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_H2</span>
+                  <h3 className="text-base font-bold text-gray-900">False Alarm Ratio</h3>
+                </div>
+                <p className="mb-4 text-xs text-gray-600">
+                  FAR = F / (H + F). High FAR (near 1) for most pairs confirms that compound episodes
+                  in the full series vastly outnumber reported events, regardless of threshold.
+                </p>
+                <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                  <div className="p-4">
+                    <Image
+                      src="/figures/tc4_summary/fig_TC4_H2_far_heatmap.png"
+                      alt="Figure TC4-H2 — FAR heatmap"
+                      width={700} height={600}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
                   </div>
                 </div>
-              ))}
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_H3</span>
+                  <h3 className="text-base font-bold text-gray-900">Probability of Detection</h3>
+                </div>
+                <p className="mb-4 text-xs text-gray-600">
+                  POD = H / (H + M). POD decreases toward the top-right (more restrictive thresholds).
+                  The best POD (~0.59) is achieved at q85/q50 but with even higher false alarms.
+                </p>
+                <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                  <div className="p-4">
+                    <Image
+                      src="/figures/tc4_summary/fig_TC4_H3_pod_heatmap.png"
+                      alt="Figure TC4-H3 — POD heatmap"
+                      width={700} height={600}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figure TC4-S1: ranking scatter ────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-gray-50 py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_S1</span>
+              <h2 className="text-xl font-bold text-gray-900">Threshold Ranking: POD vs FAR</h2>
+            </div>
+            <p className="mb-6 text-sm text-gray-600 max-w-2xl">
+              All 81 threshold pairs plotted in POD–FAR space. Bubble size is proportional to CSI;
+              the optimal pair (★) is highlighted. The clustering of all points near FAR=1 reveals
+              the dominant false-alarm problem at daily resolution.
+            </p>
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+              <div className="p-5">
+                <Image
+                  src="/figures/tc4_summary/fig_TC4_S1_ranking_scatter.png"
+                  alt="Figure TC4-S1 — Ranking scatter POD vs FAR"
+                  width={800} height={650}
+                  className="w-full h-auto rounded-lg"
+                  unoptimized
+                />
+              </div>
+              <div className="border-t border-gray-100 px-5 py-4">
+                <p className="text-xs text-gray-500 italic leading-relaxed">
+                  POD vs FAR for all 81 pairs (q50–q90 × q50–q90). Bubble size ∝ CSI. Optimal pair marked with ★.
+                  Preferred region: upper-left (high POD, low FAR). The absence of any pair near the upper-left
+                  confirms the false-alarm problem is structural at this temporal resolution.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figure TC4-S2: per-event hit/miss ────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_S2</span>
+              <h2 className="text-xl font-bold text-gray-900">Per-Event Hit / Miss — Optimal Pair</h2>
+            </div>
+            <p className="mb-6 text-sm text-gray-600 max-w-2xl">
+              Each of the 91 reported SC coastal disasters shown as a horizontal bar: green = captured (hit),
+              red = missed. At the optimal pair (Hₛ=q90, SSH_total=q55), 42 events are hits and 49 are misses.
+            </p>
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+              <div className="p-5">
+                <Image
+                  src="/figures/tc4_summary/fig_TC4_S2_event_hits.png"
+                  alt="Figure TC4-S2 — Per-event hit/miss chart"
+                  width={1000} height={1200}
+                  className="w-full h-auto rounded-lg"
+                  unoptimized
+                />
+              </div>
+              <div className="border-t border-gray-100 px-5 py-4">
+                <p className="text-xs text-gray-500 italic leading-relaxed">
+                  Hit/miss at optimal pair (Hₛ=q90, SSH_total=q55). Green = compound condition met within [D-2, D+1 00Z].
+                  Red = not met. Events sorted by date within sector.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figures TC4-S3 and TC4-S4 side by side ───────────────────────── */}
+        <div className="border-b border-gray-200 bg-gray-50 py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="grid gap-8 md:grid-cols-2">
+              <div>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_S3</span>
+                  <h3 className="text-base font-bold text-gray-900">Capture Lag Distribution</h3>
+                </div>
+                <p className="mb-4 text-xs text-gray-600">
+                  Of the 42 hits: most (36%) are captured on the event day itself (D 00Z); 31% on D-1
+                  (antecedent forcing); 19% on D-2; 14% via the D+1 operational tolerance.
+                </p>
+                <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                  <div className="p-4">
+                    <Image
+                      src="/figures/tc4_summary/fig_TC4_S3_lag_distribution.png"
+                      alt="Figure TC4-S3 — Capture lag distribution"
+                      width={600} height={500}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_S4</span>
+                  <h3 className="text-base font-bold text-gray-900">POD by Coastal Sector</h3>
+                </div>
+                <p className="mb-4 text-xs text-gray-600">
+                  POD disaggregated by coastal sector at the optimal pair. Reveals whether detection
+                  performance is geographically uniform or sector-dependent.
+                </p>
+                <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                  <div className="p-4">
+                    <Image
+                      src="/figures/tc4_summary/fig_TC4_S4_sector_pod.png"
+                      alt="Figure TC4-S4 — POD by coastal sector"
+                      width={900} height={500}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
