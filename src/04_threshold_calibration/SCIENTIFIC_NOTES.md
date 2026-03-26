@@ -89,13 +89,13 @@ false alarms in the denominator. It ranges from 0 (no skill) to 1 (perfect detec
 
 ## Datasets and Variables
 
-| Variable | Source | Resolution | Period | Notes |
-|----------|--------|------------|--------|-------|
-| VHM0 (Hₛ) | WAVERYS (CMEMS) | ~8 km, daily 00Z | 1993–2025 | Regridded to WAVERYS grid |
-| zos (SSH) | GLORYS12 (CMEMS) | ~8 km, daily 00Z | 1993–2025 | Tidal-residual product |
-| tide | FES2022 via eo-tides | Daily 00Z (at grid points) | 1993–2025 | Evaluated at each municipality's grid point |
-| SSH_total | zos + tide | Daily 00Z | 1993–2025 | Computed per grid point |
-| Observed events | Leal et al. (2024) | Daily (civil date) | 1998–2023 | 91 events, 22 municipalities, 5 SC sectors |
+| Variable | Source | Resolution | Period (in NetCDF) | Effective analysis period | Notes |
+|----------|--------|------------|--------------------|--------------------------|-------|
+| VHM0 (Hₛ) | WAVERYS (CMEMS) | ~8 km, daily 00Z | 1993–2025 | 1998-01-XX − 2d to 2023-MM-DD + 1d | Clipped by preprocessing layer |
+| zos (SSH) | GLORYS12 (CMEMS) | ~8 km, daily 00Z | 1993–2025 | Same clip as VHM0 | Clipped by preprocessing layer |
+| tide | FES2022 via eo-tides | Daily 00Z (at grid points) | Evaluated at 00:00 UTC | Same clip applied via ssh_total_cache | Instantaneous snapshot at midnight |
+| SSH_total | zos + tide | Daily 00Z | — | Same clip as zos | Computed per grid point |
+| Observed events | Leal et al. (2024) | Daily (civil date) | 1998–2023 | 1998–2023 (full) | 91 events, 22 municipalities, 5 SC sectors |
 
 The unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc`) contains VHM0
 and zos on the same WAVERYS grid. FES2022 tides are computed at the same grid points using
@@ -111,10 +111,61 @@ The following components are reused **without modification**:
 
 - `src/02_preliminary_compound/events.build_event_records()`: resolves each of the 91
   reported events to its nearest valid grid point (municipality → WAVERYS/GLORYS12 cell)
-  and extracts the full climatological Hₛ and SSH series at that point.
+  and extracts the climatological Hₛ and SSH series at that point (from the clipped dataset).
 - `src/03_tidal_sensitivity/tides.build_tide_cache()`: computes FES2022 tidal predictions
   at daily 00:00 UTC for each unique grid point.
 - `src/03_tidal_sensitivity/tides.add_tide_to_ssh()`: computes SSH_total = SSH + tide.
+
+### Step 4.0b — Temporal domain restriction (preprocessing)
+
+**Problem addressed:** The unified dataset spans 1993–2025; the SC disaster database covers
+1998–2023. Without temporal restriction, Layer 2 scans ~7 years of unvalidated data
+(1993–1997 and 2024–2025). Any compound episode in those years is automatically classified
+as a false alarm — not because it is spurious, but because the reporting database simply does
+not cover those periods. This inflates F and biases FAR upward, artificially favouring more
+restrictive threshold pairs.
+
+**Solution:** Before building event records or computing any thresholds, the input dataset is
+clipped to the **validated period** — i.e., the range of event dates extended by the causal
+window margins:
+
+    t_start = min(event_dates) + min(offsets)   [e.g., 1998-01-XX − 2 days]
+    t_end   = max(event_dates) + max(offsets)   [e.g., 2023-MM-DD + 1 day]
+
+The offsets ensure that the full match window [D-2, D+1] of every event falls within the
+retained domain. This clip is applied to the xr.Dataset before any downstream computation.
+
+**Implementation:** `src/04_threshold_calibration/preprocessing.py`,
+function `clip_to_validated_period()`.
+
+**Effects on each analysis layer:**
+
+| Layer | Before clip | After clip |
+|-------|-------------|------------|
+| Quantile thresholds | Computed from ~32-year series | Computed from ~25-year series (~9,100 obs/grid point) |
+| Layer 1 (hit/miss) | No change — all events already in validated period | No change |
+| Layer 2 (false alarms) | Scans 1993–2025 (~11,700 steps) | Scans 1998–2023 ± window (~9,100 steps) |
+| F count | Includes episodes in 1993–1997 and 2024–2025 | Restricted to validated period only |
+| FAR | Inflated by unvalidatable episodes | Reflects only validatable domain |
+| CSI | Systematically suppressed by inflated F | More representative of true detection skill |
+
+**Design choice — full dataset clip vs. split-index approach:**
+An alternative implementation would retain the full 1993–2025 series for threshold
+computation (for climatological stability) while passing a restricted time index only to
+`run_false_alarms`. This split-index approach avoids any change to the quantile values at
+the cost of additional complexity (two different `time_index` objects in the pipeline). The
+full-clip approach was preferred because:
+
+1. It is architecturally simpler (one preprocessing call, one unified `time_index`).
+2. The 25-year period is statistically sufficient for robust percentile estimation.
+3. It avoids a subtle internal inconsistency where thresholds and the false alarm domain
+   correspond to different temporal extents.
+4. It is methodologically transparent: the calibration domain and the threshold reference
+   period are identical by construction.
+
+**Assumption:** The clipped period (~25 years) yields quantile estimates that are
+statistically equivalent to those from the full 32-year series. For daily percentiles
+(q50–q90), ~9,100 observations per grid point is more than adequate.
 
 ### Step 4.1 — Causal/antecedent matching window
 
@@ -144,7 +195,7 @@ For each threshold pair (thr_hs_pct, thr_ssh_pct):
         2. Compute local thresholds:
                thr_hs    = quantile(Hₛ_clim,       thr_hs_pct)
                thr_ssh   = quantile(SSH_total_clim, thr_ssh_pct)
-           using the full 1993–2025 climatological series at that grid point.
+           using the clipped climatological series (validated period) at that grid point.
         3. Build match_times = [D-2, D-1, D, D+1] ∩ time_index
         4. Check: captured = any(Hₛ(t) ≥ thr_hs AND SSH_total(t) ≥ thr_ssh
                                   for t in match_times)
@@ -158,7 +209,7 @@ the coast, reflecting the local climatological context.
 
 For each unique grid point and each threshold pair:
 
-    1. Find all compound days in the full 1993–2025 series:
+    1. Find all compound days in the validated-period series (after preprocessing clip):
            compound_mask(t) = (Hₛ(t) ≥ thr_hs) AND (SSH_total(t) ≥ thr_ssh)
     2. Cluster consecutive compound days (gap ≤ 1 day) into independent episodes.
     3. For each episode, check if any of its days falls within the causal window
@@ -193,25 +244,36 @@ The optimal pair is selected following the hierarchy: max CSI → min FAR → ma
    baseline given the current dataset. Hourly-resolution tidal effects will be considered
    in a future extension.
 
-2. **Local percentile thresholds**: Thresholds are computed from the full annual
-   climatological series at each municipality's grid point. No seasonal decomposition or
-   block maxima approach is used. This is consistent with Steps 2–3 and keeps the
-   comparison clean.
+2. **Local percentile thresholds**: Thresholds are computed from the clipped annual
+   climatological series at each municipality's grid point (validated period, ~25 years).
+   No seasonal decomposition or block maxima approach is used. This is consistent with
+   Steps 2–3 and keeps the comparison clean.
 
-3. **Single global match window**: The same causal window [D-2, D-1, D, D+1] is applied
+3. **Temporal domain restriction**: The analysis is restricted to the period covered by
+   the reported events database (1998–2023), extended by the causal window margins. The
+   unvalidated years 1993–1997 and 2024–2025 are excluded from both the false alarm scan
+   and the threshold computation. This is the correct calibration domain: we can only
+   evaluate detection skill where validation data exist.
+
+   *Quantile stability justification*: For daily data, ~9,100 observations per grid point
+   (25 years × 365 days) is more than sufficient for robust estimation of percentiles
+   between q50 and q90. Monte Carlo experiments on climatological series of this length
+   typically show quantile uncertainty < 2% of the IQR for sample sizes above 5,000.
+
+4. **Single global match window**: The same causal window [D-2, D-1, D, D+1] is applied
    uniformly to all municipalities and sectors. Sector-specific windows are not tested in
    the base implementation but are a natural sensitivity extension.
 
-4. **Event independence**: Each of the 91 reported events is treated as an independent
+5. **Event independence**: Each of the 91 reported events is treated as an independent
    observation. Some municipalities appear multiple times (repeat disasters). The method
    does not account for temporal clustering of observed events, which could bias the
    contingency table if multiple events share overlapping causal windows.
 
-5. **False alarm domain restriction**: False alarms are evaluated only at grid points with
+6. **False alarm domain restriction**: False alarms are evaluated only at grid points with
    at least one observed event. This is a deliberate scope restriction, not a bug. It means
    CSI may be somewhat optimistic relative to a full-domain scan.
 
-6. **NaN handling**: Grid points where either Hₛ or SSH_total has NaN throughout are
+7. **NaN handling**: Grid points where either Hₛ or SSH_total has NaN throughout are
    silently skipped. Approximately 50% of northern SC municipalities have partial or complete
    NaN coverage due to GLORYS12/WAVERYS grid resolution near complex coastal geometries.
    These events are recorded as misses and logged.
@@ -267,11 +329,19 @@ Results will be documented here after the analysis is executed. Key outputs to i
    municipalities with observed events. The broader SC coast may have additional false alarm
    episodes not captured by this scope restriction.
 
-5. **Threshold stationarity**: Percentile thresholds are computed over the full 1993–2025
-   period without accounting for long-term trends (e.g., sea level rise). For climate
+5. **Temporal domain restriction and its residual limitation**: The preprocessing clip
+   removes unvalidatable years from the false alarm count (Assumption 3). However, the
+   validated period (1998–2023) still has uneven reporting coverage: early years (1998–2005)
+   may have fewer reported events due to underreporting, not fewer actual coastal disasters.
+   Episodes during low-reporting years that remain inside the clip window could still inflate
+   F slightly. This limitation is inherent to validation data availability and is not
+   addressable without additional historical records.
+
+6. **Threshold stationarity**: Percentile thresholds are computed over the validated period
+   (1998–2023) without accounting for long-term trends (e.g., sea level rise). For climate
    projections, non-stationary thresholds would be required.
 
-6. **Independent events assumption**: Some municipalities have multiple events within a few
+7. **Independent events assumption**: Some municipalities have multiple events within a few
    years. If the threshold that captures one event is the same as the one that misses another,
    the contingency table may not be fully independent across observations.
 

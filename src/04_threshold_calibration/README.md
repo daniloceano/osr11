@@ -31,6 +31,29 @@ D-2, D-1, D, D+1 00Z
 
 The window is **asymmetric**: it accepts antecedents (the forcing may precede the reported impact) and includes D+1 00Z as an operational tolerance for the midnight-UTC snapshot convention. Compound episodes detected after D+1 are **not** counted as matches.
 
+## Temporal domain restriction (preprocessing)
+
+Before the grid scan, the unified dataset is clipped to the period covered by the
+reported events database, extended by the causal window margins:
+
+```
+t_start = min(event_dates) + min(offsets)   [earliest event − 2 days]
+t_end   = max(event_dates) + max(offsets)   [latest event + 1 day]
+```
+
+**Why this matters:** The unified dataset spans 1993–2025 but the SC disaster database
+covers only 1998–2023. Any compound episode in 1993–1997 or 2024–2025 has no validation
+event to pair with and would be automatically counted as a false alarm. This inflates F,
+distorts FAR, and shifts the optimal threshold pair towards artificially restrictive
+combinations. Clipping the dataset to the validated period eliminates this bias.
+
+**Effect on thresholds:** Local percentile thresholds are now computed from the clipped
+series (~25 years, ~9,100 daily observations per grid point). This is statistically
+equivalent to the full 32-year series for percentile estimation purposes.
+
+Implementation: `src/04_threshold_calibration/preprocessing.py`, function
+`clip_to_validated_period()`. Called from `main.py` immediately after loading.
+
 ## What is reused from previous steps
 
 | From | What |
@@ -46,6 +69,7 @@ No new geographic matching is performed. The same grid points established in Ste
 ```
 src/04_threshold_calibration/
 ├── main.py              # CLI orchestrator (--all, --hits-misses, --false-alarms, --summary)
+├── preprocessing.py     # Temporal domain restriction: clip dataset to validated period
 ├── RUN.md               # Quick-start guide
 ├── README.md            # This file
 ├── SCIENTIFIC_NOTES.md  # Full methodological documentation

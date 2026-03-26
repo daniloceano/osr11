@@ -35,7 +35,7 @@ event_idx,disaster_id,municipality,date,thr_hs_pct,thr_ssh_pct,captured,lag_from
 33,26,Barra Velha,2011-05-29,0.9,0.55,True,0.0,1.9837497472763062,0.23693403601646423,2011-05-29,4,2,North
 34,27,Penha,2011-06-04,0.9,0.55,False,,,,,4,0,Central-north
 35,28,Balneário Barra do Sul,2012-01-27,0.9,0.55,False,,,,,4,0,North
-36,29,Balneário Barra do Sul,2015-07-27,0.9,0.55,True,-2.0,1.556249976158142,0.2075793221592903,2015-07-25,4,1,North
+36,29,Balneário Barra do Sul,2015-07-27,0.9,0.55,True,-2.0,1.556249976158142,0.2075793221592903,2015-07-25,4,2,North
 37,30,Balneário Barra do Sul,2015-08-18,0.9,0.55,False,,,,,4,0,North
 38,31,Balneário Barra do Sul,2016-07-01,0.9,0.55,False,,,,,4,0,North
 39,32,Florianópolis,2016-09-15,0.9,0.55,False,,,,,4,0,Central
@@ -54,7 +54,7 @@ event_idx,disaster_id,municipality,date,thr_hs_pct,thr_ssh_pct,captured,lag_from
 52,43,Barra Velha,2017-09-13,0.9,0.55,False,,,,,4,0,Central
 53,44,Navegantes,2017-09-16,0.9,0.55,True,-2.0,1.6050000190734863,0.01509222760796547,2017-09-14,4,2,Central-north
 54,45,Balneário Barra do Sul,2017-09-18,0.9,0.55,False,,,,,4,0,North
-55,46,Itapema,2017-09-30,0.9,0.55,True,-1.0,1.6749999523162842,0.15640850458294153,2017-09-29,4,1,Central-north
+55,46,Itapema,2017-09-30,0.9,0.55,True,-1.0,1.6749999523162842,0.15640850458294153,2017-09-29,4,2,Central-north
 56,47,Garopaba,2017-10-01,0.9,0.55,True,-2.0,1.9962499141693115,0.05555320158600807,2017-09-29,4,1,Central-south
 57,48,São Francisco do Sul,2017-10-07,0.9,0.55,False,,,,,4,0,North
 58,49,Bombinhas,2017-12-10,0.9,0.55,False,,,,,4,0,Central-north

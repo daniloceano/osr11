@@ -22,12 +22,27 @@ If no argument is given, --all is assumed.
 Pipeline
 --------
 1. Load unified metocean dataset and reported events  [reuse 02_preliminary_compound]
-2. Build event records (municipality → nearest grid point)  [reuse 02_preliminary_compound]
-3. Compute FES2022 tidal series for each unique grid point  [reuse 03_tidal_sensitivity]
-4. Build SSH_total = SSH + tide climatological series per grid point  [NEW]
-5. [--hits-misses] Layer 1: event-by-event hit/miss scan across all threshold pairs
-6. [--false-alarms] Layer 2: false alarm count from full-series scan
-7. [--summary] Compute CSI/POD/FAR, select optimal pair, save tables and figures
+2. Clip dataset to validated period (event date range ± causal window margins)  [NEW]
+3. Build event records (municipality → nearest grid point)  [reuse 02_preliminary_compound]
+4. Compute FES2022 tidal series for each unique grid point  [reuse 03_tidal_sensitivity]
+5. Build SSH_total = SSH + tide series per grid point  [NEW]
+6. [--hits-misses] Layer 1: event-by-event hit/miss scan across all threshold pairs
+7. [--false-alarms] Layer 2: false alarm count from validated-period scan
+8. [--summary] Compute CSI/POD/FAR, select optimal pair, save tables and figures
+
+Temporal domain restriction (Step 2)
+-------------------------------------
+The unified dataset spans 1993–2025 but the validation database (Leal et al., 2024)
+covers only 1998–2023. Scanning the full series in Layer 2 inflates F with compound
+episodes in unvalidated years (1993–1997, 2024–2025), which distorts FAR and CSI.
+
+The preprocessing step clips the dataset to:
+
+    [min(event_dates) + min(offsets), max(event_dates) + max(offsets)]
+
+i.e., typically from ~1997-12-30 to ~2023-MM-DD+1 (exact dates depend on the
+event database). This restricts both the false alarm scan and the quantile
+threshold computation to the same validated temporal domain.
 
 SSH_total rationale
 -------------------
@@ -56,6 +71,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 from src.threshold_calibration.config.analysis_config import CFG
+from src.threshold_calibration.preprocessing import clip_to_validated_period
 from src.threshold_calibration.utils import make_output_dirs
 from src.threshold_calibration.calibration import (
     build_ssh_total_cache,
@@ -136,9 +152,20 @@ def main(args: argparse.Namespace | None = None) -> None:
     # ── Load data (reuse preliminary_compound loaders) ─────────────────────────
     ds        = load_unified_dataset()
     df_events = load_reported_events()
-    time_index = ds.time.values
+
+    # ── Preprocessing: clip dataset to validated temporal domain ────────────────
+    #
+    # The unified dataset spans 1993–2025; the reported events cover 1998–2023.
+    # Without this step, Layer 2 scans ~7 unvalidated years and classifies any
+    # compound episode there as a false alarm, inflating F artificially.
+    # Clipping anchors both quantile thresholds and the false alarm scan to the
+    # same validated period. See src/04_threshold_calibration/preprocessing.py
+    # for the full rationale.
     import pandas as pd
-    time_index = pd.DatetimeIndex(time_index)
+    ds, _t_clip_start, _t_clip_end = clip_to_validated_period(
+        ds, df_events, CFG["match_window_offsets"]
+    )
+    time_index = pd.DatetimeIndex(ds.time.values)
 
     # ── Build event records (reuse preliminary_compound events module) ──────────
     records = build_event_records(ds, df_events)

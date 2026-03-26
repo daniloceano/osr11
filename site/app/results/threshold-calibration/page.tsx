@@ -56,7 +56,7 @@ export default function ThresholdCalibrationPage() {
                 { label: 'SSH variable',    value: 'SSH_total = zos + FES2022 tide (00:00 UTC instantaneous)' },
                 { label: 'Match window',    value: '[D-2, D-1, D, D+1 00Z] — causal/antecedent' },
                 { label: 'Primary metric',  value: 'CSI = H / (H + M + F)' },
-                { label: 'Local thresholds', value: 'Per grid point · full annual climatology' },
+                { label: 'Local thresholds', value: 'Per grid point · validated-period climatology (~25 yr)' },
                 { label: 'Events',          value: '91 events · 22 municipalities · 5 sectors' },
               ].map((m) => (
                 <div key={m.label} className="rounded-lg border border-gray-300/60 bg-gray-50 px-3 py-2">
@@ -116,6 +116,13 @@ export default function ThresholdCalibrationPage() {
                   tagColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
                 },
                 {
+                  step: '0b',
+                  title: 'Temporal domain restriction — clip to validated period',
+                  text: 'The unified dataset spans 1993–2025, but the SC disaster database covers only 1998–2023. Without restriction, Layer 2 would scan ~7 unvalidated years and classify every compound episode there as a false alarm — not because the episode is spurious, but because no validation record exists for those periods. This inflates F and distorts FAR. The preprocessing layer clips the dataset to [min(event_dates) + min(offsets), max(event_dates) + max(offsets)], i.e., from roughly late 1997 to early 2024. Both the false alarm scan (Layer 2) and the quantile threshold computation operate on this validated period only.',
+                  tag: 'Preprocessing',
+                  tagColor: 'text-amber-700 bg-amber-50 border-amber-200',
+                },
+                {
                   step: '1',
                   title: 'Define the causal matching window [D-2, D-1, D, D+1 00Z]',
                   text: 'For each reported event on civil date D, the admissible match timestamps are D-2, D-1, D, and D+1 (operational 00Z tolerance). The window is asymmetric: antecedents are allowed (the forcing may precede the reported impact by 1–2 days), but compound episodes detected only on D+2 or later are NOT considered matches.',
@@ -125,7 +132,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   step: '2',
                   title: 'Build the threshold grid',
-                  text: 'Nine percentile levels are tested for each variable: q50, q55, q60, q65, q70, q75, q80, q85, q90 (every 5 percentile points). This produces 81 threshold pairs. The sweep range and step are controlled by three parameters in analysis_config.py (pct_start, pct_stop, pct_step), making it straightforward to change resolution (e.g., every 2%) or extend the range (e.g., to q95). Thresholds are computed locally at each municipality\'s grid point using the full annual climatological series (1993–2025), not seasonally.',
+                  text: 'Nine percentile levels are tested for each variable: q50, q55, q60, q65, q70, q75, q80, q85, q90 (every 5 percentile points). This produces 81 threshold pairs. The sweep range and step are controlled by three parameters in analysis_config.py (pct_start, pct_stop, pct_step), making it straightforward to change resolution (e.g., every 2%) or extend the range (e.g., to q95). Thresholds are computed locally at each municipality\'s grid point using the validated-period climatological series (~25 years, not the full 1993–2025 record), not seasonally.',
                   tag: 'Grid scan',
                   tagColor: 'text-violet-700 bg-violet-50 border-violet-200',
                 },
@@ -139,7 +146,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   step: '4',
                   title: 'Layer 2 — False alarm detection from the full series',
-                  text: 'For each unique grid point and each threshold pair: scan the full 1993–2025 series for compound days (both conditions simultaneously exceeded); cluster consecutive compound days into episodes (gap ≤ 1 day); check if each episode overlaps with any observed event\'s causal window at that grid point. Episodes that do not overlap → false alarms (F).',
+                  text: 'For each unique grid point and each threshold pair: scan the validated-period series (after preprocessing clip, ~1998–2023) for compound days (both conditions simultaneously exceeded); cluster consecutive compound days into episodes (gap ≤ 1 day); check if each episode overlaps with any observed event\'s causal window at that grid point. Episodes that do not overlap → false alarms (F). The temporal restriction ensures F only counts episodes that the validation database is in a position to confirm or reject.',
                   tag: 'Layer 2',
                   tagColor: 'text-red-700 bg-red-50 border-red-200',
                 },
