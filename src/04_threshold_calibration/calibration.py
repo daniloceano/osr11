@@ -325,6 +325,77 @@ def _episode_is_paired(
     return False
 
 
+def _count_fa_detailed(
+    records: list,
+    ssh_total_cache: dict,
+    time_index: pd.DatetimeIndex,
+    hs_pct: float,
+    ssh_pct: float,
+    episode_max_gap: int,
+) -> tuple[int, dict[str, int]]:
+    """Count false alarm episodes for one threshold pair, with per-municipality breakdown.
+
+    Returns
+    -------
+    (total_fa, fa_per_municipality)
+        total_fa : int — total false alarm episodes across all grid points
+        fa_per_municipality : dict mapping municipality name → FA count at its grid point.
+            Multiple municipalities that share the same grid point receive the same count.
+    """
+    # Collect unique grid points and their climatological series
+    unique_points: dict[tuple[float, float], Any] = {}
+    for rec in records:
+        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
+        if key not in unique_points:
+            unique_points[key] = (rec.hs_clim, ssh_total_cache.get(key, pd.Series(dtype=float)))
+
+    # Build reverse mapping: grid point → list of municipality names
+    point_to_munis: dict[tuple[float, float], list[str]] = {}
+    for rec in records:
+        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
+        if key not in point_to_munis:
+            point_to_munis[key] = []
+        if rec.municipality not in point_to_munis[key]:
+            point_to_munis[key].append(rec.municipality)
+
+    total_fa = 0
+    fa_per_point: dict[tuple[float, float], int] = {k: 0 for k in unique_points}
+
+    for (lat, lon), (hs_clim, ssh_total_clim) in unique_points.items():
+        if hs_clim.empty or ssh_total_clim.empty:
+            continue
+
+        thr_hs  = _local_threshold(hs_clim, hs_pct)
+        thr_ssh = _local_threshold(ssh_total_clim, ssh_pct)
+
+        if np.isnan(thr_hs) or np.isnan(thr_ssh):
+            continue
+
+        hs_aligned  = hs_clim.reindex(time_index)
+        ssh_aligned = ssh_total_clim.reindex(time_index)
+
+        compound_mask = (hs_aligned >= thr_hs) & (ssh_aligned >= thr_ssh)
+        episodes = _cluster_episodes(compound_mask, episode_max_gap)
+
+        if not episodes:
+            continue
+
+        event_windows = _build_event_windows_for_point(records, lat, lon, time_index)
+
+        for episode in episodes:
+            if not _episode_is_paired(episode, event_windows):
+                total_fa += 1
+                fa_per_point[(lat, lon)] += 1
+
+    # Map per-point counts to municipality names
+    fa_per_muni: dict[str, int] = {}
+    for point, count in fa_per_point.items():
+        for muni in point_to_munis.get(point, []):
+            fa_per_muni[muni] = count
+
+    return total_fa, fa_per_muni
+
+
 def count_false_alarms_for_pair(
     records: list,
     ssh_total_cache: dict,
@@ -350,42 +421,9 @@ def count_false_alarms_for_pair(
     -------
     int — number of false alarm episodes
     """
-    # Collect unique grid points
-    unique_points: dict[tuple[float, float], Any] = {}
-    for rec in records:
-        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
-        if key not in unique_points:
-            unique_points[key] = (rec.hs_clim, ssh_total_cache.get(key, pd.Series(dtype=float)))
-
-    total_fa = 0
-
-    for (lat, lon), (hs_clim, ssh_total_clim) in unique_points.items():
-        if hs_clim.empty or ssh_total_clim.empty:
-            continue
-
-        thr_hs  = _local_threshold(hs_clim, hs_pct)
-        thr_ssh = _local_threshold(ssh_total_clim, ssh_pct)
-
-        if np.isnan(thr_hs) or np.isnan(thr_ssh):
-            continue
-
-        # Align series
-        hs_aligned    = hs_clim.reindex(time_index)
-        ssh_aligned   = ssh_total_clim.reindex(time_index)
-
-        compound_mask = (hs_aligned >= thr_hs) & (ssh_aligned >= thr_ssh)
-        episodes = _cluster_episodes(compound_mask, episode_max_gap)
-
-        if not episodes:
-            continue
-
-        # Get all event windows at this grid point
-        event_windows = _build_event_windows_for_point(records, lat, lon, time_index)
-
-        for episode in episodes:
-            if not _episode_is_paired(episode, event_windows):
-                total_fa += 1
-
+    total_fa, _ = _count_fa_detailed(
+        records, ssh_total_cache, time_index, hs_pct, ssh_pct, episode_max_gap
+    )
     return total_fa
 
 
@@ -396,7 +434,7 @@ def run_false_alarms(
     hs_percentiles: list[float],
     ssh_percentiles: list[float],
     episode_max_gap: int,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Run Layer 2: false alarm count for all threshold pairs.
 
     Parameters
@@ -409,11 +447,17 @@ def run_false_alarms(
 
     Returns
     -------
-    DataFrame with columns [thr_hs_pct, thr_ssh_pct, F]
+    (fa_df, fa_per_muni_df)
+        fa_df : DataFrame with columns [thr_hs_pct, thr_ssh_pct, F]
+            Aggregate false alarm count per threshold pair.
+        fa_per_muni_df : DataFrame with columns [thr_hs_pct, thr_ssh_pct, municipality, F]
+            Per-municipality false alarm count per threshold pair. Municipalities
+            that share the same grid point receive the same count.
     """
     n_pairs = len(hs_percentiles) * len(ssh_percentiles)
     pair_idx = 0
     rows_fa: list[dict] = []
+    rows_fa_muni: list[dict] = []
 
     for hs_pct in hs_percentiles:
         for ssh_pct in ssh_percentiles:
@@ -424,13 +468,24 @@ def run_false_alarms(
                     pair_idx, n_pairs,
                     round(hs_pct * 100), round(ssh_pct * 100),
                 )
-            F = count_false_alarms_for_pair(
+            F, fa_per_muni = _count_fa_detailed(
                 records, ssh_total_cache, time_index,
                 hs_pct, ssh_pct, episode_max_gap,
             )
             rows_fa.append({"thr_hs_pct": hs_pct, "thr_ssh_pct": ssh_pct, "F": F})
+            for muni, count in fa_per_muni.items():
+                rows_fa_muni.append({
+                    "thr_hs_pct": hs_pct,
+                    "thr_ssh_pct": ssh_pct,
+                    "municipality": muni,
+                    "F": count,
+                })
 
-    return pd.DataFrame(rows_fa)
+    fa_df = pd.DataFrame(rows_fa)
+    fa_per_muni_df = pd.DataFrame(rows_fa_muni) if rows_fa_muni else pd.DataFrame(
+        columns=["thr_hs_pct", "thr_ssh_pct", "municipality", "F"]
+    )
+    return fa_df, fa_per_muni_df
 
 
 # ── Build SSH_total cache ──────────────────────────────────────────────────────

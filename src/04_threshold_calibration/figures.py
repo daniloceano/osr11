@@ -11,6 +11,9 @@ TC4-S1  Ranking scatter: POD vs FAR (bubble size = CSI)
 TC4-S2  Hit/miss bar chart per event at the optimal threshold pair
 TC4-S3  Capture lag distribution (D-2 / D-1 / D / D+1 00Z)
 TC4-S4  CSI, FAR, POD by coastal sector at optimal pair
+TC4-M1  Municipality hit-rate heatmap (city × threshold pair)
+TC4-M2  Municipality miss-rate heatmap (city × threshold pair)
+TC4-M3  Municipality false-alarm heatmap (city × threshold pair)
 """
 from __future__ import annotations
 
@@ -472,6 +475,348 @@ def plot_sector_metrics(df_event_hits: pd.DataFrame, optimal: dict) -> plt.Figur
     return fig
 
 
+# ── TC4-M1/M2/M3: Municipality spatial heatmaps ───────────────────────────────
+
+_SECTOR_ORDER = ["North", "Central-north", "Central", "Central-south", "South"]
+
+
+def _build_municipality_order(
+    df_event_hits: pd.DataFrame,
+    df_muni_ref: pd.DataFrame | None,
+) -> list[tuple[str, str]]:
+    """Return (municipality, sector) tuples in canonical coastal display order.
+
+    Order: North → Central-north → Central → Central-south → South.
+    Within each sector: sorted by latitude (northernmost = least-negative first).
+    For municipalities whose events span multiple sectors, the most frequent
+    sector assignment in the event database is used.
+
+    Parameters
+    ----------
+    df_event_hits : full event-hits table (all threshold pairs).
+    df_muni_ref   : municipality grid reference table (provides muni_lat).
+
+    Returns
+    -------
+    list of (municipality, sector) tuples, length = number of unique municipalities.
+    """
+    # Most common sector per municipality
+    sector_map: dict[str, str] = (
+        df_event_hits.groupby("municipality")["coastal_sector"]
+        .agg(lambda x: x.value_counts().index[0])
+        .to_dict()
+    )
+
+    # Latitude from reference table (more northerly = less negative lat)
+    lat_map: dict[str, float] = {}
+    if df_muni_ref is not None and not df_muni_ref.empty and "muni_lat" in df_muni_ref.columns:
+        lat_map = df_muni_ref.set_index("municipality")["muni_lat"].to_dict()
+
+    def _sort_key(muni: str) -> tuple[int, float]:
+        sector = sector_map.get(muni, "Unknown")
+        rank = _SECTOR_ORDER.index(sector) if sector in _SECTOR_ORDER else 99
+        lat = lat_map.get(muni, 0.0)
+        return (rank, -lat)  # -lat: more northern first within sector
+
+    munis_sorted = sorted(sector_map.keys(), key=_sort_key)
+    return [(m, sector_map[m]) for m in munis_sorted]
+
+
+def _draw_municipality_heatmap(
+    matrix: np.ndarray,
+    muni_order: list[tuple[str, str]],
+    hs_percentiles: list[float],
+    ssh_percentiles: list[float],
+    title: str,
+    cmap: str,
+    vmin: float,
+    vmax: float,
+    cbar_label: str,
+    optimal: dict | None = None,
+) -> plt.Figure:
+    """Render a (municipality × threshold-pair) heatmap.
+
+    Parameters
+    ----------
+    matrix         : (n_munis × 81) array of values. NaN = no data.
+    muni_order     : list of (municipality, sector) from _build_municipality_order().
+    hs_percentiles : sorted list of Hₛ percentile levels (e.g. [0.50, …, 0.90]).
+    ssh_percentiles: sorted list of SSH percentile levels.
+    title          : figure title string.
+    cmap, vmin, vmax, cbar_label : colormap parameters.
+    optimal        : dict with 'thr_hs_pct' and 'thr_ssh_pct' for the optimal pair.
+                     If provided, the corresponding column is highlighted.
+    """
+    n_munis = len(muni_order)
+    n_pairs = len(hs_percentiles) * len(ssh_percentiles)  # 81
+
+    fig, ax = plt.subplots(figsize=(STYLE.fig_width_wide + 3.5, max(7, n_munis * 0.42)))
+
+    im = ax.imshow(
+        matrix, aspect="auto", cmap=cmap, vmin=vmin, vmax=vmax,
+        interpolation="none",
+    )
+    cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.02)
+    cbar.set_label(cbar_label, fontsize=STYLE.font_size_axis_label)
+
+    # ── X-axis: Hₛ group labels ───────────────────────────────────────────────
+    n_ssh = len(ssh_percentiles)
+    group_centers = [g * n_ssh + n_ssh // 2 for g in range(len(hs_percentiles))]
+    ax.set_xticks(group_centers)
+    ax.set_xticklabels(
+        [f"Hₛ=q{round(p * 100)}" for p in hs_percentiles],
+        fontsize=STYLE.font_size_tick,
+    )
+    ax.set_xlabel(
+        "Hₛ threshold (percentile group)\n"
+        "Within each group, SSH threshold varies q50 → q90 (left to right)",
+        fontsize=STYLE.font_size_axis_label,
+    )
+
+    # Vertical separators between Hₛ groups
+    for g in range(1, len(hs_percentiles)):
+        ax.axvline(g * n_ssh - 0.5, color="gray", lw=0.7, ls="--", alpha=0.6)
+
+    # Highlight optimal pair column
+    if optimal is not None:
+        try:
+            opt_hs_idx  = list(hs_percentiles).index(optimal["thr_hs_pct"])
+            opt_ssh_idx = list(ssh_percentiles).index(optimal["thr_ssh_pct"])
+            opt_col = opt_hs_idx * n_ssh + opt_ssh_idx
+            ax.axvline(opt_col - 0.5, color="red", lw=1.8, ls="-", alpha=0.9)
+            ax.axvline(opt_col + 0.5, color="red", lw=1.8, ls="-", alpha=0.9)
+            ax.text(
+                opt_col, -1.2, "★",
+                ha="center", va="top", color="red", fontsize=9,
+                transform=ax.get_xaxis_transform(),
+            )
+        except (ValueError, KeyError):
+            pass
+
+    # ── Y-axis: municipality names + sector separators ────────────────────────
+    muni_names = [m for m, _ in muni_order]
+    ax.set_yticks(range(n_munis))
+    ax.set_yticklabels(muni_names, fontsize=STYLE.font_size_tick - 1)
+    ax.set_ylabel("")
+
+    # Identify sector boundaries and draw separator lines + sector labels
+    sector_boundaries: list[int] = []
+    prev_sector: str | None = None
+    for i, (_muni, sector) in enumerate(muni_order):
+        if sector != prev_sector:
+            sector_boundaries.append(i)
+            prev_sector = sector
+
+    for k, boundary in enumerate(sector_boundaries):
+        if boundary > 0:
+            ax.axhline(boundary - 0.5, color="black", lw=1.1, ls="-")
+
+        # Sector label in left margin
+        next_boundary = sector_boundaries[k + 1] if k + 1 < len(sector_boundaries) else n_munis
+        mid = (boundary + next_boundary - 1) / 2
+        sector_name = muni_order[boundary][1]
+        color = SECTOR_COLORS.get(sector_name, "#333333")
+        ax.text(
+            -2.5, mid,
+            sector_name,
+            ha="right", va="center",
+            fontsize=STYLE.font_size_tick - 1,
+            color=color,
+            fontweight="bold",
+            clip_on=False,
+        )
+
+    ax.set_title(title, fontsize=STYLE.font_size_title, fontweight="bold")
+    # Use subplots_adjust instead of tight_layout to ensure the left-margin
+    # sector annotations (placed at x < 0 in data coordinates) are not clipped.
+    fig.subplots_adjust(left=0.20, right=0.95, top=0.90, bottom=0.12)
+    return fig
+
+
+def plot_city_hits_heatmap(
+    df_event_hits: pd.DataFrame,
+    muni_order: list[tuple[str, str]],
+    optimal: dict,
+) -> plt.Figure:
+    """TC4-M1 — Hit-rate heatmap: municipality × threshold pair.
+
+    Each cell shows the fraction of that municipality's reported events that
+    were captured (hit) at the given (Hₛ, SSH_total) threshold pair.  Values
+    range from 0 (all events missed) to 1 (all events captured).
+
+    Municipality rows are ordered by coastal sector (North → South) and by
+    latitude within each sector.  Hₛ groups of nine SSH levels are separated
+    by vertical dashed lines; the optimal pair is marked with ★.
+
+    Parameters
+    ----------
+    df_event_hits : full event-hits table (all threshold pairs).
+    muni_order    : from _build_municipality_order().
+    optimal       : dict with 'thr_hs_pct' and 'thr_ssh_pct'.
+    """
+    hs_pcts  = sorted(df_event_hits["thr_hs_pct"].unique())
+    ssh_pcts = sorted(df_event_hits["thr_ssh_pct"].unique())
+    pairs    = [(hs, ssh) for hs in hs_pcts for ssh in ssh_pcts]
+    pair_idx = {p: i for i, p in enumerate(pairs)}
+
+    # Compute hit_rate per (municipality, pair)
+    hr = (
+        df_event_hits
+        .groupby(["municipality", "thr_hs_pct", "thr_ssh_pct"])["captured"]
+        .mean()
+        .reset_index()
+    )
+
+    muni_names = [m for m, _ in muni_order]
+    muni_row   = {m: i for i, m in enumerate(muni_names)}
+    matrix     = np.full((len(muni_names), len(pairs)), np.nan)
+
+    for _, row in hr.iterrows():
+        i = muni_row.get(row["municipality"])
+        j = pair_idx.get((row["thr_hs_pct"], row["thr_ssh_pct"]))
+        if i is not None and j is not None:
+            matrix[i, j] = row["captured"]
+
+    return _draw_municipality_heatmap(
+        matrix=matrix,
+        muni_order=muni_order,
+        hs_percentiles=hs_pcts,
+        ssh_percentiles=ssh_pcts,
+        title=(
+            "TC4-M1 — Hit Rate per Municipality × Threshold Pair\n"
+            "Fraction of reported events captured within the causal window [D-2, D+1 00Z]"
+        ),
+        cmap="YlGn",
+        vmin=0.0,
+        vmax=1.0,
+        cbar_label="Hit rate  (H / n_events)",
+        optimal=optimal,
+    )
+
+
+def plot_city_misses_heatmap(
+    df_event_hits: pd.DataFrame,
+    muni_order: list[tuple[str, str]],
+    optimal: dict,
+) -> plt.Figure:
+    """TC4-M2 — Miss-rate heatmap: municipality × threshold pair.
+
+    Each cell shows the fraction of that municipality's events that were missed
+    (1 − hit_rate) at the given threshold pair.  High values (dark orange/red)
+    indicate municipalities where the compound condition consistently fails to
+    match reported disasters regardless of threshold choice.
+
+    Parameters
+    ----------
+    df_event_hits : full event-hits table (all threshold pairs).
+    muni_order    : from _build_municipality_order().
+    optimal       : dict with 'thr_hs_pct' and 'thr_ssh_pct'.
+    """
+    hs_pcts  = sorted(df_event_hits["thr_hs_pct"].unique())
+    ssh_pcts = sorted(df_event_hits["thr_ssh_pct"].unique())
+    pairs    = [(hs, ssh) for hs in hs_pcts for ssh in ssh_pcts]
+    pair_idx = {p: i for i, p in enumerate(pairs)}
+
+    mr = (
+        df_event_hits
+        .groupby(["municipality", "thr_hs_pct", "thr_ssh_pct"])["captured"]
+        .mean()
+        .reset_index()
+    )
+    mr["miss_rate"] = 1.0 - mr["captured"]
+
+    muni_names = [m for m, _ in muni_order]
+    muni_row   = {m: i for i, m in enumerate(muni_names)}
+    matrix     = np.full((len(muni_names), len(pairs)), np.nan)
+
+    for _, row in mr.iterrows():
+        i = muni_row.get(row["municipality"])
+        j = pair_idx.get((row["thr_hs_pct"], row["thr_ssh_pct"]))
+        if i is not None and j is not None:
+            matrix[i, j] = row["miss_rate"]
+
+    return _draw_municipality_heatmap(
+        matrix=matrix,
+        muni_order=muni_order,
+        hs_percentiles=hs_pcts,
+        ssh_percentiles=ssh_pcts,
+        title=(
+            "TC4-M2 — Miss Rate per Municipality × Threshold Pair\n"
+            "Fraction of reported events not captured (1 − hit rate)"
+        ),
+        cmap="YlOrRd",
+        vmin=0.0,
+        vmax=1.0,
+        cbar_label="Miss rate  (M / n_events)",
+        optimal=optimal,
+    )
+
+
+def plot_city_false_alarms_heatmap(
+    df_fa_per_muni: pd.DataFrame,
+    muni_order: list[tuple[str, str]],
+    optimal: dict,
+) -> plt.Figure:
+    """TC4-M3 — False alarm heatmap: municipality × threshold pair.
+
+    Each cell shows the number of false alarm episodes at that municipality's
+    grid point for the given threshold pair.  A false alarm episode is a
+    compound exceedance cluster in the validated period that does NOT overlap
+    with any observed event's causal window at the same grid point.
+
+    Note: municipalities that share the same WAVERYS/GLORYS12 grid point will
+    have identical false alarm counts (they observe the same oceanographic signal).
+
+    Parameters
+    ----------
+    df_fa_per_muni : per-municipality false alarm table with columns
+                     [thr_hs_pct, thr_ssh_pct, municipality, F].
+    muni_order     : from _build_municipality_order().
+    optimal        : dict with 'thr_hs_pct' and 'thr_ssh_pct'.
+    """
+    if df_fa_per_muni is None or df_fa_per_muni.empty:
+        log.warning("No per-municipality false alarm data — skipping TC4-M3.")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.text(0.5, 0.5, "No per-municipality false alarm data.\nRe-run with --all to generate.",
+                ha="center", va="center", fontsize=10, color="gray")
+        ax.set_title("TC4-M3 — False Alarms per Municipality (data not available)",
+                     fontsize=STYLE.font_size_title, fontweight="bold")
+        return fig
+
+    hs_pcts  = sorted(df_fa_per_muni["thr_hs_pct"].unique())
+    ssh_pcts = sorted(df_fa_per_muni["thr_ssh_pct"].unique())
+    pairs    = [(hs, ssh) for hs in hs_pcts for ssh in ssh_pcts]
+    pair_idx = {p: i for i, p in enumerate(pairs)}
+
+    muni_names = [m for m, _ in muni_order]
+    muni_row   = {m: i for i, m in enumerate(muni_names)}
+    matrix     = np.full((len(muni_names), len(pairs)), np.nan)
+
+    for _, row in df_fa_per_muni.iterrows():
+        i = muni_row.get(row["municipality"])
+        j = pair_idx.get((row["thr_hs_pct"], row["thr_ssh_pct"]))
+        if i is not None and j is not None:
+            matrix[i, j] = row["F"]
+
+    vmax = float(np.nanpercentile(matrix, 99)) if not np.all(np.isnan(matrix)) else 1.0
+
+    return _draw_municipality_heatmap(
+        matrix=matrix,
+        muni_order=muni_order,
+        hs_percentiles=hs_pcts,
+        ssh_percentiles=ssh_pcts,
+        title=(
+            "TC4-M3 — False Alarm Count per Municipality × Threshold Pair\n"
+            "Episodes in validated period not paired with any observed event at that grid point"
+        ),
+        cmap="Reds",
+        vmin=0.0,
+        vmax=vmax,
+        cbar_label="False alarm episodes (F)",
+        optimal=optimal,
+    )
+
+
 # ── Orchestration ─────────────────────────────────────────────────────────────
 
 def run_figures(
@@ -481,6 +826,7 @@ def run_figures(
     optimal: dict,
     df_muni_ref: pd.DataFrame | None = None,
     df_events_meta: pd.DataFrame | None = None,
+    df_fa_per_muni: pd.DataFrame | None = None,
 ) -> None:
     """Generate and save all Step 4 figures.
 
@@ -494,6 +840,9 @@ def run_figures(
                       If provided (and cartopy is available), the TC4-A1 audit
                       map is generated.
     df_events_meta  : reported events DataFrame (for sector metadata in audit map).
+    df_fa_per_muni  : per-municipality false alarm counts (all threshold pairs),
+                      as produced by calibration.run_false_alarms(). Optional;
+                      if None, TC4-M3 is generated with a placeholder message.
     """
     log.info("Generating threshold calibration figures...")
 
@@ -526,5 +875,17 @@ def run_figures(
 
     fig_s4 = plot_sector_metrics(df_event_hits, optimal)
     save_fig(fig_s4, "fig_TC4_S4_sector_pod", subdir="summary")
+
+    # ── TC4-M1/M2/M3: Municipality spatial heatmaps ────────────────────────
+    muni_order = _build_municipality_order(df_event_hits, df_muni_ref)
+
+    fig_m1 = plot_city_hits_heatmap(df_event_hits, muni_order, optimal)
+    save_fig(fig_m1, "fig_TC4_M1_city_hit_rate", subdir="summary")
+
+    fig_m2 = plot_city_misses_heatmap(df_event_hits, muni_order, optimal)
+    save_fig(fig_m2, "fig_TC4_M2_city_miss_rate", subdir="summary")
+
+    fig_m3 = plot_city_false_alarms_heatmap(df_fa_per_muni, muni_order, optimal)
+    save_fig(fig_m3, "fig_TC4_M3_city_false_alarms", subdir="summary")
 
     log.info("All TC4 figures saved.")

@@ -672,6 +672,131 @@ export default function ThresholdCalibrationPage() {
           </div>
         </div>
 
+        {/* ── Spatial performance heatmaps (TC4-M1 / M2 / M3) ─────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">Spatial Performance — Heatmaps per Municipality</h2>
+            <p className="mb-6 text-sm text-gray-600 max-w-3xl">
+              The three heatmaps below break down hits, misses, and false alarms by municipality
+              (y-axis) across all 81 threshold pairs (x-axis). Each column in the x-axis represents
+              one of the 81 (Hₛ, SSH_total) threshold pair combinations, grouped into nine Hₛ
+              percentile bands (q50–q90); within each band, the SSH threshold varies from q50 to q90
+              left-to-right. The optimal pair is marked with ★. Municipalities are ordered from
+              north to south along the SC coast, with coastal sector boundaries indicated on the
+              left margin.
+            </p>
+
+            {/* Methodological note */}
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-8">
+              <p className="text-xs font-semibold text-blue-800 mb-1">How to read these figures</p>
+              <ul className="space-y-1 text-xs text-blue-700 list-disc list-inside">
+                <li><strong>Hit rate</strong> (TC4-M1): fraction of a municipality&apos;s reported events captured by the compound condition within [D-2, D+1 00Z]. Dark green = good detection.</li>
+                <li><strong>Miss rate</strong> (TC4-M2): fraction of events not captured (1 − hit rate). Dark orange/red = the method consistently misses events at that location.</li>
+                <li><strong>False alarms</strong> (TC4-M3): number of compound episodes in the validated period that do not coincide with any reported event at that grid point. Darker red = more spurious detections. Municipalities that share the same grid point have identical values.</li>
+                <li>Each heatmap cell aggregates all reported events for that municipality at that threshold pair. Municipalities with a single reported event will show binary 0/1 for hit/miss rate.</li>
+              </ul>
+            </div>
+
+            {/* TC4-M1: Hit rate */}
+            <div className="mb-10">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_M1</span>
+                <h3 className="text-base font-bold text-gray-900">Hit Rate per Municipality × Threshold Pair</h3>
+              </div>
+              <p className="mb-4 text-xs text-gray-600 max-w-3xl">
+                Fraction of each municipality&apos;s reported events captured at each threshold pair.
+                Values near 0 (white) indicate the compound condition is rarely met; values near 1
+                (dark green) indicate consistently good capture. Municipalities with high hit rates
+                only at the most lenient thresholds (left side of each band) reveal weak compound
+                forcing relative to the local climatology.
+              </p>
+              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="p-4">
+                  <Image
+                    src="/figures/tc4_summary/fig_TC4_M1_city_hit_rate.png"
+                    alt="Figure TC4-M1 — Hit rate per municipality"
+                    width={1600} height={900}
+                    className="w-full h-auto rounded-lg"
+                    unoptimized
+                  />
+                </div>
+                <div className="border-t border-gray-100 px-5 py-4">
+                  <p className="text-xs text-gray-500 italic leading-relaxed">
+                    Hit rate = H / n_events for each (municipality, threshold pair) combination.
+                    Colourmap: YlGn (0 = white, 1 = dark green). Optimal pair (★) marked with red column boundary.
+                    X-axis groups: each labelled band spans 9 SSH levels (q50–q90 left to right).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* TC4-M2: Miss rate */}
+            <div className="mb-10">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_M2</span>
+                <h3 className="text-base font-bold text-gray-900">Miss Rate per Municipality × Threshold Pair</h3>
+              </div>
+              <p className="mb-4 text-xs text-gray-600 max-w-3xl">
+                Complement of the hit rate. Municipalities that appear uniformly dark across all
+                threshold pairs are structural hotspots of misses — the compound ocean condition
+                does not co-occur with the reported disaster at any threshold, suggesting either
+                a different physical mechanism, data mismatch, or grid-point representativity issues.
+              </p>
+              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="p-4">
+                  <Image
+                    src="/figures/tc4_summary/fig_TC4_M2_city_miss_rate.png"
+                    alt="Figure TC4-M2 — Miss rate per municipality"
+                    width={1600} height={900}
+                    className="w-full h-auto rounded-lg"
+                    unoptimized
+                  />
+                </div>
+                <div className="border-t border-gray-100 px-5 py-4">
+                  <p className="text-xs text-gray-500 italic leading-relaxed">
+                    Miss rate = 1 − hit rate = M / n_events for each (municipality, threshold pair).
+                    Colourmap: YlOrRd (0 = white, 1 = dark red). Rows that are uniformly dark indicate
+                    municipalities where no threshold pair captures the reported events.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* TC4-M3: False alarms */}
+            <div>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_M3</span>
+                <h3 className="text-base font-bold text-gray-900">False Alarm Count per Municipality × Threshold Pair</h3>
+              </div>
+              <p className="mb-4 text-xs text-gray-600 max-w-3xl">
+                Number of compound episodes at each municipality&apos;s grid point that are NOT paired
+                with any observed event. This reveals geographic hotspots of spurious detections
+                independent of event reporting — locations where the ocean climatology frequently
+                exceeds both thresholds simultaneously without a corresponding disaster record.
+                Note: municipalities that share the same grid point will have identical FA counts.
+              </p>
+              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="p-4">
+                  <Image
+                    src="/figures/tc4_summary/fig_TC4_M3_city_false_alarms.png"
+                    alt="Figure TC4-M3 — False alarms per municipality"
+                    width={1600} height={900}
+                    className="w-full h-auto rounded-lg"
+                    unoptimized
+                  />
+                </div>
+                <div className="border-t border-gray-100 px-5 py-4">
+                  <p className="text-xs text-gray-500 italic leading-relaxed">
+                    False alarm count F per (municipality, threshold pair). Colourmap: Reds (higher = more spurious
+                    episodes). More lenient thresholds (left side of each band) produce more false alarms.
+                    Generated from tab_TC4_false_alarms_per_municipality.csv (requires full --all run).
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── What comes next ───────────────────────────────────────────────── */}
         <div className="border-b border-gray-200 bg-gray-50 py-14">
           <div className="mx-auto max-w-5xl px-6">

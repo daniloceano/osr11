@@ -57,16 +57,19 @@ def run_summary(
     optimal: dict,
     all_captures: list,
     df_events_meta: pd.DataFrame,
+    fa_per_muni_df: pd.DataFrame | None = None,
 ) -> None:
     """Generate all summary tables and figures for Step 4.
 
     Parameters
     ----------
-    df_metrics : output of metrics.compute_scores()
-    df_ranked  : output of metrics.rank_combinations()
-    optimal    : dict — best threshold pair and its metrics
-    all_captures : list[CaptureResult] from calibration.run_hits_misses()
+    df_metrics     : output of metrics.compute_scores()
+    df_ranked      : output of metrics.rank_combinations()
+    optimal        : dict — best threshold pair and its metrics
+    all_captures   : list[CaptureResult] from calibration.run_hits_misses()
     df_events_meta : reported events DataFrame (for sector metadata)
+    fa_per_muni_df : per-municipality false alarm counts across all threshold
+                     pairs (from calibration.run_false_alarms()). Optional.
     """
     log.info("== Generating Step 4 summary outputs ==")
 
@@ -93,6 +96,12 @@ def run_summary(
     lag_sum = capture_lag_summary(df_event_hits_opt)
     _save_csv(lag_sum, "tab_TC4_lag_summary")
 
+    # Per-municipality false alarm counts (all threshold pairs)
+    if fa_per_muni_df is not None and not fa_per_muni_df.empty:
+        _save_csv(fa_per_muni_df, "tab_TC4_false_alarms_per_municipality")
+    else:
+        log.info("  No per-municipality FA data provided — tab_TC4_false_alarms_per_municipality not saved.")
+
     # ── Figures ───────────────────────────────────────────────────────────────
     # Load the municipality → grid reference table for the audit map (TC4-A1).
     # If the file does not exist, the audit figure is silently skipped.
@@ -106,7 +115,8 @@ def run_summary(
             log.warning("  Could not load municipality grid reference: %s", exc)
 
     run_figures(df_metrics, df_event_hits_all, lag_sum, optimal,
-                df_muni_ref=df_muni_ref, df_events_meta=df_events_meta)
+                df_muni_ref=df_muni_ref, df_events_meta=df_events_meta,
+                df_fa_per_muni=fa_per_muni_df)
 
     # ── Run log ───────────────────────────────────────────────────────────────
     _write_run_log(df_metrics, df_ranked, optimal, df_event_hits_opt, lag_sum)

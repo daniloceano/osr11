@@ -214,10 +214,11 @@ def main(args: argparse.Namespace | None = None) -> None:
 
     # ── Layer 2: false alarms ──────────────────────────────────────────────────
     false_alarms_df = None
+    fa_per_muni_df  = None
 
     if run_all or getattr(args, "false_alarms", False):
         log.info("Layer 2: false alarm scan across full series...")
-        false_alarms_df = run_false_alarms(
+        false_alarms_df, fa_per_muni_df = run_false_alarms(
             records,
             ssh_total_cache,
             time_index,
@@ -241,7 +242,8 @@ def main(args: argparse.Namespace | None = None) -> None:
         df_ranked  = rank_combinations(df_metrics)
         optimal    = select_optimal_pair(df_metrics)
 
-        run_summary(df_metrics, df_ranked, optimal, all_captures, df_events)
+        run_summary(df_metrics, df_ranked, optimal, all_captures, df_events,
+                    fa_per_muni_df=fa_per_muni_df)
 
     log.info("=" * 68)
     log.info("Threshold calibration complete.")
