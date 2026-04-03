@@ -183,7 +183,7 @@ def plot_grid_audit(
     ]
     ax.legend(
         handles=sector_handles + symbol_handles,
-        loc="lower left", fontsize=7,
+        loc="upper left", fontsize=7,
         framealpha=0.88, title="Coastal sector / Symbol",
         title_fontsize=7,
     )
@@ -548,9 +548,27 @@ def _draw_municipality_heatmap(
                      If provided, the corresponding column is highlighted.
     """
     n_munis = len(muni_order)
-    n_pairs = len(hs_percentiles) * len(ssh_percentiles)  # 81
 
-    fig, ax = plt.subplots(figsize=(STYLE.fig_width_wide + 3.5, max(7, n_munis * 0.42)))
+    # ── Figure sizing: tight vertical fit, no excess whitespace ──────────────
+    # Row height chosen so municipality labels remain legible without blank rows.
+    _row_h      = 0.36    # inches per municipality row
+    _top_in     = 0.85    # title
+    _bottom_in  = 0.95    # two-line xlabel + tick labels
+    _left_in    = 3.60    # sector labels (narrow strip) + municipality name labels
+    _right_in   = 1.05    # colorbar
+    _axes_w_in  = 13.50   # heatmap area width
+
+    fig_w = _left_in + _axes_w_in + _right_in
+    fig_h = _top_in + n_munis * _row_h + _bottom_in
+
+    # Convert to fractional margins
+    l_frac = _left_in  / fig_w
+    r_frac = 1.0 - _right_in  / fig_w
+    t_frac = 1.0 - _top_in    / fig_h
+    b_frac = _bottom_in / fig_h
+
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    fig.subplots_adjust(left=l_frac, right=r_frac, top=t_frac, bottom=b_frac)
 
     im = ax.imshow(
         matrix, aspect="auto", cmap=cmap, vmin=vmin, vmax=vmax,
@@ -593,13 +611,16 @@ def _draw_municipality_heatmap(
         except (ValueError, KeyError):
             pass
 
-    # ── Y-axis: municipality names + sector separators ────────────────────────
+    # ── Y-axis: municipality names ────────────────────────────────────────────
     muni_names = [m for m, _ in muni_order]
     ax.set_yticks(range(n_munis))
     ax.set_yticklabels(muni_names, fontsize=STYLE.font_size_tick - 1)
     ax.set_ylabel("")
 
-    # Identify sector boundaries and draw separator lines + sector labels
+    # ── Sector boundaries: horizontal separators + vertical sector labels ─────
+    # Sector labels are drawn with fig.text() using figure-fraction coordinates
+    # so they sit to the LEFT of the municipality name tick labels and are
+    # rotated 90° to conserve horizontal space.
     sector_boundaries: list[int] = []
     prev_sector: str | None = None
     for i, (_muni, sector) in enumerate(muni_order):
@@ -607,29 +628,35 @@ def _draw_municipality_heatmap(
             sector_boundaries.append(i)
             prev_sector = sector
 
+    # x position for sector labels: a thin strip at the very left of the figure
+    # (about 0.4 inches from left edge → x_fig ≈ 0.4 / fig_w)
+    sector_x_fig = 0.40 / fig_w
+
     for k, boundary in enumerate(sector_boundaries):
         if boundary > 0:
             ax.axhline(boundary - 0.5, color="black", lw=1.1, ls="-")
 
-        # Sector label in left margin
         next_boundary = sector_boundaries[k + 1] if k + 1 < len(sector_boundaries) else n_munis
-        mid = (boundary + next_boundary - 1) / 2
+        mid_row = (boundary + next_boundary - 1) / 2
         sector_name = muni_order[boundary][1]
         color = SECTOR_COLORS.get(sector_name, "#333333")
-        ax.text(
-            -2.5, mid,
+
+        # Convert data row index → axes fraction → figure fraction
+        # imshow: row 0 is at the TOP of the axes (y increases downward)
+        mid_ax = 1.0 - (mid_row + 0.5) / n_munis
+        mid_fig_y = b_frac + mid_ax * (t_frac - b_frac)
+
+        fig.text(
+            sector_x_fig, mid_fig_y,
             sector_name,
-            ha="right", va="center",
-            fontsize=STYLE.font_size_tick - 1,
+            ha="center", va="center",
+            rotation=90,
+            fontsize=STYLE.font_size_tick,
             color=color,
             fontweight="bold",
-            clip_on=False,
         )
 
     ax.set_title(title, fontsize=STYLE.font_size_title, fontweight="bold")
-    # Use subplots_adjust instead of tight_layout to ensure the left-margin
-    # sector annotations (placed at x < 0 in data coordinates) are not clipped.
-    fig.subplots_adjust(left=0.20, right=0.95, top=0.90, bottom=0.12)
     return fig
 
 
