@@ -3,6 +3,7 @@ Figure generation for the threshold calibration analysis (OSR11 — Step 4).
 
 Figures produced
 ----------------
+TC4-A1  Audit map: municipality locations vs. matched grid points (coastal geometry check)
 TC4-H1  CSI heatmap (hs_pct × ssh_pct)
 TC4-H2  FAR heatmap (hs_pct × ssh_pct)
 TC4-H3  POD heatmap (hs_pct × ssh_pct)
@@ -22,11 +23,175 @@ import pandas as pd
 
 from src.threshold_calibration.config.analysis_config import CFG
 from src.threshold_calibration.utils import save_fig
-from config.plot_config import STYLE
+from config.plot_config import STYLE, SECTOR_COLORS
 
 log = logging.getLogger(__name__)
 
 _PCT_LABELS = {p: f"q{round(p*100)}" for p in CFG["hs_percentiles"]}
+
+
+# ── TC4-A1: Grid audit map ────────────────────────────────────────────────────
+
+def plot_grid_audit(
+    df_ref: pd.DataFrame,
+    df_events: pd.DataFrame,
+) -> plt.Figure | None:
+    """Map showing municipality locations and their matched WAVERYS/GLORYS12 grid points.
+
+    This figure is intended for visual verification of the municipality → grid-point
+    assignment before any quantitative analysis is performed.  It shows:
+
+    - Municipality coastal positions (stars), coloured by coastal sector.
+    - Matched grid points (circles), same colour scheme.
+    - A line connecting each municipality to its matched grid point.
+    - Municipalities with insufficient data coverage are marked with a grey cross.
+
+    Parameters
+    ----------
+    df_ref : pd.DataFrame
+        Municipality → grid reference table from
+        ``outputs/preprocessing/municipality_grid_ref.csv``.
+        Required columns: municipality, muni_lat, muni_lon, grid_lat, grid_lon,
+        grid_dist_km, data_quality.
+    df_events : pd.DataFrame
+        Reported events (from load_reported_events).  Used only to attach
+        coastal_sector to each municipality row.
+
+    Returns
+    -------
+    plt.Figure or None if cartopy is not available.
+    """
+    try:
+        import cartopy.crs as ccrs
+        import cartopy.feature as cfeature
+    except ImportError:
+        log.warning("cartopy not available — skipping TC4-A1 audit map.")
+        return None
+
+    if df_ref is None or df_ref.empty:
+        log.warning("Municipality grid reference table is empty — skipping TC4-A1.")
+        return None
+
+    # ── Attach coastal sector from events metadata ─────────────────────────────
+    if "coastal_sector" in df_events.columns:
+        sector_map = (
+            df_events[["municipality", "coastal_sector"]]
+            .dropna()
+            .drop_duplicates("municipality")
+            .set_index("municipality")["coastal_sector"]
+        )
+        df_ref = df_ref.copy()
+        df_ref["coastal_sector"] = df_ref["municipality"].map(sector_map)
+    else:
+        df_ref = df_ref.copy()
+        df_ref["coastal_sector"] = "Unknown"
+
+    # ── Map extent (SC coast + small buffer) ──────────────────────────────────
+    lat_min = df_ref[["muni_lat", "grid_lat"]].min().min() - 0.4
+    lat_max = df_ref[["muni_lat", "grid_lat"]].max().max() + 0.4
+    lon_min = df_ref[["muni_lon", "grid_lon"]].min().min() - 0.4
+    lon_max = df_ref[["muni_lon", "grid_lon"]].max().max() + 0.4
+
+    proj = ccrs.PlateCarree()
+    fig, ax = plt.subplots(
+        figsize=(STYLE.fig_width_double, 8.5),
+        subplot_kw={"projection": proj},
+    )
+    ax.set_extent([lon_min, lon_max, lat_min, lat_max], crs=proj)
+
+    # ── Background features ───────────────────────────────────────────────────
+    ax.add_feature(cfeature.LAND,        facecolor="#f5f0e8", zorder=0)
+    ax.add_feature(cfeature.OCEAN,       facecolor="#d6eaf8", zorder=0)
+    ax.add_feature(cfeature.COASTLINE,   linewidth=0.7,  zorder=1)
+    ax.add_feature(cfeature.BORDERS,     linewidth=0.4,  zorder=1, linestyle="--")
+    ax.add_feature(cfeature.RIVERS,      linewidth=0.3,  zorder=1, alpha=0.5)
+    ax.gridlines(
+        draw_labels=True, linewidth=0.4, color="gray", alpha=0.6,
+        xlocs=np.arange(-52, -46, 1), ylocs=np.arange(-30, -25, 1),
+    )
+
+    # ── Per-row plotting ──────────────────────────────────────────────────────
+    legend_sectors: dict[str, object] = {}
+
+    for _, row in df_ref.iterrows():
+        sector = row.get("coastal_sector", "Unknown") or "Unknown"
+        color  = SECTOR_COLORS.get(sector, "#555555")
+        ok     = (row["data_quality"] == "ok")
+
+        # Connector line
+        ax.plot(
+            [row["muni_lon"], row["grid_lon"]],
+            [row["muni_lat"], row["grid_lat"]],
+            color=color, linewidth=0.8, alpha=0.5,
+            transform=proj, zorder=2,
+        )
+
+        # Grid point (circle)
+        ax.scatter(
+            row["grid_lon"], row["grid_lat"],
+            s=55, marker="o", color=color, edgecolors="white",
+            linewidths=0.6, alpha=0.85,
+            transform=proj, zorder=3,
+        )
+
+        # Municipality (star for ok, grey × for insufficient data)
+        if ok:
+            h = ax.scatter(
+                row["muni_lon"], row["muni_lat"],
+                s=90, marker="*", color=color, edgecolors="black",
+                linewidths=0.4, alpha=0.95,
+                transform=proj, zorder=4,
+                label=sector,
+            )
+            if sector not in legend_sectors:
+                legend_sectors[sector] = h
+        else:
+            ax.scatter(
+                row["muni_lon"], row["muni_lat"],
+                s=90, marker="x", color="gray", linewidths=1.2,
+                transform=proj, zorder=4,
+            )
+
+        # Municipality name annotation (right-aligned, small font)
+        ax.text(
+            row["muni_lon"] + 0.04, row["muni_lat"],
+            row["municipality"].split("/")[0][:18],
+            fontsize=5.5, ha="left", va="center",
+            transform=proj, zorder=5,
+            color="#222222",
+        )
+
+    # ── Legend ────────────────────────────────────────────────────────────────
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+
+    sector_handles = [
+        Patch(facecolor=SECTOR_COLORS.get(s, "#555555"), label=s)
+        for s in sorted(k for k in legend_sectors.keys() if isinstance(k, str))
+    ]
+    symbol_handles = [
+        Line2D([0], [0], marker="*", color="w", markerfacecolor="k",
+               markersize=9, label="Municipality (ok)"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="k",
+               markersize=7, label="Grid point matched"),
+        Line2D([0], [0], marker="x", color="gray", markersize=8,
+               markeredgewidth=1.5, label="Municipality (insufficient data)",
+               linestyle="None"),
+    ]
+    ax.legend(
+        handles=sector_handles + symbol_handles,
+        loc="lower left", fontsize=7,
+        framealpha=0.88, title="Coastal sector / Symbol",
+        title_fontsize=7,
+    )
+
+    ax.set_title(
+        "TC4-A1 — Municipality → Grid Point Assignment Audit\n"
+        "Stars: municipality coastal position  ·  Circles: matched WAVERYS/GLORYS12 grid point",
+        fontsize=STYLE.font_size_title, fontweight="bold",
+    )
+    fig.tight_layout()
+    return fig
 
 
 def _pivot_metric(df_metrics: pd.DataFrame, metric: str) -> pd.DataFrame:
@@ -314,9 +479,31 @@ def run_figures(
     df_event_hits: pd.DataFrame,
     lag_summary: pd.DataFrame,
     optimal: dict,
+    df_muni_ref: pd.DataFrame | None = None,
+    df_events_meta: pd.DataFrame | None = None,
 ) -> None:
-    """Generate and save all Step 4 figures."""
+    """Generate and save all Step 4 figures.
+
+    Parameters
+    ----------
+    df_metrics      : output of metrics.compute_scores()
+    df_event_hits   : per-event capture results (all threshold pairs)
+    lag_summary     : capture lag distribution at optimal pair
+    optimal         : dict — best threshold pair and its metrics
+    df_muni_ref     : municipality→grid reference table (optional).
+                      If provided (and cartopy is available), the TC4-A1 audit
+                      map is generated.
+    df_events_meta  : reported events DataFrame (for sector metadata in audit map).
+    """
     log.info("Generating threshold calibration figures...")
+
+    # ── TC4-A1: Grid audit map ─────────────────────────────────────────────
+    if df_muni_ref is not None and df_events_meta is not None:
+        fig_a1 = plot_grid_audit(df_muni_ref, df_events_meta)
+        if fig_a1 is not None:
+            save_fig(fig_a1, "fig_TC4_A1_grid_audit", subdir="summary")
+    else:
+        log.info("  Skipping TC4-A1 (municipality grid reference not provided).")
 
     fig_h1 = plot_csi_heatmap(df_metrics, optimal)
     save_fig(fig_h1, "fig_TC4_H1_csi_heatmap", subdir="summary")

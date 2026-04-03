@@ -94,7 +94,19 @@ def run_summary(
     _save_csv(lag_sum, "tab_TC4_lag_summary")
 
     # ── Figures ───────────────────────────────────────────────────────────────
-    run_figures(df_metrics, df_event_hits_all, lag_sum, optimal)
+    # Load the municipality → grid reference table for the audit map (TC4-A1).
+    # If the file does not exist, the audit figure is silently skipped.
+    df_muni_ref = None
+    _ref_path = CFG.get("municipality_grid_ref")
+    if _ref_path is not None and Path(_ref_path).exists():
+        try:
+            df_muni_ref = pd.read_csv(_ref_path)
+            log.info("  Loaded municipality grid reference: %d rows", len(df_muni_ref))
+        except Exception as exc:
+            log.warning("  Could not load municipality grid reference: %s", exc)
+
+    run_figures(df_metrics, df_event_hits_all, lag_sum, optimal,
+                df_muni_ref=df_muni_ref, df_events_meta=df_events_meta)
 
     # ── Run log ───────────────────────────────────────────────────────────────
     _write_run_log(df_metrics, df_ranked, optimal, df_event_hits_opt, lag_sum)
@@ -125,7 +137,9 @@ def _write_run_log(
         f"  Total pairs       : {len(df_metrics)}",
         f"  Match window      : {CFG['match_window_offsets']} days (D-2, D-1, D, D+1 00Z)",
         f"  Episode max gap   : {CFG['episode_max_gap_days']} day",
-        f"  SSH_total         : zos + FES2022 tide (instantaneous 00:00 UTC)",
+        f"  SSH_total         : zos (00:00 UTC) + FES2022 tide (daily maximum)",
+        f"  Hₛ convention     : daily maximum (from 3-hourly WAVERYS)",
+        f"  SSH convention    : 00:00 UTC snapshot (GLORYS12 is a daily product)",
         "",
         "OPTIMAL PAIR",
         f"  Hₛ threshold      : q{round(optimal['thr_hs_pct']*100)}",

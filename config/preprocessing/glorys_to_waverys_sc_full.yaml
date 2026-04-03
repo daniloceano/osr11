@@ -19,7 +19,11 @@ interpolation:
 temporal:
   # WAVERYS is 3-hourly; resample to daily before merging with GLORYS (daily).
   # max: captures peak conditions per day — preferred for compound-event extremes
-  resample_method: mean
+  #
+  # METHODOLOGICAL NOTE (2026-04-02): Changed from 'mean' to 'max'.
+  # See glorys_to_waverys_test.yaml for full rationale.
+  # VMDR is also resampled with 'max' for consistency, but is unused in STEP 4.
+  resample_method: max
 
 variables:
   glorys_sea_level:       zos

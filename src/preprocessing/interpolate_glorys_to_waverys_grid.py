@@ -106,8 +106,17 @@ def resample_waverys_daily(ds: xr.Dataset, method: str) -> xr.Dataset:
     Parameters
     ----------
     method:
-        'mean' — daily mean (default, suited for climatology).
+        'mean' — daily mean (suited for climatology).
         'max'  — daily maximum (suited for extremes / compound events).
+
+    Notes
+    -----
+    When ``method='max'``, the same aggregation is applied to all WAVERYS
+    variables, including VMDR (mean wave direction).  Taking the maximum of
+    a directional variable is not physically meaningful; however, VMDR is not
+    used by any downstream analysis step (STEP 4 only uses VHM0).  The choice
+    to aggregate VMDR with the same method avoids per-variable branching in
+    the preprocessing pipeline and has no practical effect on results.
     """
     if method not in ("mean", "max"):
         raise ValueError(f"resample_method must be 'mean' or 'max', got '{method}'")
@@ -278,6 +287,13 @@ def build_unified_dataset(
             ds_unified[var] = ds_unified[var].astype(np.float32)
 
     # Global attributes
+    _hs_desc = (
+        "daily maximum from 3-hourly WAVERYS"
+        if resample_method == "max"
+        else "daily mean from 3-hourly WAVERYS"
+    )
+    _zos_desc = "daily snapshot at 00:00 UTC from GLORYS12 (daily product; sub-daily SSH not available)"
+
     ds_unified.attrs = {
         "title": "Unified metocean dataset — WAVERYS spatial grid",
         "description": (
@@ -291,6 +307,13 @@ def build_unified_dataset(
         "interpolation_method": interp_method,
         "temporal_resample_method": f"WAVERYS resampled to daily ({resample_method})",
         "temporal_strategy": "Temporal intersection of GLORYS (daily) and WAVERYS (daily after resample)",
+        "VHM0_temporal_convention": _hs_desc,
+        "zos_temporal_convention": _zos_desc,
+        "zos_limitation": (
+            "GLORYS12 is a daily ocean reanalysis with one snapshot per day at 00:00 UTC. "
+            "Daily-maximum SSH cannot be derived from this product. "
+            "Sub-daily SSH data would require a different source (e.g., hourly CMEMS NRT product)."
+        ),
         "Conventions": "CF-1.6",
     }
 

@@ -18,7 +18,14 @@ temporal:
   # resample_method options: mean | max
   #   - mean: preserves mean wave conditions; appropriate for climatological studies
   #   - max: captures peak conditions per day; preferred for compound-event extremes
-  resample_method: mean
+  #
+  # METHODOLOGICAL NOTE (2026-04-02): Changed from 'mean' to 'max'.
+  # The compound-event calibration (STEP 4) requires daily-maximum wave heights
+  # to correctly characterise the worst forcing within each day.  Using the daily
+  # mean would systematically underestimate the peak wave conditions and bias
+  # percentile thresholds downward.  VMDR (wave direction) is also resampled with
+  # 'max' for code consistency, but this variable is not used downstream in STEP 4.
+  resample_method: max
 
 variables:
   # Real variable names as found in the NetCDF files (do not change unless files change)

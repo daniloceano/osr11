@@ -53,7 +53,7 @@ export default function ThresholdCalibrationPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               {[
                 { label: 'Threshold grid',  value: 'q50–q90, every 5 percentile points (9 × 9 = 81 pairs) · configurable via pct_step in analysis_config.py' },
-                { label: 'SSH variable',    value: 'SSH_total = zos + FES2022 tide (00:00 UTC instantaneous)' },
+                { label: 'SSH variable',    value: 'SSH_total = zos (GLORYS12 00:00 UTC) + FES2022 tide (daily max from hourly)' },
                 { label: 'Match window',    value: '[D-2, D-1, D, D+1 00Z] — causal/antecedent' },
                 { label: 'Primary metric',  value: 'CSI = H / (H + M + F)' },
                 { label: 'Local thresholds', value: 'Per grid point · validated-period climatology (~25 yr)' },
@@ -111,7 +111,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   step: '0',
                   title: 'Reuse infrastructure from Steps 2–3',
-                  text: 'The municipality→grid association uses a centralised preprocessing reference (outputs/preprocessing/municipality_grid_ref.csv) that selects the nearest grid point with ≥80% valid data across the full time series — resolving NaN-coverage issues for northern SC municipalities. Climatological Hₛ and SSH series and the FES2022 tidal cache from Steps 2–3 are reused without modification. SSH_total = SSH + FES2022 tide (instantaneous 00:00 UTC) is computed for each unique grid point.',
+                  text: 'The municipality→grid association uses a centralised preprocessing reference (outputs/preprocessing/municipality_grid_ref.csv) that selects the nearest grid point with ≥80% valid data across the full time series — resolving NaN-coverage issues for northern SC municipalities. Climatological Hₛ and SSH series and the FES2022 tidal cache from Steps 2–3 are reused without modification. SSH_total = zos (GLORYS12 00:00 UTC snapshot) + FES2022 tide (daily maximum from hourly FES2022 output) is computed for each unique grid point. Hₛ uses the daily maximum from 3-hourly WAVERYS fields.',
                   tag: 'Reuse',
                   tagColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
                 },
@@ -214,13 +214,13 @@ export default function ThresholdCalibrationPage() {
                   offset: 'D',
                   color: 'border-gray-300 bg-white',
                   label: 'Event day',
-                  desc: 'The civil date of the reported disaster. Corresponds to the 00:00 UTC snapshot of the event day.',
+                  desc: 'The civil date of the reported disaster. Uses the daily maximum of Hₛ and tide within the calendar day; SSH (zos) from the 00:00 UTC GLORYS12 snapshot.',
                 },
                 {
                   offset: 'D+1 00Z',
                   color: 'border-orange-200 bg-orange-50',
                   label: 'Operational tolerance',
-                  desc: 'If the compound peak occurred during the afternoon or evening of civil day D (e.g., 18:00 UTC), it appears at 00Z of D+1 in the daily snapshot series. This step avoids penalising for UTC convention.',
+                  desc: 'Operational tolerance for late-day events. Hₛ and tide daily maxima cover the full calendar day, so late peaks on civil day D are already captured on D. This offset also catches cases where the GLORYS12 SSH 00Z snapshot of D+1 better represents the tidal setup peak.',
                 },
               ].map((w) => (
                 <div key={w.offset} className={`rounded-xl border p-4 ${w.color}`}>
@@ -309,8 +309,8 @@ export default function ThresholdCalibrationPage() {
               {[
                 {
                   icon: '⚠️',
-                  title: 'Daily temporal resolution — instantaneous 00:00 UTC snapshots',
-                  text: 'WAVERYS and GLORYS12 are daily datasets. Both SSH and Hₛ use their 00:00 UTC values, and the FES2022 tide is also evaluated at 00:00 UTC (instantaneous snapshot at midnight, not a daily average). Intra-day tidal peaks that occur at other times (e.g., afternoon high tide) are not captured. The D+1 00Z tolerance partially compensates for events whose peak occurred late on civil day D.',
+                  title: 'Mixed temporal convention — daily max Hₛ and tide, 00:00 UTC snapshot for SSH',
+                  text: 'Hₛ uses the daily maximum derived from 3-hourly WAVERYS fields (8 values per day), capturing the peak wave height within each civil day. The FES2022 tidal component also uses the daily maximum from hourly FES2022 output (24 values per day). GLORYS12 SSH (zos) retains the 00:00 UTC daily snapshot, as GLORYS12 is available at daily frequency only. This mixed convention means SSH_total = zos_00Z + max_tide(day), which is physically more representative of the peak compound forcing than a pure midnight snapshot.',
                 },
                 {
                   icon: '⚠️',
@@ -325,7 +325,7 @@ export default function ThresholdCalibrationPage() {
                 {
                   icon: '⚠️',
                   title: 'Reported event quality and timing uncertainty',
-                  text: 'The Leal et al. (2024) database is based on Civil Defense records, which may have reporting delays or missing entries. Dates are civil dates (not UTC datetimes), introducing up to ±12 h of timing uncertainty relative to the 00Z snapshot convention.',
+                  text: 'The Leal et al. (2024) database is based on Civil Defense records, which may have reporting delays or missing entries. Dates are civil dates (not UTC datetimes). Daily-maximum Hₛ and tide cover the full 24-hour window of each civil day, which substantially reduces sensitivity to the exact timing of the reported event.',
                 },
                 {
                   icon: '⚠️',
@@ -434,6 +434,43 @@ export default function ThresholdCalibrationPage() {
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Figure TC4-A1: Grid audit map ─────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_A1</span>
+              <h2 className="text-xl font-bold text-gray-900">Municipality → Grid Point Audit Map</h2>
+            </div>
+            <p className="mb-6 text-sm text-gray-600 max-w-2xl">
+              Spatial audit showing which WAVERYS/GLORYS12 grid point was assigned to each of the
+              22 SC municipalities with Civil Defense records. Each municipality centroid is connected
+              by a line to its selected nearest grid point with ≥80% valid data across the full time
+              series. Points failing the coverage threshold are flagged. Confirms that the spatial
+              matching step resolves correctly across all coastal sectors, including northern SC
+              (Araquari, São Francisco do Sul, Itapoá) where grid coverage is most constrained.
+            </p>
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+              <div className="p-5">
+                <Image
+                  src="/figures/tc4_summary/fig_TC4_A1_grid_audit.png"
+                  alt="Figure TC4-A1 — Municipality to grid point audit map"
+                  width={1000} height={800}
+                  className="w-full h-auto rounded-lg"
+                  unoptimized
+                />
+              </div>
+              <div className="border-t border-gray-100 px-5 py-4">
+                <p className="text-xs text-gray-500 italic leading-relaxed">
+                  Municipality centroids (circles) connected to their assigned WAVERYS/GLORYS12 grid point (crosses).
+                  Grid points with ≥80% valid data coverage across 1993–2025 are shown in blue; flagged/insufficient
+                  coverage in red. Lines indicate the municipality→grid association used throughout Step 4.
+                  Background shows the SC coastal sector divisions.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -8,17 +8,34 @@ threshold performance against the 91-event SC coastal disaster database.
 The SSH_total variable (zos + FES2022 tide) is used, consistent with the
 decision consolidated in the Tidal Sensitivity Analysis (Step 3 / Step 2b).
 
-Temporal convention
--------------------
-The unified GLORYS12/WAVERYS dataset contains daily values with timestamps at
-00:00 UTC. FES2022 tides are evaluated at 00:00 UTC each day (instantaneous
-snapshot at midnight), consistent with the dataset time convention.
+Temporal convention — daily maximums (updated 2026-04-02)
+----------------------------------------------------------
+All pipeline variables represent the daily maximum value for their respective
+source, as follows:
 
-    SSH_total(t) = zos(t, 00:00 UTC) + tide(t, 00:00 UTC)
+    VHM0 (Hₛ):
+        Daily maximum from 3-hourly WAVERYS, resampled during preprocessing
+        (resample_method='max' in config/preprocessing/glorys_to_waverys_*.yaml).
+        Replaces the prior daily mean.
 
-The D+1 00Z operational tolerance in the matching window accounts for events
-whose peak forcing occurred late on civil day D (e.g., 18:00 UTC), which would
-appear at 00Z of D+1 in the daily snapshot series.
+    FES2022 tide:
+        Daily maximum: FES2022 evaluated at hourly resolution (00:00–23:00 UTC);
+        maximum retained per calendar day.  Computed by build_tide_cache() with
+        daily_max=True.
+
+    zos (SSH from GLORYS12):
+        Unchanged — GLORYS12 is a daily ocean reanalysis with one 00:00 UTC
+        snapshot per day.  Sub-daily SSH is not available from this product.
+        True daily-maximum SSH cannot be derived without a sub-daily SSH source.
+
+        SSH_total(d) = zos(d, 00:00 UTC) + tide_daily_max(d)
+
+    The D+1 00Z operational tolerance in the matching window accounts for events
+    whose peak forcing occurred late on civil day D (e.g., 18:00 UTC), which
+    would appear at 00Z of D+1 in the daily snapshot series for zos.  This
+    tolerance is less critical for Hₛ and tide, which are now daily maxima, but
+    is retained for consistency and to avoid penalising the method for the
+    GLORYS12 temporal convention.
 
 Threshold sweep
 ---------------

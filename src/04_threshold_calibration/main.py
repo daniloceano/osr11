@@ -47,8 +47,20 @@ threshold computation to the same validated temporal domain.
 SSH_total rationale
 -------------------
 Following the Tidal Sensitivity Analysis (Step 3), SSH_total = SSH + FES2022 tide
-is used as the sea level variable throughout. The FES2022 model provides daily
-(00:00 UTC) tidal predictions consistent with the GLORYS12 snapshot convention.
+is used as the sea level variable throughout.
+
+Temporal convention (updated 2026-04-02): daily maximums
+---------------------------------------------------------
+Consistent with the switch to daily-maximum Hₛ in the unified metocean dataset,
+FES2022 tidal heights are also computed as daily maximums (FES2022 evaluated at
+hourly resolution; daily max retained). This represents the highest tidal level
+occurring at any point during the civil day.
+
+GLORYS12 SSH (zos) remains at the 00:00 UTC daily snapshot, since GLORYS12 is a
+daily ocean reanalysis product with one value per day. Sub-daily SSH data are not
+available from GLORYS12, so a true daily-maximum SSH cannot be derived from this
+source. The limitation is documented in the NetCDF global attributes and in
+SCIENTIFIC_NOTES.md.
 
 Causal window
 -------------
@@ -175,8 +187,11 @@ def main(args: argparse.Namespace | None = None) -> None:
     log.info("Built %d event records.", len(records))
 
     # ── Compute FES2022 tidal series (reuse tidal_sensitivity.tides) ────────────
-    log.info("Computing FES2022 tidal series for all unique grid points...")
-    tide_cache = build_tide_cache(records)
+    # daily_max=True: evaluate FES2022 at hourly resolution and retain the daily
+    # maximum tide height.  Consistent with the switch to daily-maximum Hₛ in
+    # the preprocessing step (resample_method='max' in the YAML config).
+    log.info("Computing FES2022 daily-maximum tidal series for all unique grid points...")
+    tide_cache = build_tide_cache(records, daily_max=True)
 
     # ── Build SSH_total climatological series per grid point ────────────────────
     log.info("Building SSH_total = SSH + tide series per grid point...")

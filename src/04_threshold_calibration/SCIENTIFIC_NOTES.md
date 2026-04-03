@@ -89,17 +89,32 @@ false alarms in the denominator. It ranges from 0 (no skill) to 1 (perfect detec
 
 ## Datasets and Variables
 
-| Variable | Source | Resolution | Period (in NetCDF) | Effective analysis period | Notes |
-|----------|--------|------------|--------------------|--------------------------|-------|
-| VHM0 (Hₛ) | WAVERYS (CMEMS) | ~8 km, daily 00Z | 1993–2025 | 1998-01-XX − 2d to 2023-MM-DD + 1d | Clipped by preprocessing layer |
-| zos (SSH) | GLORYS12 (CMEMS) | ~8 km, daily 00Z | 1993–2025 | Same clip as VHM0 | Clipped by preprocessing layer |
-| tide | FES2022 via eo-tides | Daily 00Z (at grid points) | Evaluated at 00:00 UTC | Same clip applied via ssh_total_cache | Instantaneous snapshot at midnight |
-| SSH_total | zos + tide | Daily 00Z | — | Same clip as zos | Computed per grid point |
+| Variable | Source | Temporal resolution / convention | Period (in NetCDF) | Effective analysis period | Notes |
+|----------|--------|-----------------------------------|--------------------|--------------------------|-------|
+| VHM0 (Hₛ) | WAVERYS (CMEMS) | **Daily maximum** from 3-hourly WAVERYS | 1993–2025 | 1998-01-XX − 2d to 2023-MM-DD + 1d | Clipped by preprocessing layer; resample_method='max' |
+| zos (SSH) | GLORYS12 (CMEMS) | Daily 00:00 UTC snapshot (only value available) | 1993–2025 | Same clip as VHM0 | GLORYS12 is a daily product; sub-daily SSH not available |
+| tide | FES2022 via eo-tides | **Daily maximum** (FES2022 at hourly resolution, daily max retained) | Evaluated at run time | Same clip applied via ssh_total_cache | `build_tide_cache(daily_max=True)` |
+| SSH_total | zos + tide | zos at 00:00 UTC + daily-max tide (approximation) | — | Same clip as zos | Computed per grid point; see limitation note below |
 | Observed events | Leal et al. (2024) | Daily (civil date) | 1998–2023 | 1998–2023 (full) | 91 events, 22 municipalities, 5 SC sectors |
 
-The unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc`) contains VHM0
-and zos on the same WAVERYS grid. FES2022 tides are computed at the same grid points using
+**SSH_total temporal approximation**: Because GLORYS12 provides only one daily value (at 00:00 UTC)
+and the FES2022 tide is now the daily maximum (which may occur at any hour), SSH_total is the sum of two
+quantities that are not strictly synchronous. This is an inherent limitation of GLORYS12's daily
+resolution and cannot be resolved without sub-daily SSH data. The approximation is physically
+reasonable — it represents the background SSH state plus the worst tidal contribution of the day —
+but it is not a true simultaneous total sea level.
+
+The unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc`) contains VHM0 (daily max)
+and zos (00:00 UTC) on the same WAVERYS grid. FES2022 tides are computed at the same grid points using
 the `eo-tides` Python library (see Step 3 documentation).
+
+### Methodological change log (2026-04-02)
+
+| Variable | Before | After | Rationale |
+|----------|--------|-------|-----------|
+| VHM0 (Hₛ) | Daily mean from 3-hourly WAVERYS | **Daily maximum** from 3-hourly WAVERYS | Compound event detection requires the worst-case wave forcing, not the average |
+| FES2022 tide | Instantaneous at 00:00 UTC | **Daily maximum** (hourly FES2022 → daily max) | Consistent with Hₛ change; captures the highest tidal contribution during the day |
+| zos (SSH) | 00:00 UTC daily snapshot | **Unchanged** — GLORYS12 is a daily product | Sub-daily GLORYS12 SSH is not available from CMEMS |
 
 ---
 
@@ -238,11 +253,15 @@ The optimal pair is selected following the hierarchy: max CSI → min FAR → ma
 
 ## Assumptions
 
-1. **SSH_total = SSH + FES2022 (daily 00Z)**: The tidal component is the FES2022 daily
-   prediction at midnight UTC, consistent with the GLORYS12 snapshot time. The Tidal
-   Sensitivity Analysis (Step 3) established that daily resolution is the appropriate
-   baseline given the current dataset. Hourly-resolution tidal effects will be considered
-   in a future extension.
+1. **SSH_total = zos (00:00 UTC) + FES2022 tide (daily maximum)**: Following the 2026-04-02
+   methodological update, the tidal component is the FES2022 daily maximum — the highest
+   astronomical tide occurring at any hour during the civil day, computed by evaluating
+   FES2022 at hourly resolution and taking the daily maximum per grid point. This is
+   consistent with the switch to daily-maximum Hₛ in the preprocessing step.
+   GLORYS12 SSH (zos) remains at the daily 00:00 UTC snapshot, as GLORYS12 is a daily
+   ocean reanalysis and sub-daily SSH data are not available from this product. The
+   combination of a 00:00 UTC SSH with a daily-maximum tide is an approximation; see the
+   SSH_total temporal approximation note in the Datasets section.
 
 2. **Local percentile thresholds**: Thresholds are computed from the clipped annual
    climatological series at each municipality's grid point (validated period, ~25 years).
@@ -310,10 +329,14 @@ Results will be documented here after the analysis is executed. Key outputs to i
 
 ## Caveats and Limitations
 
-1. **Daily temporal resolution**: WAVERYS and GLORYS12 are daily datasets. The compound
-   detection cannot resolve intra-day timing. The D+1 00Z tolerance partially compensates,
-   but tidal phasing effects at sub-daily scales are not captured. This is the most
-   significant limitation of the current implementation.
+1. **GLORYS12 daily resolution and SSH_total approximation**: GLORYS12 provides one SSH
+   value per day at 00:00 UTC. Following the 2026-04-02 update, Hₛ and the FES2022 tide
+   are represented as daily maximums, but SSH (zos) cannot be because GLORYS12 is a daily
+   product with no sub-daily information. SSH_total is therefore the sum of the 00:00 UTC
+   SSH and the daily-maximum tide — values that are not necessarily simultaneous. This
+   approximation is the most significant remaining limitation of the current implementation.
+   Sub-daily SSH data (e.g., from a high-frequency coastal model or an NRT product with
+   hourly output) would be required to remove this limitation.
 
 2. **Reanalysis representativeness**: WAVERYS and GLORYS12 are gridded reanalysis products
    with ~8 km resolution. Nearshore wave and surge dynamics (shoaling, refraction, coastal
