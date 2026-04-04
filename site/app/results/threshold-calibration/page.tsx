@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import StatusBadge from '@/components/StatusBadge';
+import Tc4EventSelector from '@/components/Tc4EventSelector';
 
 export const metadata = {
   title: 'Threshold Calibration (CSI Grid Scan) — OSR11',
@@ -794,6 +795,40 @@ export default function ThresholdCalibrationPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Per-event time-series figures ─────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">
+              Per-event Time-Series Inspection
+            </h2>
+            <p className="mb-6 text-sm text-gray-600 max-w-3xl">
+              Two-panel time-series for each of the 91 reported events, showing daily-maximum Hₛ
+              (top) and daily SSH_total = zos + FES2022 tide (bottom) in a 7-day window centred on
+              the event date. The local percentile threshold — computed from the validated-period
+              climatology at the event&apos;s grid point — is drawn as a dashed grey line. The blue
+              band marks the causal/antecedent matching window [D-2, D-1, D, D+1 00Z].
+            </p>
+
+            {/* How-to-read info box */}
+            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs text-blue-800 leading-relaxed">
+              <strong>How to use this tool:</strong> Select a threshold percentile (q50–q90) to
+              see how the threshold lines move across the full range tested in the CSI grid scan.
+              The <strong>★ optimal pair</strong> is the threshold that maximises CSI across all
+              91 events. Use the sector and capture-status filters to focus on specific subsets.
+              Events captured at the selected threshold are marked{' '}
+              <span className="font-semibold text-green-700">green ✓</span>; missed events are{' '}
+              <span className="font-semibold text-red-700">red ✗</span>.
+              <br /><br />
+              Figures are generated for the nine diagonal pairs (q50×q50 … q90×q90), where both
+              Hₛ and SSH_total share the same percentile level. This lets you inspect the visual
+              impact of moving from a lenient (q50) to a strict (q90) detector simultaneously for
+              both variables.
+            </div>
+
+            <Tc4EventSelector />
           </div>
         </div>
 

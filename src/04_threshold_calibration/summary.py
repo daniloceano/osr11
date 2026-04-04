@@ -40,6 +40,7 @@ import pandas as pd
 
 from src.threshold_calibration.config.analysis_config import CFG
 from src.threshold_calibration.figures import run_figures
+from src.threshold_calibration.event_figures import run_event_figures
 from src.threshold_calibration.metrics import build_event_hit_table, capture_lag_summary
 
 log = logging.getLogger(__name__)
@@ -58,6 +59,9 @@ def run_summary(
     all_captures: list,
     df_events_meta: pd.DataFrame,
     fa_per_muni_df: pd.DataFrame | None = None,
+    records: list | None = None,
+    ssh_total_cache: dict | None = None,
+    time_index=None,
 ) -> None:
     """Generate all summary tables and figures for Step 4.
 
@@ -70,6 +74,14 @@ def run_summary(
     df_events_meta : reported events DataFrame (for sector metadata)
     fa_per_muni_df : per-municipality false alarm counts across all threshold
                      pairs (from calibration.run_false_alarms()). Optional.
+    records : list[EventRecord] | None
+        If provided (together with ssh_total_cache and time_index), per-event
+        time-series figures are generated and site/content/tc4Events.ts is
+        written.
+    ssh_total_cache : dict | None
+        SSH_total climatological cache, keyed by (lat, lon).
+    time_index : pd.DatetimeIndex | None
+        Full (clipped) time coordinate of the dataset.
     """
     log.info("== Generating Step 4 summary outputs ==")
 
@@ -117,6 +129,22 @@ def run_summary(
     run_figures(df_metrics, df_event_hits_all, lag_sum, optimal,
                 df_muni_ref=df_muni_ref, df_events_meta=df_events_meta,
                 df_fa_per_muni=fa_per_muni_df)
+
+    # ── Per-event time-series figures ─────────────────────────────────────────
+    if records is not None and ssh_total_cache is not None:
+        log.info("Generating per-event time-series figures (diagonal pairs q50–q90)...")
+        run_event_figures(
+            records=records,
+            ssh_total_cache=ssh_total_cache,
+            time_index=time_index,
+            df_event_hits_all=df_event_hits_all,
+            df_events_meta=df_events_meta,
+            optimal=optimal,
+        )
+    else:
+        log.info(
+            "Skipping per-event time-series figures — records or ssh_total_cache not provided."
+        )
 
     # ── Run log ───────────────────────────────────────────────────────────────
     _write_run_log(df_metrics, df_ranked, optimal, df_event_hits_opt, lag_sum)

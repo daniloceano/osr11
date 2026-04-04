@@ -133,6 +133,10 @@ def _parse_args() -> argparse.Namespace:
         "--summary", action="store_true",
         help="Summary: compute metrics, select optimal pair, save tables and figures",
     )
+    group.add_argument(
+        "--timeseries", action="store_true",
+        help="Time-series only: generate per-event figures (requires prior --all or --summary run)",
+    )
     return parser.parse_args()
 
 
@@ -144,6 +148,7 @@ def main(args: argparse.Namespace | None = None) -> None:
         getattr(args, "hits_misses", False),
         getattr(args, "false_alarms", False),
         args.summary,
+        getattr(args, "timeseries", False),
     ])
 
     apply_publication_style()
@@ -243,7 +248,34 @@ def main(args: argparse.Namespace | None = None) -> None:
         optimal    = select_optimal_pair(df_metrics)
 
         run_summary(df_metrics, df_ranked, optimal, all_captures, df_events,
-                    fa_per_muni_df=fa_per_muni_df)
+                    fa_per_muni_df=fa_per_muni_df,
+                    records=records,
+                    ssh_total_cache=ssh_total_cache,
+                    time_index=time_index)
+
+    # ── Standalone --timeseries (skips calibration, loads from saved tables) ────
+    if getattr(args, "timeseries", False) and not (run_all or args.summary):
+        from src.threshold_calibration.event_figures import run_event_figures
+        _opt_path = CFG["tab_dir"] / "tab_TC4_optimal_pair.csv"
+        _hits_path = CFG["tab_dir"] / "tab_TC4_event_hits.csv"
+        if not _opt_path.exists() or not _hits_path.exists():
+            log.error(
+                "--timeseries requires prior --all / --summary run "
+                "(tab_TC4_optimal_pair.csv and tab_TC4_event_hits.csv not found)."
+            )
+            sys.exit(1)
+        import pandas as _pd
+        _optimal = _pd.read_csv(_opt_path).iloc[0].to_dict()
+        _df_hits  = _pd.read_csv(_hits_path)
+        log.info("Running standalone --timeseries (using saved calibration tables)...")
+        run_event_figures(
+            records=records,
+            ssh_total_cache=ssh_total_cache,
+            time_index=time_index,
+            df_event_hits_all=_df_hits,
+            df_events_meta=df_events,
+            optimal=_optimal,
+        )
 
     log.info("=" * 68)
     log.info("Threshold calibration complete.")
