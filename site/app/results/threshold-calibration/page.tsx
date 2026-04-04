@@ -673,6 +673,54 @@ export default function ThresholdCalibrationPage() {
           </div>
         </div>
 
+        {/* ── Figure TC4-S5: Peak scatter ───────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700">fig_TC4_S5</span>
+              <h3 className="text-xl font-bold text-gray-900">Peak Hₛ vs Peak SSH_total — Causal Window</h3>
+            </div>
+            <p className="mb-4 text-sm text-gray-600 max-w-3xl">
+              Each point represents one reported event. The x-axis shows the maximum Hₛ found
+              within the causal/antecedent window [D-2, D-1, D, D+1 00Z]; the y-axis shows the
+              maximum SSH_total in the same window. Points are coloured by coastal sector.
+              <strong> Filled circles</strong> indicate events captured at the optimal threshold pair;{' '}
+              <strong>open circles</strong> are missed events. Dashed reference lines show the
+              median local threshold across all grid points. The green-shaded quadrant marks the
+              region above both median thresholds.
+            </p>
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 leading-relaxed">
+              <strong>Note:</strong> An event above both threshold lines is not automatically
+              captured — the compound condition requires <em>simultaneous</em> exceedance of both
+              variables on the same day within the causal window. A high Hₛ peak and a high
+              SSH_total peak may fall on different days, preventing detection. Thresholds also vary
+              by grid point; the reference lines show the median across all municipalities.
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+              <div className="p-4">
+                <Image
+                  src="/figures/tc4_summary/fig_TC4_S5_peak_scatter.png"
+                  alt="Figure TC4-S5 — Peak Hₛ vs peak SSH_total within causal window"
+                  width={900} height={700}
+                  className="w-full h-auto rounded-lg"
+                  unoptimized
+                />
+              </div>
+              <div className="border-t border-gray-100 px-5 py-4">
+                <p className="text-xs text-gray-500 italic leading-relaxed">
+                  Peak absolute values within the causal window [D-2, D-1, D, D+1 00Z] for each
+                  reported event. Filled = captured at the optimal pair (Hₛ q{'{'}opt{'}'} /
+                  SSH_total q{'{'}opt{'}'}); open = missed. Coloured by coastal sector.
+                  Dashed lines: median of local percentile thresholds across all grid points.
+                  Green zone: above both median thresholds simultaneously. Detection requires the
+                  compound condition to hold on the same day — peak values in different variables
+                  on different days do not trigger detection even if both exceed their thresholds.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── Spatial performance heatmaps (TC4-M1 / M2 / M3) ─────────────── */}
         <div className="border-b border-gray-200 bg-white py-14">
           <div className="mx-auto max-w-5xl px-6">

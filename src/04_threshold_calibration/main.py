@@ -198,6 +198,28 @@ def main(args: argparse.Namespace | None = None) -> None:
     log.info("Computing FES2022 daily-maximum tidal series for all unique grid points...")
     tide_cache = build_tide_cache(records, daily_max=True)
 
+    # ── Mandatory tide validation ────────────────────────────────────────────────
+    # Step 4 requires FES2022 tide for every grid point.  build_tide_cache() is
+    # shared with Step 3 and silently fills NaN when eo-tides is not installed.
+    # Catch that here — before any computation — and abort with a clear message.
+    _failed_points: list[str] = []
+    for _key, _tseries in tide_cache.items():
+        if _tseries is None or not _tseries.notna().any():
+            _failed_points.append(str(_key))
+    if _failed_points:
+        raise RuntimeError(
+            "FES2022 tide is mandatory for Step 4 but failed for "
+            f"{len(_failed_points)} grid point(s):\n"
+            + "\n".join(f"  • {p}" for p in _failed_points[:10])
+            + ("\n  …" if len(_failed_points) > 10 else "")
+            + "\n\nPossible causes:\n"
+            "  1. Not running in the 'osr11' conda environment "
+            "(eo-tides not installed).\n"
+            "  2. FES2022 model files are missing or misconfigured.\n\n"
+            "Fix: conda run -n osr11 python src/04_threshold_calibration/main.py --all"
+        )
+    log.info("FES2022 tide validated for all %d grid point(s).", len(tide_cache))
+
     # ── Build SSH_total climatological series per grid point ────────────────────
     log.info("Building SSH_total = SSH + tide series per grid point...")
     ssh_total_cache = build_ssh_total_cache(records, tide_cache)

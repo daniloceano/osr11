@@ -11,6 +11,8 @@ TC4-S1  Ranking scatter: POD vs FAR (bubble size = CSI)
 TC4-S2  Hit/miss bar chart per event at the optimal threshold pair
 TC4-S3  Capture lag distribution (D-2 / D-1 / D / D+1 00Z)
 TC4-S4  CSI, FAR, POD by coastal sector at optimal pair
+TC4-S5  Peak Hₛ vs peak SSH_total scatter — absolute maxima within causal window,
+        coloured by sector, filled = captured at optimal pair (open = missed)
 TC4-M1  Municipality hit-rate heatmap (city × threshold pair)
 TC4-M2  Municipality miss-rate heatmap (city × threshold pair)
 TC4-M3  Municipality false-alarm heatmap (city × threshold pair)
@@ -846,6 +848,197 @@ def plot_city_false_alarms_heatmap(
 
 # ── Orchestration ─────────────────────────────────────────────────────────────
 
+# ── TC4-S5: Peak Hₛ × peak SSH_total scatter ─────────────────────────────────
+
+def plot_peak_scatter(
+    records: list,
+    ssh_total_cache: dict,
+    df_event_hits: pd.DataFrame,
+    optimal: dict,
+) -> plt.Figure:
+    """Scatter of absolute peak Hₛ vs peak SSH_total within the causal window.
+
+    Each point represents one reported event. X = maximum Hₛ found in
+    [D-2, D-1, D, D+1 00Z]; Y = maximum SSH_total in the same window.
+    Points are coloured by coastal sector.  Filled circles indicate
+    events captured at the optimal threshold pair; open circles are missed.
+
+    Dashed reference lines show the **median** of the local percentile
+    thresholds across all grid points (i.e. the median Hₛ q{N} and SSH_total
+    q{N} values used in the calibration).  Because thresholds are computed
+    locally at each municipality's grid point, individual events may have
+    threshold values that differ from these reference lines.
+
+    Parameters
+    ----------
+    records : list[EventRecord]
+    ssh_total_cache : dict mapping (lat, lon) → SSH_total climatological Series
+    df_event_hits : DataFrame from metrics.build_event_hit_table() (all pairs)
+    optimal : dict with 'thr_hs_pct', 'thr_ssh_pct', 'H', 'M'
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    from matplotlib.lines import Line2D
+    from config.plot_config import apply_publication_style
+
+    apply_publication_style()
+
+    opt_hs_pct  = float(optimal["thr_hs_pct"])
+    opt_ssh_pct = float(optimal["thr_ssh_pct"])
+
+    # Capture-status lookup keyed by event_idx
+    df_opt = df_event_hits[
+        (df_event_hits["thr_hs_pct"]  == opt_hs_pct)
+        & (df_event_hits["thr_ssh_pct"] == opt_ssh_pct)
+    ].copy()
+    capture_map: dict[int, bool] = dict(zip(df_opt["event_idx"], df_opt["captured"]))
+    sector_map: dict[int, str]   = {}
+    if "coastal_sector" in df_opt.columns:
+        sector_map = dict(zip(df_opt["event_idx"], df_opt["coastal_sector"].fillna("")))
+
+    # ── Collect per-event peak values and local thresholds ────────────────────
+    # SSH_total (zos + FES2022 tide) is mandatory in Step 4.
+    rows = []
+
+    for rec in records:
+        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
+        ssh_total_clim = ssh_total_cache.get(key, pd.Series(dtype=float))
+
+        if not ssh_total_clim.notna().any():
+            raise RuntimeError(
+                f"SSH_total is all-NaN for grid point {key} "
+                f"(municipality: {rec.municipality}) — FES2022 tidal data is mandatory "
+                "for Step 4 figures. Run in the 'osr11' conda environment."
+            )
+
+        # Causal window [D-2 … D+1]
+        win_start = rec.date - pd.Timedelta(days=2)
+        win_end   = rec.date + pd.Timedelta(days=1)
+
+        hs_causal  = rec.hs_clim.loc[win_start:win_end]
+        ssh_causal = ssh_total_clim.loc[win_start:win_end]
+
+        peak_hs  = float(hs_causal.max())  if hs_causal.notna().any()  else np.nan
+        peak_ssh = float(ssh_causal.max()) if ssh_causal.notna().any() else np.nan
+
+        # Local thresholds (same computation as Layer 1)
+        thr_hs = (
+            float(rec.hs_clim.dropna().quantile(opt_hs_pct))
+            if rec.hs_clim.notna().any() else np.nan
+        )
+        thr_ssh = (
+            float(ssh_total_clim.dropna().quantile(opt_ssh_pct))
+            if ssh_total_clim.notna().any() else np.nan
+        )
+
+        rows.append({
+            "municipality": rec.municipality,
+            "peak_hs":  peak_hs,
+            "peak_ssh": peak_ssh,
+            "thr_hs":   thr_hs,
+            "thr_ssh":  thr_ssh,
+            "captured": capture_map.get(rec.event_idx, False),
+            "sector":   sector_map.get(rec.event_idx, ""),
+        })
+
+    df_plot = pd.DataFrame(rows)
+    df_plot = df_plot.dropna(subset=["peak_hs", "peak_ssh"])
+
+    # Median reference thresholds
+    median_thr_hs  = df_plot["thr_hs"].median()
+    median_thr_ssh = df_plot["thr_ssh"].median()
+
+    # ── Figure ────────────────────────────────────────────────────────────────
+    fig, ax = plt.subplots(figsize=(9, 7))
+
+    # Light shading of "above both median thresholds" zone
+    xlim_hi = df_plot["peak_hs"].max() * 1.08 if not df_plot.empty else 1.0
+    ylim_hi = df_plot["peak_ssh"].max() * 1.08 if not df_plot.empty else 1.0
+    if (
+        not np.isnan(median_thr_hs)
+        and not np.isnan(median_thr_ssh)
+        and xlim_hi > median_thr_hs
+        and ylim_hi > median_thr_ssh
+    ):
+        ax.fill_betweenx(
+            [median_thr_ssh, ylim_hi],
+            median_thr_hs, xlim_hi,
+            color="#d0f0c0", alpha=0.25, zorder=0,
+            label="Above both median thresholds",
+        )
+
+    # Reference lines
+    if not np.isnan(median_thr_hs):
+        ax.axvline(
+            median_thr_hs, color="dimgray", ls="--", lw=1.0, alpha=0.75, zorder=1,
+            label=f"Median Hₛ q{round(opt_hs_pct * 100)} = {median_thr_hs:.2f} m",
+        )
+    if not np.isnan(median_thr_ssh):
+        ax.axhline(
+            median_thr_ssh, color="dimgray", ls=":", lw=1.0, alpha=0.75, zorder=1,
+            label=f"Median SSH_total q{round(opt_ssh_pct * 100)} = {median_thr_ssh:.2f} m",
+        )
+
+    # ── Scatter: misses first (below), hits on top ────────────────────────────
+    for sector, color in SECTOR_COLORS.items():
+        df_s = df_plot[df_plot["sector"] == sector]
+        if df_s.empty:
+            continue
+        miss = df_s[~df_s["captured"]]
+        hit  = df_s[ df_s["captured"]]
+        if not miss.empty:
+            ax.scatter(
+                miss["peak_hs"], miss["peak_ssh"],
+                facecolors="none", edgecolors=color, linewidths=1.5,
+                s=72, zorder=2,
+            )
+        if not hit.empty:
+            ax.scatter(
+                hit["peak_hs"], hit["peak_ssh"],
+                facecolors=color, edgecolors=color, linewidths=0.8,
+                s=72, zorder=3,
+            )
+
+    # ── Legend: sector colours + marker type ─────────────────────────────────
+    marker_handles = [
+        Line2D([0], [0], marker="o", linestyle="none",
+               markerfacecolor="dimgray", markeredgecolor="dimgray",
+               markersize=8, label="Captured ● (filled)"),
+        Line2D([0], [0], marker="o", linestyle="none",
+               markerfacecolor="none", markeredgecolor="dimgray",
+               markersize=8, label="Missed ○ (open)"),
+    ]
+    sector_handles = [
+        Line2D([0], [0], marker="o", linestyle="none",
+               markerfacecolor=color, markeredgecolor=color,
+               markersize=8, label=sector)
+        for sector, color in SECTOR_COLORS.items()
+        if not df_plot[df_plot["sector"] == sector].empty
+    ]
+    ax.legend(
+        handles=marker_handles + sector_handles,
+        fontsize=7.5, loc="upper left", framealpha=0.9,
+    )
+
+    # ── Axes ─────────────────────────────────────────────────────────────────
+    hs_label  = "Peak Hₛ in causal window [D-2 … D+1 00Z] (m)"
+    ssh_label = "Peak SSH_total = zos + tide in causal window [D-2 … D+1 00Z] (m)"
+    ax.set_xlabel(hs_label, fontsize=STYLE.font_size_axis_label)
+    ax.set_ylabel(ssh_label, fontsize=STYLE.font_size_axis_label)
+    ax.set_title(
+        f"TC4-S5 — Absolute peak values within causal window — filled = captured\n"
+        f"Optimal pair: Hₛ q{round(opt_hs_pct * 100)} / SSH_total q{round(opt_ssh_pct * 100)}"
+        f"  ·  {int(optimal['H'])} hits  ·  {int(optimal['M'])} misses",
+        fontsize=STYLE.font_size_title, fontweight="bold",
+    )
+    ax.tick_params(axis="both", labelsize=STYLE.font_size_tick)
+    ax.grid(True, alpha=0.3, lw=0.5)
+    fig.tight_layout()
+    return fig
+
+
 def run_figures(
     df_metrics: pd.DataFrame,
     df_event_hits: pd.DataFrame,
@@ -854,6 +1047,8 @@ def run_figures(
     df_muni_ref: pd.DataFrame | None = None,
     df_events_meta: pd.DataFrame | None = None,
     df_fa_per_muni: pd.DataFrame | None = None,
+    records: list | None = None,
+    ssh_total_cache: dict | None = None,
 ) -> None:
     """Generate and save all Step 4 figures.
 
@@ -870,6 +1065,10 @@ def run_figures(
     df_fa_per_muni  : per-municipality false alarm counts (all threshold pairs),
                       as produced by calibration.run_false_alarms(). Optional;
                       if None, TC4-M3 is generated with a placeholder message.
+    records : list[EventRecord] | None
+        Required for TC4-S5 (peak scatter). If None, TC4-S5 is skipped.
+    ssh_total_cache : dict | None
+        Required for TC4-S5. Mapping (lat, lon) → SSH_total Series.
     """
     log.info("Generating threshold calibration figures...")
 
@@ -902,6 +1101,13 @@ def run_figures(
 
     fig_s4 = plot_sector_metrics(df_event_hits, optimal)
     save_fig(fig_s4, "fig_TC4_S4_sector_pod", subdir="summary")
+
+    # ── TC4-S5: Peak scatter ───────────────────────────────────────────────
+    if records is not None and ssh_total_cache is not None:
+        fig_s5 = plot_peak_scatter(records, ssh_total_cache, df_event_hits, optimal)
+        save_fig(fig_s5, "fig_TC4_S5_peak_scatter", subdir="summary")
+    else:
+        log.info("  Skipping TC4-S5 (records or ssh_total_cache not provided).")
 
     # ── TC4-M1/M2/M3: Municipality spatial heatmaps ────────────────────────
     muni_order = _build_municipality_order(df_event_hits, df_muni_ref)

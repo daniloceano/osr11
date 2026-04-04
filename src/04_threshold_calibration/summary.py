@@ -128,7 +128,9 @@ def run_summary(
 
     run_figures(df_metrics, df_event_hits_all, lag_sum, optimal,
                 df_muni_ref=df_muni_ref, df_events_meta=df_events_meta,
-                df_fa_per_muni=fa_per_muni_df)
+                df_fa_per_muni=fa_per_muni_df,
+                records=records,
+                ssh_total_cache=ssh_total_cache)
 
     # ── Per-event time-series figures ─────────────────────────────────────────
     if records is not None and ssh_total_cache is not None:
