@@ -75,10 +75,10 @@ export default function ThresholdCalibrationPage() {
             <h2 className="mb-4 text-xl font-bold text-gray-900">What this analysis is about</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <p className="text-sm text-gray-700 leading-relaxed">
-                Steps 2 and 3 of the OSR11 pipeline used a fixed q90 threshold for both Hₛ and SSH_total,
-                and found that only 2–13 of the 91 reported SC coastal disasters show concurrent
-                exceedances within the event window. This low detection rate is expected:
-                q90 is a conventional starting point, not an empirically calibrated threshold.
+                Steps 2 and 3 of the OSR11 pipeline used a fixed q90 threshold for both Hₛ and SSH_total
+                as a conventional starting point to build the methodology infrastructure. Step 4 asks
+                whether any combination of thresholds in the q50–q90 range can do better — empirically
+                calibrated against the 91-event Civil Defense database rather than chosen arbitrarily.
                 <br /><br />
                 Step 4 asks: <strong>which pair of (Hₛ, SSH_total) thresholds best separates the
                 91 reported coastal disasters from background ocean conditions?</strong> Instead of
@@ -315,8 +315,8 @@ export default function ThresholdCalibrationPage() {
                 },
                 {
                   icon: '⚠️',
-                  title: 'Local percentile thresholds from the full annual series',
-                  text: 'Thresholds are computed from the full 1993–2025 climatological series, without seasonal decomposition. This means q80 in winter and q80 in summer correspond to different absolute values of Hₛ and SSH_total. A seasonal threshold would be more physically meaningful but adds complexity and is deferred to a future extension.',
+                  title: 'Local percentile thresholds from the validated-period climatology',
+                  text: 'Thresholds are computed from the validated-period climatological series (~25 years, ~1998–2023), not the full 1993–2025 record. This ensures that both the false alarm scan and the quantile computation operate on the same temporal domain. Thresholds are annual (no seasonal decomposition): q80 in winter and q80 in summer correspond to different absolute values of Hₛ and SSH_total. Seasonal thresholds would be more physically meaningful but add complexity and are deferred to a future extension.',
                 },
                 {
                   icon: '⚠️',
@@ -369,13 +369,13 @@ export default function ThresholdCalibrationPage() {
               <div className="flex flex-wrap gap-4">
                 {[
                   { label: 'Hₛ threshold',       value: 'q90', sub: '90th percentile' },
-                  { label: 'SSH_total threshold', value: 'q55', sub: '55th percentile' },
-                  { label: 'Hits (H)',            value: '42',  sub: 'of 91 events captured' },
-                  { label: 'Misses (M)',          value: '49',  sub: 'events not captured' },
-                  { label: 'False alarms (F)',    value: '3 406', sub: 'spurious compound episodes' },
-                  { label: 'POD',                value: '0.46', sub: 'H / (H + M)' },
-                  { label: 'FAR',                value: '0.99', sub: 'F / (H + F)' },
-                  { label: 'CSI',                value: '0.012', sub: 'H / (H + M + F)' },
+                  { label: 'SSH_total threshold', value: 'q90', sub: '90th percentile' },
+                  { label: 'Hits (H)',            value: '21',  sub: 'of 91 events captured' },
+                  { label: 'Misses (M)',          value: '70',  sub: 'events not captured' },
+                  { label: 'False alarms (F)',    value: '1 298', sub: 'spurious compound episodes' },
+                  { label: 'POD',                value: '0.23', sub: 'H / (H + M)' },
+                  { label: 'FAR',                value: '0.984', sub: 'F / (H + F)' },
+                  { label: 'CSI',                value: '0.0151', sub: 'H / (H + M + F)' },
                 ].map((m) => (
                   <div key={m.label} className="rounded-lg border border-emerald-200 bg-white px-4 py-3 min-w-[110px]">
                     <div className="text-xs text-gray-500 mb-0.5">{m.label}</div>
@@ -390,15 +390,17 @@ export default function ThresholdCalibrationPage() {
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-8">
               <p className="text-xs font-semibold text-amber-800 mb-1">Interpreting these results</p>
               <p className="text-xs text-amber-700 leading-relaxed">
-                The optimal pair (Hₛ=q90, SSH_total=q55) captures <strong>42 of 91 events (POD=0.46)</strong> but
-                produces <strong>3 406 false alarms</strong> — compound episodes in the full 32-year series with no
-                matching reported disaster. This leads to a very low CSI (0.012) and FAR near 1. The dominant driver
-                is the low SSH_total threshold (q55), which causes the compound condition to fire very frequently
-                at all grid points. The CSI grid scan confirms that no threshold pair in the q50–q90 range achieves
-                a meaningful balance between POD and FAR at daily resolution with the current 91-event database.
-                This is an important result: it indicates that the compound signal as defined here (simultaneous
-                daily exceedances) is too common relative to the reporting density, motivating either a stricter
-                compound definition, episodic clustering, or a move to sub-daily data.
+                The optimal pair (Hₛ=q90, SSH_total=q90) captures only <strong>21 of 91 events
+                (POD=0.23)</strong> while producing <strong>1 298 false alarms</strong> — compound episodes
+                in the validated-period series with no matching reported disaster. This yields a very low
+                CSI (0.0151) and FAR near 1. Even at the most restrictive combination tested (q90/q90), the
+                compound condition fires ~62× more often than disaster events are reported.
+                The CSI grid scan confirms that no threshold pair in the q50–q90 range achieves a meaningful
+                balance between POD and FAR at daily resolution with the current 91-event database.
+                This is a structural result, not a method failure: simultaneous daily exceedances are far more
+                common in the ocean climatology than in the disaster record, motivating either a stricter compound
+                definition, episodic clustering, or a move to sub-daily (3-hourly) data where peak timing can
+                be assessed more precisely.
               </p>
             </div>
 
@@ -416,10 +418,10 @@ export default function ThresholdCalibrationPage() {
                 </thead>
                 <tbody>
                   {[
-                    { offset: 'D-2', label: 'Early antecedent', count: 8,  frac: '19%' },
-                    { offset: 'D-1', label: 'Late antecedent',  count: 13, frac: '31%' },
-                    { offset: 'D',   label: 'Event day',        count: 15, frac: '36%' },
-                    { offset: 'D+1 00Z', label: 'Operational tolerance', count: 6, frac: '14%' },
+                    { offset: 'D-2', label: 'Early antecedent', count: 2,  frac: '9.5%' },
+                    { offset: 'D-1', label: 'Late antecedent',  count: 7,  frac: '33.3%' },
+                    { offset: 'D',   label: 'Event day',        count: 9,  frac: '42.9%' },
+                    { offset: 'D+1 00Z', label: 'Operational tolerance', count: 3, frac: '14.3%' },
                   ].map((r, i) => (
                     <tr key={r.offset} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                       <td className="px-4 py-2.5 font-mono font-semibold text-gray-800">{r.offset}</td>
@@ -430,7 +432,7 @@ export default function ThresholdCalibrationPage() {
                   ))}
                   <tr className="border-t-2 border-gray-300 bg-gray-100">
                     <td className="px-4 py-2.5 font-semibold text-gray-800" colSpan={2}>Total hits</td>
-                    <td className="px-4 py-2.5 text-center font-black text-gray-900">42</td>
+                    <td className="px-4 py-2.5 text-center font-black text-gray-900">21</td>
                     <td className="px-4 py-2.5 text-center font-semibold text-gray-700">100%</td>
                   </tr>
                 </tbody>
@@ -485,8 +487,8 @@ export default function ThresholdCalibrationPage() {
             </div>
             <p className="mb-6 text-sm text-gray-600 max-w-2xl">
               CSI across all 81 threshold pairs (Hₛ × SSH_total, q50–q90). The ★ marks the optimal pair
-              (Hₛ=q90, SSH_total=q55). A broad plateau would indicate robustness; the absence of one
-              confirms the sensitivity of CSI to the false-alarm structure in this dataset.
+              (Hₛ=q90, SSH_total=q90). All values are clustered near zero, reflecting the structural
+              dominance of false alarms at daily temporal resolution.
             </p>
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
               <div className="p-5">
@@ -500,8 +502,9 @@ export default function ThresholdCalibrationPage() {
               </div>
               <div className="border-t border-gray-100 px-5 py-4">
                 <p className="text-xs text-gray-500 italic leading-relaxed">
-                  CSI = H / (H + M + F) for each (Hₛ, SSH_total) percentile pair. Optimal pair marked with ★.
-                  Values annotated in each cell. Colourmap: YlGn (0 = white, higher = darker green).
+                  CSI = H / (H + M + F) for each (Hₛ, SSH_total) percentile pair. Optimal pair (Hₛ=q90, SSH_total=q90)
+                  marked with ★ in the Hₛ=q90 group label. Values annotated in each cell.
+                  Colourmap: YlGn (0 = white, higher = darker green).
                 </p>
               </div>
             </div>
@@ -541,7 +544,8 @@ export default function ThresholdCalibrationPage() {
                 </div>
                 <p className="mb-4 text-xs text-gray-600">
                   POD = H / (H + M). POD decreases toward the top-right (more restrictive thresholds).
-                  The best POD (~0.59) is achieved at q85/q50 but with even higher false alarms.
+                  The best POD (0.73) is achieved at q50/q50 but with the highest false alarm count.
+                  At the optimal pair (q90/q90), POD = 0.23.
                 </p>
                 <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
                   <div className="p-4">
@@ -601,7 +605,7 @@ export default function ThresholdCalibrationPage() {
             </div>
             <p className="mb-6 text-sm text-gray-600 max-w-2xl">
               Each of the 91 reported SC coastal disasters shown as a horizontal bar: green = captured (hit),
-              red = missed. At the optimal pair (Hₛ=q90, SSH_total=q55), 42 events are hits and 49 are misses.
+              red = missed. At the optimal pair (Hₛ=q90, SSH_total=q90), 21 events are hits and 70 are misses.
             </p>
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
               <div className="p-5">
@@ -615,7 +619,7 @@ export default function ThresholdCalibrationPage() {
               </div>
               <div className="border-t border-gray-100 px-5 py-4">
                 <p className="text-xs text-gray-500 italic leading-relaxed">
-                  Hit/miss at optimal pair (Hₛ=q90, SSH_total=q55). Green = compound condition met within [D-2, D+1 00Z].
+                  Hit/miss at optimal pair (Hₛ=q90, SSH_total=q90). Green = compound condition met within [D-2, D+1 00Z].
                   Red = not met. Events sorted by date within sector.
                 </p>
               </div>
@@ -633,8 +637,9 @@ export default function ThresholdCalibrationPage() {
                   <h3 className="text-base font-bold text-gray-900">Capture Lag Distribution</h3>
                 </div>
                 <p className="mb-4 text-xs text-gray-600">
-                  Of the 42 hits: most (36%) are captured on the event day itself (D 00Z); 31% on D-1
-                  (antecedent forcing); 19% on D-2; 14% via the D+1 operational tolerance.
+                  Of the 21 hits: most (42.9%) are captured on the event day itself; 33.3% on D-1
+                  (antecedent forcing); 9.5% on D-2; 14.3% via the D+1 operational tolerance.
+                  The dominance of D and D-1 offsets validates the causal window design.
                 </p>
                 <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
                   <div className="p-4">
@@ -764,7 +769,7 @@ export default function ThresholdCalibrationPage() {
                   <Image
                     src="/figures/tc4_summary/fig_TC4_M1_city_hit_rate.png"
                     alt="Figure TC4-M1 — Hit rate per municipality"
-                    width={1600} height={900}
+                    width={1600} height={920}
                     className="w-full h-auto rounded-lg"
                     unoptimized
                   />
@@ -796,7 +801,7 @@ export default function ThresholdCalibrationPage() {
                   <Image
                     src="/figures/tc4_summary/fig_TC4_M2_city_miss_rate.png"
                     alt="Figure TC4-M2 — Miss rate per municipality"
-                    width={1600} height={900}
+                    width={1600} height={920}
                     className="w-full h-auto rounded-lg"
                     unoptimized
                   />
@@ -829,7 +834,7 @@ export default function ThresholdCalibrationPage() {
                   <Image
                     src="/figures/tc4_summary/fig_TC4_M3_city_false_alarms.png"
                     alt="Figure TC4-M3 — False alarms per municipality"
-                    width={1600} height={900}
+                    width={1600} height={920}
                     className="w-full h-auto rounded-lg"
                     unoptimized
                   />

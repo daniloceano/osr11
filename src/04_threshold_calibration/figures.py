@@ -583,10 +583,10 @@ def _draw_municipality_heatmap(
     n_ssh = len(ssh_percentiles)
     group_centers = [g * n_ssh + n_ssh // 2 for g in range(len(hs_percentiles))]
     ax.set_xticks(group_centers)
-    ax.set_xticklabels(
-        [f"Hₛ=q{round(p * 100)}" for p in hs_percentiles],
-        fontsize=STYLE.font_size_tick,
-    )
+    # Build x-tick labels; ★ is appended to the optimal Hₛ group label below,
+    # after opt_hs_idx is resolved, so we store them as a mutable list.
+    _xtick_labels = [f"Hₛ=q{round(p * 100)}" for p in hs_percentiles]
+    ax.set_xticklabels(_xtick_labels, fontsize=STYLE.font_size_tick)
     ax.set_xlabel(
         "Hₛ threshold (percentile group)\n"
         "Within each group, SSH threshold varies q50 → q90 (left to right)",
@@ -598,6 +598,7 @@ def _draw_municipality_heatmap(
         ax.axvline(g * n_ssh - 0.5, color="gray", lw=0.7, ls="--", alpha=0.6)
 
     # Highlight optimal pair column
+    opt_hs_idx: int | None = None
     if optimal is not None:
         try:
             opt_hs_idx  = list(hs_percentiles).index(optimal["thr_hs_pct"])
@@ -605,13 +606,13 @@ def _draw_municipality_heatmap(
             opt_col = opt_hs_idx * n_ssh + opt_ssh_idx
             ax.axvline(opt_col - 0.5, color="red", lw=1.8, ls="-", alpha=0.9)
             ax.axvline(opt_col + 0.5, color="red", lw=1.8, ls="-", alpha=0.9)
-            ax.text(
-                opt_col, -1.2, "★",
-                ha="center", va="top", color="red", fontsize=9,
-                transform=ax.get_xaxis_transform(),
-            )
         except (ValueError, KeyError):
-            pass
+            opt_hs_idx = None
+
+    # Mark the optimal Hₛ group in the x-tick label (stays within axes bounds)
+    if opt_hs_idx is not None:
+        _xtick_labels[opt_hs_idx] = _xtick_labels[opt_hs_idx] + " ★"
+        ax.set_xticklabels(_xtick_labels, fontsize=STYLE.font_size_tick)
 
     # ── Y-axis: municipality names ────────────────────────────────────────────
     muni_names = [m for m, _ in muni_order]
