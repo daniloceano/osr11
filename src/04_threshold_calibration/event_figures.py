@@ -133,11 +133,24 @@ def make_event_timeseries_figure(
 
     # ── Extract windows ───────────────────────────────────────────────────────
     hs_win = rec.hs_window                               # D-3 to D+3 (7 days)
-    ssh_total_win = ssh_total_clim.reindex(hs_win.index)
+    win_start, win_end = hs_win.index[0], hs_win.index[-1]
+    ssh_total_win = ssh_total_clim.loc[win_start:win_end]
+
+    # Fallback: if SSH_total is all-NaN (e.g. eo_tides unavailable), use raw SSH (zos)
+    _ssh_total_available = ssh_total_win.notna().any()
+    if not _ssh_total_available:
+        ssh_total_win   = rec.ssh_window.loc[win_start:win_end]
+        ssh_total_clim_for_thr = rec.ssh_clim
+        _ssh_total_label = "SSH / zos (m)\ntide unavailable"
+        _ssh_total_color = STYLE.color_ssh
+    else:
+        ssh_total_clim_for_thr = ssh_total_clim
+        _ssh_total_label = "SSH_total (m)\nzos + FES2022 tide"
+        _ssh_total_color = "#7b2d8b"  # purple, consistent with Step 3
 
     # ── Local thresholds ──────────────────────────────────────────────────────
     thr_hs  = _local_threshold(rec.hs_clim, hs_pct)
-    thr_ssh = _local_threshold(ssh_total_clim, ssh_pct)
+    thr_ssh = _local_threshold(ssh_total_clim_for_thr, ssh_pct)
 
     # ── Causal window bounds for shading [D-2, D-1, D, D+1] ─────────────────
     event_dt    = pd.Timestamp(rec.date)
@@ -174,17 +187,16 @@ def make_event_timeseries_figure(
 
     # ── Panel (b): SSH_total ──────────────────────────────────────────────────
     ax_ssh = axes[1]
-    _SSH_COLOR = "#7b2d8b"  # purple, consistent with Step 3
-    ax_ssh.plot(ssh_total_win.index, ssh_total_win.values, color=_SSH_COLOR, lw=1.4, zorder=3)
-    _shade_exceedances(ax_ssh, ssh_total_win, thr_ssh, _SSH_COLOR)
+    ax_ssh.plot(ssh_total_win.index, ssh_total_win.values, color=_ssh_total_color, lw=1.4, zorder=3)
+    _shade_exceedances(ax_ssh, ssh_total_win, thr_ssh, _ssh_total_color)
     if not np.isnan(thr_ssh):
         ax_ssh.axhline(thr_ssh, color="dimgray", lw=0.9, ls="--", alpha=0.85,
                        label=f"q{round(ssh_pct * 100)} threshold", zorder=2)
         if not ssh_total_win.dropna().empty:
             max_t_ssh = ssh_total_win.idxmax()
-            ax_ssh.scatter([max_t_ssh], [ssh_total_win[max_t_ssh]], color=_SSH_COLOR,
+            ax_ssh.scatter([max_t_ssh], [ssh_total_win[max_t_ssh]], color=_ssh_total_color,
                            s=50, zorder=7, edgecolors="white", lw=0.8)
-    ax_ssh.set_ylabel("SSH_total (m)\nzos + FES2022 tide", fontsize=8, labelpad=4)
+    ax_ssh.set_ylabel(_ssh_total_label, fontsize=8, labelpad=4)
     ax_ssh.legend(loc="upper right", fontsize=6.5, framealpha=0.85)
 
     # ── X-axis ────────────────────────────────────────────────────────────────
