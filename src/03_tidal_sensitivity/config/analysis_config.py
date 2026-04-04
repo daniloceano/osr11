@@ -52,8 +52,9 @@ CFG: dict = {
     "pot_min_separation_days": 1,
 
     # ── Tidal computation ─────────────────────────────────────────────────────
-    # Frequency of tidal signal to estimate from FES2022.
-    # "D" matches the daily resolution of the unified dataset.
-    # eo-tides will compute tides at midnight UTC of each day.
+    # FES2022 tides are evaluated at hourly resolution (24 values per day) and
+    # the daily maximum is retained for each calendar day.  This is consistent
+    # with the VHM0 convention (daily maximum from 3-hourly WAVERYS).
+    # See tides.build_tide_cache(daily_max=True) for implementation details.
     "tide_freq": "D",
 }

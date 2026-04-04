@@ -118,8 +118,14 @@ def main(args: argparse.Namespace | None = None) -> None:
     thresholds_ssh = compute_thresholds(records)
 
     # ── Compute FES2022 tidal series ───────────────────────────────────────────
-    log.info("Computing FES2022 tidal series for all grid points...")
-    tide_cache = build_tide_cache(records)
+    # daily_max=True: FES2022 is evaluated at hourly resolution and the daily
+    # maximum tide height is retained for each calendar day.  This is consistent
+    # with the Hₛ convention (VHM0 is the daily maximum from 3-hourly WAVERYS).
+    # Using the 00:00 UTC snapshot (daily_max=False) would capture an arbitrary
+    # tidal phase — possibly a trough — and is not representative of the peak
+    # tidal loading during the day.
+    log.info("Computing FES2022 tidal series for all grid points (daily maximum)...")
+    tide_cache = build_tide_cache(records, daily_max=True)
 
     # ── SSH_total thresholds ───────────────────────────────────────────────────
     log.info("Computing SSH_total (SSH + tide) q90 thresholds...")
