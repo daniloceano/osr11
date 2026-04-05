@@ -16,9 +16,9 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Steps 1–3 are complete. Step 4
-            (Threshold Calibration) is the active umbrella step: sub-steps 4a (tidal sensitivity,
-            Step 3) and 4b (CSI grid scan) are done; sub-step 4c (false alarm attribution) is planned.
+            Full pipeline from data acquisition to risk integration. Steps 1–2 are complete. Step 4
+            (Threshold Calibration) is the active umbrella step with three sub-steps: 4a (Tidal
+            Sensitivity) and 4b (CSI Grid Scan) are done; 4c (False Alarm Attribution) is planned.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Steps 1–3 complete · Step 4 (Threshold Calibration) in progress — sub-steps 4a and 4b done, 4c planned
+            Steps 1–2 complete · Step 4 (Threshold Calibration) in progress — sub-steps 4a and 4b done, 4c planned
           </p>
         </div>
 
@@ -101,8 +101,54 @@ export default function ProgressTimeline() {
                   <StatusBadge status={phase.status} size="sm" />
                 </div>
 
-                {/* Task list */}
-                {(isDone || isCurrent) && (
+                {/* Sub-steps (rendered before main task list) */}
+                {phase.subSteps && phase.subSteps.length > 0 && (
+                  <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Sub-steps</p>
+                    {phase.subSteps.map((sub) => {
+                      const subDone = sub.status === 'done';
+                      const subPlanned = sub.status === 'planned';
+                      return (
+                        <div key={sub.id} className={`rounded-lg border px-3 py-2 ${
+                          subDone
+                            ? 'border-emerald-200 bg-emerald-50'
+                            : subPlanned
+                            ? 'border-gray-200 bg-gray-50 opacity-70'
+                            : 'border-amber-200 bg-amber-50'
+                        }`}>
+                          <div className="flex items-start gap-2">
+                            <span className={`mt-0.5 flex-shrink-0 text-xs font-bold ${
+                              subDone ? 'text-emerald-600' : subPlanned ? 'text-gray-400' : 'text-amber-600'
+                            }`}>
+                              {subDone ? '✓' : subPlanned ? '○' : '◉'}
+                            </span>
+                            <div className="flex-1">
+                              <p className={`text-xs font-semibold ${
+                                subDone ? 'text-emerald-700' : subPlanned ? 'text-gray-500' : 'text-amber-700'
+                              }`}>{sub.label}</p>
+                              <p className="text-xs text-gray-500">{sub.description}</p>
+                              {sub.tasks && sub.tasks.length > 0 && subDone && (
+                                <ul className="mt-1.5 grid gap-0.5 sm:grid-cols-2">
+                                  {sub.tasks.map((t, ti) => (
+                                    <li key={ti} className="flex items-start gap-1.5 text-xs text-gray-400">
+                                      <svg className="mt-0.5 h-3 w-3 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                      {t}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Task list (remaining top-level tasks) */}
+                {(isDone || isCurrent) && phase.tasks.length > 0 && (
                   <ul className="mt-3 grid gap-1 sm:grid-cols-2 border-t border-gray-200 pt-3">
                     {phase.tasks.map((task, j) => (
                       <li key={j} className="flex items-start gap-2 text-xs text-gray-500">

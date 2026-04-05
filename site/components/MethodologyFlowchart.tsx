@@ -101,6 +101,38 @@ export default function MethodologyFlowchart() {
                       <p className={`text-xs leading-relaxed ${isPlanned ? 'text-gray-500' : 'text-gray-700'}`}>
                         {step.description}
                       </p>
+
+                      {/* Sub-steps */}
+                      {step.subSteps && step.subSteps.length > 0 && (
+                        <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Sub-steps</p>
+                          {step.subSteps.map((sub) => {
+                            const subDone = sub.status === 'done';
+                            const subPlanned = sub.status === 'planned';
+                            return (
+                              <div key={sub.id} className={`flex gap-2 rounded-lg border px-3 py-2 ${
+                                subDone
+                                  ? 'border-emerald-200 bg-emerald-50'
+                                  : subPlanned
+                                  ? 'border-gray-200 bg-gray-50 opacity-70'
+                                  : 'border-amber-200 bg-amber-50'
+                              }`}>
+                                <span className={`mt-0.5 flex-shrink-0 text-xs font-bold ${
+                                  subDone ? 'text-emerald-600' : subPlanned ? 'text-gray-400' : 'text-amber-600'
+                                }`}>
+                                  {subDone ? '✓' : subPlanned ? '○' : '◉'}
+                                </span>
+                                <div>
+                                  <p className={`text-xs font-semibold ${
+                                    subDone ? 'text-emerald-700' : subPlanned ? 'text-gray-500' : 'text-amber-700'
+                                  }`}>{sub.label}</p>
+                                  <p className="text-xs text-gray-500">{sub.description}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

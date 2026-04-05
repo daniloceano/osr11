@@ -13,6 +13,14 @@ export interface DataSource {
   status: Status;
 }
 
+export interface SubStep {
+  id: string;
+  label: string;
+  description: string;
+  status: Status;
+  tasks?: string[];
+}
+
 export interface MethodStep {
   id: string;
   label: string;
@@ -20,6 +28,7 @@ export interface MethodStep {
   status: Status;
   isCurrent?: boolean;
   stepNumber?: number;
+  subSteps?: SubStep[];
 }
 
 export interface ResultCard {
@@ -54,4 +63,5 @@ export interface TimelinePhase {
   status: Status;
   tasks: string[];
   stepNumber?: number;
+  subSteps?: SubStep[];
 }

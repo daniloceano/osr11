@@ -1,5 +1,6 @@
 import type { MethodStep } from '@/lib/types';
 
+
 export const methodologySteps: MethodStep[] = [
   {
     id: 'step-1',
@@ -18,24 +19,39 @@ export const methodologySteps: MethodStep[] = [
     stepNumber: 2,
   },
   {
-    id: 'step-3',
-    label: 'STEP 3 — Tidal Sensitivity Analysis',
-    description:
-      'Sub-step 4a of the Threshold Calibration umbrella (Step 4). The FES2022 astronomical tide (eo-tides, hourly evaluation) is added to GLORYS12 SSH to form the total sea level SSH_total = zos(00:00 UTC) + tide(daily max), consistent with the Hₛ daily-maximum convention from WAVERYS. Detection at q90 changes from 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition and tidal computation infrastructure reused by Step 4b.',
-    status: 'done',
-    stepNumber: 3,
-  },
-  {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration',
     description:
       'Umbrella step that empirically establishes the compound event detection framework. '
-      + 'Sub-step 4a (Tidal Sensitivity, Step 3): complete — SSH_total definition established, detection 22→26 at q90. '
-      + 'Sub-step 4b (CSI Grid Scan): complete — 81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]; optimal pair Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). The high FAR is structural and likely reflects Civil Defense under-reporting. '
-      + 'Sub-step 4c (False Alarm Attribution): planned — cross-reference the 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI before advancing to Step 5.',
+      + 'Three sub-steps: 4a (Tidal Sensitivity) and 4b (CSI Grid Scan) are complete; '
+      + '4c (False Alarm Attribution) is planned. '
+      + 'Optimal thresholds Hₛ=q90 / SSH_total=q90 identified from the CSI grid scan (H=21, M=70, F=1 298, CSI=0.0151).',
     status: 'in-progress',
     isCurrent: true,
     stepNumber: 4,
+    subSteps: [
+      {
+        id: 'step-4a',
+        label: '4a — Tidal Sensitivity',
+        description:
+          'FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition.',
+        status: 'done',
+      },
+      {
+        id: 'step-4b',
+        label: '4b — CSI Grid Scan',
+        description:
+          '81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR likely reflects Civil Defense under-reporting.',
+        status: 'done',
+      },
+      {
+        id: 'step-4c',
+        label: '4c — False Alarm Attribution',
+        description:
+          'Cross-reference the 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI before advancing to Step 5.',
+        status: 'planned',
+      },
+    ],
   },
   {
     id: 'step-5',

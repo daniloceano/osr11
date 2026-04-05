@@ -1,5 +1,6 @@
 import type { ProjectObjective, TimelinePhase } from '@/lib/types';
 
+
 export const projectMeta = {
   title: 'Compound Flooding Events in the South Atlantic Eastern Coast',
   subtitle: 'The Joint Effect of Meteorological Tides and Extreme Wave Events',
@@ -168,31 +169,51 @@ export const timelinePhases: TimelinePhase[] = [
     ],
   },
   {
-    id: 'step-3',
-    label: 'STEP 3 — Tidal Sensitivity Analysis',
-    description: 'Sub-step 4a of Threshold Calibration. FES2022 astronomical tide (eo-tides, hourly eval.) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition reused by Step 4b.',
-    status: 'done',
-    stepNumber: 3,
-    tasks: [
-      'FES2022 tide evaluated at hourly resolution, daily max retained ✓',
-      'SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) per municipality ✓',
-      'Detection at q90: 22 → 26 (+7 new, −3 lost, 19 maintained) ✓',
-      'Per-event 3-panel figures (Hₛ / SSH / SSH_total) — 91 events ✓',
-      'Summary figures C1–C4 and tidal metrics table ✓',
-    ],
-  },
-  {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration',
-    description: 'Umbrella calibration step. Sub-step 4b (CSI Grid Scan): 81 threshold pairs evaluated, optimal pair q90/q90 identified. Sub-step 4c (Planned — False Alarm Attribution): cross-reference 1 298 flagged episodes with independent databases to distinguish under-reported events from spurious detections.',
+    description: 'Umbrella calibration step with three sub-steps. Sub-steps 4a (Tidal Sensitivity) and 4b (CSI Grid Scan) are complete. Sub-step 4c (False Alarm Attribution) is planned.',
     status: 'in-progress',
     stepNumber: 4,
     tasks: [
-      '[4b] CSI grid scan: 81 pairs (q50–q90 × q50–q90) evaluated ✓',
-      '[4b] Optimal pair: q90/q90 — H=21, M=70, F=1 298, CSI=0.0151 ✓',
-      '[4b] Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
-      '[4b] Capture lag: D (43%), D-1 (33%), D+1 (14%), D-2 (10%) ✓',
       '[4c] False alarm attribution vs S2ID/Atlas Digital — planned',
+    ],
+    subSteps: [
+      {
+        id: 'step-4a',
+        label: '4a — Tidal Sensitivity',
+        description: 'SSH_total = zos(00:00 UTC) + FES2022 tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained).',
+        status: 'done',
+        tasks: [
+          'FES2022 tide evaluated at hourly resolution, daily max retained ✓',
+          'SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) per municipality ✓',
+          'Detection at q90: 22 → 26 (+7 new, −3 lost, 19 maintained) ✓',
+          'Per-event 3-panel figures (Hₛ / SSH / SSH_total) — 91 events ✓',
+          'Summary figures C1–C4 and tidal metrics table ✓',
+        ],
+      },
+      {
+        id: 'step-4b',
+        label: '4b — CSI Grid Scan',
+        description: '81 threshold pairs (q50–q90 × q50–q90) evaluated. Optimal: Hₛ=q90 / SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151).',
+        status: 'done',
+        tasks: [
+          'CSI grid scan: 81 pairs (q50–q90 × q50–q90) evaluated ✓',
+          'Optimal pair: q90/q90 — H=21, M=70, F=1 298, CSI=0.0151 ✓',
+          'Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
+          'Capture lag: D (43%), D-1 (33%), D+1 (14%), D-2 (10%) ✓',
+        ],
+      },
+      {
+        id: 'step-4c',
+        label: '4c — False Alarm Attribution',
+        description: 'Cross-reference 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI.',
+        status: 'planned',
+        tasks: [
+          'Cross-reference flagged episodes vs S2ID/Atlas Digital',
+          'Reclassify genuine under-reported events',
+          'Revise effective CSI before advancing to Step 5',
+        ],
+      },
     ],
   },
   {
