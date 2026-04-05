@@ -10,27 +10,27 @@ export const methodologySteps: MethodStep[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Preliminary Compound Event Occurrence Analysis',
-    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database. Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 30 of 91 events show concurrent exceedances at q90 (full SC coast, 5 sectors, 22 municipalities).',
+    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database. Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 22 of 91 events show concurrent SSH-only exceedances at q90 (full SC coast, 5 sectors, 22 municipalities).',
     status: 'done',
   },
   {
     id: 'step-3',
     label: 'STEP 3 — Tidal Sensitivity Analysis',
-    description: 'FES2022 astronomical tide (eo-tides) added to GLORYS12 SSH to form SSH_total = SSH + tide(00:00 UTC). q90 thresholds recomputed for the composite series. Detection comparison: 30 → 13 concurrent events at q90 (17 lost, 0 gained). Per-event figures with hourly tidal rhythm overlay; summary figures C1–C4.',
+    description: 'FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily maximum). The daily-max convention is consistent with the Hₛ daily-maximum from WAVERYS. Detection at q90: 22 → 26 concurrent events (7 new, 3 lost, 19 maintained). Establishes the canonical SSH_total definition for Step 4.',
     status: 'done',
   },
   {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration (CSI Grid Scan)',
-    description: 'Systematic optimisation of Hₛ and SSH_total (= SSH + FES2022 tide) exceedance thresholds by computing POD, FAR, and CSI for all 81 combinations (q50–q90 × q50–q90) against the 91-event SC disaster database. Uses a causal/antecedent matching window [D-2, D-1, D, D+1 00Z]. Identifies the threshold pair that maximises CSI and establishes the empirical compound detection framework for Step 5.',
-    status: 'in-progress',
-    isCurrent: true,
+    description: 'Systematic optimisation of Hₛ and SSH_total (= SSH + FES2022 daily-max tide) exceedance thresholds: 81 pairs (q50–q90 × q50–q90) evaluated against the 91-event SC database with causal window [D-2, D+1 00Z]. Optimal pair: q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR is structural at daily resolution and likely reflects Civil Defense under-reporting. The calibrated thresholds feed directly into Step 5.',
+    status: 'done',
   },
   {
     id: 'step-5',
     label: 'STEP 5 — Storm Catalog Generation',
-    description: 'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using calibrated thresholds. Record start, end, duration, peak, and integrated intensity in structured JSON format.',
+    description: 'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using calibrated thresholds (q90/q90 from Step 4). Record start, end, duration, peak, and integrated intensity in structured JSON format.',
     status: 'planned',
+    isCurrent: true,
   },
   {
     id: 'step-6',
