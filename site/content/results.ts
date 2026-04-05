@@ -3,8 +3,8 @@ import type { ResultCard } from '@/lib/types';
 export const resultCards: ResultCard[] = [
   {
     id: 'south-sc-eda',
-    title: 'Exploratory Analysis — South Santa Catarina',
-    subtitle: 'Test-domain EDA: spatial maps, time series, events, statistics',
+    title: 'Step 2a — Exploratory Data Analysis',
+    subtitle: 'South Santa Catarina test-domain EDA: spatial maps, time series, events, statistics',
     status: 'done',
     description:
       'First systematic look at the WAVERYS and GLORYS12 test datasets for the southern sector of Santa Catarina (~29.4°S to 27.6°S). This analysis constitutes the sanity-check and pipeline-validation phase of the project, verifying that data loading, coastal point selection, and analysis routines behave correctly before scaling to the full domain.',
@@ -28,7 +28,7 @@ export const resultCards: ResultCard[] = [
   },
   {
     id: 'preliminary-compound',
-    title: 'Preliminary Compound Event Occurrence Analysis',
+    title: 'Step 2b — Preliminary Compound Analysis',
     subtitle: 'Joint q90 exceedance inspection · Full SC coast · 5 sectors · 91 events',
     status: 'done',
     description:
@@ -48,22 +48,22 @@ export const resultCards: ResultCard[] = [
   },
   {
     id: 'threshold-calibration',
-    title: 'Threshold Calibration',
-    subtitle: 'Tidal sensitivity (Step 3a) + CSI grid scan (Step 3b) · 91 events · FES2022',
+    title: 'Steps 2c–2d — Threshold Calibration',
+    subtitle: 'Tidal sensitivity (Step 2c) + CSI grid scan (Step 2d) · 91 events · FES2022',
     status: 'done',
     description:
-      'Empirical calibration of compound event detection thresholds against the 91-event SC coastal disaster database, in two sub-steps. Step 3a (tidal sensitivity): FES2022 daily-maximum tide is added to GLORYS12 SSH to form SSH_total; detection increases from 22 to 26 events at q90. Step 3b (CSI grid scan): 81 threshold pairs (q50–q90 × q50–q90) are evaluated with a causal window [D-2, D+1 00Z]; the optimal pair is q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). The high FAR is structural — compound daily exceedances are ~62× more frequent than reported disasters, likely reflecting under-reporting in the Civil Defense database.',
+      'Empirical calibration of compound event detection thresholds against the 91-event SC coastal disaster database, in two sub-steps. Step 2c (tidal sensitivity): FES2022 daily-maximum tide is added to GLORYS12 SSH to form SSH_total; detection increases from 22 to 26 events at q90. Step 2d (CSI grid scan): 81 threshold pairs (q50–q90 × q50–q90) are evaluated with a causal window [D-2, D+1 00Z]; the optimal pair is q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). The high FAR is structural — compound daily exceedances are ~62× more frequent than reported disasters, likely reflecting under-reporting in the Civil Defense database.',
     rationale:
-      'Steps 1 and 2 used a fixed q90 threshold as a conventional starting point. Step 3 asks whether any threshold pair in q50–q90 achieves a better skill score, and whether adding the FES2022 astronomical tide improves detection. The calibrated q90/q90 pair and the SSH_total definition (SSH + FES2022 daily max tide) are carried into Steps 4–8.',
+      'Steps 2a and 2b used a fixed q90 threshold as a conventional starting point. Steps 2c–2d ask whether any threshold pair in q50–q90 achieves a better skill score, and whether adding the FES2022 astronomical tide improves detection. The calibrated q90/q90 pair and the SSH_total definition (SSH + FES2022 daily max tide) are carried into Steps 3–7.',
     outputs: [
-      'Step 3a: 91 per-event 3-panel figures: Hₛ / SSH / SSH_total (with FES2022 tide overlay)',
-      'Step 3a: tab_TS_event_metrics.csv — detection_change per event (maintained/new/lost/neither)',
-      'Step 3a: fig_TS_C1–C4 — detection comparison, scatter, sector breakdown, tidal fraction',
-      'Step 3b: tab_TC4_metrics_full.csv — CSI, POD, FAR for all 81 threshold pairs',
-      'Step 3b: tab_TC4_optimal_pair.csv — q90/q90 optimal pair reference for Step 4',
-      'Step 3b: fig_TC4_H1–H3 — CSI, FAR, POD heatmaps over threshold grid',
-      'Step 3b: fig_TC4_S1–S5 — ranking scatter, hit/miss, lag distribution, sector POD, peak scatter',
-      'Step 3b: fig_TC4_M1–M3 — per-municipality hit rate, miss rate, false alarm heatmaps',
+      'Step 2c: 91 per-event 3-panel figures: Hₛ / SSH / SSH_total (with FES2022 tide overlay)',
+      'Step 2c: tab_TS_event_metrics.csv — detection_change per event (maintained/new/lost/neither)',
+      'Step 2c: fig_TS_C1–C4 — detection comparison, scatter, sector breakdown, tidal fraction',
+      'Step 2d: tab_TC4_metrics_full.csv — CSI, POD, FAR for all 81 threshold pairs',
+      'Step 2d: tab_TC4_optimal_pair.csv — q90/q90 optimal pair reference for Step 3',
+      'Step 2d: fig_TC4_H1–H3 — CSI, FAR, POD heatmaps over threshold grid',
+      'Step 2d: fig_TC4_S1–S5 — ranking scatter, hit/miss, lag distribution, sector POD, peak scatter',
+      'Step 2d: fig_TC4_M1–M3 — per-municipality hit rate, miss rate, false alarm heatmaps',
     ],
     href: '/results/threshold-calibration',
   },

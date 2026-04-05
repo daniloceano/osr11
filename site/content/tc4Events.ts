@@ -1,6 +1,6 @@
 // AUTO-GENERATED — do not edit by hand.
-// Regenerate with: python src/04_threshold_calibration/main.py --summary
-// or:              python src/04_threshold_calibration/main.py --timeseries
+// Regenerate with: python src/02_threshold_calibration/04_csi_grid_scan/main.py --summary
+// or:              python src/02_threshold_calibration/04_csi_grid_scan/main.py --timeseries
 
 export type Tc4EventEntry = {
   label: string;

@@ -20,11 +20,11 @@ temporal:
   #   - max: captures peak conditions per day; preferred for compound-event extremes
   #
   # METHODOLOGICAL NOTE (2026-04-02): Changed from 'mean' to 'max'.
-  # The compound-event calibration (STEP 4) requires daily-maximum wave heights
+  # The compound-event calibration (Step 2d) requires daily-maximum wave heights
   # to correctly characterise the worst forcing within each day.  Using the daily
   # mean would systematically underestimate the peak wave conditions and bias
   # percentile thresholds downward.  VMDR (wave direction) is also resampled with
-  # 'max' for code consistency, but this variable is not used downstream in STEP 4.
+  # 'max' for code consistency, but this variable is not used downstream in Step 2d.
   resample_method: max
 
 variables:

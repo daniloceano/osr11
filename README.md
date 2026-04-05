@@ -94,33 +94,62 @@ CMEMS products are accessed via the `copernicusmarine` Python toolbox. Disaster 
 
 ## Methodological Framework
 
-The project implements an 8-step execution algorithm aligned with the conceptual risk chain:
+The project implements a multi-step execution algorithm aligned with the conceptual risk chain:
 
 ### **STEP 1 — Data Preparation**
 
-Compile, harmonize, and quality-check all datasets. Standardize spatial reference systems and temporal coverage. Remove inconsistent records and document data quality limitations.
+Compile, harmonize, and quality-check all datasets. Download CMEMS reanalyses (WAVERYS, GLORYS12), preprocess reported events databases, standardize spatial reference systems and temporal coverage, and generate unified metocean datasets on a common grid.
 
-**Status:** ✅ Partially complete (test domain only)  
-**Implementation:** `src/acquisition/`, `src/preprocessing/`
+**Status:** ✅ Complete (test domain)  
+**Implementation:** `src/01_data_preparation/`
+- `acquisition/` — CMEMS download scripts, test fixture generation
+- `preprocessing/` — Excel → CSV conversion, spatial regridding (GLORYS → WAVERYS grid)
 
 ---
 
-### **STEP 2 — Threshold Calibration**
+### **STEP 2 — Threshold Calibration** (umbrella step)
 
-Select candidate extreme thresholds for sea level (N) and significant wave height (Hₛ). For each threshold combination, detect storms in Santa Catarina and compare with reported coastal disasters from the SC Civil Defense database. Compute matching statistics (hit rate, false alarm rate, critical success index). Select the threshold combination with the best performance.
+Umbrella step that empirically establishes the compound event detection framework. Encompasses four sub-steps (2a–2d) that progressively refine the detection thresholds by comparing against the 91-event SC coastal disaster database.
 
-**Rationale:** Threshold definition is inherently subjective. Validation against observed disasters provides an empirical, pragmatic calibration strategy that grounds the analysis in real-world impacts. Although this introduces regional bias (SC-based thresholds extrapolated to other sectors), it represents the most defensible approach given uneven disaster record availability along the Brazilian coast.
+#### Sub-step 2a — Exploratory Data Analysis
 
-**Status:** 🔄 In progress — initial visual calibration complete (full SC domain)
-**Implementation:** `src/02_preliminary_compound/`
-**Current scope:** q90 thresholds applied to 91 reported events across 5 SC sectors and 22 municipalities. Results show low concurrent exceedances (2%) at q90 — systematic threshold grid scan is the next step.
-**Limitation:** Many northern SC municipalities have NaN data due to reanalysis grid coverage gaps over complex coastal geometries.
+First-look inspection of WAVERYS and GLORYS12 spatial distributions, temporal variability, and the events database. Coastal grid-point selection via Natural Earth coastline. Municipality–grid association via IBGE API. Per-sector boxplots, seasonal cycles, and compound quick-look at empirical q90.
+
+**Status:** ✅ Complete  
+**Implementation:** `src/02_threshold_calibration/01_exploratory_data_analysis/`
+
+#### Sub-step 2b — Preliminary Compound Event Occurrence Analysis
+
+First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database (full coast, 5 sectors, 22 municipalities). Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 22 of 91 events show concurrent SSH-only exceedances at q90. Establishes the baseline from which sub-step 2d calibrates thresholds systematically.
+
+**Status:** ✅ Complete  
+**Implementation:** `src/02_threshold_calibration/02_preliminary_compound/`
+
+#### Sub-step 2c — Tidal Sensitivity Analysis
+
+FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition.
+
+**Status:** ✅ Complete  
+**Implementation:** `src/02_threshold_calibration/03_tidal_sensitivity/`
+
+#### Sub-step 2d — CSI Grid Scan
+
+81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR likely reflects Civil Defense under-reporting.
+
+**Status:** ✅ Complete  
+**Implementation:** `src/02_threshold_calibration/04_csi_grid_scan/`
+
+#### Sub-step 2e — False Alarm Attribution (planned)
+
+Cross-reference the 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI before advancing to Step 3.
+
+**Status:** 🔄 Planned
 
 ---
 
 ### **STEP 3 — Storm Catalog Generation**
 
-For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances and merging consecutive exceedances into single storm events. For each identified storm, record:
+For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances (using calibrated q90/q90 from Step 2d) and merging consecutive exceedances into single storm events. For each identified storm, record:
 
 - Start time
 - End time  
@@ -131,7 +160,7 @@ For each coastal grid point, construct independent storm catalogs by identifying
 
 Generate separate catalogs for sea-level storms and wave storms. Save catalogs in structured JSON format for reproducibility and downstream analysis.
 
-**Status:** 🔄 Planned (Phase 2)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
@@ -153,7 +182,7 @@ Optionally impose a minimum overlap duration threshold. From the resulting compo
 - Seasonality (monthly climatology)
 - Spatial distribution
 
-**Status:** 🔄 Planned (Phase 3)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
@@ -220,7 +249,7 @@ Produce the main applied outcome: a **coastal risk map of compound wave–surge 
 
 ---
 
-### **STEP 8 — Optional Physical Interpretation**
+### **STEP 8 — Physical Interpretation (Optional)**
 
 As an optional validation and interpretation stage:
 
@@ -241,28 +270,28 @@ This stage strengthens the physical interpretation and overall robustness of the
 
 The repository currently contains:
 
-✅ **Phase 0 — Data acquisition pipeline** (complete)
-- CMEMS download scripts (`src/acquisition/`)
+✅ **STEP 1 — Data Preparation** (complete for test domain)
+- Implemented in `src/01_data_preparation/`
+- CMEMS download scripts (`acquisition/`)
 - Test fixture generation for south SC sector and full SC coast
 - Reported events preprocessing (Excel → CSV)
+- Spatial regridding: GLORYS → WAVERYS grid (`preprocessing/`)
 
-✅ **Step 1 — Exploratory data analysis** (complete for south SC test domain)
-- Implemented in `src/01_explore_test_data_south_sc/`
-- Spatial maximum maps of Hₛ and SSH (Part A)
-- Time series at peak grid points (Part B)
-- Reported events EDA: counts, boxplots, seasonality (Part D)
-- Municipality–grid association via IBGE API (Part E)
-- Per-sector overview figures (Part F)
-- Descriptive statistics, scatter plots, seasonal cycle, compound quick-look (Part G)
+✅ **STEP 2 — Threshold Calibration** (sub-steps 2a–2d complete; 2e planned)
 
-**Important:** The exploratory analysis is **not** the full compound event detection framework described in Steps 2–7. It is a preliminary sanity-check and data familiarization phase. The exploratory "compound quick-look" uses empirical q90 thresholds as a placeholder.
+- **Sub-step 2a** — Exploratory Data Analysis (`src/02_threshold_calibration/01_exploratory_data_analysis/`):
+  Spatial maximum maps, time series, reported events EDA, municipality–grid association, per-sector boxplots, statistical analyses
 
-🔄 **Step 2 — Threshold calibration** (in progress — full SC coast)
-- Implemented in `src/02_preliminary_compound/`
-- Domain extended from south SC to full SC (5 sectors, 22 municipalities, 91 events)
-- Initial visual calibration at q90 complete
-- Key finding: 2/91 concurrent exceedances at q90; systematic threshold optimisation planned
-- Limitation: ~50% of events have NaN data due to reanalysis grid gaps over complex coasts
+- **Sub-step 2b** — Preliminary Compound Analysis (`src/02_threshold_calibration/02_preliminary_compound/`):
+  Domain: full SC (5 sectors, 22 municipalities, 91 events); key finding: 22/91 concurrent SSH-only exceedances at q90
+
+- **Sub-step 2c** — Tidal Sensitivity (`src/02_threshold_calibration/03_tidal_sensitivity/`):
+  SSH_total = SSH + FES2022 daily max tide; detection at q90: 22 → 26 events
+
+- **Sub-step 2d** — CSI Grid Scan (`src/02_threshold_calibration/04_csi_grid_scan/`):
+  81 threshold pairs evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151)
+
+- **Sub-step 2e** — False Alarm Attribution: 🔄 planned (cross-reference flagged episodes with S2ID/Atlas Digital)
 
 🔄 **Steps 3–8** — Planned, not yet implemented
 
@@ -287,7 +316,7 @@ osr11/
 │   │   ├── metocean_sc_sul_unified_waverys_grid.nc  # Unified daily · south SC
 │   │   ├── waverys_sc_full_test.nc           # VHM0, VMDR · 3-hourly · full SC
 │   │   ├── glorys_sc_full_test.nc            # zos · daily · full SC
-│   │   └── metocean_sc_full_unified_waverys_grid.nc # Unified daily · full SC (Step 2 input)
+│   │   └── metocean_sc_full_unified_waverys_grid.nc # Unified daily · full SC
 │   ├── reported events/
 │   │   ├── README.md                         # Reported events database documentation
 │   │   └── reported_events_Karine_sc.csv     # SC Civil Defense disaster database (Leal et al. 2024)
@@ -295,44 +324,45 @@ osr11/
 │   └── raw/                                  # Full CMEMS downloads (not committed, .gitignore)
 ├── src/
 │   ├── __init__.py                           # Import alias registry for numbered analysis dirs
-│   ├── acquisition/
-│   │   ├── download_cmems.py                 # Main CMEMS download script
-│   │   ├── download_cmems_parallel.py        # Parallel download variant
-│   │   ├── catalog_inspect.py                # CMEMS catalog inspection utility
-│   │   └── build_test_fixture.py             # Build test-domain NetCDF subsets
-│   ├── preprocessing/
-│   │   ├── README.md                         # Preprocessing pipeline documentation
-│   │   ├── convert_reported_events.py        # Excel → CSV conversion for reported events
-│   │   └── interpolate_glorys_to_waverys_grid.py  # Spatial regridding pipeline
-│   ├── 01_explore_test_data_south_sc/        # Step 1: Exploratory EDA (south SC test domain)
-│   │   ├── main.py                           # CLI orchestrator (--all, --maps, --timeseries, etc.)
-│   │   ├── io.py                             # Dataset loaders and South sector filtering
-│   │   ├── coastal.py                        # Coastal grid point selection (Natural Earth)
-│   │   ├── maps.py                           # Part A: Spatial maxima maps
-│   │   ├── timeseries.py                     # Part B: Time series at peak grid points
-│   │   ├── reported_events.py                # Part D: Reported events EDA
-│   │   ├── municipalities.py                 # Part E: Municipality–grid association (IBGE API)
-│   │   ├── boxplots.py                       # Part F: Sector boxplot figures
-│   │   ├── statistics.py                     # Part G: Statistical analyses and distributions
-│   │   ├── utils.py                          # Shared utilities (logging, I/O helpers)
-│   │   ├── config/analysis_config.py         # Configuration: file paths, parameters, output dirs
-│   │   ├── README.md                         # Detailed module documentation
-│   │   └── RUN.md                            # Quick-start command reference
-│   └── 02_preliminary_compound/             # Step 2: Threshold calibration (full SC coast)
-│       ├── main.py                           # CLI orchestrator (--all, --event-figures, --summary)
-│       ├── io.py                             # Data loaders (all SC sectors, target_sector=None)
-│       ├── events.py                         # Event records (municipality→grid, all SC coords)
-│       ├── thresholds.py                     # q90 computation + per-event metrics
-│       ├── event_figures.py                  # Per-event visualisations (MagicA POT shading)
-│       ├── summary.py                        # Consolidated table + S1–S4 summary figures
-│       ├── utils.py                          # save_fig, make_output_dirs, muni_slug
-│       ├── config/analysis_config.py         # Configuration: paths, parameters, target_sector
-│       ├── README.md                         # Module documentation
-│       └── RUN.md                            # Quick-start command reference
+│   │
+│   ├── 01_data_preparation/                  # STEP 1 — Data Preparation
+│   │   ├── acquisition/                      #   Download CMEMS data
+│   │   │   ├── download_cmems.py             #     Main CMEMS download script
+│   │   │   ├── download_cmems_parallel.py    #     Parallel download variant
+│   │   │   ├── catalog_inspect.py            #     CMEMS catalog inspection utility
+│   │   │   └── build_test_fixture.py         #     Build test-domain NetCDF subsets
+│   │   └── preprocessing/                    #   Harmonization, interpolation
+│   │       ├── README.md                     #     Preprocessing pipeline documentation
+│   │       ├── convert_reported_events.py    #     Excel → CSV conversion
+│   │       └── interpolate_glorys_to_waverys_grid.py  # Spatial regridding
+│   │
+│   └── 02_threshold_calibration/             # STEP 2 — Threshold Calibration (umbrella)
+│       ├── 01_exploratory_data_analysis/     #   Sub-step 2a — EDA
+│       │   ├── main.py                       #     CLI orchestrator
+│       │   ├── io.py, coastal.py, maps.py    #     Analysis modules
+│       │   ├── config/analysis_config.py     #     Configuration
+│       │   └── README.md, RUN.md             #     Documentation
+│       ├── 02_preliminary_compound/          #   Sub-step 2b — Preliminary analysis
+│       │   ├── main.py                       #     CLI orchestrator
+│       │   ├── events.py, thresholds.py      #     Analysis modules
+│       │   ├── config/analysis_config.py     #     Configuration
+│       │   └── README.md, RUN.md             #     Documentation
+│       ├── 03_tidal_sensitivity/             #   Sub-step 2c — Tidal sensitivity
+│       │   ├── main.py                       #     CLI orchestrator
+│       │   ├── tides.py                      #     FES2022 integration
+│       │   ├── config/analysis_config.py     #     Configuration
+│       │   └── README.md                     #     Documentation
+│       └── 04_csi_grid_scan/                 #   Sub-step 2d — CSI grid scan
+│           ├── main.py                       #     CLI orchestrator
+│           ├── calibration.py, metrics.py    #     Analysis modules
+│           ├── config/analysis_config.py     #     Configuration
+│           └── README.md, RUN.md, SCIENTIFIC_NOTES.md
+│
 ├── outputs/                                  # Analysis outputs (not committed, .gitignore)
-│   └── south_sc_test_data_exploratory/
-│       ├── figures/                          # PNG figures (300 dpi, publication-ready)
-│       └── tables/                           # CSV summary tables
+│   ├── south_sc_test_data_exploratory/       #   Step 2a outputs
+│   ├── preliminary_compound/                 #   Step 2b outputs
+│   ├── tidal_sensitivity/                    #   Step 2c outputs
+│   └── threshold_calibration/                #   Step 2d outputs
 ├── logs/                                     # Execution logs (not committed, .gitignore)
 └── site/                                     # Scientific results website (Next.js + Tailwind CSS)
     ├── README.md                             # Site documentation
@@ -364,61 +394,72 @@ copernicusmarine login
 # Enter credentials (stored in ~/.copernicusmarine/)
 ```
 
-### 2. Run Exploratory Analysis (Step 1 — South SC test domain)
+### 2. Run Exploratory Analysis (Step 2a — South SC test domain)
 
 The test fixtures (`data/test/`) are already committed. No download required.
 
 ```bash
 # Full exploratory analysis (all parts)
-python -m src.explore_test_data_south_sc.main --all
+python -m src.exploratory_data_analysis.main --all
 
 # Individual parts
-python -m src.explore_test_data_south_sc.main --maps           # Part A: Spatial maxima
-python -m src.explore_test_data_south_sc.main --timeseries     # Part B: Time series
-python -m src.explore_test_data_south_sc.main --events         # Part D: Reported events EDA
-python -m src.explore_test_data_south_sc.main --municipalities # Part E: Municipality–grid
-python -m src.explore_test_data_south_sc.main --boxplots       # Part F: Sector overview
-python -m src.explore_test_data_south_sc.main --statistics     # Part G: Statistical analyses
+python -m src.exploratory_data_analysis.main --maps           # Part A: Spatial maxima
+python -m src.exploratory_data_analysis.main --timeseries     # Part B: Time series
+python -m src.exploratory_data_analysis.main --events         # Part D: Reported events EDA
+python -m src.exploratory_data_analysis.main --municipalities # Part E: Municipality–grid
+python -m src.exploratory_data_analysis.main --boxplots       # Part F: Sector overview
+python -m src.exploratory_data_analysis.main --statistics     # Part G: Statistical analyses
 ```
 
 Outputs written to: `outputs/south_sc_test_data_exploratory/`
 
-See `src/01_explore_test_data_south_sc/RUN.md` for complete command reference.
+See `src/02_threshold_calibration/01_exploratory_data_analysis/RUN.md` for complete command reference.
 
-### 3. Run Threshold Calibration (Step 2 — Full SC coast)
+### 3. Run Preliminary Compound Analysis (Step 2b — Full SC coast)
 
 The full SC unified dataset (`data/test/metocean_sc_full_unified_waverys_grid.nc`) is committed.
 
 ```bash
 # Full analysis (per-event figures + summary)
-python src/02_preliminary_compound/main.py --all
+python -m src.preliminary_compound.main --all
 
 # Individual parts
-python src/02_preliminary_compound/main.py --event-figures   # TC-1: per-event figures
-python src/02_preliminary_compound/main.py --summary         # Summary: S1–S4 + tables
+python -m src.preliminary_compound.main --event-figures   # TC-1: per-event figures
+python -m src.preliminary_compound.main --summary         # Summary: S1–S4 + tables
 ```
 
 Outputs written to: `outputs/preliminary_compound/`
 
-See `src/02_preliminary_compound/RUN.md` for complete command reference.
+See `src/02_threshold_calibration/02_preliminary_compound/RUN.md` for complete command reference.
 
-### 4. Download Full-Domain Data (Optional)
+### 4. Run CSI Grid Scan (Step 2d)
+
+```bash
+# Full threshold calibration analysis
+python -m src.csi_grid_scan.main --all
+```
+
+Outputs written to: `outputs/threshold_calibration/`
+
+See `src/02_threshold_calibration/04_csi_grid_scan/RUN.md` for complete command reference.
+
+### 5. Download Full-Domain Data (Optional)
 
 **Note:** Full GLORYS12 and WAVERYS downloads are large (~100 GB+ for full Brazilian coast, 1993–2025). Test fixtures are sufficient for exploratory work.
 
 ```bash
 # Inspect CMEMS catalog (recommended before downloading)
-python src/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_PHY_001_030
-python src/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_WAV_001_032
+python src/01_data_preparation/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_PHY_001_030
+python src/01_data_preparation/acquisition/catalog_inspect.py GLOBAL_MULTIYEAR_WAV_001_032
 
 # Configure download parameters
 cp config/download_config.example.yml config/download_config.yml
 # Edit config/download_config.yml with desired spatial/temporal extent
 
 # Download GLORYS12 and/or WAVERYS
-python src/acquisition/download_cmems.py --product glorys
-python src/acquisition/download_cmems.py --product waverys
-# Or both: python src/acquisition/download_cmems.py
+python src/01_data_preparation/acquisition/download_cmems.py --product glorys
+python src/01_data_preparation/acquisition/download_cmems.py --product waverys
+# Or both: python src/01_data_preparation/acquisition/download_cmems.py
 ```
 
 Downloaded files saved to `data/raw/` (not committed to Git).
@@ -453,11 +494,13 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Current Implementation Status
 
-- **Phase 0 (Data preparation):** Complete for south SC test domain; full-domain downloads require large storage and processing time.
+- **STEP 1 (Data Preparation):** Complete for south SC test domain; full-domain downloads require large storage and processing time. Implementation in `src/01_data_preparation/`.
 
-- **Step 1 (Exploratory analysis):** Implemented for south SC test domain (`src/01_explore_test_data_south_sc/`). This is **not** the final compound event detection framework—it is a preliminary EDA phase using empirical thresholds (q90) for data familiarization and pipeline validation.
-
-- **Step 2 (Preliminary compound event occurrence analysis):** Initial visual calibration complete for the full SC coast (`src/02_preliminary_compound/`). The analysis covers all 5 Leal et al. (2024) sectors (91 events, 22 municipalities) but has data gaps for many northern municipalities due to reanalysis grid coverage limitations. Systematic threshold optimisation (hit rate, CSI grid scan) is the immediate next step.
+- **STEP 2 (Threshold Calibration):** Sub-steps 2a–2d complete; sub-step 2e (False Alarm Attribution) planned.
+  - **2a** — Exploratory analysis complete (`src/02_threshold_calibration/01_exploratory_data_analysis/`)
+  - **2b** — Preliminary compound analysis complete (`src/02_threshold_calibration/02_preliminary_compound/`)
+  - **2c** — Tidal sensitivity complete (`src/02_threshold_calibration/03_tidal_sensitivity/`)
+  - **2d** — CSI grid scan complete (`src/02_threshold_calibration/04_csi_grid_scan/`)
 
 - **Steps 3–8 (Storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
 
@@ -495,4 +538,4 @@ University of São Paulo, Brazil
 
 ---
 
-**Last updated:** March 2026
+**Last updated:** April 2026

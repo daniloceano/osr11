@@ -1,5 +1,5 @@
 ======================================================================
-OSR11 — Step 4: Threshold Calibration (CSI Grid Scan)
+OSR11 — Step 3: Threshold Calibration (CSI Grid Scan)
 ======================================================================
 
 CONFIGURATION

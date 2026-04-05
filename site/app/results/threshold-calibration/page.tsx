@@ -104,7 +104,7 @@ export default function ThresholdCalibrationHubPage() {
             <h2 className="mb-6 text-xl font-bold text-gray-900">Sub-analyses</h2>
             <div className="grid gap-6 md:grid-cols-2">
 
-              {/* Step 4a — Tidal Sensitivity */}
+              {/* Sub-step 3a — Tidal Sensitivity */}
               <div className="rounded-xl border-2 border-gray-200 bg-white p-6 flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <StatusBadge status="done" />
@@ -137,7 +137,7 @@ export default function ThresholdCalibrationHubPage() {
                 </Link>
               </div>
 
-              {/* Step 4b — CSI Grid Scan */}
+              {/* Sub-step 3b — CSI Grid Scan */}
               <div className="rounded-xl border-2 border-gray-200 bg-white p-6 flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <StatusBadge status="done" />
@@ -192,7 +192,7 @@ export default function ThresholdCalibrationHubPage() {
                   text: 'Even at q90/q90, 1 298 compound episodes are flagged with no matching reported event. This likely reflects the incompleteness of the Civil Defense database (under-reporting, missing dates, spatially patchy coverage) rather than spurious oceanic detections. The ocean signal is real; it is the observational record that is sparse. This distinction is critical for interpreting subsequent steps.',
                 },
                 {
-                  label: 'The calibrated threshold feeds Steps 4–8.',
+                  label: 'The calibrated threshold feeds Steps 4–9.',
                   text: 'The optimal pair (q90/q90) from tab_TC4_optimal_pair.csv is passed directly to Step 4 (Storm Catalog Generation). It defines the exceedance thresholds used to identify independent compound storm episodes in the full 1993–2025 series at all coastal grid points.',
                 },
               ].map((item, i) => (

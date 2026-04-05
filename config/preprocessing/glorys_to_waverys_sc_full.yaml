@@ -22,7 +22,7 @@ temporal:
   #
   # METHODOLOGICAL NOTE (2026-04-02): Changed from 'mean' to 'max'.
   # See glorys_to_waverys_test.yaml for full rationale.
-  # VMDR is also resampled with 'max' for consistency, but is unused in STEP 4.
+  # VMDR is also resampled with 'max' for consistency, but is unused in Step 2d.
   resample_method: max
 
 variables:

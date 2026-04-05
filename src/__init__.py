@@ -5,8 +5,20 @@ Registers numbered analysis directories under their non-numbered import
 aliases so that ``from src.xxx import`` statements continue to work after
 directories are renamed to ``01_xxx``, ``02_xxx``, etc.
 
+Directory structure (after March 2026 refactoring):
+----------------------------------------------------
+src/
+├── 01_data_preparation/          # STEP 1 — Data Preparation
+│   ├── acquisition/              #   Download CMEMS data
+│   └── preprocessing/            #   Harmonization, interpolation
+└── 02_threshold_calibration/     # STEP 2 — Threshold Calibration (umbrella)
+    ├── 01_exploratory_data_analysis/   # Sub-step 2a — EDA
+    ├── 02_preliminary_compound/        # Sub-step 2b — Preliminary analysis
+    ├── 03_tidal_sensitivity/           # Sub-step 2c — Tidal sensitivity
+    └── 04_csi_grid_scan/               # Sub-step 2d — CSI grid scan
+
 Adding a new numbered module:
-    1. Rename the directory (git mv).
+    1. Create the directory (or git mv).
     2. Add an entry to _MODULE_ALIASES below — that is all.
 """
 import importlib.util
@@ -15,18 +27,29 @@ from pathlib import Path
 
 _src_dir = Path(__file__).parent
 
-# alias (importable name) → real directory name (may start with digit)
+# alias (importable name) → real directory path (relative to src/)
+# Supports nested paths for Step 2 sub-modules.
 _MODULE_ALIASES: dict[str, str] = {
-    "explore_test_data_south_sc": "01_explore_test_data_south_sc",
-    "preliminary_compound":       "02_preliminary_compound",
-    "tidal_sensitivity":          "03_tidal_sensitivity",
-    "threshold_calibration":      "04_threshold_calibration",
+    # STEP 1 — Data Preparation
+    "data_preparation":           "01_data_preparation",
+    "acquisition":                "01_data_preparation/acquisition",
+    "preprocessing":              "01_data_preparation/preprocessing",
+
+    # STEP 2 — Threshold Calibration (umbrella)
+    "threshold_calibration":      "02_threshold_calibration",
+
+    # STEP 2 sub-steps (legacy aliases for backward compatibility)
+    "exploratory_data_analysis":  "02_threshold_calibration/01_exploratory_data_analysis",
+    "explore_test_data_south_sc": "02_threshold_calibration/01_exploratory_data_analysis",  # legacy
+    "preliminary_compound":       "02_threshold_calibration/02_preliminary_compound",
+    "tidal_sensitivity":          "02_threshold_calibration/03_tidal_sensitivity",
+    "csi_grid_scan":              "02_threshold_calibration/04_csi_grid_scan",
 }
 
 
 def _register_numbered_modules() -> None:
-    for alias, real_name in _MODULE_ALIASES.items():
-        real_dir  = _src_dir / real_name
+    for alias, real_path in _MODULE_ALIASES.items():
+        real_dir  = _src_dir / real_path
         init_file = real_dir / "__init__.py"
         if not init_file.exists():
             continue
