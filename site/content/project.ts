@@ -121,7 +121,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Three analysis steps are complete: (1) exploratory data analysis validating the pipeline and municipality–grid associations; (2) preliminary compound event occurrence analysis inspecting q90 exceedances for all 91 events in the Leal et al. (2024) SC disaster database — 30 of 91 events show concurrent exceedances; (3) tidal sensitivity analysis adding FES2022 astronomical tide (eo-tides) to SSH to assess whether total sea level improves detection — 13 of 91 events are concurrent with SSH+tide at q90. The next step is formal threshold calibration via a systematic CSI grid scan across q50–q90 combinations.
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Four analysis steps are complete: (1) exploratory data analysis validating the pipeline and municipality–grid associations; (2) preliminary compound event occurrence analysis inspecting q90 exceedances for all 91 events in the Leal et al. (2024) SC disaster database — 22 of 91 events show concurrent SSH-only exceedances; (3–4) threshold calibration comprising a tidal sensitivity sub-step (FES2022 daily-maximum tide added to SSH, increasing detection to 26 of 91 at q90) and a CSI grid scan across 81 threshold pairs (q50–q90 × q50–q90), identifying q90/q90 as the optimal pair (H=21, M=70, F=1 298, CSI=0.0151). The next step is storm catalog generation using the calibrated thresholds.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -154,39 +154,40 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Preliminary Compound Event Occurrence Analysis',
-    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 30 of 91 events show concurrent exceedances.',
+    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 22 of 91 events show concurrent exceedances.',
     status: 'done',
     tasks: [
       'Per-event ±3-day time-series windows (MagicA POT) — 91 events ✓',
       'q90 thresholds from full 1993–2025 climatological series ✓',
       'Concomitance metrics (Hₛ and SSH joint exceedances) ✓',
       'Cross-event summary figures and metrics table ✓',
-      '30 of 91 events show concurrent exceedances at q90 ✓',
+      '22 of 91 events show concurrent SSH-only exceedances at q90 ✓',
     ],
   },
   {
     id: 'step-3',
     label: 'STEP 3 — Tidal Sensitivity Analysis',
-    description: 'Assess whether adding FES2022 astronomical tide to GLORYS12 SSH changes compound event detection at daily resolution. SSH_total = SSH + tide(00:00 UTC); q90 thresholds recomputed for the composite series.',
+    description: 'FES2022 daily-maximum tide (via eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total. Compound detection compared at q90: 22 → 26 events (7 new, 3 lost, 19 maintained). Establishes the canonical SSH_total definition for Step 4.',
     status: 'done',
     tasks: [
-      'FES2022 tide computed at 00:00 UTC via eo-tides for all 22 municipalities ✓',
-      'SSH_total = SSH + tide; q90 thresholds recomputed per municipality ✓',
-      'Detection comparison: 30 → 13 concurrent events (17 lost, 0 gained) ✓',
-      'Per-event figures with hourly tidal rhythm overlay ✓',
+      'FES2022 tide evaluated at hourly resolution, daily maximum retained ✓',
+      'SSH_total = zos (00:00 UTC) + FES2022 tide (daily max) per municipality ✓',
+      'Detection comparison: 22 → 26 concurrent events (+7 new, −3 lost) ✓',
+      'Per-event 3-panel figures (Hₛ / SSH / SSH_total) for all 91 events ✓',
       'Summary figures (C1–C4) and metrics table ✓',
     ],
   },
   {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration (CSI Grid Scan)',
-    description: 'Systematic optimisation of Hₛ and SSH thresholds by computing hit rate (HR), false-alarm rate (FAR), and Critical Success Index (CSI) for all q50–q90 × q50–q90 combinations against the 91-event SC database.',
-    status: 'planned',
+    description: 'Systematic optimisation of Hₛ and SSH_total thresholds: 81 pairs (q50–q90 × q50–q90) evaluated against the 91-event SC database with causal window [D-2, D+1 00Z]. Optimal pair: q90/q90 (H=21, M=70, F=1 298, CSI=0.0151).',
+    status: 'done',
     tasks: [
-      'Compute HR, FAR, CSI for all q50–q90 threshold combinations',
-      'Identify threshold pair maximising CSI',
-      'Validate against withheld events',
-      'Document calibrated thresholds for SC coast',
+      'CSI, POD, FAR computed for all 81 threshold pairs ✓',
+      'Optimal pair q90/q90 identified (max CSI) ✓',
+      'Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
+      'Capture lag distribution: D-2 (9.5%), D-1 (33.3%), D (42.9%), D+1 (14.3%) ✓',
+      'tab_TC4_optimal_pair.csv saved for Step 5 ✓',
     ],
   },
   {
