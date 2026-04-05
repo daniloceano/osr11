@@ -121,7 +121,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Four analysis steps are complete: (1) exploratory data analysis validating the pipeline and municipality–grid associations; (2) preliminary compound event occurrence analysis inspecting q90 exceedances for all 91 events in the Leal et al. (2024) SC disaster database — 22 of 91 events show concurrent SSH-only exceedances; (3–4) threshold calibration comprising a tidal sensitivity sub-step (FES2022 daily-maximum tide added to SSH, increasing detection to 26 of 91 at q90) and a CSI grid scan across 81 threshold pairs (q50–q90 × q50–q90), identifying q90/q90 as the optimal pair (H=21, M=70, F=1 298, CSI=0.0151). The next step is storm catalog generation using the calibrated thresholds.
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Steps 1–3 are complete: (1) exploratory data analysis validating the pipeline and municipality–grid associations; (2) preliminary compound event occurrence analysis inspecting q90 exceedances for all 91 events in the Leal et al. (2024) SC disaster database — 22 of 91 events show concurrent SSH-only exceedances; (3) tidal sensitivity analysis adding FES2022 daily-maximum tide to SSH to form SSH_total — detection increases to 26 of 91 at q90. Step 4 (Threshold Calibration) is in progress: sub-step 4b (CSI grid scan) is complete, identifying q90/q90 as the optimal threshold pair (H=21, M=70, F=1 298, CSI=0.0151); sub-step 4c (false alarm attribution) is planned before advancing to Step 5.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -168,23 +168,31 @@ export const timelinePhases: TimelinePhase[] = [
     ],
   },
   {
+    id: 'step-3',
+    label: 'STEP 3 — Tidal Sensitivity Analysis',
+    description: 'Sub-step 4a of Threshold Calibration. FES2022 astronomical tide (eo-tides, hourly eval.) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition reused by Step 4b.',
+    status: 'done',
+    stepNumber: 3,
+    tasks: [
+      'FES2022 tide evaluated at hourly resolution, daily max retained ✓',
+      'SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) per municipality ✓',
+      'Detection at q90: 22 → 26 (+7 new, −3 lost, 19 maintained) ✓',
+      'Per-event 3-panel figures (Hₛ / SSH / SSH_total) — 91 events ✓',
+      'Summary figures C1–C4 and tidal metrics table ✓',
+    ],
+  },
+  {
     id: 'step-4',
     label: 'STEP 4 — Threshold Calibration',
-    description:
-      'Umbrella step comprising three sub-analyses. '
-      + '[4a — Tidal Sensitivity] SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) established; detection at q90: 22 → 26 (+7 new, −3 lost). '
-      + '[4b — CSI Grid Scan] 81 threshold pairs (q50–q90 × q50–q90) evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151). '
-      + '[4c — Planned] False alarm attribution via S2ID/Atlas Digital cross-reference.',
-    status: 'done',
+    description: 'Umbrella calibration step. Sub-step 4b (CSI Grid Scan): 81 threshold pairs evaluated, optimal pair q90/q90 identified. Sub-step 4c (Planned — False Alarm Attribution): cross-reference 1 298 flagged episodes with independent databases to distinguish under-reported events from spurious detections.',
+    status: 'in-progress',
     stepNumber: 4,
     tasks: [
-      '[4a] SSH_total = zos(00:00 UTC) + FES2022 tide(daily max from hourly) ✓',
-      '[4a] Detection at q90: 22 → 26 (+7 new, −3 lost, 19 maintained) ✓',
-      '[4a] Per-event 3-panel figures (Hₛ / SSH / SSH_total) ✓',
       '[4b] CSI grid scan: 81 pairs (q50–q90 × q50–q90) evaluated ✓',
       '[4b] Optimal pair: q90/q90 — H=21, M=70, F=1 298, CSI=0.0151 ✓',
       '[4b] Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
       '[4b] Capture lag: D (43%), D-1 (33%), D+1 (14%), D-2 (10%) ✓',
+      '[4c] False alarm attribution vs S2ID/Atlas Digital — planned',
     ],
   },
   {

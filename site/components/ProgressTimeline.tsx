@@ -16,10 +16,9 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Steps 1–4 are complete for the
-            full Santa Catarina coast. Step 4 (Threshold Calibration) is an umbrella step comprising
-            three sub-analyses: tidal sensitivity (4a), CSI grid scan (4b), and a planned false alarm
-            attribution (4c). The next active stage is Step 5 (Storm Catalog Generation).
+            Full pipeline from data acquisition to risk integration. Steps 1–3 are complete. Step 4
+            (Threshold Calibration) is the active umbrella step: sub-steps 4a (tidal sensitivity,
+            Step 3) and 4b (CSI grid scan) are done; sub-step 4c (false alarm attribution) is planned.
           </p>
         </div>
 
@@ -50,7 +49,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Data preparation, exploratory analysis, preliminary compound event occurrence, and threshold calibration complete
+            Steps 1–3 complete · Step 4 (Threshold Calibration) in progress — sub-steps 4a and 4b done, 4c planned
           </p>
         </div>
 
