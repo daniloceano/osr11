@@ -16,9 +16,10 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Steps 1–4 (exploratory analysis,
-            preliminary compound event occurrence, and threshold calibration including tidal sensitivity
-            and CSI grid scan) are complete for the full Santa Catarina coast.
+            Full pipeline from data acquisition to risk integration. Steps 1–4 are complete for the
+            full Santa Catarina coast. Step 4 (Threshold Calibration) is an umbrella step comprising
+            three sub-analyses: tidal sensitivity (4a), CSI grid scan (4b), and a planned false alarm
+            attribution (4c). The next active stage is Step 5 (Storm Catalog Generation).
           </p>
         </div>
 
@@ -86,7 +87,7 @@ export default function ProgressTimeline() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
-                        i
+                        phase.stepNumber ?? i
                       )}
                     </div>
                     <div>

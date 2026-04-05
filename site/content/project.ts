@@ -130,6 +130,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'Data Preparation',
     description: 'Compile, harmonize, and quality-check all datasets. Download CMEMS reanalyses for the SC domain; convert disaster database to structured CSV; set up shared configuration and plot styling.',
     status: 'done',
+    stepNumber: 0,
     tasks: [
       'Download WAVERYS (GLOBAL_MULTIYEAR_WAV_001_032) for SC',
       'Download GLORYS12 (GLOBAL_MULTIYEAR_PHY_001_030) for SC',
@@ -142,6 +143,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'STEP 1 — Exploratory Data Analysis',
     description: 'First-look inspection of WAVERYS and GLORYS12 spatial distributions, temporal variability, and the events database. Coastal grid-point selection and municipality–grid association.',
     status: 'done',
+    stepNumber: 1,
     tasks: [
       'Spatial maxima maps (Hₛ and SSH) — full SC coast ✓',
       'Time series at peak grid points per sector ✓',
@@ -154,8 +156,9 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Preliminary Compound Event Occurrence Analysis',
-    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 22 of 91 events show concurrent exceedances.',
+    description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 22 of 91 events show concurrent SSH-only exceedances at q90. Establishes the baseline for formal threshold calibration in Step 4.',
     status: 'done',
+    stepNumber: 2,
     tasks: [
       'Per-event ±3-day time-series windows (MagicA POT) — 91 events ✓',
       'q90 thresholds from full 1993–2025 climatological series ✓',
@@ -165,38 +168,33 @@ export const timelinePhases: TimelinePhase[] = [
     ],
   },
   {
-    id: 'step-3',
-    label: 'STEP 3 — Tidal Sensitivity Analysis',
-    description: 'FES2022 daily-maximum tide (via eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total. Compound detection compared at q90: 22 → 26 events (7 new, 3 lost, 19 maintained). Establishes the canonical SSH_total definition for Step 4.',
-    status: 'done',
-    tasks: [
-      'FES2022 tide evaluated at hourly resolution, daily maximum retained ✓',
-      'SSH_total = zos (00:00 UTC) + FES2022 tide (daily max) per municipality ✓',
-      'Detection comparison: 22 → 26 concurrent events (+7 new, −3 lost) ✓',
-      'Per-event 3-panel figures (Hₛ / SSH / SSH_total) for all 91 events ✓',
-      'Summary figures (C1–C4) and metrics table ✓',
-    ],
-  },
-  {
     id: 'step-4',
-    label: 'STEP 4 — Threshold Calibration (CSI Grid Scan)',
-    description: 'Systematic optimisation of Hₛ and SSH_total thresholds: 81 pairs (q50–q90 × q50–q90) evaluated against the 91-event SC database with causal window [D-2, D+1 00Z]. Optimal pair: q90/q90 (H=21, M=70, F=1 298, CSI=0.0151).',
+    label: 'STEP 4 — Threshold Calibration',
+    description:
+      'Umbrella step comprising three sub-analyses. '
+      + '[4a — Tidal Sensitivity] SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) established; detection at q90: 22 → 26 (+7 new, −3 lost). '
+      + '[4b — CSI Grid Scan] 81 threshold pairs (q50–q90 × q50–q90) evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151). '
+      + '[4c — Planned] False alarm attribution via S2ID/Atlas Digital cross-reference.',
     status: 'done',
+    stepNumber: 4,
     tasks: [
-      'CSI, POD, FAR computed for all 81 threshold pairs ✓',
-      'Optimal pair q90/q90 identified (max CSI) ✓',
-      'Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
-      'Capture lag distribution: D-2 (9.5%), D-1 (33.3%), D (42.9%), D+1 (14.3%) ✓',
-      'tab_TC4_optimal_pair.csv saved for Step 5 ✓',
+      '[4a] SSH_total = zos(00:00 UTC) + FES2022 tide(daily max from hourly) ✓',
+      '[4a] Detection at q90: 22 → 26 (+7 new, −3 lost, 19 maintained) ✓',
+      '[4a] Per-event 3-panel figures (Hₛ / SSH / SSH_total) ✓',
+      '[4b] CSI grid scan: 81 pairs (q50–q90 × q50–q90) evaluated ✓',
+      '[4b] Optimal pair: q90/q90 — H=21, M=70, F=1 298, CSI=0.0151 ✓',
+      '[4b] Per-municipality hit/miss/FA heatmaps (M1–M3) ✓',
+      '[4b] Capture lag: D (43%), D-1 (33%), D+1 (14%), D-2 (10%) ✓',
     ],
   },
   {
     id: 'step-5',
     label: 'STEP 5 — Storm Catalog Generation',
-    description: 'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using calibrated thresholds.',
+    description: 'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using calibrated thresholds (q90/q90 from Step 4b). Apply POT to the full 1993–2025 series; merge consecutive exceedances into discrete storm events; record start, end, duration, peak, and integrated intensity.',
     status: 'planned',
+    stepNumber: 5,
     tasks: [
-      'Identify threshold exceedances at each grid point',
+      'Identify Hₛ and SSH_total threshold exceedances at each grid point',
       'Merge consecutive exceedances into discrete storm events',
       'Record start, end, duration, peak, integrated intensity',
       'Save catalogs in structured JSON format',
@@ -207,6 +205,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'STEP 6 — Compound Event Detection',
     description: 'Identify compound events as temporal overlaps between sea-level storms and wave storms.',
     status: 'planned',
+    stepNumber: 6,
     tasks: [
       'Compare sea-level and wave storm catalogs at each grid point',
       'Classify compound events based on temporal overlap criterion',
@@ -219,6 +218,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'STEP 7 — Exposure Analysis',
     description: 'Quantify compound hazard exposure: frequency, intensity, trends, and recurrence along the SC coast.',
     status: 'planned',
+    stepNumber: 7,
     tasks: [
       'Compute mean annual frequency of compound events',
       'Calculate intensity metrics and overlap duration statistics',
@@ -231,6 +231,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'STEP 8 — Vulnerability Analysis',
     description: 'Construct coastal vulnerability index integrating social, physical-territorial, and historical damage layers.',
     status: 'planned',
+    stepNumber: 8,
     tasks: [
       'Compile IBGE social indicators (population, income, infrastructure)',
       'Extract Macrodiagnóstico physical-territorial variables',
@@ -243,6 +244,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'STEP 9 — Risk Integration',
     description: 'Produce coastal risk map by combining hazard, exposure, and vulnerability components.',
     status: 'planned',
+    stepNumber: 9,
     tasks: [
       'Rescale exposure and vulnerability to [0, 1]',
       'Combine via weighted mean or multiplicative approach',
@@ -255,6 +257,7 @@ export const timelinePhases: TimelinePhase[] = [
     label: 'Extension to Full Brazilian Coastal Domain',
     description: 'Scale validated pipeline to the complete Brazilian coast using full CMEMS downloads.',
     status: 'planned',
+    stepNumber: 10,
     tasks: [
       'Download full-domain CMEMS reanalyses',
       'Run Steps 4–9 pipeline for all coastal sectors',

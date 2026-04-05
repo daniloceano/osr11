@@ -19,6 +19,7 @@ export interface MethodStep {
   description: string;
   status: Status;
   isCurrent?: boolean;
+  stepNumber?: number;
 }
 
 export interface ResultCard {
@@ -52,4 +53,5 @@ export interface TimelinePhase {
   description: string;
   status: Status;
   tasks: string[];
+  stepNumber?: number;
 }
