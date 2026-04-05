@@ -6,7 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 import TsEventSelector from '@/components/TsEventSelector';
 
 export const metadata = {
-  title: 'Tidal Sensitivity Analysis — Step 4a — OSR11',
+  title: 'Tidal Sensitivity Analysis — Step 3a — OSR11',
   description:
     'Sensitivity test extending the preliminary compound event occurrence analysis by adding FES2022 astronomical tide to GLORYS12 SSH. Comparison of compound event detection with SSH-only vs SSH + tide (SSH_total). Full SC coast, 91 events.',
 };
@@ -38,7 +38,7 @@ export default function TidalSensitivityPage() {
 
             <div className="flex flex-wrap items-start gap-2 mb-4">
               <StatusBadge status="done" />
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 4a</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 3a</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 91 events</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">FES2022 · eo-tides</span>
             </div>
@@ -352,8 +352,8 @@ export default function TidalSensitivityPage() {
               <h3 className="text-sm font-semibold text-gray-900 mb-3">What this tells us for the CSI grid scan</h3>
               <ul className="space-y-1.5">
                 {[
-                  'For the formal threshold calibration (Step 4b — CSI grid scan), SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) is used, consistent with this sensitivity analysis. This is now the canonical SSH_total definition across the pipeline.',
-                  'The daily-max tide convention is shared by both Step 4a and Step 4b. Any future step that computes SSH_total should use the same daily-maximum tide from FES2022 evaluated at hourly resolution.',
+                  'For the formal threshold calibration (Step 3b — CSI grid scan), SSH_total = zos(00:00 UTC) + FES2022 tide(daily max) is used, consistent with this sensitivity analysis. This is now the canonical SSH_total definition across the pipeline.',
+                  'The daily-max tide convention is shared by both Step 3a and Step 3b. Any future step that computes SSH_total should use the same daily-maximum tide from FES2022 evaluated at hourly resolution.',
                   'When sub-daily SSH data becomes available (e.g., from coastal tide gauge records or higher-frequency reanalysis), repeat this sensitivity test at hourly or 3-hourly resolution to properly assess tidal phasing with wave and surge peaks.',
                   'The FES2022 model and eo-tides infrastructure are validated and ready for extension to hourly tidal predictions at any coastal location.',
                 ].map((s, i) => (
