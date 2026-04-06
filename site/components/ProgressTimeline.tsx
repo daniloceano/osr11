@@ -16,9 +16,9 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Steps 1–2 are complete. Step 3
-            (Threshold Calibration) is the active umbrella step with three sub-steps: 3a (Tidal
-            Sensitivity) and 3b (CSI Grid Scan) are done; 3c (False Alarm Attribution) is planned.
+            Full pipeline from data acquisition to risk integration. Step 1 (Data Preparation) is
+            complete. Step 2 (Threshold Calibration) is the active umbrella step with five sub-steps:
+            2a–2d are done; 2e (False Alarm Attribution) is planned.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Steps 1–2 complete · Step 3 (Threshold Calibration) in progress — sub-steps 3a and 3b done, 3c planned
+            Step 1 complete · Step 2 (Threshold Calibration) in progress — sub-steps 2a–2d done, 2e planned
           </p>
         </div>
 

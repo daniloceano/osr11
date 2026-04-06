@@ -58,7 +58,7 @@ const keyFindings = [
   {
     icon: '🔗',
     title: '22 of 91 events show concurrent exceedances at q90',
-    text: '22 of 91 events (24%) have at least one day in the 7-day window where both Hₛ and SSH simultaneously exceed their q90 thresholds. This rate was the baseline finding that motivated the systematic threshold calibration carried out in Step 3 (sub-step 3b — CSI Grid Scan), which scanned 81 threshold pairs and found q90/q90 to be the optimal combination (H=21, M=70, CSI=0.0151).',
+    text: '22 of 91 events (24%) have at least one day in the 7-day window where both Hₛ and SSH simultaneously exceed their q90 thresholds. This rate was the baseline finding that motivated the systematic threshold calibration carried out in Step 2 (sub-step 2d — CSI Grid Scan), which scanned 81 threshold pairs and found q90/q90 to be the optimal combination (H=21, M=70, CSI=0.0151).',
   },
 ];
 
@@ -82,9 +82,9 @@ const limitations = [
   'Grid coverage gaps: many northern SC municipalities have their nearest ocean grid cell over land or in geometrically unresolved bays, producing NaN values in thresholds and metrics. This affects ~50% of the 91 analysed events.',
   'q90 thresholds are computed from the full annual series (no seasonal decomposition). Because wave heights peak in austral winter, the annual q90 may underperform relative to a seasonally stratified threshold.',
   'Municipality–grid assignment uses the nearest ocean grid cell to an approximate coastal centroid. No spatial interpolation is applied between grid cells.',
-  'The ±3-day symmetric window used here is a preliminary choice. Step 3b adopted an asymmetric causal/antecedent window [D-2, D-1, D, D+1 00Z] based on physical reasoning about antecedent forcing and operational timing tolerances.',
+  'The ±3-day symmetric window used here is a preliminary choice. Step 2d adopted an asymmetric causal/antecedent window [D-2, D-1, D, D+1 00Z] based on physical reasoning about antecedent forcing and operational timing tolerances.',
   'Normalisation by climatological mean can produce inflated SSH normalised values when the mean SSH is close to zero.',
-  'This is a preliminary first-pass analysis. Systematic threshold optimisation (CSI grid scan over 81 pairs, q50–q90 × q50–q90) was completed in Step 3b, identifying q90/q90 as the optimal detection threshold pair.',
+  'This is a preliminary first-pass analysis. Systematic threshold optimisation (CSI grid scan over 81 pairs, q50–q90 × q50–q90) was completed in Step 2d, identifying q90/q90 as the optimal detection threshold pair.',
   'The dataset is daily (WAVERYS resampled from 3-hourly using daily mean). Sub-daily compound exceedances are not resolved at this stage.',
 ];
 
@@ -129,7 +129,7 @@ export default function ThresholdCalibrationPage() {
               22 municipalities, 91 events, 1998–2020). A first-pass q90 threshold (top 10% of
               the full 1993–2025 climatological series) is applied to identify joint Hₛ and SSH
               exceedances. Exceedance episodes detected via MagicA peaks-over-threshold. The
-              systematic threshold calibration (Step 3 — Threshold Calibration) follows from this step.
+              systematic threshold calibration (Step 2 — Threshold Calibration) follows from this step.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -176,7 +176,7 @@ export default function ThresholdCalibrationPage() {
                 in both variables simultaneously when measured at daily resolution at the
                 nearest ocean grid point.
                 <br /><br />
-                The <strong>formal threshold calibration</strong> was carried out in Step 3,
+                The <strong>formal threshold calibration</strong> was carried out in Step 2,
                 which scanned all q50–q90 × q50–q90 combinations and computed hit rate,
                 false-alarm rate, and Critical Success Index (CSI) against the 91-event database.
                 The optimal pair identified was q90/q90 (H=21, M=70, F=1 298, CSI=0.0151).
@@ -435,7 +435,7 @@ export default function ThresholdCalibrationPage() {
             </ul>
 
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
-              <h3 className="text-sm font-semibold text-emerald-900 mb-3">Addressed in Step 3 — Threshold Calibration</h3>
+              <h3 className="text-sm font-semibold text-emerald-900 mb-3">Addressed in Step 2 — Threshold Calibration</h3>
               <ul className="space-y-1.5">
                 {[
                   'Systematic CSI grid scan: all q50–q90 × q50–q90 Hₛ–SSH_total combinations evaluated; optimal pair identified as q90/q90 (H=21, M=70, F=1 298, CSI=0.0151).',

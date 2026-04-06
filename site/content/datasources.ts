@@ -65,7 +65,7 @@ export const dataSources: DataSource[] = [
     resolution: 'Event-level (point-in-time), municipality resolution',
     period: '1998–2023',
     role: 'Threshold calibration: validate extreme thresholds by maximizing correspondence with reported events. Pragmatic validation strategy acknowledging regional bias when extrapolated.',
-    stage: 'Exploratory analysis (Step 1), Threshold calibration (Step 3), Storm Catalog (Step 4)',
+    stage: 'Exploratory analysis (Step 2a), Threshold calibration (Step 2), Storm Catalog (Step 3)',
     status: 'done',
   },
   {
@@ -83,7 +83,7 @@ export const dataSources: DataSource[] = [
     resolution: 'Event-level, municipal resolution',
     period: '1991–present',
     role: 'Compound event validation; historical damage records as auxiliary sensitivity layer for vulnerability analysis. Acknowledged data quality limitations.',
-    stage: 'Storm Catalog (Step 4); Vulnerability (Step 7)',
+    stage: 'Storm Catalog (Step 3); Vulnerability (Step 6)',
     status: 'planned',
   },
   {
@@ -121,7 +121,7 @@ export const dataSources: DataSource[] = [
     resolution: 'Municipal (Brazil administrative unit)',
     period: 'Current (census data ~2010, 2022)',
     role: 'Municipality–grid association for spatial analysis; social vulnerability indicators (population, income, infrastructure) for risk integration.',
-    stage: 'Exploratory analysis (Step 1); Vulnerability (Step 6)',
+    stage: 'Exploratory analysis (Step 2a); Vulnerability (Step 6)',
     status: 'planned',
   },
   {

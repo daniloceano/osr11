@@ -6,7 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 import Tc4EventSelector from '@/components/Tc4EventSelector';
 
 export const metadata = {
-  title: 'Threshold Calibration — CSI Grid Scan (Step 3b) — OSR11',
+  title: 'Threshold Calibration — CSI Grid Scan (Step 2d) — OSR11',
   description:
     'Systematic optimisation of Hₛ and SSH_total exceedance thresholds against the 91-event SC coastal disaster database. CSI grid scan over q50–q90 threshold pairs (every 5 percentile points) with causal/antecedent matching window.',
 };
@@ -38,7 +38,7 @@ export default function CsiScanPage() {
 
             <div className="flex flex-wrap items-start gap-2 mb-4">
               <StatusBadge status="done" />
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 3b</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2d</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 91 events</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">81 threshold pairs · CSI optimisation</span>
             </div>
@@ -80,11 +80,11 @@ export default function CsiScanPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <p className="text-sm text-gray-700 leading-relaxed">
                 Steps 2 and 4a of the OSR11 pipeline used a fixed q90 threshold for both Hₛ and SSH_total
-                as a conventional starting point to build the methodology infrastructure. Step 3b asks
+                as a conventional starting point to build the methodology infrastructure. Step 2d asks
                 whether any combination of thresholds in the q50–q90 range can do better — empirically
                 calibrated against the 91-event Civil Defense database rather than chosen arbitrarily.
                 <br /><br />
-                Step 3b asks: <strong>which pair of (Hₛ, SSH_total) thresholds best separates the
+                Step 2d asks: <strong>which pair of (Hₛ, SSH_total) thresholds best separates the
                 91 reported coastal disasters from background ocean conditions?</strong> Instead of
                 assuming q90, the analysis sweeps all combinations from q50 to q90 (in steps of 0.05)
                 and evaluates, for each pair, how many events are captured (hits), missed, and how
@@ -99,7 +99,7 @@ export default function CsiScanPage() {
                 both misses (too restrictive a threshold) and false alarms (too permissive a threshold),
                 making it the appropriate metric when the target is a balanced detector.
                 <br /><br />
-                The calibrated threshold pair from Step 3b directly informs Step 4 (Storm Catalog
+                The calibrated threshold pair from Step 2d directly informs Step 3 (Storm Catalog
                 Generation), where it is used to define independent compound storm episodes in the
                 full 1993–2025 time series.
               </p>
@@ -165,7 +165,7 @@ export default function CsiScanPage() {
                 {
                   step: '6',
                   title: 'Select the optimal threshold pair',
-                  text: 'Selection hierarchy: (1) highest CSI; (2) lowest FAR as tiebreaker (prefer less permissive solutions); (3) highest percentile sum (most restrictive pair) as second tiebreaker. The selected pair is saved to tab_TC4_optimal_pair.csv and passed to Step 4.',
+                  text: 'Selection hierarchy: (1) highest CSI; (2) lowest FAR as tiebreaker (prefer less permissive solutions); (3) highest percentile sum (most restrictive pair) as second tiebreaker. The selected pair is saved to tab_TC4_optimal_pair.csv and passed to Step 3.',
                   tag: 'Selection',
                   tagColor: 'text-teal-700 bg-teal-50 border-teal-200',
                 },
@@ -196,7 +196,7 @@ export default function CsiScanPage() {
           <div className="mx-auto max-w-5xl px-6">
             <h2 className="mb-4 text-xl font-bold text-gray-900">The Causal/Antecedent Matching Window</h2>
             <p className="mb-6 text-sm text-gray-600 max-w-3xl">
-              This is the central methodological decision of Step 3b. An observed event reported on civil
+              This is the central methodological decision of Step 2d. An observed event reported on civil
               date <strong>D</strong> is considered <em>captured</em> if the compound condition holds at any
               of the following daily 00Z timestamps:
             </p>
@@ -474,7 +474,7 @@ export default function CsiScanPage() {
                 <p className="text-xs text-gray-500 italic leading-relaxed">
                   Municipality centroids (circles) connected to their assigned WAVERYS/GLORYS12 grid point (crosses).
                   Grid points with ≥80% valid data coverage across 1993–2025 are shown in blue; flagged/insufficient
-                  coverage in red. Lines indicate the municipality→grid association used throughout Step 3b.
+                  coverage in red. Lines indicate the municipality→grid association used throughout Step 2d.
                   Background shows the SC coastal sector divisions.
                 </p>
               </div>
@@ -873,8 +873,8 @@ export default function CsiScanPage() {
             <div className="rounded-xl border border-gray-200 bg-white p-5">
               <ul className="space-y-2">
                 {[
-                  { arrow: '→', text: 'Step 4 (Storm Catalog Generation): the optimal threshold pair from tab_TC4_optimal_pair.csv defines the exceedance thresholds used to identify independent storm episodes across the full 32-year series at all coastal grid points.' },
-                  { arrow: '→', text: 'Step 5 (Compound Event Detection): compound events are identified as temporal overlaps between Hₛ and SSH_total storm episodes in the catalogs produced by Step 4.' },
+                  { arrow: '→', text: 'Step 3 (Storm Catalog Generation): the optimal threshold pair from tab_TC4_optimal_pair.csv defines the exceedance thresholds used to identify independent storm episodes across the full 32-year series at all coastal grid points.' },
+                  { arrow: '→', text: 'Step 5 (Compound Event Detection): compound events are identified as temporal overlaps between Hₛ and SSH_total storm episodes in the catalogs produced by Step 3.' },
                   { arrow: '→', text: 'Scientific paper: the CSI grid scan provides the empirical justification for the chosen detection thresholds, replacing the arbitrary q90 assumption of the preliminary analysis.' },
                 ].map((s, i) => (
                   <li key={i} className="flex gap-2 text-sm text-gray-600">
