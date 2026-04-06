@@ -11,9 +11,9 @@ export default function ResultsGrid() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Preliminary Results</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-700">
-            The cards below summarise the analytical blocks in this project — what has been
-            completed, what is in progress, and what is planned. The exploratory analysis for the 
-            South SC test domain is now complete. Click on completed analyses to view detailed results and figures.
+            The cards below summarise the methodological steps in this project — what has been
+            completed, what is in progress, and what is planned. Step 2 (Threshold Calibration) is complete, 
+            containing four sub-analyses. Click on completed steps to view detailed results and figures.
           </p>
         </div>
 

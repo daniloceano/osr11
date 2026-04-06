@@ -104,16 +104,20 @@ export default function ThresholdCalibrationPage() {
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span>Results</span>
+              <Link href="/results" className="hover:text-gray-700 transition-colors">Results</Link>
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-600">Preliminary Compound Event Occurrence Analysis</span>
+              <Link href="/results/threshold-calibration" className="hover:text-gray-700 transition-colors">Threshold Calibration</Link>
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-gray-600">Preliminary Compound Analysis</span>
             </div>
 
             <div className="flex flex-wrap items-start gap-2 mb-4">
               <StatusBadge status="done" />
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2b</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 22 municipalities</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">MagicA POT</span>
             </div>
@@ -128,8 +132,8 @@ export default function ThresholdCalibrationPage() {
               disaster in the Leal et al. (2024) database — full Santa Catarina coast (5 sectors,
               22 municipalities, 91 events, 1998–2020). A first-pass q90 threshold (top 10% of
               the full 1993–2025 climatological series) is applied to identify joint Hₛ and SSH
-              exceedances. Exceedance episodes detected via MagicA peaks-over-threshold. The
-              systematic threshold calibration (Step 2 — Threshold Calibration) follows from this step.
+              exceedances. Exceedance episodes detected via MagicA peaks-over-threshold. Steps 2c
+              (Tidal Sensitivity) and 2d (CSI Grid Scan) follow from this step.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">

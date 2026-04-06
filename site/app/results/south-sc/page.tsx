@@ -95,17 +95,21 @@ export default function SouthSCPage() {
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span>Results</span>
+              <Link href="/results" className="hover:text-gray-700 transition-colors">Results</Link>
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-600">South SC — Exploratory Analysis</span>
+              <Link href="/results/threshold-calibration" className="hover:text-gray-700 transition-colors">Threshold Calibration</Link>
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-gray-600">Exploratory Data Analysis</span>
             </div>
 
             <div className="flex flex-wrap items-start gap-3 mb-4">
-              <StatusBadge status="in-progress" />
+              <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Phase 1
+                Step 2a
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
                 Test domain · South SC

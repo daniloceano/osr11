@@ -2,78 +2,50 @@ import type { ResultCard } from '@/lib/types';
 
 export const resultCards: ResultCard[] = [
   {
-    id: 'south-sc-eda',
-    title: 'Step 2a — Exploratory Data Analysis',
-    subtitle: 'South Santa Catarina test-domain EDA: spatial maps, time series, events, statistics',
-    status: 'done',
-    description:
-      'First systematic look at the WAVERYS and GLORYS12 test datasets for the southern sector of Santa Catarina (~29.4°S to 27.6°S). This analysis constitutes the sanity-check and pipeline-validation phase of the project, verifying that data loading, coastal point selection, and analysis routines behave correctly before scaling to the full domain.',
-    rationale:
-      'The exploratory phase is essential to (1) validate the data pipeline, (2) develop and test methodological choices (e.g., coastal grid selection, municipality–grid association), (3) characterise the statistical properties of Hₛ and SSH in the test domain, and (4) establish a first qualitative link between reanalysis signals and observed coastal disasters before proceeding to a rigorous compound detection framework.',
-    outputs: [
-      'Spatial maximum maps of Hₛ and SSH over the full 1993–2025 period',
-      'Time series at peak-value grid points with event-window highlighting',
-      'Reported events EDA: count per municipality, Hₛ/SSH boxplots, monthly seasonality',
-      'Municipality–grid association table (IBGE coordinates, nearest WAVERYS/GLORYS cells)',
-      'Per-sector boxplot figures (map + Hₛ + SSH by municipality)',
-      'Descriptive statistics tables (mean, p75, p90, p99, max)',
-      'Scatter plots (Hₛ vs SSH, one per municipality, coloured by year)',
-      'Seasonal cycle figures (monthly median ± IQR for Hₛ and SSH)',
-      'Compound quick-look: joint exceedances at empirical q90 thresholds',
-      'Top compound events time series (per municipality)',
-      'Marginal distribution histograms (Hₛ and SSH per municipality)',
-    ],
-    href: '/results/south-sc',
-    parts: ['Part A', 'Part B', 'Part D', 'Part E', 'Part F', 'Part G'],
-  },
-  {
-    id: 'preliminary-compound',
-    title: 'Step 2b — Preliminary Compound Analysis',
-    subtitle: 'Joint q90 exceedance inspection · Full SC coast · 5 sectors · 91 events',
-    status: 'done',
-    description:
-      'Preliminary analysis of joint Hₛ and SSH exceedances during the 91 reported coastal disasters in the Leal et al. (2024) Santa Catarina database (5 sectors, 22 municipalities, 1998–2020). For each event, the ±3-day window at the nearest ocean grid point is inspected using a first-pass q90 threshold. MagicA peaks-over-threshold identifies distinct exceedance episodes. Key finding: only 2 of 91 events show concurrent q90 exceedances — a calibration signal that motivates the next step: a systematic threshold grid scan (hit rate / CSI optimisation across q50–q90 combinations).',
-    rationale:
-      'Before calibrating thresholds formally, it is essential to characterise how the reanalysis signal behaves during known disaster dates. This preliminary occurrence analysis documents the distribution of Hₛ and SSH anomalies during reported events and establishes the empirical baseline for the CSI-based threshold optimisation that follows.',
-    outputs: [
-      '91 per-event time series figures with MagicA exceedance shading',
-      'Consolidated metrics table: raw maxima, normalised maxima, days above threshold, concomitance',
-      'Threshold statistics table per municipality (q90, mean, std, p99)',
-      'fig_TC_S1 — Normalised Hₛ and SSH maxima per event (grouped bar chart)',
-      'fig_TC_S2 — Normalised Hₛ vs SSH scatter, concurrent events highlighted',
-      'fig_TC_S3 — Concomitance fraction bar chart per event',
-      'fig_TC_S4 — Concomitance heatmap: municipality × event date',
-    ],
-    href: '/results/preliminary-compound',
-  },
-  {
     id: 'threshold-calibration',
-    title: 'Steps 2c–2d — Threshold Calibration',
-    subtitle: 'Tidal sensitivity (Step 2c) + CSI grid scan (Step 2d) · 91 events · FES2022',
+    title: 'Step 2 — Threshold Calibration',
+    subtitle: 'Empirical detection framework · EDA · Preliminary analysis · Tidal sensitivity · CSI grid scan',
     status: 'done',
     description:
-      'Empirical calibration of compound event detection thresholds against the 91-event SC coastal disaster database, in two sub-steps. Step 2c (tidal sensitivity): FES2022 daily-maximum tide is added to GLORYS12 SSH to form SSH_total; detection increases from 22 to 26 events at q90. Step 2d (CSI grid scan): 81 threshold pairs (q50–q90 × q50–q90) are evaluated with a causal window [D-2, D+1 00Z]; the optimal pair is q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). The high FAR is structural — compound daily exceedances are ~62× more frequent than reported disasters, likely reflecting under-reporting in the Civil Defense database.',
+      'Umbrella step that empirically establishes the compound event detection framework against the 91-event SC coastal disaster database. Four sub-steps completed: (2a) Exploratory Data Analysis validates the pipeline and municipality–grid associations; (2b) Preliminary Compound Analysis inspects q90 exceedances for all 91 events; (2c) Tidal Sensitivity adds FES2022 tide to form SSH_total; (2d) CSI Grid Scan identifies optimal threshold pair q90/q90. Sub-step (2e) False Alarm Attribution is planned.',
     rationale:
-      'Steps 2a and 2b used a fixed q90 threshold as a conventional starting point. Steps 2c–2d ask whether any threshold pair in q50–q90 achieves a better skill score, and whether adding the FES2022 astronomical tide improves detection. The calibrated q90/q90 pair and the SSH_total definition (SSH + FES2022 daily max tide) are carried into Steps 3–7.',
+      'Before detecting compound events at scale, thresholds must be calibrated against observed coastal disasters. This step transforms the conventional q90 starting point into a validated detection framework with documented skill scores (CSI=0.0151, POD=0.23, FAR=0.984) and establishes the canonical SSH_total definition used throughout the pipeline.',
     outputs: [
-      'Step 2c: 91 per-event 3-panel figures: Hₛ / SSH / SSH_total (with FES2022 tide overlay)',
-      'Step 2c: tab_TS_event_metrics.csv — detection_change per event (maintained/new/lost/neither)',
-      'Step 2c: fig_TS_C1–C4 — detection comparison, scatter, sector breakdown, tidal fraction',
-      'Step 2d: tab_TC4_metrics_full.csv — CSI, POD, FAR for all 81 threshold pairs',
-      'Step 2d: tab_TC4_optimal_pair.csv — q90/q90 optimal pair reference for Step 3',
-      'Step 2d: fig_TC4_H1–H3 — CSI, FAR, POD heatmaps over threshold grid',
-      'Step 2d: fig_TC4_S1–S5 — ranking scatter, hit/miss, lag distribution, sector POD, peak scatter',
-      'Step 2d: fig_TC4_M1–M3 — per-municipality hit rate, miss rate, false alarm heatmaps',
+      '2a: Spatial maximum maps, time series, municipality–grid association, per-sector boxplots',
+      '2a: Seasonal cycles, compound quick-look at empirical q90, marginal distributions',
+      '2b: 91 per-event time series figures with MagicA exceedance shading',
+      '2b: Consolidated metrics table, threshold statistics, concomitance heatmaps',
+      '2c: 91 per-event 3-panel figures (Hₛ / SSH / SSH_total with FES2022 tide overlay)',
+      '2c: Detection change analysis (22 → 26 events), tidal fraction metrics',
+      '2d: CSI, POD, FAR for all 81 threshold pairs (q50–q90 × q50–q90)',
+      '2d: Optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151)',
+      '2d: Per-municipality hit/miss/FA heatmaps, capture lag distribution',
     ],
     href: '/results/threshold-calibration',
+    parts: ['2a — EDA', '2b — Preliminary', '2c — Tidal', '2d — CSI Scan'],
   },
   {
     id: 'compound-detection',
-    title: 'Compound Event Detection',
+    title: 'Step 3 — Storm Catalog Generation',
+    subtitle: 'Independent wave and surge storm catalogs · POT · q90/q90 thresholds',
+    status: 'planned',
+    description:
+      'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using the calibrated thresholds (q90/q90 from Step 2d). Apply peaks-over-threshold to the full 1993–2025 series; merge consecutive exceedances into discrete storm events.',
+    rationale:
+      'The storm catalogs are the foundation for compound event detection in Step 4. By identifying independent Hₛ and SSH_total storm episodes first, the temporal overlap analysis can be conducted systematically.',
+    outputs: [
+      'Hₛ storm catalog per grid point (start, end, duration, peak, integrated intensity)',
+      'SSH_total storm catalog per grid point',
+      'Structured JSON format for downstream analysis',
+    ],
+  },
+  {
+    id: 'compound-events',
+    title: 'Step 4 — Compound Event Detection',
     subtitle: 'Joint wave–surge exceedances along the Brazilian coast',
     status: 'planned',
     description:
-      'Application of the compound detection framework to the full study domain. Identification of episodes in which both Hₛ and SSH exceed their respective extreme thresholds within the calibrated temporal coincidence window. Statistical characterisation of compound event frequency, intensity, duration, and seasonal distribution.',
+      'Identify compound events as temporal overlaps between independent sea-level and wave storms from the Step 3 catalogs. Compute co-occurrence statistics: frequency, intensity, duration, peak time lags, and seasonal distribution.',
     rationale:
       'The compound event catalog is the primary scientific deliverable of the hazard phase and the foundation for validation, risk mapping, and physical interpretation.',
     outputs: [
