@@ -153,11 +153,24 @@ ALPHA_C = 0.10  # context coherence weight (0–1: season + neighbors + exposure
 # ANNUAL BURDEN PARAMETERS
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Target annual burden: B(θ) = min(1, B_raw(θ) / B_target)
-# B_target represents the largest acceptable average number of detected compound
-# episodes per year. Should be justified by climatological plausibility or
-# auditing capacity.
-B_TARGET = 10.0  # episodes per year (default; adjust based on domain knowledge)
+# Per-municipality annual burden target.
+#
+# The effective B_target is computed at run time as:
+#     B_target_effective = B_TARGET_PER_MUNICIPALITY × n_municipalities
+#
+# where n_municipalities is the number of unique municipalities with valid grid
+# associations in the event records (determined from the expanded events database).
+#
+# SCIENTIFIC RATIONALE:
+#   One event per month per municipality (~12/year) is a climatologically
+#   plausible upper bound for compound coastal events on the SC coast. It
+#   implies that, for every municipality being monitored, the detector should
+#   not flag more than ~12 compound episodes per year on average. Scaling by
+#   n_municipalities ensures the total domain budget grows proportionally with
+#   spatial coverage, avoiding penalising analyses with more municipalities.
+#
+# Example: 14 municipalities → B_target_effective = 12 × 14 = 168 ep/yr
+B_TARGET_PER_MUNICIPALITY = 12.0  # episodes per year per municipality
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CONTEXT COHERENCE PARAMETERS (C_i components)
@@ -167,9 +180,31 @@ B_TARGET = 10.0  # episodes per year (default; adjust based on domain knowledge)
 # Used for C_i^season indicator.
 ACTIVE_SEASON_MONTHS = [4, 5, 6, 7, 8, 9, 10]  # April–October (autumn–winter–early spring)
 
-# Exposed municipalities — list of IBGE codes identified as high-exposure in OSR11
-# Used for C_i^exposure indicator. To be populated from project vulnerability layers.
-EXPOSED_MUNICIPALITIES: list[int] = []  # placeholder — populate from project data
+# Exposed municipalities — northern-sector Santa Catarina coastal municipalities.
+# Used for C_i^exposure indicator: C_i^exposure = 1 for episodes at these municipalities.
+#
+# SCIENTIFIC RATIONALE (Step 2e authoritative decision):
+#   The northern sector (Itapoá, São Francisco do Sul, Araquari, Balneário Barra do Sul,
+#   Barra Velha) is treated as high-exposure because:
+#     1. These municipalities are in the northernmost part of the Santa Catarina coast,
+#        exposed to a distinct wave climate influenced by NE swell and tropical systems.
+#     2. Grid coverage for GLORYS12/WAVERYS in this sector is partially degraded (higher
+#        NaN fractions due to shallow bathymetry and complex coastline geometry), making
+#        real events more likely to appear as unmatched detections even when they occurred.
+#     3. Treating these municipalities as exposure-vulnerable increases the soft plausibility
+#        of unmatched episodes there, partially compensating for the model coverage gap.
+#
+#   NOTE: This list uses municipality names (strings) matching the keys in
+#   src/02_threshold_calibration/02_preliminary_compound/events.py::_SOUTH_SC_COORDS.
+#   IBGE codes are not used because municipality names are the primary join key in all
+#   event records throughout this project.
+EXPOSED_MUNICIPALITIES: list[str] = [
+    "Itapoá",
+    "São Francisco do Sul",
+    "Araquari",
+    "Balneário Barra do Sul",
+    "Barra Velha",
+]
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SENSITIVITY ANALYSIS CONFIGURATIONS
@@ -189,8 +224,9 @@ SENSITIVITY_ALPHA = [
     {"alpha_E": 0.60, "alpha_I": 0.30, "alpha_C": 0.10, "label": "default"},
 ]
 
-# Alternative B_target values
-SENSITIVITY_B_TARGET = [5.0, 10.0, 15.0, 20.0]
+# Alternative per-municipality B_target values (episodes/year/municipality).
+# Effective domain budget = value × n_municipalities at run time.
+SENSITIVITY_B_TARGET = [6.0, 12.0, 18.0, 24.0]
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CONSOLIDATED CONFIGURATION DICTIONARY
@@ -245,12 +281,12 @@ CFG: dict = {
     "alpha_I": ALPHA_I,
     "alpha_C": ALPHA_C,
 
-    # ── Annual burden ─────────────────────────────────────────────────────────
-    "b_target": B_TARGET,
+    # ── Annual burden (per municipality; effective = value × n_municipalities) ──
+    "b_target_per_municipality": B_TARGET_PER_MUNICIPALITY,
 
     # ── Context coherence ─────────────────────────────────────────────────────
     "active_season_months": ACTIVE_SEASON_MONTHS,
-    "exposed_municipalities": EXPOSED_MUNICIPALITIES,
+    "exposed_municipalities": EXPOSED_MUNICIPALITIES,   # list[str] of northern-sector municipality names
 
     # ── Sensitivity analysis ──────────────────────────────────────────────────
     "sensitivity_weights": SENSITIVITY_WEIGHTS,

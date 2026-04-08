@@ -26,8 +26,9 @@
 ### Evidence from Step 2d (Diagnostic)
 
 Step 2d (CSI Grid Scan) was a diagnostic exploration that revealed fundamental limitations of
-classical verification metrics. Using the original Civil Defense database (91 events), the
-CSI-optimal threshold pair (Hₛ=q90, SSH_total=q90) yielded:
+classical verification metrics. Using the original Civil Defense database
+(91 valid municipality×event rows from 105 raw entries, corresponding to 72 unique storms),
+the CSI-optimal threshold pair (Hₛ=q90, SSH_total=q90) yielded:
 
 - **H = 21** hits (reported events captured)
 - **M = 70** misses (reported events not captured)
@@ -141,11 +142,24 @@ The following were **excluded**:
 
 | Aspect | Legacy (Leal et al.) | Expanded Documentary |
 |--------|---------------------|---------------------|
-| Events | 91 | 56 |
+| Raw CSV rows | 105 | 56 |
+| Valid rows after cleaning | **91** (municipality × disaster pairs) | **56** (all unique municipality × date pairs) |
+| Unique disaster IDs / events | **72** independent storms | N/A (no common disaster ID) |
 | Period | 1998–2023 | 1998–2020 |
 | Primary sources | Civil Defense records | News, theses, reports |
-| Marine-forcing evidence | Variable | Explicit requirement |
+| Marine-forcing evidence | Variable quality | Explicit requirement |
 | Source traceability | Limited | URL + title for each event |
+
+**Event count clarification:**
+The "91 events" cited in Step 2d documentation refers to the **91 valid municipality×disaster-id rows** 
+after removing entries with missing dates, municipality names, or IDs (105 raw rows → 91 valid). 
+These 91 rows correspond to **72 unique storm events** (some storms affected multiple municipalities, 
+contributing more than one row).
+
+Step 2d evaluates each municipality×event row independently (H, M counted per municipality),
+so the relevant denominator for Step 2d POD is 91 rows, not 72 storms.
+
+For Step 2e, P = 56 municipality×date pairs from the expanded documentary database.
 
 The expanded database has fewer events but more rigorous marine-forcing evidence, making it
 better suited for PU calibration where the positive class must be reliably labeled.
@@ -185,17 +199,29 @@ reliable metric because P is known with confidence.
 The raw annual detection rate:
 
 $$
-B_{raw}(\theta) = \frac{N_{det}(\theta)}{Y} = \frac{H(\theta) + U(\theta)}{Y}
+B_{raw}(\theta) = \frac{H(\theta) + U(\theta)}{Y}
 $$
 
-Normalized burden (dimensionless):
+Normalised burden (dimensionless):
 
 $$
-B(\theta) = \min\left(1, \frac{B_{raw}(\theta)}{B_{target}}\right)
+B(\theta) = \min\left(1, \frac{B_{raw}(\theta)}{B_{target}^{eff}}\right)
 $$
 
-Where $B_{target}$ is the operational target for acceptable annual detections. This term
-penalizes threshold pairs that generate an unrealistic or unmanageable number of episodes.
+Where the effective annual budget scales with the number of municipalities analysed:
+
+$$
+B_{target}^{eff} = B_{target}^{muni} \times N_{muni}
+$$
+
+- $B_{target}^{muni}$ — per-municipality annual tolerance (default: 12 episodes/year/municipality)
+- $N_{muni}$ — number of unique municipalities with valid grid coverage in the analysis
+
+**Rationale:** One compound coastal event per month per municipality (12/year) is
+climatologically plausible for the SC coast. Scaling by $N_{muni}$ ensures the
+domain-wide budget grows proportionally with spatial coverage, avoiding unfair
+penalisation of analyses that include more municipalities. This term penalises
+threshold pairs that generate an unrealistically large total detection rate.
 
 ### Confidence Weight (qᵢ)
 
@@ -212,22 +238,43 @@ Where:
 
 Default weights: $\alpha_E = 0.60$, $\alpha_I = 0.30$, $\alpha_C = 0.10$
 
-#### External Evidence Component (Eᵢ)
+#### External Evidence Component (Eᵢ) — Repository Adaptation
 
-Binary flag indicating independent corroboration:
+Binary flag indicating documentary corroboration:
 
 $$
 E_i = \begin{cases}
-1 & \text{if external evidence supports the episode} \\
+1 & \text{if documentary evidence supports the episode} \\
 0 & \text{otherwise}
 \end{cases}
 $$
 
-**Minimum rule for $E_i = 1$:**
-1. At least one official source (Civil Defense bulletin, municipal report) explicitly
-   reporting coastal impact within ±1 day of the detected episode, OR
-2. At least two independent non-official sources (news, social media) with consistent
-   date and location.
+**Ideal definition:** $E_i = 1$ if at least one independent external source
+(Civil Defense bulletin, municipal emergency report, independent news article)
+confirms coastal impact at the episode's municipality within the causal window.
+This ideally requires a broader, truly independent evidence layer.
+
+**Repository adaptation (current implementation):** Because the repository has
+limited documentary density, $E_i$ is computed from all event records available
+under `data/reported events/`:
+
+1. **Legacy Civil Defense database** (`reported_events_Karine_sc.csv`, 105 rows /
+   91 unique disaster IDs): Any legacy event at the same municipality and overlapping
+   temporal window sets $E_i = 1$. This is meaningful because many legacy events are
+   NOT in the expanded positive set (e.g., events after 2020, North-sector events
+   with lower documentary density in the expanded search).
+
+2. **Optional manual override** (`data/audit/unmatched_episode_audit.csv`): A
+   researcher-curated CSV can set $E_i$ explicitly for specific episodes.
+   Manual overrides take priority over the rule-based approach.
+
+**Note on independence:** This adaptation uses documentary sources that partially
+overlap with those used to define P. In the ideal case, $E_i$ would rely on a
+broader, fully independent evidence layer (national Civil Defense portal, broader
+news archive, social media monitoring). The current approach is an operational
+compromise documented here. The weight $\alpha_E = 0.60$ reflects confidence in
+the evidence quality; analysts who judge the overlap problematic should reduce
+$\alpha_E$ (see `config/PARAMETER_DECISIONS.md`).
 
 #### Physical Intensity Component (Iᵢ)
 
@@ -263,8 +310,12 @@ Where:
   (April–October for SC storm-wave impacts)
 - $C_i^{multi} = 1$ if at least one neighboring municipality or adjacent grid point also
   registers a temporally consistent compound episode within ±1 day
-- $C_i^{exposure} = 1$ if the municipality is identified as high-exposure in the project
-  vulnerability framework
+- $C_i^{exposure} = 1$ if the municipality is in the Northern sector of the Santa
+  Catarina coast (Itapoá, São Francisco do Sul, Araquari, Balneário Barra do Sul,
+  Barra Velha). **Rationale:** GLORYS12 and WAVERYS coverage is partially degraded
+  in this region, so real events there are more likely to appear as unmatched
+  detections. Assigning $C_i^{exposure} = 1$ increases plausibility of unmatched
+  episodes in the north, compensating for systematic model under-detection.
 
 ### Soft Unmatched Penalty
 
@@ -309,11 +360,22 @@ If multiple threshold pairs yield similar scores:
 
 ## Implementation Steps
 
-### Step 1: Load Step 2d Results
+### Step 1: Independent Threshold Sweep
 
-Load the CSI metrics grid and false alarm list from Step 2d outputs. This provides:
-- H(θ), M(θ), F(θ) for all 81 threshold pairs
-- List of unmatched episodes with dates, locations, and peak values
+**Step 2e performs its own independent threshold sweep. It does NOT load or
+re-use the Step 2d CSI metrics grid or false alarm list as analytical inputs.**
+
+The same threshold grid (q50–q90 in 5% steps, 81 pairs) is swept from scratch
+using the expanded documentary database (56 events, 1998–2020) as the positive
+set P. The Step 2d outputs are used only for the final comparison table
+(tab_TC5_csi_vs_pu_comparison.csv).
+
+**Step 2e sweep:**
+1. Load unified metocean dataset; clip to validated period [1998–2020 ± window]
+2. Build EventRecord objects from the 56 expanded events
+3. Compute SSH_total = zos + FES2022 tide per grid point
+4. Layer 1 (hits/misses): evaluate each event against each threshold pair
+5. Layer 2 (unmatched): collect episode details including peak Hₛ and SSH_total
 
 ### Step 2: Compute Physical Intensity (Iᵢ)
 

@@ -97,7 +97,7 @@ false alarms in the denominator. It ranges from 0 (no skill) to 1 (perfect detec
 | zos (SSH) | GLORYS12 (CMEMS) | Daily 00:00 UTC snapshot (only value available) | 1993–2025 | Same clip as VHM0 | GLORYS12 is a daily product; sub-daily SSH not available |
 | tide | FES2022 via eo-tides | **Daily maximum** (FES2022 at hourly resolution, daily max retained) | Evaluated at run time | Same clip applied via ssh_total_cache | `build_tide_cache(daily_max=True)` |
 | SSH_total | zos + tide | zos at 00:00 UTC + daily-max tide (approximation) | — | Same clip as zos | Computed per grid point; see limitation note below |
-| Observed events | Leal et al. (2024) | Daily (civil date) | 1998–2023 | 1998–2023 (full) | 91 events, 22 municipalities, 5 SC sectors |
+| Observed events | Leal et al. (2024) | Daily (civil date) | 1998–2023 | 1998–2023 (full) | **91 valid municipality×event rows** (105 raw rows; 14 removed by dropna); 72 unique disaster IDs; 22 municipalities, 5 SC sectors |
 
 **SSH_total temporal approximation**: Because GLORYS12 provides only one daily value (at 00:00 UTC)
 and the FES2022 tide is now the daily maximum (which may occur at any hour), SSH_total is the sum of two

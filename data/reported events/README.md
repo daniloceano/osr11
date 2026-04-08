@@ -6,12 +6,19 @@ This directory contains two complementary datasets of coastal impact episodes on
 
 ## Overview
 
-| File | Type | Period | N records (approx.) | Role |
-|------|------|--------|---------------------|------|
-| `reported_events_Karine_sc.csv` | Official civil-defence database | 1998–2023 | 105 | Primary calibration target |
+| File | Type | Period | N records | Role in workflow |
+|------|------|--------|-----------|-----------------|
+| `reported_events_Karine_sc.csv` | Official civil-defence database | 1998–2023 | **105 raw rows → 91 valid after cleaning** (72 unique disaster IDs) | Step 2d positive set; Step 2e E_i evidence source |
 | `reported_events_Karine_sc.xlsx` | Same — original Excel format | 1998–2023 | 105 | Source file for CSV generation |
-| `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` | Curated documentary archive | 1998–2020 | ~100+ | Supplementary auditing and event discovery |
-| `ressaca_sc_eventos_sc_1998_2020_repository_methodology.md` | Methodology document | — | — | Curation protocol for the curated archive |
+| `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` | Curated documentary archive | 1998–2020 | **56 unique municipality×date pairs** | Step 2e primary positive set (P=56) |
+| `ressaca_sc_eventos_sc_1998_2020_repository_methodology.md` | Methodology document | — | — | Curation protocol for the expanded archive |
+
+**Event count note:** The legacy CSV has 105 raw rows. After removing rows with missing
+disaster_id, municipality, or date (14 rows), **91 valid rows** remain. These 91 rows
+represent **municipality×disaster-id pairs** — some storms affected multiple municipalities
+(11 storms affected 2–5 municipalities each), so 91 rows map to only **72 unique
+disaster events**. Step 2d uses all 91 rows as independent observation records (H+M=91).
+The expanded documentary database has 56 unique (city, date) pairs with no duplication.
 
 ---
 
@@ -19,7 +26,9 @@ This directory contains two complementary datasets of coastal impact episodes on
 
 ### Description
 
-Table of 105 coastal disasters declared by municipalities in Santa Catarina, Brazil, covering 1998–2023. This is the **primary observational reference** for the threshold calibration workflow.
+Table of 105 raw rows (91 valid after cleaning, corresponding to 72 unique storm events) 
+of coastal disasters declared by municipalities in Santa Catarina, Brazil, covering 1998–2023.
+This is the **primary positive set for Step 2d** and an **evidence source for Step 2e E_i computation**.
 
 Records are derived from Brazilian official civil-defence registers and public disaster databases, compiled and published by Leal et al. (2024). Events represent officially declared coastal disasters with marine forcing (wave and/or storm-tide component).
 

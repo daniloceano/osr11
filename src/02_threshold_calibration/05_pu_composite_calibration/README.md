@@ -89,16 +89,17 @@ The rationale:
 
 ## What This Step Consumes
 
-| From | What |
-|------|------|
-| Step 1 | `data/test/metocean_sc_full_unified_waverys_grid.nc` — unified dataset |
-| Documentary search | `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` — 56 curated events |
-| Step 2b | Event record infrastructure, municipality→grid matching |
-| Step 2c | SSH_total definition (zos + FES2022 daily max tide) |
-| Step 2d | CSI metrics (for diagnostic comparison only — thresholds NOT used) |
-| Manual | `data/audit/unmatched_episode_audit.csv` — external evidence flags (Eᵢ) |
+| From | What | Role |
+|------|------|------|
+| Step 1 | `data/test/metocean_sc_full_unified_waverys_grid.nc` | Unified metocean dataset |
+| Documentary search | `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` | **Primary positive set P** (56 events) |
+| Legacy database | `reported_events_Karine_sc.csv` | **E_i evidence source** for unmatched episodes |
+| Step 2b | Event record infrastructure, municipality→grid matching | Infrastructure reuse |
+| Step 2c | SSH_total definition (zos + FES2022 daily max tide) | Variable definition |
+| Step 2d | CSI optimal pair and metrics | **Comparison only — NOT used for threshold selection** |
+| Manual (optional) | `data/audit/unmatched_episode_audit.csv` | E_i override for specific episodes |
 
-**Note:** Step 2e performs its own independent threshold sweep. The CSI-optimal thresholds from Step 2d are retained only for methodological comparison.
+**Step 2e performs its own independent threshold sweep.** The CSI-optimal thresholds from Step 2d are retained only for methodological comparison. The expanded documentary database (56 events) is the positive set P; the legacy database (105 rows / 91 unique disaster IDs) serves as a corroborating evidence source for E_i.
 
 ## What This Step Produces
 
@@ -122,15 +123,17 @@ src/02_threshold_calibration/05_pu_composite_calibration/
 ├── README.md                # This file
 ├── RUN.md                   # Quick-start guide
 ├── SCIENTIFIC_NOTES.md      # Full methodological documentation
+├── INTEGRATION_NOTES.md     # Workflow integration context
 ├── config/
 │   ├── __init__.py
-│   └── analysis_config.py   # Weights, paths, parameters
-├── main.py                  # CLI orchestrator (to be implemented)
-├── scoring.py               # Composite score computation (to be implemented)
-├── audit.py                 # qᵢ component calculations (to be implemented)
-├── sensitivity.py           # Sensitivity analysis (to be implemented)
-├── figures.py               # Visualization (to be implemented)
-└── utils.py                 # Helpers (to be implemented)
+│   ├── analysis_config.py   # All user-editable parameters (weights, paths, etc.)
+│   └── PARAMETER_DECISIONS.md  # Rationale for each parameter
+├── main.py                  # CLI orchestrator (--all, --hits-misses, --scoring, …)
+├── scoring.py               # Independent threshold sweep + composite score
+├── audit.py                 # q_i component calculations (E_i, I_i, C_i)
+├── sensitivity.py           # Sensitivity analysis (weights, alphas, B_target)
+├── figures.py               # Heatmaps, comparison plots, q_i distribution
+└── utils.py                 # Data loading, directory setup, logging
 ```
 
 ## Relationship to Step 2d
@@ -139,29 +142,43 @@ src/02_threshold_calibration/05_pu_composite_calibration/
 |--------|------------------------|------------------------|
 | **Purpose** | Diagnostic exploration | Threshold calibration |
 | **Objective** | Maximize CSI | Maximize composite score |
-| **Events database** | Leal et al. (91 events) | Expanded documentary (56 events) |
+| **Events database** | Leal et al. (91 rows / 72 unique storms) | Expanded documentary (56 rows) |
+| **Positive count P** | 91 (municipality×event pairs) | 56 (municipality×date pairs) |
 | **Unmatched episodes** | Counted as F (hard false alarms) | Weighted by plausibility qᵢ |
 | **Under-reporting** | Not addressed | Explicitly modeled |
-| **Threshold output** | CSI-optimal (for comparison only) | PU-optimal (final calibrated pair) |
+| **Threshold output** | CSI-optimal (comparison only) | PU-optimal (final calibrated pair) |
 
-**Step 2d was diagnostic, not prescriptive.** It revealed that classical CSI metrics fail under incomplete reporting (FAR=0.984). The CSI-optimal thresholds from Step 2d are **not used** by subsequent steps. Step 2e performs its own independent threshold sweep and produces the **final calibrated threshold pair** for use in Step 3 (Storm Catalog Generation).
+**Step 2d was diagnostic, not prescriptive.** It revealed that classical CSI metrics fail under incomplete reporting (FAR=0.984). The CSI-optimal thresholds from Step 2d are **not used** by Step 2e or any subsequent step. Step 2e performs its own independent threshold sweep and produces the **final calibrated threshold pair** for use in Step 3 (Storm Catalog Generation).
 
-## Manual Audit Process
+**Event count note:** The legacy database has 105 raw CSV rows → 91 valid rows after removing entries with missing date/municipality/disaster_id → 72 unique disaster IDs (storms). Step 2d uses 91 as the denominator (municipality×event pairs). Step 2e uses P=56 from the expanded database.
 
-Before running the full composite calibration, the researcher should:
+## Context Coherence: Northern-Sector Exposure
 
-1. **Export unmatched episodes** from Step 2d false alarm analysis
-2. **Audit top-priority episodes** (highest Iᵢ values) for external evidence
-3. **Record Eᵢ flags** in `data/audit/unmatched_episode_audit.csv`
+**C_i^exposure = 1** for municipalities in the **Northern sector** of the Santa Catarina coast:
 
-The audit can be incremental — non-audited episodes default to Eᵢ=0 while still contributing through Iᵢ and Cᵢ.
+- Itapoá, São Francisco do Sul, Araquari, Balneário Barra do Sul, Barra Velha
 
-### Audit CSV Format
+These municipalities are treated as high-exposure because GLORYS12/WAVERYS grid
+coverage is partially degraded in the northern sector (shallow bathymetry, complex
+coastline), making genuine coastal impacts more likely to appear as unmatched
+detections. This is configured in `config/analysis_config.py::EXPOSED_MUNICIPALITIES`.
+
+See `config/PARAMETER_DECISIONS.md` for full rationale.
+
+## External Evidence (E_i): Automatic + Optional Override
+
+**Automatic (default):** E_i is computed by checking whether any legacy Civil Defense
+record (`reported_events_Karine_sc.csv`) falls within the episode's municipality and
+temporal window. No manual audit required for basic operation.
+
+**Optional manual override:** A researcher-curated CSV at `data/audit/unmatched_episode_audit.csv`
+can override E_i for specific episodes. Only the `episode_id` and `E_i` columns are required.
+When present, manual flags take priority over the automatic rule.
 
 ```csv
-episode_id,municipality_code,date_start,date_end,E_i,evidence_source,audit_date,auditor_notes
-ep_001,4205407,2015-06-15,2015-06-16,1,"SC Civil Defense bulletin 2015-06-16",2026-04-08,Confirmed flooding in Florianópolis
-ep_002,4209102,2018-07-12,2018-07-12,0,,2026-04-08,No corroborating sources found
+episode_id,E_i,evidence_source,audit_date,auditor_notes
+hs85_ssh80_FLO_20150619,1,"SC Civil Defense bulletin",2026-04-08,Confirmed flooding
+hs70_ssh75_BAR_20180712,0,,2026-04-08,No corroborating sources found
 ```
 
 ## References
