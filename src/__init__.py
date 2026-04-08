@@ -15,7 +15,8 @@ src/
     ├── 01_exploratory_data_analysis/   # Sub-step 2a — EDA
     ├── 02_preliminary_compound/        # Sub-step 2b — Preliminary analysis
     ├── 03_tidal_sensitivity/           # Sub-step 2c — Tidal sensitivity
-    └── 04_csi_grid_scan/               # Sub-step 2d — CSI grid scan
+    ├── 04_csi_grid_scan/               # Sub-step 2d — CSI grid scan
+    └── 05_pu_composite_calibration/    # Sub-step 2e — PU composite calibration
 
 Adding a new numbered module:
     1. Create the directory (or git mv).
@@ -44,6 +45,7 @@ _MODULE_ALIASES: dict[str, str] = {
     "preliminary_compound":       "02_threshold_calibration/02_preliminary_compound",
     "tidal_sensitivity":          "02_threshold_calibration/03_tidal_sensitivity",
     "csi_grid_scan":              "02_threshold_calibration/04_csi_grid_scan",
+    "pu_composite_calibration":   "02_threshold_calibration/05_pu_composite_calibration",
 }
 
 

@@ -132,24 +132,42 @@ FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to
 **Status:** ✅ Complete  
 **Implementation:** `src/02_threshold_calibration/03_tidal_sensitivity/`
 
-#### Sub-step 2d — CSI Grid Scan
+#### Sub-step 2d — CSI Grid Scan (Diagnostic)
 
-81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR likely reflects Civil Defense under-reporting.
+81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Optimal CSI pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). The extremely high FAR (98.4%) revealed that classical verification metrics are unsuitable for this application due to systematic under-reporting in the Civil Defense database.
+
+**Purpose:** Diagnostic exploration — demonstrated the need for a PU-based approach.  
+**Note:** CSI thresholds are NOT used by subsequent steps; Step 2e performs independent calibration.
 
 **Status:** ✅ Complete  
 **Implementation:** `src/02_threshold_calibration/04_csi_grid_scan/`
 
-#### Sub-step 2e — False Alarm Attribution (planned)
+#### Sub-step 2e — PU Composite Calibration (Final Calibration)
 
-Cross-reference the 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI before advancing to Step 3.
+**Final threshold calibration** using a positive-unlabeled (PU) composite score that addresses systematic under-reporting. Uses an **expanded documentary database** (56 events) curated from news archives, academic theses, and technical reports with explicit marine-forcing evidence.
 
-**Status:** 🔄 Planned
+**Methodology:** The composite score balances three components:
+- **Positive recall** R_pos(θ) = H(θ) / P — fraction of reported events captured
+- **Annual burden** B(θ) — normalized detection rate (prevents excessive alerts)
+- **Soft unmatched penalty** F_soft(θ) — penalizes unmatched episodes weighted by their plausibility
+
+Each unmatched episode receives a confidence weight q_i based on:
+- **External evidence** (E_i): Civil Defense bulletins, municipal reports, news sources
+- **Physical intensity** (I_i): Percentile exceedance of detected peaks
+- **Context coherence** (C_i): Seasonal timing, neighboring detections, exposure status
+
+The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P, with default weights (0.60, 0.20, 0.20). Step 2e performs its own **independent threshold sweep** — it does NOT use thresholds from Step 2d.
+
+**Theoretical basis:** Positive-unlabeled learning framework (Bekker and Davis, 2020); impact observation bias (Wyatt et al., 2023; Delforge et al., 2025).
+
+**Status:** 🔧 Scaffolding complete (methodology defined, implementation pending)  
+**Implementation:** `src/02_threshold_calibration/05_pu_composite_calibration/`
 
 ---
 
 ### **STEP 3 — Storm Catalog Generation**
 
-For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances (using calibrated q90/q90 from Step 2d) and merging consecutive exceedances into single storm events. For each identified storm, record:
+For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances (using the PU-optimal thresholds from Step 2e) and merging consecutive exceedances into single storm events. For each identified storm, record:
 
 - Start time
 - End time  
