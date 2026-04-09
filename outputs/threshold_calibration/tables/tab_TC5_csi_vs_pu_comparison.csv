@@ -1,3 +1,0 @@
-method,events_db,validated_period,thr_hs_pct,thr_ssh_pct,H,metric_primary,FAR
-CSI (Step 2d),Legacy (91 unique IDs / 105 rows),1998–2023,0.9,0.9,21.0,CSI=0.0151,0.9840788476118272
-PU Composite (Step 2e),Expanded documentary (56 events),1998–2020,0.9,0.9,15.0,Score=-3.3987,N/A (PU framework)

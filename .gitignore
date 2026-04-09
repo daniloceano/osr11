@@ -27,6 +27,7 @@ data/test/metocean_sc_sul_unified_waverys_grid.nc
 outputs/south_sc_test_data_exploratory/*
 outputs/preliminary_compound/*
 outputs/tidal_sensitivity/*
+outputs/threshold_calibration/*
 
 # Logs
 logs/*.log
