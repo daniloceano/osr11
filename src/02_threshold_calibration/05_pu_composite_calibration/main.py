@@ -341,7 +341,16 @@ def main(args: argparse.Namespace | None = None) -> None:
         if records is None:
             ds, time_index, records, events_combined, legacy_df, n_years, n_union_cities = \
                 _load_data_and_records(CFG)
+            log.info("Computing FES2022 daily-maximum tidal series...")
             tide_cache = build_tide_cache(records, daily_max=True)
+            # Validate — SSH_total = zos + FES tide is mandatory; no fallback allowed
+            failed = [k for k, v in tide_cache.items() if v is None or not v.notna().any()]
+            if failed:
+                raise RuntimeError(
+                    f"FES2022 tide failed for {len(failed)} grid point(s). "
+                    "Run inside the 'osr' conda environment with eo_tides installed."
+                )
+            log.info("FES2022 tide validated for %d grid point(s).", len(tide_cache))
             ssh_total_cache = build_ssh_total_cache_pu(records, tide_cache)
 
         # Determine n_years from clipped time index

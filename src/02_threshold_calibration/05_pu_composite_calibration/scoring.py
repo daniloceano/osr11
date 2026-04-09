@@ -674,16 +674,23 @@ def get_event_capture_status(
         peak_ssh_causal: float — max SSH_total in causal window
         thr_hs        : float — local Hₛ threshold at the event's grid point
         thr_ssh       : float — local SSH_total threshold
-        source        : str   — "expanded" | "legacy" | "both" | "unknown"
+        source        : str   — "expanded" | "legacy" | "both" | "unknown" (provenance audit)
+        coastal_sector: str   — coastal sector name from the events database (empty if unknown)
     """
-    # Source lookup keyed by disaster_id (if available)
+    # Provenance lookup keyed by disaster_id (if available)
     source_map: dict[int, str] = {}
-    if events_combined is not None and "disaster_id" in events_combined.columns \
-            and "source" in events_combined.columns:
-        source_map = dict(
-            zip(events_combined["disaster_id"].astype(int),
-                events_combined["source"].astype(str))
-        )
+    sector_map_ev: dict[int, str] = {}
+    if events_combined is not None and "disaster_id" in events_combined.columns:
+        if "source" in events_combined.columns:
+            source_map = dict(
+                zip(events_combined["disaster_id"].astype(int),
+                    events_combined["source"].astype(str))
+            )
+        if "coastal_sector" in events_combined.columns:
+            sector_map_ev = dict(
+                zip(events_combined["disaster_id"].astype(int),
+                    events_combined["coastal_sector"].astype(str))
+            )
 
     rows: list[dict] = []
     for rec in records:
@@ -721,6 +728,7 @@ def get_event_capture_status(
             "thr_hs":         thr_hs,
             "thr_ssh":        thr_ssh,
             "source":         source_map.get(int(rec.disaster_id), "unknown"),
+            "coastal_sector": sector_map_ev.get(int(rec.disaster_id), ""),
         })
 
     df = pd.DataFrame(rows)

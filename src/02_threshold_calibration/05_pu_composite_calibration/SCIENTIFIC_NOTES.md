@@ -101,73 +101,38 @@ unmatched detections.
 
 ## Reported Events Database
 
-### Expanded Documentary Archive
+### Combined Positive-Event Set (Step 2e)
 
-Step 2e uses the UNION of both event databases as its positive set (see `load_combined_events()` in utils.py). The expanded documentary database is one of the two components:
+Step 2e uses a single harmonized positive-event set assembled from two input databases
+(see `load_combined_events()` in utils.py). The combined set is the analytical object;
+individual database provenance is retained in `tab_TC5_positive_event_union_audit.csv`
+for reproducibility and audit purposes, but is not a primary analytical distinction.
 
-**File:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv`
-**Methodology:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_repository_methodology.md`
+**Combined set:**
+- **P = 147** unique (municipality, date) pairs
+- **27 unique municipalities** across 5 coastal sectors (SC coast)
+- **Period:** 1998–2020
+- **Exact overlaps:** 0 (confirmed by audit)
+- **Near-matches:** 1 (Florianópolis, ±3 days; not a duplicate)
+- **B_target_effective:** 12 ep/yr/muni × 27 munis = 324 ep/yr
 
-| Attribute | Value |
-|-----------|-------|
-| Events | 56 documented `ressaca` episodes |
-| Period | 1998–2020 |
-| Resolution | Municipality × date |
-| Sources | Academic theses/dissertations, news archives, technical reports, Civil Defense materials |
+All 147 events are treated as equally reliable positive labels within the PU framework.
 
-### Documentary Search Protocol
+**Database provenance (for reproducibility):**
 
-The expanded database was assembled through forensic-style documentary search:
+| Component | N | Period | Primary sources |
+|-----------|---|--------|----------------|
+| Documentary archive | 56 | 1998–2020 | Theses, news, technical reports |
+| Civil Defense records (Leal et al.) | 91 | 1998–2023 | Civil Defense disaster records |
+| **Combined (union)** | **147** | 1998–2020 | **both** |
 
-1. **Broad exploratory searches** — identify institutions and archives reporting storm-tide impacts
-2. **Targeted source chasing** — references in one document used to locate supporting material
-3. **Event-by-event extraction** — retain only municipality-date pairs with explicit marine-forcing evidence
+See `tab_TC5_positive_event_union_audit.csv` for the full per-row provenance audit.
 
-### Inclusion Criteria
-
-An event was included only when source text clearly supported **marine-forced coastal disturbance**:
-
-- `ressaca do mar` or strong-wave coastal impact
-- Marine water intrusion into built-up coastal areas
-- Storm-tide or positive sea-level coastal inundation
-- Overtopping or shoreline erosion explicitly associated with wave action
-
-The following were **excluded**:
-- Rainfall-only flooding
-- Inland flash flooding or river flooding
-- Wind damage without documented coastal inundation
-- Generic civil-defence reports lacking clear marine-process reference
-
-### Comparison with Legacy Database
-
-| Aspect | Legacy (Leal et al.) | Expanded Documentary |
-|--------|---------------------|---------------------|
-| Raw CSV rows | 105 | 56 |
-| Valid rows after cleaning | **91** (municipality × disaster pairs) | **56** (all unique municipality × date pairs) |
-| Unique disaster IDs / events | **72** independent storms | N/A (no common disaster ID) |
-| Period | 1998–2023 | 1998–2020 |
-| Primary sources | Civil Defense records | News, theses, reports |
-| Marine-forcing evidence | Variable quality | Explicit requirement |
-| Source traceability | Limited | URL + title for each event |
-
-**Event count clarification:**
-The "91 events" cited in Step 2d documentation refers to the **91 valid municipality×disaster-id rows** 
-after removing entries with missing dates, municipality names, or IDs (105 raw rows → 91 valid). 
-These 91 rows correspond to **72 unique storm events** (some storms affected multiple municipalities, 
-contributing more than one row).
-
-Step 2d evaluates each municipality×event row independently (H, M counted per municipality),
-so the relevant denominator for Step 2d POD is 91 rows, not 72 storms.
-
-**For Step 2e, the positive set P is the UNION of both databases:**
-P = 147 unique (municipality, date) pairs (56 expanded + 91 legacy, 0 exact overlaps)
-from 27 unique municipalities (union of 14 expanded + 22 legacy cities).
-See `load_combined_events()` in utils.py and `tab_TC5_positive_event_union_audit.csv`.
-
-The union framework ensures the scoring uses the broadest possible set of confirmed impacts.
-The expanded database provides additional marine-forcing specificity; the legacy database
-provides additional spatial and temporal coverage. Both are treated as equally reliable
-positive labels within the PU framework.
+**Step 2d compatibility note:**
+Step 2d uses 91 municipality×event rows (from the Civil Defense database) with the CSI
+framework. Step 2e uses 147 events (combined set) with the PU framework. The comparison
+table `tab_TC5_csi_vs_pu_comparison.csv` accounts for this difference when comparing
+optimal pairs across steps.
 
 ---
 
@@ -371,13 +336,13 @@ If multiple threshold pairs yield similar scores:
 re-use the Step 2d CSI metrics grid or false alarm list as analytical inputs.**
 
 The same threshold grid (q50–q90 in 5% steps, 81 pairs) is swept from scratch
-using the expanded documentary database (56 events, 1998–2020) as the positive
-set P. The Step 2d outputs are used only for the final comparison table
+using the combined harmonized positive-event set (147 events, 27 municipalities) as
+the positive set P. The Step 2d outputs are used only for the final comparison table
 (tab_TC5_csi_vs_pu_comparison.csv).
 
 **Step 2e sweep:**
 1. Load unified metocean dataset; clip to validated period [1998–2020 ± window]
-2. Build EventRecord objects from the 56 expanded events
+2. Build EventRecord objects from the 147 combined positive events
 3. Compute SSH_total = zos + FES2022 tide per grid point
 4. Layer 1 (hits/misses): evaluate each event against each threshold pair
 5. Layer 2 (unmatched): collect episode details including peak Hₛ and SSH_total

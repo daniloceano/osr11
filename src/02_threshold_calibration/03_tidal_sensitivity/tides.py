@@ -189,11 +189,18 @@ def build_tide_cache(
             else:
                 tide_series = compute_tides_for_point(lat, lon, time_idx)
             cache[(lat, lon)] = tide_series
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                f"FES2022 tide model requires 'eo_tides' (not found: {exc}). "
+                "Run the pipeline inside the 'osr' conda environment where eo_tides is installed. "
+                "SSH_total = zos + FES tide is mandatory for Step 2e; there is no acceptable fallback."
+            ) from exc
         except Exception as exc:
-            log.warning("  FES2022 failed at (%.4f, %.4f): %s — filling with NaN", lat, lon, exc)
-            cache[(lat, lon)] = pd.Series(
-                np.nan, index=time_idx, name=CFG["tide_var_name"]
-            )
+            raise RuntimeError(
+                f"FES2022 tide computation failed at (lat={lat:.4f}, lon={lon:.4f}): {exc}. "
+                "Verify that tide model files exist in the configured directory "
+                f"({CFG.get('tide_models_dir', 'not set')}) and that eo_tides is installed."
+            ) from exc
 
     log.info("Tide computation complete for %d grid points.", len(cache))
     return cache

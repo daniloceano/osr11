@@ -255,18 +255,34 @@ export const tc5Figures: FigureItem[] = [
   },
   {
     filename: 'tc5_summary/fig_TC5_A2_city_source_audit.png',
-    title: 'Municipality Source Audit — Combined Positive-Event Set',
+    title: 'Municipality Audit Map — Combined Positive-Event Set (SC Coast)',
     caption:
-      'Georeferenced map (Santa Catarina coast, cartopy/Natural Earth) of the 27 unique municipalities in the combined positive-event set, coloured by source database: green triangles (▲) = expanded-only (56 events); blue squares (■) = legacy-only (91 events); red circles (●) = both databases (0 exact overlaps confirmed). Open circles mark matched WAVERYS/GLORYS12 grid points; thin lines connect municipality centroids to grid points. Municipalities marked ★ have near-match events (within ±3 days at the same city across databases; confirmed at Florianópolis). Verification: 147 total events, 0 exact (municipality, date) overlaps, 27 unique cities (union of 14 expanded + 22 legacy), B_target_effective = 12 × 27 = 324 ep/yr.',
+      'Georeferenced map (Santa Catarina coast, cartopy/Natural Earth) of the 27 unique municipalities in the combined 147-event positive set. Open circles mark the matched WAVERYS/GLORYS12 grid points; thin lines connect municipality centroids to grid points. Municipalities marked ★ have near-match events across constituent databases (within ±3 days; confirmed at Florianópolis). The combined positive set is the analysis object for Step 2e. Total: 147 events, 27 municipalities, B_target_effective = 12 × 27 = 324 ep/yr. Database provenance details are available in tab_TC5_positive_event_union_audit.csv.',
     group: 'City Audit',
     part: 'Step 2e',
   },
-  // Event-level capture diagnostic (E series)
+  // Event-level capture diagnostics (E series) — sector-coloured, SSH_total mandatory
   {
     filename: 'tc5_summary/fig_TC5_E1_event_capture.png',
-    title: 'Event-level Capture Diagnostic — Peak Hₛ at Optimal Pair (Hs dimension)',
+    title: 'TC5-E1 — Peak Hₛ per Event, by Coastal Sector (PU-optimal pair)',
     caption:
-      'Peak Hₛ within the causal window [D-2 … D+1] for all 147 combined positive events, sorted by source then date. Filled markers = above local Hₛ q90 threshold; open markers = below threshold. Colour encodes event source: green = expanded documentary database, blue = legacy Civil Defense database. The dashed horizontal line is the median local Hₛ threshold (q90) across all grid points (individual thresholds vary). Light green shading marks the zone above the median threshold. NOTE: the SSH_total dimension is not shown in this rendering because FES2022 tidal data (eo_tides) was unavailable at figure-generation time; the full compound capture criterion (Hₛ ∧ SSH_total) was applied during scoring and yielded H=15 hits at q90/q90. Regenerate with eo_tides installed for the full 2-D scatter. Analogous to Step 2d TC4-S5 peak scatter but using the combined 147-event positive set.',
+      'Peak Hₛ within the causal window [D-2 … D+1] for all 147 combined positive events sorted by coastal sector (canonical order: North → Central-north → Central → Central-south → South) and then by date. Colour encodes coastal sector, consistent with Step 2d sector-colour convention (SECTOR_COLORS). Filled markers = captured (compound hit at Hₛ q90 ∧ SSH_total q90); open = missed. Dashed horizontal line = median local Hₛ q90 threshold across all grid points (individual thresholds vary). Light green shading marks the zone above the median threshold.',
+    group: 'Event Capture',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_E2_ssh_capture.png',
+    title: 'TC5-E2 — Peak SSH_total per Event, by Coastal Sector (PU-optimal pair)',
+    caption:
+      'Analogous to TC5-E1 but with peak SSH_total = zos + FES2022 tide on the y-axis. Events sorted by coastal sector then date. SSH_total is computed as the daily-maximum SSH (GLORYS12 zos) plus the FES2022 astronomical tide at hourly resolution, resampled to daily maxima. Dotted horizontal line = median local SSH_total q90 threshold. Light blue shading marks the zone above the threshold. Filled = captured; open = missed at the PU-optimal pair (q90/q90).',
+    group: 'Event Capture',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_E3_peak_scatter.png',
+    title: 'TC5-E3 — Peak Hₛ vs SSH_total Scatter (PU-optimal pair)',
+    caption:
+      'Scatter of peak Hₛ (x-axis) vs peak SSH_total = zos + FES2022 tide (y-axis) within the causal window [D-2 … D+1] for all 147 combined positive events. Colour encodes coastal sector; filled = captured (compound hit), open = missed at the PU-optimal pair (Hₛ q90 / SSH_total q90). Dashed and dotted reference lines show the median local thresholds across grid points. Light green shading marks the zone where both thresholds are exceeded. This figure is the Step 2e analogue of Step 2d TC4-S5, applied to the final combined 147-event positive set.',
     group: 'Event Capture',
     part: 'Step 2e',
   },
