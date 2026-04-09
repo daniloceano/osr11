@@ -89,6 +89,7 @@ from src.pu_composite_calibration.scoring import (
     compute_pu_scores,
     rank_combinations_pu,
     select_optimal_pair_pu,
+    get_event_capture_status,
 )
 from src.pu_composite_calibration.audit import (
     build_episode_audit_table,
@@ -308,11 +309,12 @@ def main(args: argparse.Namespace | None = None) -> None:
         )
 
     # ── Scoring ───────────────────────────────────────────────────────────────
-    df_scores  = None
-    audit_df   = None
-    optimal    = None
-    df_ranked  = None
-    P          = None   # total positive events (len of expanded events DB)
+    df_scores       = None
+    audit_df        = None
+    optimal         = None
+    df_ranked       = None
+    P               = None   # total positive events (len of expanded events DB)
+    event_status_df = None   # per-event capture status at optimal pair (for TC5-E1)
 
     if run_all or getattr(args, "scoring", False):
         # Load cached intermediate results if not produced in this run
@@ -404,6 +406,43 @@ def main(args: argparse.Namespace | None = None) -> None:
 
         # ── Step 2d comparison table ───────────────────────────────────────────
         _save_csi_comparison(optimal, tab_dir)
+
+        # ── Per-event capture status at optimal pair (for TC5-E1 figure) ───────
+        log.info("Computing per-event capture status at optimal pair...")
+        event_status_df = get_event_capture_status(
+            records=records,
+            ssh_total_cache=ssh_total_cache,
+            time_index=time_index,
+            thr_hs_pct=float(optimal["thr_hs_pct"]),
+            thr_ssh_pct=float(optimal["thr_ssh_pct"]),
+            offsets=CFG["match_window_offsets"],
+            events_combined=events_combined,
+        )
+        event_status_df.to_csv(tab_dir / "tab_TC5_event_capture_status.csv", index=False)
+        log.info("Saved: tab_TC5_event_capture_status.csv")
+
+        # ── Positive-event union audit table ──────────────────────────────────
+        # Augments tab_TC5_event_provenance.csv with explicit binary source flags
+        # and source_class label for transparent external verification.
+        _prov_path = tab_dir / "tab_TC5_event_provenance.csv"
+        if _prov_path.exists():
+            _prov = pd.read_csv(_prov_path, parse_dates=["date"])
+            _prov["source_expanded"] = _prov["source"].isin(["expanded", "both"])
+            _prov["source_legacy"]   = _prov["source"].isin(["legacy", "both"])
+            _prov["source_class"]    = _prov["source"].map({
+                "expanded": "expanded_only",
+                "legacy":   "legacy_only",
+                "both":     "both",
+            }).fillna("unknown")
+            _prov.to_csv(tab_dir / "tab_TC5_positive_event_union_audit.csv", index=False)
+            log.info(
+                "Saved: tab_TC5_positive_event_union_audit.csv  "
+                "(n=%d  expanded_only=%d  legacy_only=%d  both=%d)",
+                len(_prov),
+                int((_prov["source_class"] == "expanded_only").sum()),
+                int((_prov["source_class"] == "legacy_only").sum()),
+                int((_prov["source_class"] == "both").sum()),
+            )
 
         # ── Scoring metadata (for partial re-runs like --sensitivity alone) ────
         Path(_META_CACHE).parent.mkdir(parents=True, exist_ok=True)
@@ -507,8 +546,12 @@ def main(args: argparse.Namespace | None = None) -> None:
         from config.plot_config import apply_publication_style
         apply_publication_style()
         log.info("Generating figures...")
-        # run_all_figures will load tab_TC5_event_provenance.csv from disk if available.
-        run_all_figures(df_scores, df_ranked, optimal, audit_df, CFG)
+        # run_all_figures loads tab_TC5_event_provenance.csv and
+        # tab_TC5_event_capture_status.csv from disk if not passed in-memory.
+        run_all_figures(
+            df_scores, df_ranked, optimal, audit_df, CFG,
+            event_status_df=event_status_df,
+        )
 
     # ── Summary ───────────────────────────────────────────────────────────────
     if run_all or getattr(args, "summary", False):

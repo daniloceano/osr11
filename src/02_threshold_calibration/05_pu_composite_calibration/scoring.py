@@ -634,3 +634,100 @@ def select_optimal_pair_pu(df_scores: pd.DataFrame) -> dict:
         best["U"],
     )
     return best.drop("rank").to_dict()
+
+
+def get_event_capture_status(
+    records: list,
+    ssh_total_cache: dict,
+    time_index: "pd.DatetimeIndex",
+    thr_hs_pct: float,
+    thr_ssh_pct: float,
+    offsets: list[int],
+    events_combined: "pd.DataFrame | None" = None,
+) -> pd.DataFrame:
+    """Return per-event capture status and peak values at a specific threshold pair.
+
+    Evaluates each event record against the given threshold pair and computes
+    the peak Hₛ and peak SSH_total within the causal window for scatter-plot
+    diagnostics (analogous to Step 2d's plot_peak_scatter data preparation).
+
+    Parameters
+    ----------
+    records : list[EventRecord]
+    ssh_total_cache : dict mapping (lat, lon) → SSH_total pd.Series
+    time_index : pd.DatetimeIndex
+    thr_hs_pct, thr_ssh_pct : float — threshold percentiles (e.g. 0.90)
+    offsets : list[int] — causal window offsets (e.g. [-2, -1, 0, 1])
+    events_combined : optional combined events DataFrame with 'disaster_id' and
+        'source' columns.  When supplied, the source label ("expanded",
+        "legacy", "both") is joined to each row by disaster_id.
+
+    Returns
+    -------
+    DataFrame with columns:
+        event_idx     : int
+        disaster_id   : int
+        municipality  : str
+        date          : pd.Timestamp
+        captured      : bool
+        peak_hs_causal: float — max Hₛ in causal window [D-2, D+1]
+        peak_ssh_causal: float — max SSH_total in causal window
+        thr_hs        : float — local Hₛ threshold at the event's grid point
+        thr_ssh       : float — local SSH_total threshold
+        source        : str   — "expanded" | "legacy" | "both" | "unknown"
+    """
+    # Source lookup keyed by disaster_id (if available)
+    source_map: dict[int, str] = {}
+    if events_combined is not None and "disaster_id" in events_combined.columns \
+            and "source" in events_combined.columns:
+        source_map = dict(
+            zip(events_combined["disaster_id"].astype(int),
+                events_combined["source"].astype(str))
+        )
+
+    rows: list[dict] = []
+    for rec in records:
+        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
+        ssh_total_clim = ssh_total_cache.get(key, pd.Series(dtype=float))
+
+        captured = _evaluate_event_pu(
+            rec, ssh_total_clim, thr_hs_pct, thr_ssh_pct, time_index, offsets
+        )
+
+        # Local thresholds at this grid point
+        thr_hs  = _local_threshold(rec.hs_clim, thr_hs_pct)
+        thr_ssh = _local_threshold(ssh_total_clim, thr_ssh_pct)
+
+        # Peak values within causal window [D-2, D+1]
+        event_dt  = pd.Timestamp(rec.date)
+        win_start = event_dt - pd.Timedelta(days=2)
+        win_end   = event_dt + pd.Timedelta(days=1)
+
+        hs_win  = rec.hs_clim.loc[win_start:win_end]
+        ssh_win = ssh_total_clim.loc[win_start:win_end] \
+            if not ssh_total_clim.empty else pd.Series(dtype=float)
+
+        peak_hs  = float(hs_win.max())  if hs_win.notna().any()  else float("nan")
+        peak_ssh = float(ssh_win.max()) if ssh_win.notna().any() else float("nan")
+
+        rows.append({
+            "event_idx":      int(rec.event_idx),
+            "disaster_id":    int(rec.disaster_id),
+            "municipality":   rec.municipality,
+            "date":           pd.Timestamp(rec.date),
+            "captured":       bool(captured),
+            "peak_hs_causal": peak_hs,
+            "peak_ssh_causal": peak_ssh,
+            "thr_hs":         thr_hs,
+            "thr_ssh":        thr_ssh,
+            "source":         source_map.get(int(rec.disaster_id), "unknown"),
+        })
+
+    df = pd.DataFrame(rows)
+    n_hit  = int(df["captured"].sum())
+    n_miss = len(df) - n_hit
+    log.info(
+        "Event capture status at hs=q%.0f / ssh=q%.0f: H=%d  M=%d  (of %d evaluable events)",
+        thr_hs_pct * 100, thr_ssh_pct * 100, n_hit, n_miss, len(df),
+    )
+    return df

@@ -103,7 +103,7 @@ unmatched detections.
 
 ### Expanded Documentary Archive
 
-Step 2e uses an expanded documentary database curated specifically to support PU calibration:
+Step 2e uses the UNION of both event databases as its positive set (see `load_combined_events()` in utils.py). The expanded documentary database is one of the two components:
 
 **File:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv`
 **Methodology:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_repository_methodology.md`
@@ -159,10 +159,15 @@ contributing more than one row).
 Step 2d evaluates each municipality×event row independently (H, M counted per municipality),
 so the relevant denominator for Step 2d POD is 91 rows, not 72 storms.
 
-For Step 2e, P = 56 municipality×date pairs from the expanded documentary database.
+**For Step 2e, the positive set P is the UNION of both databases:**
+P = 147 unique (municipality, date) pairs (56 expanded + 91 legacy, 0 exact overlaps)
+from 27 unique municipalities (union of 14 expanded + 22 legacy cities).
+See `load_combined_events()` in utils.py and `tab_TC5_positive_event_union_audit.csv`.
 
-The expanded database has fewer events but more rigorous marine-forcing evidence, making it
-better suited for PU calibration where the positive class must be reliably labeled.
+The union framework ensures the scoring uses the broadest possible set of confirmed impacts.
+The expanded database provides additional marine-forcing specificity; the legacy database
+provides additional spatial and temporal coverage. Both are treated as equally reliable
+positive labels within the PU framework.
 
 ---
 
@@ -172,7 +177,7 @@ better suited for PU calibration where the positive class must be reliably label
 
 Let:
 - $\mathcal{R} = \{r_j\}_{j=1}^{P}$ — set of reported coastal-impact events
-- $P = |\mathcal{R}| = 56$ — number of reported events (expanded documentary database)
+- $P = |\mathcal{R}| = 147$ — combined positive-event set (expanded 56 + legacy 91, 0 exact overlaps, 27 municipalities)
 - $\theta = (\tau_{Hs}, \tau_{SSH})$ — candidate threshold pair (local percentiles)
 - $H(\theta)$ — number of reported events captured (hits)
 - $M(\theta)$ — number of reported events not captured (misses)

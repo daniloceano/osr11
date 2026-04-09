@@ -183,11 +183,15 @@ export const figureGroups = [
 
 export const tc5Figures: FigureItem[] = [
   // Score heatmaps (H series)
+  // Colour convention (consistent across all four heatmaps):
+  //   lighter cell = better result  /  darker cell = worse result
+  //   Maximize metrics (H1, H2): YlGn_r — high value = light yellow, low = dark green
+  //   Minimize metrics (H3, H4): YlOrRd — low value = light yellow, high = dark red
   {
     filename: 'tc5_summary/fig_TC5_H1_score_heatmap.png',
     title: 'PU Composite Score Surface — Threshold Grid',
     caption:
-      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Each cell shows the score for one threshold pair. The optimal pair (marked by a rectangle) maximises Score, balancing positive recall against annual burden and soft unmatched penalty. Higher values (greener) indicate a better trade-off. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). Combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities, 1998–2020.',
+      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Colour scale: lighter (yellow) = higher score = better; darker (green) = lower score = worse. The optimal pair (black rectangle) maximises Score. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). Combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities, 1998–2020.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -195,7 +199,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H2_recall_heatmap.png',
     title: 'Positive Recall R_pos Surface — Threshold Grid',
     caption:
-      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. R_pos measures what fraction of the combined positive-event set (147 events: expanded 56 + legacy 91, 27 municipalities) is captured by the compound detector at each threshold pair. As expected, more permissive (lower percentile) thresholds capture more events, but this comes at the cost of higher annual burden. The optimal pair is marked with a rectangle.',
+      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. Colour scale: lighter (yellow) = higher recall = better; darker (green) = lower recall = worse. More permissive (lower percentile) thresholds capture more events at the cost of higher burden. Combined positive-event set: 147 events (expanded 56 + legacy 91, 27 municipalities). The optimal pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -203,7 +207,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H3_burden_heatmap.png',
     title: 'Annual Burden B(θ) Surface — Threshold Grid',
     caption:
-      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. B measures whether the detector fires more often than the operational budget allows. B_target_effective = 12 ep/yr/muni × 27 municipalities (union of expanded + legacy) = 324 ep/yr total. Warmer colours indicate higher detection frequency (exceeding the budget). The optimal pair is marked with a rectangle.',
+      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. Colour scale: lighter (yellow) = lower burden = better; darker (red) = higher burden = worse. B_target_effective = 12 ep/yr/muni × 27 municipalities (union of expanded + legacy) = 324 ep/yr total. The optimal pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -211,7 +215,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H4_fsoft_heatmap.png',
     title: 'Normalised Soft Penalty F_soft(θ)/P Surface — Threshold Grid',
     caption:
-      'Heatmap of the soft unmatched penalty F_soft(θ)/P across the 9×9 threshold grid. F_soft = Σᵢ(1 − qᵢ) aggregates the plausibility-weighted sum of unmatched episodes: low qᵢ = low confidence the episode corresponds to a real event (large penalty); high qᵢ = plausible unmatched episode (small penalty). Normalised by P (total confirmed events) for comparability with R_pos. Lower is better.',
+      'Heatmap of the soft unmatched penalty F_soft(θ)/P across the 9×9 threshold grid. F_soft = Σᵢ(1 − qᵢ): low qᵢ = low plausibility (large penalty); high qᵢ = plausible unmatched episode (small penalty). Colour scale: lighter (yellow) = lower penalty = better; darker (red) = higher penalty = worse. Normalised by P (147 combined events). The optimal pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -253,8 +257,17 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_A2_city_source_audit.png',
     title: 'Municipality Source Audit — Combined Positive-Event Set',
     caption:
-      'Geographic scatter of the 27 unique municipalities in the combined positive-event set, plotted on the Santa Catarina coast and coloured by source database: green triangles = expanded-only (5 cities: Biguaçu, Imbituba, Joinville, Laguna, Tijucas); blue squares = legacy-only (13 cities); red circles = both databases (9 cities: Balneário Camboriú, Barra Velha, Bombinhas, Florianópolis, Itajaí, Palhoça, Passo de Torres, Porto Belo, São Francisco do Sul). Open circles mark matched WAVERYS/GLORYS12 grid points. Municipalities marked ★ have near-match events (within ±3 days at the same city across databases; found at Florianópolis). Four expanded cities (Biguaçu, Imbituba, Joinville, Laguna) lack grid associations and are structural misses in the scoring.',
+      'Georeferenced map (Santa Catarina coast, cartopy/Natural Earth) of the 27 unique municipalities in the combined positive-event set, coloured by source database: green triangles (▲) = expanded-only (56 events); blue squares (■) = legacy-only (91 events); red circles (●) = both databases (0 exact overlaps confirmed). Open circles mark matched WAVERYS/GLORYS12 grid points; thin lines connect municipality centroids to grid points. Municipalities marked ★ have near-match events (within ±3 days at the same city across databases; confirmed at Florianópolis). Verification: 147 total events, 0 exact (municipality, date) overlaps, 27 unique cities (union of 14 expanded + 22 legacy), B_target_effective = 12 × 27 = 324 ep/yr.',
     group: 'City Audit',
+    part: 'Step 2e',
+  },
+  // Event-level capture diagnostic (E series)
+  {
+    filename: 'tc5_summary/fig_TC5_E1_event_capture.png',
+    title: 'Event-level Capture Diagnostic — Peak Hₛ at Optimal Pair (Hs dimension)',
+    caption:
+      'Peak Hₛ within the causal window [D-2 … D+1] for all 147 combined positive events, sorted by source then date. Filled markers = above local Hₛ q90 threshold; open markers = below threshold. Colour encodes event source: green = expanded documentary database, blue = legacy Civil Defense database. The dashed horizontal line is the median local Hₛ threshold (q90) across all grid points (individual thresholds vary). Light green shading marks the zone above the median threshold. NOTE: the SSH_total dimension is not shown in this rendering because FES2022 tidal data (eo_tides) was unavailable at figure-generation time; the full compound capture criterion (Hₛ ∧ SSH_total) was applied during scoring and yielded H=15 hits at q90/q90. Regenerate with eo_tides installed for the full 2-D scatter. Analogous to Step 2d TC4-S5 peak scatter but using the combined 147-event positive set.',
+    group: 'Event Capture',
     part: 'Step 2e',
   },
 ];
@@ -265,4 +278,5 @@ export const tc5FigureGroups = [
   'Sensitivity',
   'Episode Audit',
   'City Audit',
+  'Event Capture',
 ];

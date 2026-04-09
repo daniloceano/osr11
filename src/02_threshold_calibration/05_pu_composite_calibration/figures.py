@@ -30,9 +30,22 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 # ── Shared colour maps ─────────────────────────────────────────────────────────
-_SCORE_CMAP  = "RdYlGn"   # diverging: red=bad, green=good
-_METRIC_CMAP = "viridis"
-_BURDEN_CMAP = "YlOrRd"   # low burden (yellow) → high burden (red)
+# Convention (applied consistently across ALL Step 2e heatmaps):
+#   lighter colour = better result  /  darker colour = worse result
+#
+# Maximize metrics (Score, Recall): higher value = better → use reversed
+#   sequential colourmap so the HIGH end is LIGHT (yellow/white) and the
+#   LOW end is DARK (green).  YlGn_r: 0 → dark green (bad), 1 → yellow (good).
+#
+# Minimize metrics (Burden B, Soft penalty F_soft/P): lower value = better →
+#   use forward sequential colourmap so the LOW end is LIGHT (yellow) and the
+#   HIGH end is DARK (red).  YlOrRd: 0 → yellow (good), 1 → dark red (bad).
+#
+# This ensures that a quick visual scan always associates "lighter cell" with
+# "better result" regardless of which metric is being displayed.
+_SCORE_CMAP  = "YlGn_r"   # reversed yellow→green: low score=dark green, high score=yellow (light)
+_METRIC_CMAP = "YlGn_r"   # same convention for recall (maximize)
+_BURDEN_CMAP = "YlOrRd"   # forward yellow→red: low burden=yellow (light/good), high=dark red (bad)
 
 
 # ── Internal helper: 9×9 pivot for heatmaps ──────────────────────────────────
@@ -487,11 +500,14 @@ def plot_city_source_audit(
     grid_ref_path: "Path",
     output_path: "Path",
 ) -> None:
-    """Scatter plot of combined-event municipalities on the SC coast, coloured by source.
+    """Map of combined-event municipalities on the SC coast, coloured by database source.
 
     Shows which municipalities come from the expanded database only, the legacy
     database only, or both — as a geographic audit of the combined positive set.
-    Grid point positions are overlaid as circles; municipality centroids as stars.
+    Uses cartopy for a properly georeferenced map with coastline and land/sea features.
+    Grid point positions are overlaid as circles; municipality centroids as markers.
+
+    Falls back to a plain matplotlib scatter if cartopy is not installed, with a warning.
 
     Parameters
     ----------
@@ -524,60 +540,347 @@ def plot_city_source_audit(
         events_provenance.loc[events_provenance["near_match_flag"], "municipality"]
     )
 
-    # Merge with grid_ref
+    # Merge with grid_ref (outer so municipalities without grid points appear too)
     merged = grid_ref.merge(muni_source, on="municipality", how="outer")
-    merged["db_source"] = merged["db_source"].fillna("legacy")  # legacy-only if in grid_ref but not provenance
+    merged["db_source"] = merged["db_source"].fillna("legacy")
 
     source_style = {
-        "expanded": {"color": "#2ca02c", "marker": "^", "label": "Expanded only (14 cities)"},
-        "legacy":   {"color": "#1f77b4", "marker": "s", "label": "Legacy only (13 cities)"},
-        "both":     {"color": "#d62728", "marker": "o", "label": "Both databases (9+1 cities)"},
+        "expanded": {"color": "#2ca02c", "marker": "^", "zorder": 6,
+                     "label": "Expanded only"},
+        "legacy":   {"color": "#1f77b4", "marker": "s", "zorder": 5,
+                     "label": "Legacy only"},
+        "both":     {"color": "#d62728", "marker": "o", "zorder": 7,
+                     "label": "Both databases"},
     }
 
-    fig, ax = plt.subplots(figsize=(5, 9))
+    # Determine map extent from data
+    lons = merged["muni_lon"].dropna()
+    lats = merged["muni_lat"].dropna()
+    if lons.empty or lats.empty:
+        log.warning("No valid municipality coordinates — skipping city audit figure.")
+        return
+    lon_buf, lat_buf = 0.6, 0.4
+    lon_min = float(lons.min()) - lon_buf
+    lon_max = float(lons.max()) + lon_buf
+    lat_min = float(lats.min()) - lat_buf
+    lat_max = float(lats.max()) + lat_buf
 
+    # ── Try cartopy for a geographically proper map ───────────────────────────
+    try:
+        import cartopy.crs as ccrs
+        import cartopy.feature as cfeature
+        _use_cartopy = True
+    except ImportError:
+        log.warning(
+            "cartopy not available — TC5-A2 will be a plain scatter plot without "
+            "coastline. Install cartopy (conda install -c conda-forge cartopy) for a "
+            "publication-quality geographic figure."
+        )
+        _use_cartopy = False
+
+    if _use_cartopy:
+        proj = ccrs.PlateCarree()
+        fig, ax = plt.subplots(
+            figsize=(5, 10),
+            subplot_kw={"projection": proj},
+        )
+        ax.set_extent([lon_min, lon_max, lat_min, lat_max], crs=proj)
+
+        # ── Geographic background ─────────────────────────────────────────────
+        ax.add_feature(cfeature.LAND,      facecolor="#f5f0e8", zorder=0)
+        ax.add_feature(cfeature.OCEAN,     facecolor="#d6eaf8", zorder=0)
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.8,  zorder=1, color="#444444")
+        ax.add_feature(cfeature.BORDERS,   linewidth=0.5,  zorder=1, linestyle="--",
+                       edgecolor="#888888")
+        ax.add_feature(cfeature.RIVERS,    linewidth=0.3,  zorder=1, alpha=0.4,
+                       edgecolor="#3385cc")
+        gl = ax.gridlines(
+            draw_labels=True, linewidth=0.35, color="gray", alpha=0.55,
+            xlocs=np.arange(lon_min, lon_max + 0.5, 1.0),
+            ylocs=np.arange(lat_min, lat_max + 0.5, 1.0),
+            x_inline=False, y_inline=False,
+        )
+        gl.top_labels   = False
+        gl.right_labels = False
+        gl.xlabel_style = {"fontsize": 7}
+        gl.ylabel_style = {"fontsize": 7}
+
+        def _scatter(lons_, lats_, **kw):
+            ax.scatter(lons_, lats_, transform=proj, **kw)
+
+        def _annotate(lon_, lat_, text, **kw):
+            ax.annotate(text, xy=(lon_, lat_), xycoords=proj._as_mpl_transform(ax),
+                        **kw)
+
+    else:
+        fig, ax = plt.subplots(figsize=(5, 9))
+        ax.set_xlim(lon_max + 0.1, lon_min - 0.1)  # west on left
+        ax.set_ylim(lat_min - 0.1, lat_max + 0.1)
+        ax.set_xlabel("Longitude (°W)", fontsize=9)
+        ax.set_ylabel("Latitude (°S)", fontsize=9)
+        ax.grid(alpha=0.25)
+
+        def _scatter(lons_, lats_, **kw):
+            ax.scatter(lons_, lats_, **kw)
+
+        def _annotate(lon_, lat_, text, **kw):
+            ax.annotate(text, xy=(lon_, lat_), **kw)
+
+    # ── Plot municipalities coloured by source ────────────────────────────────
     for src, style in source_style.items():
-        subset = merged[merged["db_source"] == src]
+        subset = merged[merged["db_source"] == src].dropna(subset=["muni_lon", "muni_lat"])
         if subset.empty:
             continue
-        ax.scatter(
-            subset["muni_lon"], subset["muni_lat"],
-            marker=style["marker"], color=style["color"], s=60,
-            zorder=5, label=style["label"], alpha=0.85, edgecolors="k", linewidths=0.4,
+
+        # Count for legend label
+        n = len(subset["municipality"].unique())
+        label = f"{style['label']} ({n})"
+
+        _scatter(
+            subset["muni_lon"].values, subset["muni_lat"].values,
+            marker=style["marker"], color=style["color"], s=55, zorder=style["zorder"],
+            label=label, alpha=0.88, edgecolors="k", linewidths=0.5,
         )
-        # Overlay grid points as smaller unfilled circles
-        coord_cols = [c for c in ["grid_lat", "grid_lon"] if c in subset.columns]
-        grid_sub = subset.dropna(subset=coord_cols) if coord_cols else subset.iloc[0:0]
-        if not grid_sub.empty:
-            ax.scatter(
-                grid_sub["grid_lon"], grid_sub["grid_lat"],
+
+        # Overlay corresponding grid points as open circles
+        gp = subset.dropna(subset=["grid_lon", "grid_lat"]) \
+            if "grid_lon" in subset.columns and "grid_lat" in subset.columns \
+            else subset.iloc[0:0]
+        if not gp.empty:
+            _scatter(
+                gp["grid_lon"].values, gp["grid_lat"].values,
                 marker="o", facecolor="none", edgecolor=style["color"],
-                s=90, zorder=4, linewidths=1.2,
+                s=100, zorder=style["zorder"] - 1, linewidths=1.3,
             )
+            # Thin connector lines between municipality and grid point
+            for _, row in gp.iterrows():
+                if _use_cartopy:
+                    import cartopy.crs as _ccrs_local
+                    ax.plot(
+                        [row["muni_lon"], row["grid_lon"]],
+                        [row["muni_lat"], row["grid_lat"]],
+                        color=style["color"], lw=0.5, alpha=0.4,
+                        transform=_ccrs_local.PlateCarree(), zorder=2,
+                    )
+                else:
+                    ax.plot(
+                        [row["muni_lon"], row["grid_lon"]],
+                        [row["muni_lat"], row["grid_lat"]],
+                        color=style["color"], lw=0.5, alpha=0.4, zorder=2,
+                    )
 
-    # Label municipalities
-    for _, row in merged.iterrows():
-        if pd.isna(row.get("muni_lat")):
-            continue
+    # ── Municipality labels ───────────────────────────────────────────────────
+    for _, row in merged.dropna(subset=["muni_lon", "muni_lat"]).iterrows():
         nm_flag = row["municipality"] in near_muni
-        ax.annotate(
-            ("★ " if nm_flag else "") + row["municipality"],
-            xy=(row["muni_lon"], row["muni_lat"]),
+        text = ("★ " if nm_flag else "") + row["municipality"]
+        _annotate(
+            float(row["muni_lon"]), float(row["muni_lat"]), text,
             xytext=(4, 2), textcoords="offset points",
-            fontsize=5.5, color="black",
+            fontsize=5.2, color="black",
         )
 
-    ax.set_xlabel("Longitude (°W)", fontsize=10)
-    ax.set_ylabel("Latitude (°S)", fontsize=10)
     ax.set_title(
         "TC5-A2 — Combined Positive-Event Set: Municipality Sources\n"
-        "Stars (★) = near-match cities (±3 d cross-database)",
-        fontsize=10, pad=6,
+        "Markers: ▲ expanded only | ■ legacy only | ● both\n"
+        "Open circles = grid points  ·  ★ = near-match cities (±3 d)",
+        fontsize=9, pad=6,
     )
-    ax.legend(fontsize=8, loc="lower right")
-    ax.grid(alpha=0.25)
-    ax.invert_xaxis()  # west on left
+    ax.legend(fontsize=8, loc="lower left" if _use_cartopy else "lower right",
+              framealpha=0.9)
 
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    log.info("Saved: %s", output_path.name)
+
+
+# ── Event-level capture scatter (TC5-E1) ─────────────────────────────────────
+
+def plot_event_capture_scatter(
+    event_status_df: pd.DataFrame,
+    optimal: dict,
+    output_path: Path,
+) -> None:
+    """Scatter of peak Hₛ vs peak SSH_total within the causal window for each event.
+
+    Each point represents one confirmed positive event from the combined event set.
+    X = max Hₛ in [D-2 … D+1]; Y = max SSH_total in the same window.
+    Filled markers = captured (HIT) at the PU-optimal threshold pair.
+    Open markers   = missed at the optimal pair.
+    Colour encodes event source: green=expanded, blue=legacy, red=both.
+
+    Dashed reference lines show the median local threshold across all events
+    (because thresholds are computed locally, individual thresholds vary).
+    A light green shading marks the "above-both-thresholds" zone.
+
+    Parameters
+    ----------
+    event_status_df : DataFrame from scoring.get_event_capture_status().
+        Required columns: peak_hs_causal, peak_ssh_causal, captured, source,
+        municipality, date, thr_hs, thr_ssh.
+    optimal : dict with thr_hs_pct, thr_ssh_pct, H, M (and optionally R_pos, Score).
+    output_path : where to save the figure.
+    """
+    from matplotlib.lines import Line2D
+
+    df = event_status_df.dropna(subset=["peak_hs_causal"])
+    if df.empty:
+        log.warning("No valid peak Hs values — skipping TC5-E1 event capture scatter.")
+        return
+
+    ssh_available = df["peak_ssh_causal"].notna().any()
+
+    opt_hs_pct  = float(optimal.get("thr_hs_pct", 0.90))
+    opt_ssh_pct = float(optimal.get("thr_ssh_pct", 0.90))
+
+    # Source → display properties (consistent with TC5-A2)
+    source_style = {
+        "expanded": {"color": "#2ca02c", "label": "Expanded"},
+        "legacy":   {"color": "#1f77b4", "label": "Legacy"},
+        "both":     {"color": "#d62728", "label": "Both databases"},
+        "unknown":  {"color": "#999999", "label": "Unknown"},
+    }
+
+    if ssh_available:
+        # ── Full 2-D scatter: Hs vs SSH_total ────────────────────────────────
+        df2 = df.dropna(subset=["peak_ssh_causal"])
+        H = int(df2["captured"].sum())
+        M = len(df2) - H
+
+        median_thr_hs  = df2["thr_hs"].median()
+        median_thr_ssh = df2["thr_ssh"].median()
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+
+        xlim_hi = df2["peak_hs_causal"].max()  * 1.10
+        ylim_hi = df2["peak_ssh_causal"].max() * 1.10
+        if not (np.isnan(median_thr_hs) or np.isnan(median_thr_ssh)):
+            ax.fill_betweenx(
+                [median_thr_ssh, ylim_hi],
+                median_thr_hs, xlim_hi,
+                color="#d0f0c0", alpha=0.20, zorder=0,
+            )
+
+        if not np.isnan(median_thr_hs):
+            ax.axvline(
+                median_thr_hs, color="dimgray", ls="--", lw=0.9, alpha=0.75, zorder=1,
+                label=f"Median Hₛ q{round(opt_hs_pct*100)} = {median_thr_hs:.2f} m",
+            )
+        if not np.isnan(median_thr_ssh):
+            ax.axhline(
+                median_thr_ssh, color="dimgray", ls=":", lw=0.9, alpha=0.75, zorder=1,
+                label=f"Median SSH_total q{round(opt_ssh_pct*100)} = {median_thr_ssh:.2f} m",
+            )
+
+        for src, style in source_style.items():
+            df_s = df2[df2["source"] == src]
+            if df_s.empty:
+                continue
+            miss = df_s[~df_s["captured"]]
+            hit  = df_s[ df_s["captured"]]
+            if not miss.empty:
+                ax.scatter(
+                    miss["peak_hs_causal"], miss["peak_ssh_causal"],
+                    facecolors="none", edgecolors=style["color"], linewidths=1.6,
+                    s=65, zorder=2,
+                )
+            if not hit.empty:
+                ax.scatter(
+                    hit["peak_hs_causal"], hit["peak_ssh_causal"],
+                    facecolors=style["color"], edgecolors=style["color"], linewidths=0.7,
+                    s=65, zorder=3,
+                )
+
+        src_handles = [
+            Line2D([0], [0], marker="o", linestyle="none",
+                   markerfacecolor=s["color"], markeredgecolor=s["color"],
+                   markersize=7, label=s["label"])
+            for src, s in source_style.items()
+            if src in df2["source"].values
+        ]
+        marker_handles = [
+            Line2D([0], [0], marker="o", linestyle="none",
+                   markerfacecolor="dimgray", markeredgecolor="dimgray",
+                   markersize=8, label="Captured ● (filled)"),
+            Line2D([0], [0], marker="o", linestyle="none",
+                   markerfacecolor="none", markeredgecolor="dimgray",
+                   markersize=8, label="Missed ○ (open)"),
+        ]
+        first_legend = ax.legend(
+            handles=src_handles, title="Source", fontsize=8,
+            loc="upper left", framealpha=0.85,
+        )
+        ax.add_artist(first_legend)
+        ax.legend(handles=marker_handles, fontsize=8, loc="lower right", framealpha=0.85)
+
+        ax.set_xlabel("Peak Hₛ in causal window [D-2 … D+1] (m)", fontsize=11)
+        ax.set_ylabel("Peak SSH_total in causal window (m)", fontsize=11)
+        ax.set_title(
+            f"TC5-E1 — Event-level capture at PU-optimal pair\n"
+            f"Hₛ=q{round(opt_hs_pct*100)} / SSH_total=q{round(opt_ssh_pct*100)}"
+            f"  →  H={H}  M={M}  (R_pos={H/(H+M):.2f})",
+            fontsize=10, fontweight="bold",
+        )
+
+    else:
+        # ── Degraded: Hs-only strip plot (SSH dimension unavailable) ─────────
+        # Show peak Hs per event sorted by source then date, with q90 threshold.
+        # "Captured" is approximated by Hs-only (above local thr_hs).
+        df_sort = df.sort_values(["source", "date"]).reset_index(drop=True)
+        df_sort["hs_above"] = df_sort["peak_hs_causal"] >= df_sort["thr_hs"].fillna(
+            df_sort["thr_hs"].median()
+        )
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+
+        # Shaded zone above median Hs threshold
+        median_thr_hs = df_sort["thr_hs"].median()
+        if not np.isnan(median_thr_hs):
+            ax.axhspan(median_thr_hs, df_sort["peak_hs_causal"].max() * 1.10,
+                       color="#d0f0c0", alpha=0.25, zorder=0,
+                       label="Above median Hₛ threshold")
+            ax.axhline(median_thr_hs, color="dimgray", ls="--", lw=0.9, alpha=0.75, zorder=1,
+                       label=f"Median Hₛ q{round(opt_hs_pct*100)} = {median_thr_hs:.2f} m")
+
+        for src, style in source_style.items():
+            df_s = df_sort[df_sort["source"] == src]
+            if df_s.empty:
+                continue
+            below = df_s[~df_s["hs_above"]]
+            above = df_s[ df_s["hs_above"]]
+            if not below.empty:
+                ax.scatter(
+                    below.index, below["peak_hs_causal"],
+                    facecolors="none", edgecolors=style["color"], linewidths=1.5,
+                    s=55, zorder=2, label=f"{style['label']} — below Hₛ thr.",
+                )
+            if not above.empty:
+                ax.scatter(
+                    above.index, above["peak_hs_causal"],
+                    facecolors=style["color"], edgecolors=style["color"], linewidths=0.7,
+                    s=55, zorder=3, label=f"{style['label']} — above Hₛ thr.",
+                )
+
+        ax.set_xlabel("Event rank (sorted by source, then date)", fontsize=11)
+        ax.set_ylabel("Peak Hₛ in causal window [D-2 … D+1] (m)", fontsize=11)
+        ax.set_title(
+            f"TC5-E1 — Event peak Hₛ diagnostic  [SSH dimension unavailable: eo_tides not installed]\n"
+            f"Hₛ threshold q{round(opt_hs_pct*100)} shown  |  "
+            f"n={len(df_sort)} combined positive events  "
+            f"({int(df_sort['hs_above'].sum())} above Hₛ thr. alone)",
+            fontsize=9, fontweight="bold",
+        )
+
+        ax.text(
+            0.99, 0.01,
+            "NOTE: Full compound capture (Hₛ ∧ SSH_total) requires eo_tides + FES2022.\n"
+            "Open = below local Hₛ threshold; Filled = above Hₛ threshold (SSH not checked).",
+            transform=ax.transAxes, fontsize=7, ha="right", va="bottom",
+            bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow", ec="gray", alpha=0.8),
+        )
+        ax.legend(fontsize=8, loc="upper left", framealpha=0.85, ncol=2)
+
+    ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
@@ -593,6 +896,7 @@ def run_all_figures(
     audit_df: pd.DataFrame,
     cfg: dict,
     events_provenance: "pd.DataFrame | None" = None,
+    event_status_df: "pd.DataFrame | None" = None,
 ) -> None:
     """Generate all Step 2e figures and save to cfg["fig_summary_dir"].
 
@@ -601,6 +905,9 @@ def run_all_figures(
     events_provenance : optional DataFrame from load_combined_events() provenance.
         When provided, generates the city/database source audit figure (TC5-A2).
         Loaded from tab_TC5_event_provenance.csv if not passed directly.
+    event_status_df : optional DataFrame from scoring.get_event_capture_status().
+        When provided, generates the event-level capture scatter (TC5-E1).
+        Loaded from tab_TC5_event_capture_status.csv if not passed directly.
     """
     fig_dir     = Path(cfg["fig_dir"])
     summary_dir = Path(cfg["fig_summary_dir"])
@@ -672,6 +979,25 @@ def run_all_figures(
         plot_city_source_audit(
             _provenance, _grid_ref_path,
             summary_dir / "fig_TC5_A2_city_source_audit.png",
+        )
+
+    # ── Event-level capture scatter (TC5-E1) ──────────────────────────────────
+    # Attempt to load event status from disk if not passed in-memory
+    _event_status = event_status_df
+    if _event_status is None:
+        _es_path = tab_dir / "tab_TC5_event_capture_status.csv"
+        if _es_path.exists():
+            _event_status = pd.read_csv(_es_path, parse_dates=["date"])
+
+    if _event_status is not None and not _event_status.empty:
+        plot_event_capture_scatter(
+            _event_status, optimal,
+            summary_dir / "fig_TC5_E1_event_capture.png",
+        )
+    else:
+        log.warning(
+            "Event capture status not available — skipping TC5-E1. "
+            "Run with --scoring to generate tab_TC5_event_capture_status.csv."
         )
 
     log.info("All Step 2e figures saved to: %s", summary_dir)
