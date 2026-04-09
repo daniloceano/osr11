@@ -17,6 +17,29 @@ Loading the legacy events database
 The legacy CSV is loaded with minimal cleaning for use as a corroborating evidence
 source in the E_i calculation (audit.py). Only disaster_id, municipality, date, and
 coastal_sector are required from the legacy database.
+
+Combined positive-event framework (Step 2e v2)
+----------------------------------------------
+Step 2e uses BOTH databases as its positive set P. load_combined_events() produces
+the union of expanded (56 events, 14 cities) and legacy (91 events, 22 cities),
+deduplicated on exact (municipality, date) matches, yielding 147 unique
+(municipality, date) pairs from 27 unique municipalities.
+
+  N_union_cities = 27
+  B_target_effective = 12 × 27 = 324 ep/yr (from combined)
+
+Near-matches (within ±3 days at the same municipality across databases) are retained
+as separate events and flagged in the provenance table. Two near-matches were found
+at Florianópolis (see tab_TC5_event_provenance.csv).
+
+Note on unmapped municipalities
+---------------------------------
+Four cities from the expanded database (Biguaçu, Imbituba, Joinville, Laguna)
+are not present in municipality_grid_ref.csv and therefore have no valid grid
+associations. Events at these cities are included in the provenance table but
+will be dropped by build_event_records() and cannot contribute to hits. They
+represent structural misses — real events that the current grid coverage cannot
+detect. P for scoring is set to len(records) (evaluable events only).
 """
 from __future__ import annotations
 
@@ -208,6 +231,135 @@ def load_legacy_events(path: Path) -> pd.DataFrame:
         df["municipality"].nunique(),
     )
     return df
+
+
+# ── Data loading: combined positive-event set ────────────────────────────────
+
+def load_combined_events(
+    expanded_path: Path,
+    legacy_path: Path,
+    near_match_window_days: int = 3,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load and combine the expanded and legacy event databases into a unified positive set.
+
+    The combined positive set is the UNION of both databases, deduplicated on
+    exact (municipality, date) matches. Near-matches within ±near_match_window_days
+    at the same municipality but across databases are retained as separate events
+    and flagged in the provenance table.
+
+    Parameters
+    ----------
+    expanded_path : Path
+        Path to ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv (56 events).
+    legacy_path : Path
+        Path to reported_events_Karine_sc.csv (91 events).
+    near_match_window_days : int
+        Window in days for near-match flagging (default 3, matching the causal window).
+
+    Returns
+    -------
+    combined_df : pd.DataFrame
+        Union of both databases. Columns:
+            disaster_id  — new sequential integer (1-based, re-assigned after merge)
+            municipality — string
+            date         — pd.Timestamp
+            coastal_sector
+            source       — "expanded" | "legacy" | "both"
+        Rows with source="both" indicate exact (municipality, date) duplicates;
+        only one copy is retained (the expanded-database row takes priority).
+    provenance_df : pd.DataFrame
+        Audit table with columns:
+            municipality, date, source, near_match_flag (bool)
+        near_match_flag is True if another event from the OTHER database exists
+        at the same municipality within ±near_match_window_days.
+
+    Notes
+    -----
+    With 0 exact (municipality, date) overlaps between the two databases
+    (confirmed by prior analysis), the combined set has 56 + 91 = 147 events
+    across 27 unique municipalities (union of 14 expanded + 22 legacy).
+    Four expanded cities (Biguaçu, Imbituba, Joinville, Laguna) lack grid
+    associations and will be dropped by build_event_records().
+    """
+    # ── Load both databases ────────────────────────────────────────────────────
+    exp_df = load_expanded_events(expanded_path)
+    leg_df = load_legacy_events(legacy_path)
+
+    # Tag source before merge
+    exp_sub = exp_df[["municipality", "date", "coastal_sector"]].copy()
+    exp_sub["source"] = "expanded"
+
+    leg_sub = leg_df[["municipality", "date", "coastal_sector"]].copy()
+    leg_sub["source"] = "legacy"
+
+    combined = pd.concat([exp_sub, leg_sub], ignore_index=True)
+
+    # ── Deduplicate on exact (municipality, date) ─────────────────────────────
+    # Mark both copies of duplicates as "both", then drop the second (legacy) copy.
+    # expanded takes priority so that source_title/notes from expanded are kept
+    # if we later join back. For now we only care about municipality, date, source.
+    dup_mask = combined.duplicated(subset=["municipality", "date"], keep=False)
+    combined.loc[dup_mask, "source"] = "both"
+    combined = combined.drop_duplicates(
+        subset=["municipality", "date"], keep="first"
+    ).reset_index(drop=True)
+
+    # ── Near-match detection ───────────────────────────────────────────────────
+    # For each pair of events at the same municipality but from different databases,
+    # flag those within ±near_match_window_days (exclusive of 0 = exact match).
+    near_match = [False] * len(combined)
+    # Only cities that appear in BOTH databases can have cross-database near-matches
+    exp_cities = set(exp_sub["municipality"].unique())
+    leg_cities = set(leg_sub["municipality"].unique())
+    shared_cities = exp_cities & leg_cities
+
+    combined["_date_int"] = (combined["date"] - pd.Timestamp("2000-01-01")).dt.days
+    for city in shared_cities:
+        city_rows = combined[combined["municipality"] == city]
+        exp_rows = city_rows[city_rows["source"] == "expanded"]
+        leg_rows = city_rows[city_rows["source"] == "legacy"]
+
+        for i_exp in exp_rows.index:
+            d_exp = combined.loc[i_exp, "_date_int"]
+            for i_leg in leg_rows.index:
+                d_leg = combined.loc[i_leg, "_date_int"]
+                diff = abs(d_exp - d_leg)
+                if 0 < diff <= near_match_window_days:
+                    near_match[i_exp] = True
+                    near_match[i_leg] = True
+
+    combined["near_match_flag"] = near_match
+    combined = combined.drop(columns=["_date_int"])
+
+    # ── Assign new sequential disaster_ids ────────────────────────────────────
+    combined.insert(0, "disaster_id", range(1, len(combined) + 1))
+
+    # ── Build provenance table (for audit export) ─────────────────────────────
+    provenance_df = combined[
+        ["municipality", "date", "source", "near_match_flag"]
+    ].copy()
+
+    # ── Remove near_match_flag from the returned combined_df ─────────────────
+    combined_out = combined.drop(columns=["near_match_flag"])
+
+    # ── Logging ───────────────────────────────────────────────────────────────
+    n_muni    = combined_out["municipality"].nunique()
+    n_nm      = int(sum(near_match))
+    n_exp     = int((combined_out["source"].isin(["expanded", "both"])).sum())
+    n_leg     = int((combined_out["source"].isin(["legacy",   "both"])).sum())
+    n_both    = int((combined_out["source"] == "both").sum())
+    log.info(
+        "Combined events: %d total "
+        "(exp=%d, leg=%d, exact-both=%d) | %d municipalities | "
+        "%s to %s | %d near-matches flagged (±%dd)",
+        len(combined_out), n_exp, n_leg, n_both,
+        n_muni,
+        combined_out["date"].min().date(),
+        combined_out["date"].max().date(),
+        n_nm, near_match_window_days,
+    )
+
+    return combined_out, provenance_df
 
 
 # ── Data loading: unified metocean dataset ────────────────────────────────────

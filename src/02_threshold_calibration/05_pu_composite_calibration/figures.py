@@ -6,14 +6,16 @@ between the Step 2d (CSI) and Step 2e (PU) optimal threshold pairs.
 
 Figure inventory
 ----------------
-fig_TC5_H1_score_heatmap.png     — Composite Score(θ) across 9×9 threshold grid
-fig_TC5_H2_recall_heatmap.png    — R_pos(θ) across 9×9 threshold grid
-fig_TC5_H3_burden_heatmap.png    — B(θ) across 9×9 threshold grid
-fig_TC5_H4_fsoft_heatmap.png     — F_soft(θ)/P across 9×9 threshold grid
-fig_TC5_S1_csi_vs_pu.png         — CSI optimal pair vs PU optimal pair comparison
-fig_TC5_S2_sensitivity_weights.png — Weight sensitivity: optimal pair stability
+fig_TC5_H1_score_heatmap.png        — Composite Score(θ) across 9×9 threshold grid
+fig_TC5_H2_recall_heatmap.png       — R_pos(θ) across 9×9 threshold grid
+fig_TC5_H3_burden_heatmap.png       — B(θ) across 9×9 threshold grid
+fig_TC5_H4_fsoft_heatmap.png        — F_soft(θ)/P across 9×9 threshold grid
+fig_TC5_S1_csi_vs_pu.png            — CSI optimal pair vs PU optimal pair comparison
+fig_TC5_S2_sensitivity_weights.png  — Weight sensitivity: optimal pair stability
 fig_TC5_S3_sensitivity_b_target.png — B_target sensitivity: Score vs B_target
-fig_TC5_A1_qi_distribution.png   — Distribution of q_i values across all episodes
+fig_TC5_A1_qi_distribution.png      — Distribution of q_i values across all episodes
+fig_TC5_A2_city_source_audit.png    — Municipality source audit (expanded/legacy/both)
+                                       coloured by database origin on SC coast map
 """
 from __future__ import annotations
 
@@ -111,13 +113,20 @@ def plot_metric_heatmap(
     ax.set_ylabel("Hₛ threshold", fontsize=11)
     ax.set_title(title, fontsize=12, pad=8)
 
-    # Annotate cells
+    # Annotate cells — use luminance to pick readable text color for any cmap
+    _vmin = vmin if vmin is not None else float(np.nanmin(matrix.values))
+    _vmax = vmax if vmax is not None else float(np.nanmax(matrix.values))
+    _norm = plt.Normalize(vmin=_vmin, vmax=_vmax)
+    _cmap_obj = plt.get_cmap(cmap)
     for i in range(len(hs_labels)):
         for j in range(len(ssh_labels)):
             val = matrix.values[i, j]
             txt = f"{val:{fmt}}" if not np.isnan(val) else "—"
+            rgba = _cmap_obj(_norm(val))
+            # Perceived luminance (ITU-R BT.601)
+            lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
             ax.text(j, i, txt, ha="center", va="center", fontsize=7,
-                    color="white" if val < (matrix.values.max() * 0.6) else "black")
+                    color="black" if lum > 0.55 else "white")
 
     # Mark optimal pair
     if optimal is not None:
@@ -471,6 +480,110 @@ def plot_qi_distribution(
     log.info("Saved: %s", output_path.name)
 
 
+# ── City/database source audit figure ────────────────────────────────────────
+
+def plot_city_source_audit(
+    events_provenance: "pd.DataFrame",
+    grid_ref_path: "Path",
+    output_path: "Path",
+) -> None:
+    """Scatter plot of combined-event municipalities on the SC coast, coloured by source.
+
+    Shows which municipalities come from the expanded database only, the legacy
+    database only, or both — as a geographic audit of the combined positive set.
+    Grid point positions are overlaid as circles; municipality centroids as stars.
+
+    Parameters
+    ----------
+    events_provenance : DataFrame from load_combined_events() — columns
+        [municipality, date, source, near_match_flag].
+    grid_ref_path : Path to municipality_grid_ref.csv.
+    output_path : where to save the figure.
+    """
+    from pathlib import Path as _Path
+
+    grid_ref_path = _Path(grid_ref_path)
+    if not grid_ref_path.exists():
+        log.warning(
+            "municipality_grid_ref.csv not found at %s — skipping city audit figure.",
+            grid_ref_path,
+        )
+        return
+
+    grid_ref = pd.read_csv(grid_ref_path)
+
+    # Unique municipality → source mapping from provenance
+    muni_source = (
+        events_provenance.groupby("municipality")["source"]
+        .agg(lambda s: "both" if "both" in s.values else
+             ("expanded" if (s == "expanded").any() else "legacy"))
+        .reset_index()
+        .rename(columns={"source": "db_source"})
+    )
+    near_muni = set(
+        events_provenance.loc[events_provenance["near_match_flag"], "municipality"]
+    )
+
+    # Merge with grid_ref
+    merged = grid_ref.merge(muni_source, on="municipality", how="outer")
+    merged["db_source"] = merged["db_source"].fillna("legacy")  # legacy-only if in grid_ref but not provenance
+
+    source_style = {
+        "expanded": {"color": "#2ca02c", "marker": "^", "label": "Expanded only (14 cities)"},
+        "legacy":   {"color": "#1f77b4", "marker": "s", "label": "Legacy only (13 cities)"},
+        "both":     {"color": "#d62728", "marker": "o", "label": "Both databases (9+1 cities)"},
+    }
+
+    fig, ax = plt.subplots(figsize=(5, 9))
+
+    for src, style in source_style.items():
+        subset = merged[merged["db_source"] == src]
+        if subset.empty:
+            continue
+        ax.scatter(
+            subset["muni_lon"], subset["muni_lat"],
+            marker=style["marker"], color=style["color"], s=60,
+            zorder=5, label=style["label"], alpha=0.85, edgecolors="k", linewidths=0.4,
+        )
+        # Overlay grid points as smaller unfilled circles
+        coord_cols = [c for c in ["grid_lat", "grid_lon"] if c in subset.columns]
+        grid_sub = subset.dropna(subset=coord_cols) if coord_cols else subset.iloc[0:0]
+        if not grid_sub.empty:
+            ax.scatter(
+                grid_sub["grid_lon"], grid_sub["grid_lat"],
+                marker="o", facecolor="none", edgecolor=style["color"],
+                s=90, zorder=4, linewidths=1.2,
+            )
+
+    # Label municipalities
+    for _, row in merged.iterrows():
+        if pd.isna(row.get("muni_lat")):
+            continue
+        nm_flag = row["municipality"] in near_muni
+        ax.annotate(
+            ("★ " if nm_flag else "") + row["municipality"],
+            xy=(row["muni_lon"], row["muni_lat"]),
+            xytext=(4, 2), textcoords="offset points",
+            fontsize=5.5, color="black",
+        )
+
+    ax.set_xlabel("Longitude (°W)", fontsize=10)
+    ax.set_ylabel("Latitude (°S)", fontsize=10)
+    ax.set_title(
+        "TC5-A2 — Combined Positive-Event Set: Municipality Sources\n"
+        "Stars (★) = near-match cities (±3 d cross-database)",
+        fontsize=10, pad=6,
+    )
+    ax.legend(fontsize=8, loc="lower right")
+    ax.grid(alpha=0.25)
+    ax.invert_xaxis()  # west on left
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    log.info("Saved: %s", output_path.name)
+
+
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 def run_all_figures(
@@ -479,15 +592,23 @@ def run_all_figures(
     optimal: dict,
     audit_df: pd.DataFrame,
     cfg: dict,
+    events_provenance: "pd.DataFrame | None" = None,
 ) -> None:
-    """Generate all Step 2e figures and save to cfg["fig_summary_dir"]."""
+    """Generate all Step 2e figures and save to cfg["fig_summary_dir"].
+
+    Parameters
+    ----------
+    events_provenance : optional DataFrame from load_combined_events() provenance.
+        When provided, generates the city/database source audit figure (TC5-A2).
+        Loaded from tab_TC5_event_provenance.csv if not passed directly.
+    """
     fig_dir     = Path(cfg["fig_dir"])
     summary_dir = Path(cfg["fig_summary_dir"])
     tab_dir     = Path(cfg["tab_dir"])
     fig_dir.mkdir(parents=True, exist_ok=True)
     summary_dir.mkdir(parents=True, exist_ok=True)
 
-    P = int(df_scores["H"].max() + df_scores["M"].max())  # approximate
+    P = int(df_scores["H"].max() + df_scores["M"].max())  # evaluable positive events
 
     # ── Score heatmaps ─────────────────────────────────────────────────────────
     plot_score_heatmap(
@@ -533,6 +654,24 @@ def run_all_figures(
             summary_dir / "fig_TC5_A1_qi_distribution.png",
             thr_hs_pct=optimal.get("thr_hs_pct"),
             thr_ssh_pct=optimal.get("thr_ssh_pct"),
+        )
+
+    # ── City/database source audit ────────────────────────────────────────────
+    # Attempt to load provenance from disk if not passed in-memory
+    _provenance = events_provenance
+    if _provenance is None:
+        _prov_path = tab_dir / "tab_TC5_event_provenance.csv"
+        if _prov_path.exists():
+            _provenance = pd.read_csv(_prov_path, parse_dates=["date"])
+
+    if _provenance is not None:
+        _grid_ref_path = Path(cfg.get(
+            "municipality_grid_ref",
+            Path(cfg["output_root"]).parents[0] / "preprocessing/municipality_grid_ref.csv",
+        ))
+        plot_city_source_audit(
+            _provenance, _grid_ref_path,
+            summary_dir / "fig_TC5_A2_city_source_audit.png",
         )
 
     log.info("All Step 2e figures saved to: %s", summary_dir)

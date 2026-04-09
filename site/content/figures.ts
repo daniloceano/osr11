@@ -176,8 +176,10 @@ export const figureGroups = [
 // These figures are from the PU Composite Calibration (Step 2e), which performs
 // an independent threshold sweep using a composite score that treats unmatched
 // detected episodes as unlabeled rather than automatically as false alarms.
-// The calibration uses the expanded documentary events database
-// (56 events, 1998–2020), not the legacy Leal et al. (2024) database.
+// The calibration uses the COMBINED positive-event set:
+//   expanded (56 events, 14 cities) + legacy (91 events, 22 cities)
+//   = 147 unique (municipality, date) pairs, 27 municipalities, 1998–2020.
+// B_target_effective = 12 ep/yr/muni × 27 municipalities = 324 ep/yr.
 
 export const tc5Figures: FigureItem[] = [
   // Score heatmaps (H series)
@@ -185,7 +187,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H1_score_heatmap.png',
     title: 'PU Composite Score Surface — Threshold Grid',
     caption:
-      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Each cell shows the score for one threshold pair. The optimal pair (marked by a rectangle) maximises Score, balancing positive recall against annual burden and soft unmatched penalty. Higher values (greener) indicate a better trade-off. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). 56 expanded events, 1998–2020.',
+      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Each cell shows the score for one threshold pair. The optimal pair (marked by a rectangle) maximises Score, balancing positive recall against annual burden and soft unmatched penalty. Higher values (greener) indicate a better trade-off. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). Combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities, 1998–2020.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -193,7 +195,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H2_recall_heatmap.png',
     title: 'Positive Recall R_pos Surface — Threshold Grid',
     caption:
-      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. R_pos measures what fraction of the 56 confirmed expanded events is captured by the compound detector at each threshold pair. As expected, more permissive (lower percentile) thresholds capture more events, but this comes at the cost of higher annual burden. The optimal pair is marked with a rectangle.',
+      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. R_pos measures what fraction of the combined positive-event set (147 events: expanded 56 + legacy 91, 27 municipalities) is captured by the compound detector at each threshold pair. As expected, more permissive (lower percentile) thresholds capture more events, but this comes at the cost of higher annual burden. The optimal pair is marked with a rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -201,7 +203,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H3_burden_heatmap.png',
     title: 'Annual Burden B(θ) Surface — Threshold Grid',
     caption:
-      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. B measures whether the detector fires more often than the operational budget allows. B_target_effective = 12 ep/yr/muni × 14 municipalities = 168 ep/yr total. Warmer colours indicate higher detection frequency (exceeding the budget). The optimal pair is marked with a rectangle.',
+      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. B measures whether the detector fires more often than the operational budget allows. B_target_effective = 12 ep/yr/muni × 27 municipalities (union of expanded + legacy) = 324 ep/yr total. Warmer colours indicate higher detection frequency (exceeding the budget). The optimal pair is marked with a rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -218,7 +220,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S1_csi_vs_pu.png',
     title: 'CSI Optimal Pair vs PU Optimal Pair — Threshold Comparison',
     caption:
-      'Side-by-side bar chart comparing the threshold percentiles selected by Step 2d (CSI optimisation, 91-event legacy database) and Step 2e (PU composite calibration, 56-event expanded database). Both methods converge on q90/q90 for Hₛ and SSH_total, providing independent confirmation that the q90 pair is robust to the choice of events database and calibration metric. The convergence suggests the result is not an artefact of a single database or method.',
+      'Side-by-side bar chart comparing the threshold percentiles selected by Step 2d (CSI optimisation, 91-event legacy database) and Step 2e (PU composite calibration, combined 147-event positive set: expanded 56 + legacy 91, 27 municipalities). Both methods converge on q90/q90 for Hₛ and SSH_total, providing independent confirmation that the q90 pair is robust to the choice of events database and calibration metric. The convergence suggests the result is not an artefact of a single database or method.',
     group: 'Comparison',
     part: 'Step 2e',
   },
@@ -234,17 +236,25 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S3_sensitivity_b_target.png',
     title: 'B_target Sensitivity — Score vs Per-Municipality Burden Target',
     caption:
-      'Sensitivity of the PU composite score and optimal threshold pair to alternative per-municipality annual burden targets (6, 12, 18, 24 episodes/year/municipality). The effective domain budget scales with n_municipalities (14 municipalities; total = value × 14). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested targets, demonstrating robustness. Score improves (less negative) with more permissive targets, reflecting the reduced burden penalty.',
+      'Sensitivity of the PU composite score and optimal threshold pair to alternative per-municipality annual burden targets (6, 12, 18, 24 episodes/year/municipality). The effective domain budget scales with n_union_municipalities = 27 (union of both databases; total = value × 27). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested targets, demonstrating robustness. Score improves (less negative) with more permissive targets, reflecting the reduced burden penalty.',
     group: 'Sensitivity',
     part: 'Step 2e',
   },
-  // Audit figure (A series)
+  // Audit figures (A series)
   {
     filename: 'tc5_summary/fig_TC5_A1_qi_distribution.png',
     title: 'Distribution of qᵢ Confidence Weights — Unmatched Episodes',
     caption:
       'Histogram of qᵢ confidence weights for all unmatched episodes at the PU-optimal threshold pair (q90/q90). qᵢ = clip(α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ, 0, 1) aggregates external evidence (Eᵢ), physical intensity (Iᵢ), and context coherence (Cᵢ) for each unmatched episode. Red dashed line: mean; orange dotted line: median. Episodes clustered near 0 have low plausibility (few circumstantial indicators of a real event); episodes near 1 are highly plausible but unconfirmed in the documentary database, likely reflecting under-reporting.',
     group: 'Episode Audit',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_A2_city_source_audit.png',
+    title: 'Municipality Source Audit — Combined Positive-Event Set',
+    caption:
+      'Geographic scatter of the 27 unique municipalities in the combined positive-event set, plotted on the Santa Catarina coast and coloured by source database: green triangles = expanded-only (5 cities: Biguaçu, Imbituba, Joinville, Laguna, Tijucas); blue squares = legacy-only (13 cities); red circles = both databases (9 cities: Balneário Camboriú, Barra Velha, Bombinhas, Florianópolis, Itajaí, Palhoça, Passo de Torres, Porto Belo, São Francisco do Sul). Open circles mark matched WAVERYS/GLORYS12 grid points. Municipalities marked ★ have near-match events (within ±3 days at the same city across databases; found at Florianópolis). Four expanded cities (Biguaçu, Imbituba, Joinville, Laguna) lack grid associations and are structural misses in the scoring.',
+    group: 'City Audit',
     part: 'Step 2e',
   },
 ];
@@ -254,4 +264,5 @@ export const tc5FigureGroups = [
   'Comparison',
   'Sensitivity',
   'Episode Audit',
+  'City Audit',
 ];

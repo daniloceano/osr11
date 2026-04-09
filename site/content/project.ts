@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Step 1 (Data Preparation) is complete. Step 2 (Threshold Calibration) is complete: all five sub-steps are done. Steps 2a–2d established and diagnostically confirmed the q90/q90 threshold pair (CSI=0.0151). Step 2e (PU Composite Calibration) performed an independent threshold sweep using the expanded documentary events database (56 events, 1998–2020) and a PU composite score — independently confirming q90/q90 (R_pos=0.268, robust to all sensitivity experiments). Step 3 (Storm Catalog Generation) is next.
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Step 1 (Data Preparation) is complete. Step 2 (Threshold Calibration) is complete: all five sub-steps are done. Steps 2a–2d established and diagnostically confirmed the q90/q90 threshold pair (CSI=0.0151). Step 2e (PU Composite Calibration) performed an independent threshold sweep using the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020) and a PU composite score — independently confirming q90/q90 (R_pos=0.268, robust to all sensitivity experiments). B_target_effective = 12 × 27 = 324 ep/yr. Step 3 (Storm Catalog Generation) is next.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -142,7 +142,7 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Threshold Calibration',
-    description: 'Umbrella calibration step with five sub-steps — all complete. Steps 2a–2d established SSH_total, swept 81 threshold pairs, and diagnostically selected q90/q90. Step 2e (PU Composite Calibration) independently confirmed q90/q90 using an expanded events database and a composite score designed for under-reported databases.',
+    description: 'Umbrella calibration step with five sub-steps — all complete. Steps 2a–2d established SSH_total, swept 81 threshold pairs, and diagnostically selected q90/q90. Step 2e (PU Composite Calibration) independently confirmed q90/q90 using the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities) and a PU composite score designed for under-reported databases. B_target_effective = 12 × 27 = 324 ep/yr.',
     status: 'done',
     stepNumber: 2,
     tasks: [],
@@ -202,16 +202,18 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-2e',
         label: '2e — PU Composite Calibration',
-        description: 'Independent threshold sweep using a PU composite score (R_pos, annual burden, soft unmatched penalty) against the expanded documentary events database (56 events, 1998–2020). Confirms q90/q90 as the final calibrated threshold pair.',
+        description: 'Independent threshold sweep using a PU composite score (R_pos, annual burden, soft unmatched penalty) against the combined positive-event set: expanded (56 events, 14 cities) + legacy (91 events, 22 cities) = 147 unique (municipality, date) pairs across 27 municipalities, 1998–2020. B_target_effective = 12 × 27 = 324 ep/yr. Confirms q90/q90 as the final calibrated threshold pair.',
         status: 'done',
         tasks: [
-          'Load expanded documentary events database (56 events, 1998–2020) ✓',
-          'Layer 1: event hit/miss scan — 81 pairs × 56 events ✓',
+          'Load combined positive-event set: expanded (56) + legacy (91) = 147 events, 27 municipalities ✓',
+          'Export event provenance table (source flags, near-match detection) ✓',
+          'Layer 1: event hit/miss scan — 81 pairs × combined set ✓',
           'Layer 2: collect unmatched episode metadata (peak Hₛ, SSH_total, dates) ✓',
           'Build episode audit table: compute Eᵢ, Iᵢ, Cᵢ, qᵢ per episode ✓',
-          'Compute PU composite scores for all 81 pairs ✓',
-          'Optimal pair: q90/q90 — R_pos=0.268, H=15/P=56, U=1 267 ✓',
+          'Compute PU composite scores for all 81 pairs (B_target_effective = 12 × 27 = 324 ep/yr) ✓',
+          'Optimal pair: q90/q90 — confirmed by combined-database PU sweep ✓',
           'Sensitivity analysis: weights, alphas, B_target — all confirm q90/q90 ✓',
+          'City/database source audit figure (TC5-A2) ✓',
         ],
       },
     ],

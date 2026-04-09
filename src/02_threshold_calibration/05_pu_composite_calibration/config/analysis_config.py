@@ -12,18 +12,30 @@ Methodology reference:
     osr11_option_c_methodology.md — "Proposed composite score for threshold
     calibration under impact under-reporting"
 
-Reported events database:
-    This step uses the expanded documentary coastal-impact database
-    (ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv), which was
-    curated from news archives, academic theses/dissertations, and technical
-    reports. See ressaca_sc_eventos_sc_1998_2020_repository_methodology.md
-    for the full documentary search and curation protocol.
+Combined positive-event framework:
+    Step 2e uses BOTH reported-event databases as its positive set P:
 
-    The expanded database provides:
-        - 56 documented ressaca events (1998–2020)
-        - Municipality-level resolution with coastal sector attribution
-        - Traceable source citations (URL + title) for each event
-        - Explicit marine-forcing evidence (not generic flood reports)
+    1. Expanded documentary database (primary):
+       ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv
+       - 56 documented ressaca events (1998–2020, 14 municipalities)
+       - Curated from news archives, academic theses, technical reports
+       - Traceable source citations (URL + title) for each event
+       - Explicit marine-forcing evidence (not generic flood reports)
+       See ressaca_sc_eventos_sc_1998_2020_repository_methodology.md
+
+    2. Legacy Leal et al. (2024) database:
+       reported_events_Karine_sc.csv
+       - 91 unique (municipality, date) rows from 72 disasters (1998–2020,
+         22 municipalities)
+       - Original Civil Defense / insurance damage database
+
+    Combined positive set (via load_combined_events()):
+       - 147 unique (municipality, date) pairs (0 exact overlaps)
+       - 27 unique municipalities (union of 14 expanded + 22 legacy cities)
+       - 2 near-matches (±3 days at Florianópolis, retained as separate events)
+       - P for scoring = evaluable events with valid grid associations (~143);
+         4 expanded cities (Biguaçu, Imbituba, Joinville, Laguna) are
+         structural misses (no grid point in municipality_grid_ref.csv)
 
 Relationship to Step 2d:
     Step 2d (CSI Grid Scan) was a diagnostic step that revealed the limitations
@@ -156,20 +168,21 @@ ALPHA_C = 0.10  # context coherence weight (0–1: season + neighbors + exposure
 # Per-municipality annual burden target.
 #
 # The effective B_target is computed at run time as:
-#     B_target_effective = B_TARGET_PER_MUNICIPALITY × n_municipalities
+#     B_target_effective = B_TARGET_PER_MUNICIPALITY × n_union_municipalities
 #
-# where n_municipalities is the number of unique municipalities with valid grid
-# associations in the event records (determined from the expanded events database).
+# where n_union_municipalities is the count of unique municipalities across
+# BOTH event databases (union), regardless of grid availability.
+# With the combined positive-event framework: n_union_municipalities = 27.
 #
 # SCIENTIFIC RATIONALE:
 #   One event per month per municipality (~12/year) is a climatologically
 #   plausible upper bound for compound coastal events on the SC coast. It
 #   implies that, for every municipality being monitored, the detector should
 #   not flag more than ~12 compound episodes per year on average. Scaling by
-#   n_municipalities ensures the total domain budget grows proportionally with
-#   spatial coverage, avoiding penalising analyses with more municipalities.
+#   the union city count ensures the total domain budget covers the full spatial
+#   footprint of the study area, not just cities with perfect grid coverage.
 #
-# Example: 14 municipalities → B_target_effective = 12 × 14 = 168 ep/yr
+# Combined database: 27 municipalities → B_target_effective = 12 × 27 = 324 ep/yr
 B_TARGET_PER_MUNICIPALITY = 12.0  # episodes per year per municipality
 
 # ══════════════════════════════════════════════════════════════════════════════

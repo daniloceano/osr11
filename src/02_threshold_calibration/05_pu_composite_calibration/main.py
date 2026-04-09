@@ -77,7 +77,7 @@ from src.pu_composite_calibration.config.analysis_config import CFG
 from src.pu_composite_calibration.utils import (
     make_output_dirs,
     build_percentile_levels,
-    load_expanded_events,
+    load_combined_events,
     load_legacy_events,
     load_unified_dataset,
     setup_logging,
@@ -143,18 +143,40 @@ def _parse_args() -> argparse.Namespace:
 def _load_data_and_records(cfg: dict):
     """Load dataset, events, clip to validated period, build event records.
 
+    Uses the combined positive-event framework: both the expanded documentary
+    database (56 events, 14 cities) and the legacy Leal et al. database (91
+    events, 22 cities) are merged into a single positive set of 147 unique
+    (municipality, date) pairs from 27 unique municipalities.
+
     Returns
     -------
-    tuple: (ds_clipped, time_index, records, events_expanded_df, legacy_df, n_years)
+    tuple: (ds_clipped, time_index, records, events_combined_df, legacy_df,
+            n_years, n_union_cities)
+        n_union_cities : int — count of unique municipalities across BOTH
+            databases (27). Used for B_target_effective, NOT derived from
+            records (which may drop unmapped municipalities).
     """
-    # ── Load data ─────────────────────────────────────────────────────────────
-    ds           = load_unified_dataset(cfg["unified_file"])
-    events_exp   = load_expanded_events(cfg["events_file"])
-    legacy_df    = load_legacy_events(cfg["events_file_legacy"])
+    # ── Load combined positive-event set ──────────────────────────────────────
+    ds = load_unified_dataset(cfg["unified_file"])
+    events_combined, events_provenance = load_combined_events(
+        cfg["events_file"], cfg["events_file_legacy"]
+    )
+    # Compute union city count BEFORE build_event_records (which may drop cities
+    # not in municipality_grid_ref.csv — currently Biguaçu, Imbituba, Joinville, Laguna)
+    n_union_cities = int(events_combined["municipality"].nunique())
+
+    # Retain legacy_df separately for audit E_i calculation (audit.py still uses it)
+    legacy_df = load_legacy_events(cfg["events_file_legacy"])
+
+    # Export event provenance table
+    tab_dir = Path(cfg["tab_dir"])
+    tab_dir.mkdir(parents=True, exist_ok=True)
+    events_provenance.to_csv(tab_dir / "tab_TC5_event_provenance.csv", index=False)
+    log.info("Saved: tab_TC5_event_provenance.csv (%d rows)", len(events_provenance))
 
     # ── Clip to validated temporal domain ─────────────────────────────────────
     ds, t_start, t_end = clip_to_validated_period(
-        ds, events_exp, cfg["match_window_offsets"]
+        ds, events_combined, cfg["match_window_offsets"]
     )
     time_index = pd.DatetimeIndex(ds.time.values)
 
@@ -165,17 +187,21 @@ def _load_data_and_records(cfg: dict):
     )
 
     # ── Build event records ───────────────────────────────────────────────────
-    # build_event_records uses CFG from src.preliminary_compound.config which
-    # sets hs_var='VHM0', ssh_var='zos', event_half_window_days=3.
-    # We pass the expanded events DataFrame directly; the function accepts any
-    # DataFrame with 'municipality', 'date', and 'disaster_id' columns.
-    records = build_event_records(ds, events_exp)
+    # build_event_records accepts any DataFrame with 'municipality', 'date',
+    # 'disaster_id' columns. Municipalities without a valid grid association
+    # (Biguaçu, Imbituba, Joinville, Laguna from expanded DB) will be silently
+    # dropped — those events are structural misses (no grid point to evaluate).
+    records = build_event_records(ds, events_combined)
     if not records:
-        log.error("No event records built from expanded events database.")
+        log.error("No event records built from combined events database.")
         sys.exit(1)
-    log.info("Built %d event records from expanded events database.", len(records))
+    log.info(
+        "Built %d event records from combined events (of %d total; "
+        "%d dropped — unmapped municipalities).",
+        len(records), len(events_combined), len(events_combined) - len(records),
+    )
 
-    return ds, time_index, records, events_exp, legacy_df, n_years
+    return ds, time_index, records, events_combined, legacy_df, n_years, n_union_cities
 
 
 def main(args: argparse.Namespace | None = None) -> None:
@@ -221,12 +247,13 @@ def main(args: argparse.Namespace | None = None) -> None:
     tide_cache = None
     ssh_total_cache = None
     time_index = None
-    events_exp = None
-    legacy_df  = None
-    n_years    = None
+    events_combined = None
+    legacy_df       = None
+    n_years         = None
+    n_union_cities  = None
 
     if need_data:
-        ds, time_index, records, events_exp, legacy_df, n_years = \
+        ds, time_index, records, events_combined, legacy_df, n_years, n_union_cities = \
             _load_data_and_records(CFG)
 
         # ── FES2022 tidal series ───────────────────────────────────────────────
@@ -310,7 +337,7 @@ def main(args: argparse.Namespace | None = None) -> None:
 
         # Load data for audit if not already loaded
         if records is None:
-            ds, time_index, records, events_exp, legacy_df, n_years = \
+            ds, time_index, records, events_combined, legacy_df, n_years, n_union_cities = \
                 _load_data_and_records(CFG)
             tide_cache = build_tide_cache(records, daily_max=True)
             ssh_total_cache = build_ssh_total_cache_pu(records, tide_cache)
@@ -319,12 +346,20 @@ def main(args: argparse.Namespace | None = None) -> None:
         if n_years is None:
             n_years = (time_index[-1] - time_index[0]).days / 365.25
 
-        P = len(events_exp)
-        n_municipalities = len({rec.municipality for rec in records})
+        # P = evaluable positive events (those with valid grid associations).
+        # Events in Biguaçu, Imbituba, Joinville, Laguna are structural misses
+        # (no grid point) and are excluded from records.
+        # n_municipalities = union city count (27) from BOTH databases, used
+        # for B_target_effective = b_target_per_muni × 27 = 12 × 27 = 324 ep/yr.
+        P = len(records)
+        n_municipalities = n_union_cities if n_union_cities is not None \
+            else events_combined["municipality"].nunique()
         log.info(
-            "Scoring: P=%d positive events | %.1f validated years | "
-            "%d unique municipalities | %d unmatched episodes",
-            P, n_years, n_municipalities, len(unmatched_episodes),
+            "Scoring: P=%d evaluable positive events (of %d combined; "
+            "%.1f validated years | %d union municipalities | "
+            "%d unmatched episodes)",
+            P, len(events_combined), n_years, n_municipalities,
+            len(unmatched_episodes),
         )
         log.info(
             "Annual burden target: %.0f ep/yr/muni × %d munis = %.0f ep/yr total",
@@ -424,7 +459,8 @@ def main(args: argparse.Namespace | None = None) -> None:
                     )
                     sys.exit(1)
                 _df_tmp = pd.read_csv(_scores_path)
-                # P = H + M is constant across all threshold pairs by definition
+                # P = H + M is constant across all threshold pairs by definition.
+                # Note: this recovers P = evaluable events (records), not 147.
                 _row0 = _df_tmp.iloc[0]
                 P = int(round(_row0["H"] + _row0["M"]))
                 # n_years: derive from burden equation if B < 1 at that row
@@ -471,6 +507,7 @@ def main(args: argparse.Namespace | None = None) -> None:
         from config.plot_config import apply_publication_style
         apply_publication_style()
         log.info("Generating figures...")
+        # run_all_figures will load tab_TC5_event_provenance.csv from disk if available.
         run_all_figures(df_scores, df_ranked, optimal, audit_df, CFG)
 
     # ── Summary ───────────────────────────────────────────────────────────────
@@ -520,7 +557,7 @@ def _save_csi_comparison(optimal: dict, tab_dir: Path) -> None:
         })
     rows.append({
         "method": "PU Composite (Step 2e)",
-        "events_db": "Expanded documentary (56 events)",
+        "events_db": "Combined: expanded (56) + legacy (91) = 147 events, 27 municipalities",
         "validated_period": "1998–2020",
         "thr_hs_pct": optimal.get("thr_hs_pct", "—"),
         "thr_ssh_pct": optimal.get("thr_ssh_pct", "—"),
