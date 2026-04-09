@@ -56,6 +56,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import json
 import pickle
 import sys
 from pathlib import Path
@@ -101,9 +102,10 @@ from src.tidal_sensitivity.tides import build_tide_cache
 log = logging.getLogger(__name__)
 
 # ── Intermediate-result cache paths (for partial runs) ────────────────────────
-_CACHE_DIR = CFG["log_dir"]
-_HM_CACHE  = Path(_CACHE_DIR) / "pu_cache_hits_misses.pkl"
-_EP_CACHE  = Path(_CACHE_DIR) / "pu_cache_unmatched_episodes.pkl"
+_CACHE_DIR   = CFG["log_dir"]
+_HM_CACHE    = Path(_CACHE_DIR) / "pu_cache_hits_misses.pkl"
+_EP_CACHE    = Path(_CACHE_DIR) / "pu_cache_unmatched_episodes.pkl"
+_META_CACHE  = Path(_CACHE_DIR) / "pu_cache_scoring_metadata.json"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -283,6 +285,7 @@ def main(args: argparse.Namespace | None = None) -> None:
     audit_df   = None
     optimal    = None
     df_ranked  = None
+    P          = None   # total positive events (len of expanded events DB)
 
     if run_all or getattr(args, "scoring", False):
         # Load cached intermediate results if not produced in this run
@@ -367,10 +370,86 @@ def main(args: argparse.Namespace | None = None) -> None:
         # ── Step 2d comparison table ───────────────────────────────────────────
         _save_csi_comparison(optimal, tab_dir)
 
+        # ── Scoring metadata (for partial re-runs like --sensitivity alone) ────
+        Path(_META_CACHE).parent.mkdir(parents=True, exist_ok=True)
+        with open(_META_CACHE, "w") as f:
+            json.dump({"n_years": n_years, "P": P}, f)
+        log.info("Saved scoring metadata: %s", _META_CACHE)
+
     # ── Sensitivity analysis ──────────────────────────────────────────────────
     if run_all or getattr(args, "sensitivity", False):
         if df_scores is None:
-            _load_scores_or_exit()
+            df_scores, df_ranked, optimal, audit_df = _load_scores_or_exit()
+
+        # Load intermediate caches if not already in memory
+        if contingency_df is None:
+            if not _HM_CACHE.exists():
+                log.error(
+                    "--sensitivity requires Layer 1 cache. Run --hits-misses first "
+                    "(cache not found: %s).", _HM_CACHE
+                )
+                sys.exit(1)
+            contingency_df = pd.read_pickle(str(_HM_CACHE))
+
+        if unmatched_episodes is None:
+            if not _EP_CACHE.exists():
+                log.error(
+                    "--sensitivity requires Layer 2 cache. Run --unmatched first "
+                    "(cache not found: %s).", _EP_CACHE
+                )
+                sys.exit(1)
+            with open(_EP_CACHE, "rb") as f:
+                unmatched_episodes = pickle.load(f)
+
+        # Load n_years and P from metadata saved during scoring.
+        # Fallback: derive P from the full metrics CSV (H+M is constant across pairs).
+        # n_years cannot be recovered from CSVs alone — metadata file is required.
+        if n_years is None or P is None:
+            if _META_CACHE.exists():
+                with open(_META_CACHE) as f:
+                    _meta = json.load(f)
+                n_years = _meta["n_years"]
+                P = _meta["P"]
+                log.info(
+                    "Loaded scoring metadata: n_years=%.2f  P=%d", n_years, P
+                )
+            else:
+                # Attempt partial recovery from the saved metrics CSV
+                _scores_path = Path(CFG["tab_dir"]) / "tab_TC5_pu_metrics_full.csv"
+                if not _scores_path.exists():
+                    log.error(
+                        "--sensitivity requires scoring metadata but neither "
+                        "%s nor %s exist. Run --scoring first.",
+                        _META_CACHE, _scores_path,
+                    )
+                    sys.exit(1)
+                _df_tmp = pd.read_csv(_scores_path)
+                # P = H + M is constant across all threshold pairs by definition
+                _row0 = _df_tmp.iloc[0]
+                P = int(round(_row0["H"] + _row0["M"]))
+                # n_years: derive from burden equation if B < 1 at that row
+                # B = (H+U)/(n_years * b_target_eff)  →  n_years = (H+U)/(B * b_target_eff)
+                _b_val = float(_row0["B"])
+                _u_val = float(_row0["U"])
+                _h_val = float(_row0["H"])
+                _b_tgt = CFG["b_target_per_municipality"]
+                # n_municipalities not in CSV; use unmatched_episodes to derive it
+                _n_munis = len({ep.municipality for ep in unmatched_episodes}) if unmatched_episodes else 1
+                _b_eff = _b_tgt * max(_n_munis, 1)
+                if _b_val > 0 and _b_val < 1.0 and _b_eff > 0:
+                    n_years = (_h_val + _u_val) / (_b_val * _b_eff)
+                    log.warning(
+                        "Scoring metadata not found — n_years derived from burden "
+                        "equation: %.2f years. Run --scoring to persist accurate metadata.",
+                        n_years,
+                    )
+                else:
+                    log.error(
+                        "Cannot derive n_years from existing CSVs (B=%.4f is saturated "
+                        "or zero). Run --scoring first to generate %s.",
+                        _b_val, _META_CACHE,
+                    )
+                    sys.exit(1)
 
         from src.pu_composite_calibration.sensitivity import run_all_sensitivity
         log.info("Running sensitivity analysis...")

@@ -188,12 +188,35 @@ def run_b_target_sensitivity(
 ) -> pd.DataFrame:
     """Re-run scoring under alternative B_target values.
 
-    Returns
-    -------
-    DataFrame with columns:
-        b_target, thr_hs_pct, thr_ssh_pct, H, U, R_pos, B, F_soft, Score
+    Column schema (explicit)
+    -----------------------
+    b_target_per_muni   : float — per-municipality burden target tested (ep/yr/muni)
+    n_municipalities    : int   — number of unique municipalities in this analysis
+    b_target_total      : float — effective domain budget = b_target_per_muni × n_municipalities
+    Score               : float — composite score at optimal pair
+    R_pos               : float — positive recall at optimal pair
+    B                   : float — normalised annual burden at optimal pair
+    F_soft              : float — soft unmatched penalty at optimal pair
+    H                   : int   — hits (matched events captured) at optimal pair
+    U                   : int   — unmatched detected episodes at optimal pair
+    thr_hs_pct          : float — optimal Hs threshold (fractional, e.g. 0.7 = q70)
+    thr_ssh_pct         : float — optimal SSH threshold (fractional, e.g. 0.7 = q70)
+    hs_percentile       : int   — optimal Hs threshold as integer percentile (e.g. 70)
+    ssh_percentile      : int   — optimal SSH threshold as integer percentile (e.g. 70)
     """
     b_targets = cfg.get("sensitivity_b_target", [])
+
+    # n_municipalities is constant across all B_target variants.
+    # Derive from unmatched episodes (same source used in compute_pu_scores).
+    if unmatched_episodes:
+        n_municipalities = len({ep.municipality for ep in unmatched_episodes})
+    else:
+        n_municipalities = max(1, cfg.get("_n_municipalities_fallback", 1))
+    log.info(
+        "B_target sensitivity: %d municipalities detected from unmatched episodes.",
+        n_municipalities,
+    )
+
     rows: list[dict] = []
 
     for bt in b_targets:
@@ -201,24 +224,30 @@ def run_b_target_sensitivity(
         alt_cfg["b_target_per_municipality"] = bt
 
         df_scores = compute_pu_scores(
-            contingency_df, unmatched_episodes, audit_df, n_years, P, alt_cfg
+            contingency_df, unmatched_episodes, audit_df, n_years, P, alt_cfg,
+            n_municipalities=n_municipalities,
         )
         opt = select_optimal_pair_pu(df_scores)
-        n_munis = opt.get("_n_municipalities", "?")
         rows.append({
-            "b_target_per_municipality": bt,
-            "thr_hs_pct":  opt["thr_hs_pct"],
-            "thr_ssh_pct": opt["thr_ssh_pct"],
-            "H":           opt["H"],
-            "U":           opt["U"],
-            "R_pos":       opt["R_pos"],
-            "B":           opt["B"],
-            "F_soft":      opt["F_soft"],
-            "Score":       opt["Score"],
+            "b_target_per_muni":  bt,
+            "n_municipalities":   n_municipalities,
+            "b_target_total":     bt * n_municipalities,
+            "Score":              opt["Score"],
+            "R_pos":              opt["R_pos"],
+            "B":                  opt["B"],
+            "F_soft":             opt["F_soft"],
+            "H":                  opt["H"],
+            "U":                  opt["U"],
+            "thr_hs_pct":         opt["thr_hs_pct"],
+            "thr_ssh_pct":        opt["thr_ssh_pct"],
+            "hs_percentile":      round(opt["thr_hs_pct"] * 100),
+            "ssh_percentile":     round(opt["thr_ssh_pct"] * 100),
         })
         log.info(
-            "  [B_target sensitivity] B_target=%.0f ep/yr/muni → hs=q%.0f/ssh=q%.0f  Score=%.4f",
-            bt, opt["thr_hs_pct"] * 100, opt["thr_ssh_pct"] * 100, opt["Score"],
+            "  [B_target sensitivity] b_target_per_muni=%.0f × %d munis = %.0f ep/yr"
+            " → hs=q%.0f/ssh=q%.0f  Score=%.4f",
+            bt, n_municipalities, bt * n_municipalities,
+            opt["thr_hs_pct"] * 100, opt["thr_ssh_pct"] * 100, opt["Score"],
         )
 
     return pd.DataFrame(rows)

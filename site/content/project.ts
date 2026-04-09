@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Step 1 (Data Preparation) is complete. Step 2 (Threshold Calibration) is in progress: sub-steps 2a (Exploratory Data Analysis), 2b (Preliminary Compound Analysis), 2c (Tidal Sensitivity, SSH_total definition), and 2d (CSI Grid Scan) are complete — optimal threshold pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151). Sub-step 2e (False Alarm Attribution) is planned before advancing to Step 3.
+The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Step 1 (Data Preparation) is complete. Step 2 (Threshold Calibration) is complete: all five sub-steps are done. Steps 2a–2d established and diagnostically confirmed the q90/q90 threshold pair (CSI=0.0151). Step 2e (PU Composite Calibration) performed an independent threshold sweep using the expanded documentary events database (56 events, 1998–2020) and a PU composite score — independently confirming q90/q90 (R_pos=0.268, robust to all sensitivity experiments). Step 3 (Storm Catalog Generation) is next.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -142,12 +142,10 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-2',
     label: 'STEP 2 — Threshold Calibration',
-    description: 'Umbrella calibration step with five sub-steps. Sub-steps 2a (Exploratory Data Analysis), 2b (Preliminary Compound Analysis), 2c (Tidal Sensitivity) and 2d (CSI Grid Scan) are complete. Sub-step 2e (False Alarm Attribution) is planned.',
-    status: 'in-progress',
+    description: 'Umbrella calibration step with five sub-steps — all complete. Steps 2a–2d established SSH_total, swept 81 threshold pairs, and diagnostically selected q90/q90. Step 2e (PU Composite Calibration) independently confirmed q90/q90 using an expanded events database and a composite score designed for under-reported databases.',
+    status: 'done',
     stepNumber: 2,
-    tasks: [
-      '[2e] False alarm attribution vs S2ID/Atlas Digital — planned',
-    ],
+    tasks: [],
     subSteps: [
       {
         id: 'step-2a',
@@ -203,13 +201,17 @@ export const timelinePhases: TimelinePhase[] = [
       },
       {
         id: 'step-2e',
-        label: '2e — False Alarm Attribution',
-        description: 'Cross-reference 1 298 flagged episodes with S2ID, Atlas Digital, and media archives to reclassify genuine under-reported events and revise effective CSI.',
-        status: 'planned',
+        label: '2e — PU Composite Calibration',
+        description: 'Independent threshold sweep using a PU composite score (R_pos, annual burden, soft unmatched penalty) against the expanded documentary events database (56 events, 1998–2020). Confirms q90/q90 as the final calibrated threshold pair.',
+        status: 'done',
         tasks: [
-          'Cross-reference flagged episodes vs S2ID/Atlas Digital',
-          'Reclassify genuine under-reported events',
-          'Revise effective CSI before advancing to Step 3',
+          'Load expanded documentary events database (56 events, 1998–2020) ✓',
+          'Layer 1: event hit/miss scan — 81 pairs × 56 events ✓',
+          'Layer 2: collect unmatched episode metadata (peak Hₛ, SSH_total, dates) ✓',
+          'Build episode audit table: compute Eᵢ, Iᵢ, Cᵢ, qᵢ per episode ✓',
+          'Compute PU composite scores for all 81 pairs ✓',
+          'Optimal pair: q90/q90 — R_pos=0.268, H=15/P=56, U=1 267 ✓',
+          'Sensitivity analysis: weights, alphas, B_target — all confirm q90/q90 ✓',
         ],
       },
     ],

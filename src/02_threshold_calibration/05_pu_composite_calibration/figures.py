@@ -301,27 +301,123 @@ def plot_sensitivity_weights(
     log.info("Saved: %s", output_path.name)
 
 
+def _resolve_b_target_x_col(df: pd.DataFrame) -> str:
+    """Resolve the per-municipality B_target column name from a sensitivity table.
+
+    Checks for known column names in priority order (newest schema first) and
+    returns the first one found. Raises KeyError with a clear diagnostic message
+    if none of the known names are present.
+
+    Schema history
+    --------------
+    Current  : b_target_per_muni          (standardised name, explicit units)
+    Previous : b_target_per_municipality  (old name before schema standardisation)
+    Legacy   : b_target                   (pre-2025 name, dropped n_municipalities)
+
+    Parameters
+    ----------
+    df : B_target sensitivity DataFrame loaded from tab_TC5_sensitivity_b_target.csv
+
+    Returns
+    -------
+    str — the column name to use as the x-axis
+    """
+    candidates = ["b_target_per_muni", "b_target_per_municipality", "b_target"]
+    for col in candidates:
+        if col in df.columns:
+            if col != "b_target_per_muni":
+                log.warning(
+                    "B_target sensitivity table uses legacy column '%s'. "
+                    "Current schema uses 'b_target_per_muni'. "
+                    "Regenerate tab_TC5_sensitivity_b_target.csv to update.",
+                    col,
+                )
+            return col
+
+    raise KeyError(
+        "B_target sensitivity table is missing the per-municipality burden column. "
+        f"Expected one of {candidates}. "
+        f"Available columns: {list(df.columns)}. "
+        "Regenerate tab_TC5_sensitivity_b_target.csv by running:\n"
+        "  python src/02_threshold_calibration/05_pu_composite_calibration/main.py --sensitivity"
+    )
+
+
+def _resolve_threshold_pct_cols(df: pd.DataFrame) -> tuple[str, str]:
+    """Resolve the optimal-pair percentile column names from a sensitivity table.
+
+    Checks for `thr_hs_pct`/`thr_ssh_pct` (fractional, 0.7=q70) and
+    `hs_percentile`/`ssh_percentile` (integer, 70=q70). Returns the pair found,
+    applying a /100 scale factor flag.
+
+    Returns
+    -------
+    (hs_col, ssh_col) — column names to use for the optimal-pair x-axis plots.
+                        Values in these columns are already in % (integer).
+    """
+    if "hs_percentile" in df.columns and "ssh_percentile" in df.columns:
+        return "hs_percentile", "ssh_percentile"
+    if "thr_hs_pct" in df.columns and "thr_ssh_pct" in df.columns:
+        log.warning(
+            "B_target sensitivity table uses legacy fractional columns "
+            "'thr_hs_pct'/'thr_ssh_pct'. "
+            "Current schema uses integer 'hs_percentile'/'ssh_percentile'. "
+            "Regenerate tab_TC5_sensitivity_b_target.csv to update."
+        )
+        return "thr_hs_pct", "thr_ssh_pct"
+    raise KeyError(
+        "B_target sensitivity table is missing optimal-pair percentile columns. "
+        f"Available columns: {list(df.columns)}."
+    )
+
+
 def plot_sensitivity_b_target(
     df_sens: pd.DataFrame,
     output_path: Path,
 ) -> None:
-    """Plot Score and optimal pair vs. B_target."""
+    """Plot composite Score and optimal threshold pair vs. per-municipality B_target.
+
+    X-axis: b_target_per_muni (episodes/year/municipality)
+    Left Y: composite Score
+    Right Y: optimal Hₛ and SSH threshold percentiles
+
+    Backward-compatible: resolves column names from current and legacy schemas.
+    Raises KeyError with diagnostics if required columns are absent.
+    """
     if df_sens.empty:
         return
 
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(df_sens["b_target"], df_sens["Score"], "o-", color="#2ca02c", label="Score")
-    ax.set_xlabel("B_target (episodes/year)", fontsize=11)
+    x_col = _resolve_b_target_x_col(df_sens)
+    hs_col, ssh_col = _resolve_threshold_pct_cols(df_sens)
+
+    # Scale: hs_percentile/ssh_percentile are already integer %; thr_hs/ssh_pct are fractions.
+    pct_scale = 1 if hs_col == "hs_percentile" else 100
+
+    x_vals = df_sens[x_col]
+
+    # Annotate x-axis label with total if n_municipalities is available
+    if "n_municipalities" in df_sens.columns:
+        n_munis = int(df_sens["n_municipalities"].iloc[0])
+        xlabel = f"Annual burden target per municipality (ep/yr/muni)\n[n={n_munis} municipalities; total = value × {n_munis}]"
+    else:
+        xlabel = "Annual burden target per municipality (ep/yr/muni)"
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(x_vals, df_sens["Score"], "o-", color="#2ca02c", label="Composite Score")
+    ax.set_xlabel(xlabel, fontsize=10)
     ax.set_ylabel("Composite Score", fontsize=11)
-    ax.set_title("Composite Score vs. Annual Burden Target", fontsize=12)
+    ax.set_title("Composite Score vs. Per-Municipality Annual Burden Target", fontsize=12)
     ax.grid(alpha=0.3)
 
+    # Convert to integer percentile if using legacy fractional columns
+    hs_vals  = df_sens[hs_col]  if pct_scale == 1 else df_sens[hs_col]  * 100
+    ssh_vals = df_sens[ssh_col] if pct_scale == 1 else df_sens[ssh_col] * 100
+
     ax2 = ax.twinx()
-    ax2.plot(df_sens["b_target"], df_sens["thr_hs_pct"] * 100, "s--", color="#d62728",
-             alpha=0.7, label="Hₛ pct")
-    ax2.plot(df_sens["b_target"], df_sens["thr_ssh_pct"] * 100, "^--", color="#ff7f0e",
-             alpha=0.7, label="SSH pct")
+    ax2.plot(x_vals, hs_vals,  "s--", color="#d62728", alpha=0.7, label="Hₛ threshold (q%)")
+    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="SSH threshold (q%)")
     ax2.set_ylabel("Optimal threshold percentile (%)", fontsize=10)
+    ax2.set_ylim(40, 100)
 
     lines1, labels1 = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()

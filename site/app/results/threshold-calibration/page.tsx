@@ -6,7 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 export const metadata = {
   title: 'Step 2 — Threshold Calibration — OSR11',
   description:
-    'Empirically calibrating compound event detection thresholds against 91 reported SC coastal disasters. Four sub-analyses: exploratory data analysis, preliminary compound analysis, tidal sensitivity (SSH vs SSH + FES2022 tide) and CSI grid scan (systematic q50–q90 optimisation).',
+    'Empirically calibrating compound event detection thresholds via five sub-analyses: exploratory data analysis, preliminary compound analysis, tidal sensitivity, CSI grid scan (diagnostic), and PU composite calibration (final). Both methods independently select q90/q90 as the optimal threshold pair.',
 };
 
 export default function ThresholdCalibrationHubPage() {
@@ -33,8 +33,8 @@ export default function ThresholdCalibrationHubPage() {
             <div className="flex flex-wrap items-start gap-2 mb-4">
               <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2</span>
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 91 events</span>
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">FES2022 · CSI optimisation</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Full SC coast · 5 sectors · 5 sub-analyses</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">FES2022 · CSI · PU composite calibration</span>
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
@@ -44,11 +44,11 @@ export default function ThresholdCalibrationHubPage() {
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-gray-600">
               This umbrella step establishes the compound event detection thresholds used throughout
-              the OSR11 pipeline. It combines four sub-analyses: exploratory data analysis (Step 2a),
-              preliminary compound analysis (Step 2b), tidal sensitivity (Step 2c) introducing the
-              SSH_total = SSH + FES2022 tide definition, and a systematic CSI grid scan (Step 2d) that
-              identifies the optimal (Hₛ, SSH_total) threshold pair by maximising the Critical Success
-              Index against the 91-event SC disaster database.
+              the OSR11 pipeline. Five sub-analyses: exploratory data analysis (Step 2a), preliminary
+              compound analysis (Step 2b), tidal sensitivity (Step 2c) introducing SSH_total = SSH +
+              FES2022 tide, a CSI grid scan (Step 2d, diagnostic), and a PU composite calibration
+              (Step 2e, final) that independently confirms q90/q90 using an expanded events database
+              and a composite score designed for under-reported impact databases.
             </p>
           </div>
         </div>
@@ -84,14 +84,15 @@ export default function ThresholdCalibrationHubPage() {
                   </p>
                 </div>
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                  <h3 className="text-xs font-semibold text-emerald-800 mb-1.5">Optimal threshold pair (Step 2d result)</h3>
+                  <h3 className="text-xs font-semibold text-emerald-800 mb-1.5">Calibrated threshold pair — confirmed by Steps 2d and 2e</h3>
                   <div className="flex gap-4 text-xs text-emerald-700">
                     <div><span className="font-bold text-base text-emerald-900">q90</span><br />Hₛ threshold</div>
                     <div className="self-center text-emerald-400">×</div>
                     <div><span className="font-bold text-base text-emerald-900">q90</span><br />SSH_total threshold</div>
                   </div>
                   <p className="mt-2 text-xs text-emerald-600">
-                    H=21, M=70, F=1 298 · POD=0.23 · FAR=0.984 · CSI=0.0151
+                    Step 2d (CSI): H=21, M=70, F=1 298, CSI=0.0151<br />
+                    Step 2e (PU): H=15, M=41, U=1 267, R_pos=0.268
                   </p>
                 </div>
               </div>
@@ -241,8 +242,8 @@ export default function ThresholdCalibrationHubPage() {
                   text: 'Even at q90/q90, 1 298 compound episodes are flagged with no matching reported event. This likely reflects the incompleteness of the Civil Defense database (under-reporting, missing dates, spatially patchy coverage) rather than spurious oceanic detections. The ocean signal is real; it is the observational record that is sparse. This distinction is critical for interpreting subsequent steps.',
                 },
                 {
-                  label: 'The calibrated threshold feeds Steps 3–8.',
-                  text: 'The optimal pair (q90/q90) from tab_TC4_optimal_pair.csv is passed directly to Step 3 (Storm Catalog Generation). It defines the exceedance thresholds used to identify independent compound storm episodes in the full 1993–2025 series at all coastal grid points.',
+                  label: 'Step 2e independently confirms q90/q90 — two methods, two databases, same answer.',
+                  text: 'The PU composite calibration (Step 2e) performs an independent threshold sweep using the expanded documentary events database (56 events, 1998–2020) and a composite score that treats unmatched detections as unlabeled rather than as false alarms. It also selects q90/q90, confirming the CSI result from Step 2d. The calibrated threshold pair from tab_TC5_optimal_pair_pu.csv is passed to Step 3 (Storm Catalog Generation).',
                 },
               ].map((item, i) => (
                 <div key={i} className="rounded-xl border border-gray-200 bg-white p-5">
@@ -259,58 +260,41 @@ export default function ThresholdCalibrationHubPage() {
           </div>
         </div>
 
-        {/* ── Planned analysis placeholder ──────────────────────────────────── */}
+        {/* ── Sub-step 2e card ──────────────────────────────────────────────── */}
         <div className="border-b border-gray-200 bg-white py-14">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="mb-5 text-xl font-bold text-gray-900">Planned: False Alarm Attribution Analysis</h2>
-
-            <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <StatusBadge status="planned" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-gray-800 mb-2">
-                    Step 2e — Under-reporting investigation and false alarm reclassification
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                    The CSI grid scan labels 1 298 compound episodes as false alarms — but this
-                    classification assumes the Leal et al. (2024) Civil Defense database is a
-                    complete record of coastal flooding events in Santa Catarina. It is not.
-                    Civil Defense reporting is voluntary, spatially uneven, and subject to
-                    significant under-reporting, particularly before 2005 and in less populated
-                    coastal sectors.
-                  </p>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                    Many &ldquo;false alarms&rdquo; may in fact be real compound coastal events that
-                    occurred but were not recorded. Step 2e will cross-reference the 1 298 flagged
-                    episodes with:
-                  </p>
-                  <ul className="space-y-1.5 mb-5">
-                    {[
-                      'The national S2ID disaster database (broader coverage, independent source)',
-                      'Atlas Digital de Desastres Naturais do Brasil (CEPED-UFSC)',
-                      'Media archives and IBGE event records for coastal municipalities',
-                      'Coastal tide gauge records (where available) for independent water-level validation',
-                    ].map((item, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-gray-500">
-                        <span className="text-gray-400 flex-shrink-0">—</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      <strong>Expected outcome:</strong> A fraction of the 1 298 flagged episodes
-                      will be reclassified as confirmed events (reducing effective FAR), while others
-                      will be confirmed spurious (pointing to physical limitations of the daily
-                      compound definition). This reclassification will yield a revised CSI that
-                      better reflects the true skill of the detector and may motivate adjustments to
-                      the threshold pair or compound definition.
-                    </p>
-                  </div>
+            <div className="rounded-xl border-2 border-emerald-200 bg-white p-6 flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <StatusBadge status="done" />
+                <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2e · Final calibration</span>
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-1">PU Composite Calibration</h3>
+              <p className="text-xs text-gray-500 mb-3">Expanded database · 56 events · 1998–2020 · PU composite score · 14 municipalities</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4 flex-1">
+                Independent threshold sweep using a positive-unlabeled (PU) composite score
+                designed for under-reported impact databases. Unmatched compound detections are
+                treated as unlabeled examples rather than false alarms, with each episode receiving
+                a confidence weight qᵢ based on external evidence, physical intensity, and
+                contextual coherence. Confirms q90/q90 as the optimal pair — robust across all
+                weight, alpha, and B_target sensitivity experiments.
+              </p>
+              <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 mb-4 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-gray-500">Optimal pair</span><br /><span className="font-bold text-gray-800">q90 / q90</span></div>
+                  <div><span className="text-gray-500">Recall (R_pos)</span><br /><span className="font-bold text-gray-800">0.268 — H=15 / P=56</span></div>
+                  <div><span className="text-gray-500">Unmatched episodes</span><br /><span className="font-bold text-gray-800">1 267</span></div>
+                  <div><span className="text-gray-500">Convergence with 2d</span><br /><span className="font-bold text-emerald-700">✓ q90/q90 confirmed</span></div>
                 </div>
               </div>
+              <Link
+                href="/results/threshold-calibration/pu-calibration"
+                className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                View PU composite calibration
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>

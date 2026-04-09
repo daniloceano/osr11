@@ -168,3 +168,90 @@ export const figureGroups = [
   'Statistics',
   'Compound Events',
 ];
+
+// ── Step 2e — PU Composite Calibration figures ────────────────────────────────
+// Source: outputs/threshold_calibration/figures/summary/fig_TC5_*.png
+// Subdir: site/public/figures/tc5_summary/
+//
+// These figures are from the PU Composite Calibration (Step 2e), which performs
+// an independent threshold sweep using a composite score that treats unmatched
+// detected episodes as unlabeled rather than automatically as false alarms.
+// The calibration uses the expanded documentary events database
+// (56 events, 1998–2020), not the legacy Leal et al. (2024) database.
+
+export const tc5Figures: FigureItem[] = [
+  // Score heatmaps (H series)
+  {
+    filename: 'tc5_summary/fig_TC5_H1_score_heatmap.png',
+    title: 'PU Composite Score Surface — Threshold Grid',
+    caption:
+      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Each cell shows the score for one threshold pair. The optimal pair (marked by a rectangle) maximises Score, balancing positive recall against annual burden and soft unmatched penalty. Higher values (greener) indicate a better trade-off. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). 56 expanded events, 1998–2020.',
+    group: 'Score Surface',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_H2_recall_heatmap.png',
+    title: 'Positive Recall R_pos Surface — Threshold Grid',
+    caption:
+      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. R_pos measures what fraction of the 56 confirmed expanded events is captured by the compound detector at each threshold pair. As expected, more permissive (lower percentile) thresholds capture more events, but this comes at the cost of higher annual burden. The optimal pair is marked with a rectangle.',
+    group: 'Score Surface',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_H3_burden_heatmap.png',
+    title: 'Annual Burden B(θ) Surface — Threshold Grid',
+    caption:
+      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. B measures whether the detector fires more often than the operational budget allows. B_target_effective = 12 ep/yr/muni × 14 municipalities = 168 ep/yr total. Warmer colours indicate higher detection frequency (exceeding the budget). The optimal pair is marked with a rectangle.',
+    group: 'Score Surface',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_H4_fsoft_heatmap.png',
+    title: 'Normalised Soft Penalty F_soft(θ)/P Surface — Threshold Grid',
+    caption:
+      'Heatmap of the soft unmatched penalty F_soft(θ)/P across the 9×9 threshold grid. F_soft = Σᵢ(1 − qᵢ) aggregates the plausibility-weighted sum of unmatched episodes: low qᵢ = low confidence the episode corresponds to a real event (large penalty); high qᵢ = plausible unmatched episode (small penalty). Normalised by P (total confirmed events) for comparability with R_pos. Lower is better.',
+    group: 'Score Surface',
+    part: 'Step 2e',
+  },
+  // Summary / comparison figures (S series)
+  {
+    filename: 'tc5_summary/fig_TC5_S1_csi_vs_pu.png',
+    title: 'CSI Optimal Pair vs PU Optimal Pair — Threshold Comparison',
+    caption:
+      'Side-by-side bar chart comparing the threshold percentiles selected by Step 2d (CSI optimisation, 91-event legacy database) and Step 2e (PU composite calibration, 56-event expanded database). Both methods converge on q90/q90 for Hₛ and SSH_total, providing independent confirmation that the q90 pair is robust to the choice of events database and calibration metric. The convergence suggests the result is not an artefact of a single database or method.',
+    group: 'Comparison',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_S2_sensitivity_weights.png',
+    title: 'Weight Sensitivity — Optimal Pair Stability',
+    caption:
+      'Sensitivity of the PU-optimal threshold pair to alternative (w₁, w₂, w₃) weight triplets. Each row shows the optimal Hₛ and SSH_total threshold percentile for one weight preset: high_recall (w₁=0.70), balanced (w₁=0.50), and default (w₁=0.60). Stability across presets confirms that the q90/q90 result does not depend on the specific weight choice within a reasonable range.',
+    group: 'Sensitivity',
+    part: 'Step 2e',
+  },
+  {
+    filename: 'tc5_summary/fig_TC5_S3_sensitivity_b_target.png',
+    title: 'B_target Sensitivity — Score vs Per-Municipality Burden Target',
+    caption:
+      'Sensitivity of the PU composite score and optimal threshold pair to alternative per-municipality annual burden targets (6, 12, 18, 24 episodes/year/municipality). The effective domain budget scales with n_municipalities (14 municipalities; total = value × 14). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested targets, demonstrating robustness. Score improves (less negative) with more permissive targets, reflecting the reduced burden penalty.',
+    group: 'Sensitivity',
+    part: 'Step 2e',
+  },
+  // Audit figure (A series)
+  {
+    filename: 'tc5_summary/fig_TC5_A1_qi_distribution.png',
+    title: 'Distribution of qᵢ Confidence Weights — Unmatched Episodes',
+    caption:
+      'Histogram of qᵢ confidence weights for all unmatched episodes at the PU-optimal threshold pair (q90/q90). qᵢ = clip(α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ, 0, 1) aggregates external evidence (Eᵢ), physical intensity (Iᵢ), and context coherence (Cᵢ) for each unmatched episode. Red dashed line: mean; orange dotted line: median. Episodes clustered near 0 have low plausibility (few circumstantial indicators of a real event); episodes near 1 are highly plausible but unconfirmed in the documentary database, likely reflecting under-reporting.',
+    group: 'Episode Audit',
+    part: 'Step 2e',
+  },
+];
+
+export const tc5FigureGroups = [
+  'Score Surface',
+  'Comparison',
+  'Sensitivity',
+  'Episode Audit',
+];

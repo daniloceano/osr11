@@ -90,9 +90,9 @@ outputs/threshold_calibration/
 │   ├── tab_TC5_pu_metrics_ranked.csv       # Ranked by PU optimal hierarchy
 │   ├── tab_TC5_optimal_pair_pu.csv         # Final calibrated threshold pair
 │   ├── tab_TC5_csi_vs_pu_comparison.csv    # Comparison with Step 2d (diagnostic)
-│   ├── tab_TC5_sensitivity_weights.csv     # Weight sensitivity
-│   ├── tab_TC5_sensitivity_alpha.csv       # Confidence weight sensitivity
-│   └── tab_TC5_sensitivity_b_target.csv   # B_target sensitivity
+│   ├── tab_TC5_sensitivity_weights.csv     # Weight sensitivity: label,w1,w2,w3,thr_hs_pct,thr_ssh_pct,H,U,R_pos,B,F_soft,Score
+│   ├── tab_TC5_sensitivity_alpha.csv       # Alpha sensitivity: label,alpha_E,alpha_I,alpha_C,thr_hs_pct,thr_ssh_pct,H,U,R_pos,B,F_soft,Score
+│   └── tab_TC5_sensitivity_b_target.csv    # B_target sensitivity (see schema below)
 ├── figures/summary/
 │   ├── fig_TC5_H1_score_heatmap.png        # Composite Score surface
 │   ├── fig_TC5_H2_recall_heatmap.png       # R_pos surface
@@ -106,6 +106,29 @@ outputs/threshold_calibration/
     └── pu_cache_hits_misses.pkl            # Layer 1 intermediate cache
     └── pu_cache_unmatched_episodes.pkl     # Layer 2 intermediate cache
 ```
+
+### `tab_TC5_sensitivity_b_target.csv` Column Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `b_target_per_muni` | float | Per-municipality annual burden target tested (ep/yr/muni) |
+| `n_municipalities` | int | Number of unique municipalities in this analysis (constant across rows) |
+| `b_target_total` | float | Effective domain budget = `b_target_per_muni × n_municipalities` (ep/yr total) |
+| `Score` | float | Composite score at the PU-optimal threshold pair |
+| `R_pos` | float | Positive recall at optimal pair |
+| `B` | float | Normalised annual burden at optimal pair |
+| `F_soft` | float | Soft unmatched penalty at optimal pair |
+| `H` | int | Hits (matched confirmed events captured) |
+| `U` | int | Unmatched detected episodes |
+| `thr_hs_pct` | float | Optimal Hₛ threshold as fraction (0.7 = q70) |
+| `thr_ssh_pct` | float | Optimal SSH threshold as fraction (0.7 = q70) |
+| `hs_percentile` | int | Optimal Hₛ threshold as integer percentile (70 for q70) |
+| `ssh_percentile` | int | Optimal SSH threshold as integer percentile (70 for q70) |
+
+**Key distinction:** `b_target_per_muni` is the per-municipality target;
+`b_target_total` is the effective domain-wide budget actually used in `B(θ)`.
+
+---
 
 ## Key Methodological Parameters
 

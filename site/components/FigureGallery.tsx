@@ -3,13 +3,21 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import type { FigureItem } from '@/lib/types';
-import { figureGroups } from '@/content/figures';
+import { figureGroups as defaultFigureGroups } from '@/content/figures';
 
-export default function FigureGallery({ figures }: { figures: FigureItem[] }) {
+interface FigureGalleryProps {
+  figures: FigureItem[];
+  /** Optional list of group names to use as filter tabs. Defaults to the
+   *  shared figureGroups export from content/figures.ts. */
+  groups?: string[];
+}
+
+export default function FigureGallery({ figures, groups: groupsProp }: FigureGalleryProps) {
   const [activeGroup, setActiveGroup] = useState<string>('All');
   const [lightbox, setLightbox] = useState<FigureItem | null>(null);
 
-  const groups = ['All', ...figureGroups.filter((g) => figures.some((f) => f.group === g))];
+  const sourceGroups = groupsProp ?? defaultFigureGroups;
+  const groups = ['All', ...sourceGroups.filter((g) => figures.some((f) => f.group === g))];
   const filtered = activeGroup === 'All' ? figures : figures.filter((f) => f.group === activeGroup);
 
   return (
