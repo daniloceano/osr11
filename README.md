@@ -4,8 +4,8 @@
 
 **Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
 **Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
-**Status:** Methodology development and exploratory analysis phase  
-**Current implementation:** Full Santa Catarina coast (threshold calibration phase)
+**Status:** Threshold calibration complete — storm catalog generation in progress  
+**Current implementation:** Full Santa Catarina coast (threshold calibration complete; Step 3 next)
 
 ---
 
@@ -120,7 +120,7 @@ First-look inspection of WAVERYS and GLORYS12 spatial distributions, temporal va
 
 #### Sub-step 2b — Preliminary Compound Event Occurrence Analysis
 
-First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database (full coast, 5 sectors, 22 municipalities). Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 22 of 91 events show concurrent SSH-only exceedances at q90. Establishes the baseline from which sub-step 2d calibrates thresholds systematically.
+First-pass inspection of joint Hₛ and SSH (zos) exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database (full coast, 5 sectors, 22 municipalities). Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 2 of 91 events show concurrent Hₛ + SSH q90 exceedances (South sector, Barra Velha: May 2001, March 2019). Establishes the baseline from which subsequent calibration steps (2c–2e) progressively refine detection.
 
 **Status:** ✅ Complete  
 **Implementation:** `src/02_threshold_calibration/02_preliminary_compound/`
@@ -144,7 +144,7 @@ FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to
 
 #### Sub-step 2e — PU Composite Calibration (Final Calibration)
 
-**Final threshold calibration** using a positive-unlabeled (PU) composite score that addresses systematic under-reporting. Uses an **expanded documentary database** (56 events) curated from news archives, academic theses, and technical reports with explicit marine-forcing evidence.
+**Final threshold calibration** using a positive-unlabeled (PU) composite score that addresses systematic under-reporting. Uses a **combined positive-event set** (expanded documentary database of 56 events + legacy Civil Defense database of 91 events = 147 unique municipality×date pairs, 27 municipalities) curated from news archives, academic theses, technical reports, and Civil Defense records.
 
 **Methodology:** The composite score balances three components:
 - **Positive recall** R_pos(θ) = H(θ) / P — fraction of reported events captured
@@ -156,11 +156,11 @@ Each unmatched episode receives a confidence weight q_i based on:
 - **Physical intensity** (I_i): Percentile exceedance of detected peaks
 - **Context coherence** (C_i): Seasonal timing, neighboring detections, exposure status
 
-The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P, with default weights (0.60, 0.20, 0.20). Step 2e performs its own **independent threshold sweep** — it does NOT use thresholds from Step 2d.
+The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P, with default weights (0.60, 0.20, 0.20). Step 2e performs its own **independent threshold sweep** — it does NOT use thresholds from Step 2d. B_target_effective = 12 × 27 = 324 ep/yr.
 
 **Theoretical basis:** Positive-unlabeled learning framework (Bekker and Davis, 2020); impact observation bias (Wyatt et al., 2023; Delforge et al., 2025).
 
-**Status:** 🔧 Scaffolding complete (methodology defined, implementation pending)  
+**Status:** ✅ Complete  
 **Implementation:** `src/02_threshold_calibration/05_pu_composite_calibration/`
 
 ---
@@ -295,21 +295,22 @@ The repository currently contains:
 - Reported events preprocessing (Excel → CSV)
 - Spatial regridding: GLORYS → WAVERYS grid (`preprocessing/`)
 
-✅ **STEP 2 — Threshold Calibration** (sub-steps 2a–2d complete; 2e planned)
+✅ **STEP 2 — Threshold Calibration** (all sub-steps 2a–2e complete)
 
 - **Sub-step 2a** — Exploratory Data Analysis (`src/02_threshold_calibration/01_exploratory_data_analysis/`):
   Spatial maximum maps, time series, reported events EDA, municipality–grid association, per-sector boxplots, statistical analyses
 
 - **Sub-step 2b** — Preliminary Compound Analysis (`src/02_threshold_calibration/02_preliminary_compound/`):
-  Domain: full SC (5 sectors, 22 municipalities, 91 events); key finding: 22/91 concurrent SSH-only exceedances at q90
+  Domain: full SC (5 sectors, 22 municipalities, 91 events); key finding: 2/91 concurrent Hₛ + SSH (zos, without tide) q90 exceedances
 
 - **Sub-step 2c** — Tidal Sensitivity (`src/02_threshold_calibration/03_tidal_sensitivity/`):
-  SSH_total = SSH + FES2022 daily max tide; detection at q90: 22 → 26 events
+  SSH_total = zos + FES2022 daily max tide; detection at q90: 22 → 26 events. Establishes canonical SSH_total definition.
 
-- **Sub-step 2d** — CSI Grid Scan (`src/02_threshold_calibration/04_csi_grid_scan/`):
-  81 threshold pairs evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151)
+- **Sub-step 2d** — CSI Grid Scan — **DIAGNOSTIC** (`src/02_threshold_calibration/04_csi_grid_scan/`):
+  81 threshold pairs evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR (98.4%) reveals Civil Defense database incompleteness; demonstrates that classical CSI is unsuitable. Thresholds from this step are NOT used in subsequent steps.
 
-- **Sub-step 2e** — False Alarm Attribution: 🔄 planned (cross-reference flagged episodes with S2ID/Atlas Digital)
+- **Sub-step 2e** — PU Composite Calibration — **FINAL CALIBRATION** (`src/02_threshold_calibration/05_pu_composite_calibration/`):
+  Independent threshold sweep using the combined positive-event set (147 events, 27 municipalities). PU composite score confirms q90/q90 as the final calibrated threshold pair. **Authoritative source of thresholds for Step 3.**
 
 🔄 **Steps 3–8** — Planned, not yet implemented
 
@@ -370,17 +371,23 @@ osr11/
 │       │   ├── tides.py                      #     FES2022 integration
 │       │   ├── config/analysis_config.py     #     Configuration
 │       │   └── README.md                     #     Documentation
-│       └── 04_csi_grid_scan/                 #   Sub-step 2d — CSI grid scan
+│       ├── 04_csi_grid_scan/                 #   Sub-step 2d — CSI grid scan (diagnostic)
+│       │   ├── main.py                       #     CLI orchestrator
+│       │   ├── calibration.py, metrics.py    #     Analysis modules
+│       │   ├── config/analysis_config.py     #     Configuration
+│       │   └── README.md, RUN.md, SCIENTIFIC_NOTES.md
+│       └── 05_pu_composite_calibration/      #   Sub-step 2e — PU composite calibration (final)
 │           ├── main.py                       #     CLI orchestrator
-│           ├── calibration.py, metrics.py    #     Analysis modules
+│           ├── scoring.py, audit.py          #     Core PU scoring + episode audit
+│           ├── sensitivity.py, figures.py    #     Sensitivity analysis + visualizations
 │           ├── config/analysis_config.py     #     Configuration
-│           └── README.md, RUN.md, SCIENTIFIC_NOTES.md
+│           └── README.md, RUN.md, SCIENTIFIC_NOTES.md, INTEGRATION_NOTES.md
 │
 ├── outputs/                                  # Analysis outputs (not committed, .gitignore)
 │   ├── south_sc_test_data_exploratory/       #   Step 2a outputs
 │   ├── preliminary_compound/                 #   Step 2b outputs
 │   ├── tidal_sensitivity/                    #   Step 2c outputs
-│   └── threshold_calibration/                #   Step 2d outputs
+│   └── threshold_calibration/                #   Step 2d and 2e outputs
 ├── logs/                                     # Execution logs (not committed, .gitignore)
 └── site/                                     # Scientific results website (Next.js + Tailwind CSS)
     ├── README.md                             # Site documentation
@@ -450,10 +457,10 @@ Outputs written to: `outputs/preliminary_compound/`
 
 See `src/02_threshold_calibration/02_preliminary_compound/RUN.md` for complete command reference.
 
-### 4. Run CSI Grid Scan (Step 2d)
+### 4. Run CSI Grid Scan — Diagnostic (Step 2d)
 
 ```bash
-# Full threshold calibration analysis
+# Full diagnostic threshold scan
 python -m src.csi_grid_scan.main --all
 ```
 
@@ -461,7 +468,20 @@ Outputs written to: `outputs/threshold_calibration/`
 
 See `src/02_threshold_calibration/04_csi_grid_scan/RUN.md` for complete command reference.
 
-### 5. Download Full-Domain Data (Optional)
+> **Note:** Step 2d is diagnostic. Its thresholds are NOT used operationally. Step 2e (PU Composite Calibration) is the final calibration step.
+
+### 5. Run PU Composite Calibration — Final Calibration (Step 2e)
+
+```bash
+# Full PU calibration pipeline
+python src/02_threshold_calibration/05_pu_composite_calibration/main.py --all
+```
+
+Outputs written to: `outputs/threshold_calibration/` (tables prefixed `tab_TC5_*`, figures `fig_TC5_*`)
+
+See `src/02_threshold_calibration/05_pu_composite_calibration/RUN.md` for complete command reference.
+
+### 6. Download Full-Domain Data (Optional)
 
 **Note:** Full GLORYS12 and WAVERYS downloads are large (~100 GB+ for full Brazilian coast, 1993–2025). Test fixtures are sufficient for exploratory work.
 
@@ -514,11 +534,12 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 - **STEP 1 (Data Preparation):** Complete for south SC test domain; full-domain downloads require large storage and processing time. Implementation in `src/01_data_preparation/`.
 
-- **STEP 2 (Threshold Calibration):** Sub-steps 2a–2d complete; sub-step 2e (False Alarm Attribution) planned.
+- **STEP 2 (Threshold Calibration):** All sub-steps 2a–2e complete.
   - **2a** — Exploratory analysis complete (`src/02_threshold_calibration/01_exploratory_data_analysis/`)
   - **2b** — Preliminary compound analysis complete (`src/02_threshold_calibration/02_preliminary_compound/`)
   - **2c** — Tidal sensitivity complete (`src/02_threshold_calibration/03_tidal_sensitivity/`)
-  - **2d** — CSI grid scan complete (`src/02_threshold_calibration/04_csi_grid_scan/`)
+  - **2d** — CSI grid scan complete — diagnostic only (`src/02_threshold_calibration/04_csi_grid_scan/`)
+  - **2e** — PU composite calibration complete — final calibrated thresholds (`src/02_threshold_calibration/05_pu_composite_calibration/`)
 
 - **Steps 3–8 (Storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
 

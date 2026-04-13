@@ -174,12 +174,19 @@ from src.pu_composite_calibration.config import CFG
 
 ---
 
-## Next Steps
+## Step 2e Status
 
-1. **Implement scoring logic:** `scoring.py` — composite score computation
-2. **Implement audit components:** `audit.py` — E_i, I_i, C_i calculations
-3. **Implement CLI:** `main.py` — orchestration with `--all`, `--export-audit`, etc.
-4. **Implement figures:** `figures.py` — heatmaps, comparison plots
-5. **Run audit process:** Curate external evidence flags for high-I_i episodes
-6. **Run full analysis:** Generate PU-optimal threshold pair
-7. **Update manuscript:** Document methodology and compare CSI vs PU results
+Step 2e is **complete**. All implementation tasks are done:
+
+- `scoring.py` — composite score computation (independent threshold sweep, PU metrics, optimal pair selection)
+- `audit.py` — E_i, I_i, C_i calculations and episode audit table
+- `main.py` — full CLI with `--all`, `--hits-misses`, `--unmatched`, `--scoring`, `--sensitivity`, `--figures`, `--summary`
+- `figures.py` — heatmaps, comparison plots, q_i distribution
+- `sensitivity.py` — weight, alpha, and B_target sensitivity experiments
+
+The PU-optimal threshold pair is stored in `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` and is the authoritative threshold source for Step 3 (Storm Catalog Generation).
+
+## Next Step
+
+**Step 3 — Storm Catalog Generation** (`src/03_storm_catalog_generation/`):
+Apply the PU-optimal threshold pair (`tab_TC5_optimal_pair_pu.csv`) to the full 1993–2025 metocean dataset to generate independent Hₛ and SSH_total storm catalogs at each coastal grid point.

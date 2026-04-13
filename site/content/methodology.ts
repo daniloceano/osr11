@@ -33,7 +33,7 @@ export const methodologySteps: MethodStep[] = [
         id: 'step-2b',
         label: '2b — Preliminary Compound Analysis',
         description:
-          'First-pass inspection of joint Hₛ and SSH exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database (full coast, 5 sectors, 22 municipalities). Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 22 of 91 events show concurrent SSH-only exceedances at q90.',
+          'First-pass inspection of joint Hₛ and SSH (zos) exceedances at q90 during each of the 91 reported coastal disasters in the Leal et al. (2024) SC database (full coast, 5 sectors, 22 municipalities). Per-event ±3-day windows; MagicA peaks-over-threshold; concomitance metrics. 2 of 91 events show concurrent Hₛ + SSH q90 exceedances (South sector, Barra Velha). Baseline for threshold calibration.',
         status: 'done',
       },
       {
@@ -120,9 +120,13 @@ full study domain.
 The joint exceedance framework defines compound events as episodes in which both Hₛ and
 SSH_total (= GLORYS12 SSH + FES2022 astronomical tide, daily maximum) exceed their respective
 extreme thresholds within a causal/antecedent matching window. The detection thresholds
-(Hₛ=q90, SSH_total=q90) and the matching window [D-2, D-1, D, D+1 00Z] are empirically
-established from the Step 2 CSI grid scan against the 91-event Leal et al. (2024) SC
-disaster database. This approach follows Zscheischler et al. (2020) and is consistent with
+(Hₛ=q90, SSH_total=q90) are empirically established by Step 2e (PU Composite Calibration),
+which applies a positive-unlabeled framework against a combined positive-event set (147 events,
+27 municipalities) to address systematic under-reporting in the Civil Defense disaster database.
+The matching window [D-2, D-1, D, D+1 00Z] was established in Steps 2b–2d and is inherited
+by Step 2e. The CSI grid scan (Step 2d) served as a diagnostic exploration and confirmed
+that classical verification metrics are not suitable under database incompleteness (FAR=0.984).
+This approach follows Zscheischler et al. (2020) and Bekker and Davis (2020), consistent with
 the physical understanding that wave generation and surge propagation are driven by the same
 atmospheric systems at the regional scale.
 `;

@@ -28,7 +28,7 @@ stationary q90 threshold computed from the full 1993–2025 climatological serie
 | **Sectors** | North, Central-north, Central, Central-south, South |
 | **Threshold** | q90 of the full daily series at the nearest ocean grid point |
 | **Window** | ±3 days centred on the reported event date (7-day total) |
-| **Variables** | Hₛ (m) and SSH (m) |
+| **Variables** | Hₛ (m) and SSH (zos, m) — tidal component added in Step 2c to form SSH_total |
 | **Key question** | Does the q90 threshold capture events simultaneously in both variables? |
 
 ---
@@ -158,8 +158,7 @@ Grid-point assignment follows a priority cascade:
 - Municipality–grid assignment uses the nearest ocean grid cell; no spatial interpolation.
 - Many northern SC municipalities have grid points over land → NaN thresholds and metrics.
 - Events from outside the dataset time range are skipped with a warning.
-- q90 is an exploratory initial choice; systematic threshold optimisation (hit rate,
-  false-alarm rate, CSI over a threshold grid) is the immediate next step.
+- q90 is an exploratory initial choice. Systematic threshold optimisation was performed in Step 2d (CSI grid scan — diagnostic) and Step 2e (PU composite calibration — final calibration). The final calibrated pair is from Step 2e.
 
 ---
 

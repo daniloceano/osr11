@@ -303,29 +303,23 @@ The optimal pair is selected following the hierarchy: max CSI → min FAR → ma
 
 ## Results and Interpretation
 
-**[PRELIMINARY — to be updated after running the full grid scan]**
+**CSI Grid Scan Results (Step 2d — Diagnostic)**
 
-Results will be documented here after the analysis is executed. Key outputs to interpret:
+The grid scan evaluated 81 threshold pairs against the 91-event SC disaster database (Leal et al., 2024). The CSI-optimal pair is:
 
-- **CSI heatmap** (fig_TC4_H1): the spatial pattern of CSI across threshold pairs reveals
-  whether there is a clear optimal region or a broad plateau. A sharp peak indicates robust
-  calibration; a broad plateau suggests the method is not highly sensitive to the exact
-  threshold choice.
+- **Hₛ = q90 / SSH_total = q90**
+- H = 21 hits, M = 70 misses, F = 1 298 false alarms
+- **CSI = 0.0151**, **FAR = 0.984**
 
-- **FAR heatmap** (fig_TC4_H2): low-percentile combinations tend to have high FAR (many
-  false alarms). The FAR surface helps identify which threshold pairs are too permissive.
+**Key diagnostic finding:** The extremely high FAR (98.4%) means that 98.4% of all detected compound episodes have no matching reported disaster. Two interpretations are possible: (1) thresholds are too permissive; (2) the disaster database is systematically incomplete. Given known Civil Defense reporting limitations (Wyatt et al., 2023; Delforge et al., 2025), interpretation #2 is dominant. This demonstrates that **classical CSI is not appropriate for this application** under incomplete reporting.
 
-- **POD heatmap** (fig_TC4_H3): high-percentile combinations tend to have low POD (many
-  misses). The POD surface helps identify pairs that are too restrictive.
+This finding motivated Step 2e (PU Composite Calibration), which independently addresses the under-reporting problem and produces the final calibrated threshold pair (also q90/q90, confirmed through a different methodology).
 
-- **Event-level hits** (tab_TC4_event_hits_optimal.csv): events consistently missed at the
-  optimal pair may indicate physical mismatches (e.g., events driven by processes not well
-  captured by WAVERYS/GLORYS12 at daily resolution, or events in sectors with poor grid
-  coverage).
-
-- **Capture lag** (tab_TC4_lag_summary.csv): the distribution of lags at which events are
-  captured (D-2, D-1, D, D+1) reveals whether the compound forcing typically precedes or
-  coincides with the reported impact.
+**Interpretation of heatmaps:**
+- **CSI heatmap** (fig_TC4_H1): a broad plateau at the high-percentile region, with maximum at q90/q90. Low CSI values throughout reflect the systematic inflation of F by unreported events.
+- **FAR heatmap** (fig_TC4_H2): FAR is high across all threshold pairs due to the incomplete reporting problem.
+- **POD heatmap** (fig_TC4_H3): POD decreases monotonically as thresholds become more restrictive.
+- **Capture lag** (tab_TC4_lag_summary.csv): event capture is distributed across D-2 to D+1, confirming that antecedent forcing (D-2, D-1) accounts for a significant fraction of detections.
 
 ---
 
@@ -372,16 +366,12 @@ Results will be documented here after the analysis is executed. Key outputs to i
 
 ---
 
-## Next Steps
+## Next Steps (after Step 2d — already completed)
 
-- **Step 4 — Storm Catalog Generation**: Use the optimal threshold pair from Step 3b to build independent storm catalogs
-  (Hₛ exceedance episodes + SSH_total exceedance episodes) for the full series at each
-  grid point.
-- **Step 5 — Compound Event Detection**: Detect compound events as temporal overlaps between the Hₛ and SSH_total catalogs.
-- **Sensitivity**: Re-run with a sector-specific match window (e.g., wider window for northern
-  sectors where grid coverage is sparser).
-- **Extension**: Evaluate whether hourly-resolution tidal signal changes the CSI surface
-  significantly (requires 3-hourly or hourly WAVERYS data).
+- **Step 2e — PU Composite Calibration (DONE)**: Step 2d revealed that classical CSI is unsuitable (FAR=0.984) due to Civil Defense database under-reporting. Step 2e performed an independent threshold sweep using a PU composite score against the combined positive-event set (147 events, 27 municipalities), producing the final calibrated threshold pair. Step 2d outputs are used by Step 2e for comparison only.
+- **Step 3 — Storm Catalog Generation**: Use the PU-optimal threshold pair from Step 2e (`tab_TC5_optimal_pair_pu.csv`) to build independent storm catalogs (Hₛ exceedance episodes + SSH_total exceedance episodes) for the full series at each grid point.
+- **Step 4 — Compound Event Detection**: Detect compound events as temporal overlaps between the Hₛ and SSH_total storm catalogs produced in Step 3.
+- **Future sensitivity (optional)**: Re-run with a sector-specific match window or hourly-resolution WAVERYS data.
 
 ---
 

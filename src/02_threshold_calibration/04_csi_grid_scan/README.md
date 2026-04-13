@@ -5,13 +5,15 @@
 
 ## Overview
 
-Systematic optimisation of Hₛ and SSH_total exceedance thresholds using a CSI (Critical Success Index) grid scan. Evaluated against the 91-event Santa Catarina coastal disaster database (Leal et al., 2024) using a causal/antecedent temporal matching window.
+Systematic exploration of Hₛ and SSH_total exceedance thresholds using a CSI (Critical Success Index) grid scan. Evaluated against the 91-event Santa Catarina coastal disaster database (Leal et al., 2024) using a causal/antecedent temporal matching window.
+
+**This step is DIAGNOSTIC.** Its optimal threshold pair (q90/q90) is retained for methodological comparison only. Step 2e (PU Composite Calibration) performs the final independent calibration and is the authoritative source of thresholds for Step 3.
 
 ## What this step does
 
-Steps 2a–2c established that a fixed q90 threshold leaves only 2–26 of 91 reported events detected as concurrent exceedances. This low rate is expected: q90 is a starting point, not a calibrated threshold. Step 2d answers the question:
+Steps 2a–2c established that a fixed q90 threshold leaves only 2–26 of 91 reported events detected as concurrent exceedances. This low rate is expected: q90 is a starting point, not a calibrated threshold. Step 2d answers the diagnostic question:
 
-> **Which pair of (Hₛ, SSH_total) thresholds best separates the 91 reported coastal disasters from background ocean conditions?**
+> **Which pair of (Hₛ, SSH_total) thresholds best separates the 91 reported coastal disasters from background ocean conditions, under the classical CSI framework?**
 
 This is answered by sweeping 81 threshold combinations (q50–q90 in 0.05 steps for each variable) and computing, for each pair:
 
@@ -22,7 +24,9 @@ This is answered by sweeping 81 threshold combinations (q50–q90 in 0.05 steps 
 - **FAR** = F / (H + F)
 - **CSI** = H / (H + M + F)
 
-The threshold pair that maximises CSI (with FAR as tiebreaker) is selected as the calibrated detection framework for Step 4 (Storm Catalog Generation).
+The threshold pair that maximises CSI (with FAR as tiebreaker) is identified. The extremely high FAR at the optimal pair (q90/q90: FAR=0.984) revealed that classical verification metrics are unsuitable due to systematic Civil Defense database under-reporting. This diagnostic finding motivated the PU composite approach in Step 2e.
+
+**Downstream use:** The Step 2d outputs are used by Step 2e for methodological comparison only. Step 2e performs its own independent threshold sweep. The final calibrated thresholds for Step 3 come from Step 2e.
 
 ## Causal matching window
 
@@ -93,5 +97,5 @@ See `RUN.md` for the complete output list. The key outputs are:
 - `tab_TC4_metrics_full.csv` — full grid scan metrics
 - `tab_TC4_metrics_ranked.csv` — ranked by optimal selection hierarchy
 - `tab_TC4_event_hits_optimal.csv` — per-event hit/miss at the optimal pair
-- `tab_TC4_optimal_pair.csv` — optimal threshold pair reference (used by Step 4)
-- `fig_TC4_H1_csi_heatmap.png` — CSI across all threshold pairs (primary result figure)
+- `tab_TC4_optimal_pair.csv` — diagnostic optimal threshold pair (used by Step 2e for comparison only; NOT used by Step 3)
+- `fig_TC4_H1_csi_heatmap.png` — CSI across all threshold pairs (primary diagnostic figure)

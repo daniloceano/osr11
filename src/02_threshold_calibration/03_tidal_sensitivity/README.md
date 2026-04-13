@@ -106,4 +106,5 @@ conda run -n osr11 python -m src.tidal_sensitivity.main --summary
 ## Relationship to other steps
 
 - **Reuses:** `src/02_threshold_calibration/02_preliminary_compound` (Step 2b) — data loading, event record building, SSH-only thresholds
-- **Feeds into:** `src/02_threshold_calibration/04_csi_grid_scan` (Step 2d — CSI Grid Scan) — same SSH_total definition (zos + FES2022 daily max tide) and same Hₛ daily-maximum convention
+- **Feeds into:** `src/02_threshold_calibration/04_csi_grid_scan` (Step 2d — CSI Grid Scan, diagnostic) — same SSH_total definition and Hₛ daily-maximum convention
+- **Feeds into:** `src/02_threshold_calibration/05_pu_composite_calibration` (Step 2e — PU Composite Calibration, final calibration) — SSH_total = zos + FES2022 daily max tide is the mandatory sea-level variable; tides.py is reused directly

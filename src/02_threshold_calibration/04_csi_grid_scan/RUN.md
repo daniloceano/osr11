@@ -4,9 +4,11 @@
 
 All previous steps must be complete:
 - **Step 2b**: `src/02_threshold_calibration/02_preliminary_compound/` — produces the EventRecord infrastructure
-- **Step 2c**: `src/02_threshold_calibration/03_tidal_sensitivity/` — confirms SSH_total = SSH + FES2022 as the sea level variable
+- **Step 2c**: `src/02_threshold_calibration/03_tidal_sensitivity/` — confirms SSH_total = zos + FES2022 daily max tide as the canonical sea-level variable
 - Data files: `data/test/metocean_sc_full_unified_waverys_grid.nc` and `data/reported events/reported_events_Karine_sc.csv` must exist.
 - Tide model files: `data/tide_models_clipped_brasil/fes2022b/` must be present.
+
+> **Note:** Step 2d is diagnostic. Its output `tab_TC4_optimal_pair.csv` is used by Step 2e for comparison only. The final calibrated thresholds for Step 3 come from Step 2e (`tab_TC5_optimal_pair_pu.csv`).
 
 ## Run the full analysis
 
