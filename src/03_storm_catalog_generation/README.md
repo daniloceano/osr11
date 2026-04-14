@@ -2,7 +2,7 @@
 
 **Part of the OSR11 Pipeline**  
 **Location:** `src/03_storm_catalog_generation/`  
-**Status:** Planned — implementation not yet started  
+**Status:** Implemented — smoke test passed on SC fixture (test mode)  
 **Preceded by:** Step 2 (Threshold Calibration, complete)  
 **Followed by:** Step 4 (Compound Event Detection)
 

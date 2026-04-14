@@ -50,6 +50,9 @@ _MODULE_ALIASES: dict[str, str] = {
     "tidal_sensitivity":          "02_threshold_calibration/03_tidal_sensitivity",
     "csi_grid_scan":              "02_threshold_calibration/04_csi_grid_scan",
     "pu_composite_calibration":   "02_threshold_calibration/05_pu_composite_calibration",
+
+    # STEP 3 — Storm Catalog Generation
+    "storm_catalog_generation":   "03_storm_catalog_generation",
 }
 
 
