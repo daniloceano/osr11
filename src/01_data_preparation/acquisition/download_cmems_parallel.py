@@ -31,11 +31,11 @@ from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-# Allow running from project root: python src/acquisition/download_cmems_parallel.py
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+# Allow sibling import regardless of how the script is invoked
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import copernicusmarine
-from src.acquisition.download_cmems import load_config
+from download_cmems import load_config
 
 # ---------------------------------------------------------------------------
 # Logging
