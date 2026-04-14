@@ -66,9 +66,12 @@ The tide integration functions already exist in Step 2c and are reused by Steps 
 - `src/02_threshold_calibration/03_tidal_sensitivity/tides.py` — contains:
   - `build_tide_cache(records, daily_max=True)` — computes FES2022 daily-max tidal series per grid point
   - `add_tide_to_ssh(ssh_series, tide_series)` — computes SSH_total = zos + tide
-  - `get_tide_for_record(record, tide_cache)` — retrieves tide for a specific grid point
+  - `_compute_daily_max_tides(lat, lon, time_index)` — hourly FES2022 evaluation → daily max (internal helper)
+  - `compute_tides_for_point(lat, lon, time_index)` — low-level FES2022 evaluation at given timestamps
 
-Step 3 must reuse these functions (not reimplement tide computation). The tide model directory is `data/tide_models_clipped_brasil/fes2022b/` (configured in Step 2e's `config/analysis_config.py`).
+Step 3 must reuse these functions (not reimplement tide computation). The tide model directory is `data/tide_models_clipped_brasil/` (configured in Step 2e's `config/analysis_config.py`, constant `TIDE_MODELS_DIR`).
+
+**Interface adaptation note:** In Step 2c–2e, `build_tide_cache()` accepts a `list[EventRecord]` and extracts `(grid_lat, grid_lon)` coordinates and the climatological time index from each record. Step 3 does not use EventRecord objects — it works with grid points from the metocean dataset. Step 3's tide wrapper should either (a) construct lightweight record-like objects compatible with `build_tide_cache()`, or (b) call the lower-level `_compute_daily_max_tides(lat, lon, time_index)` directly for each grid point. Option (b) is cleaner and avoids coupling to Step 2's data model. The `add_tide_to_ssh()` function has a simple `(pd.Series, pd.Series) → pd.Series` signature and requires no adaptation.
 
 ### 2.4 Episode clustering / gap convention
 
@@ -78,7 +81,9 @@ The episode merging convention from Steps 2d–2e is:
 EPISODE_MAX_GAP_DAYS = 1
 ```
 
-Two compound days belong to the same episode if the gap between them is at most `EPISODE_MAX_GAP_DAYS + 1` calendar days (i.e., at most 1 non-exceedance day may separate them within one episode). This is the `_cluster_episodes()` logic in `src/02_threshold_calibration/05_pu_composite_calibration/scoring.py`.
+Two exceedance days belong to the same episode if the gap between them is at most `EPISODE_MAX_GAP_DAYS + 1` calendar days (i.e., at most 1 non-exceedance day may separate them within one episode). This is the `_cluster_episodes()` logic in `src/02_threshold_calibration/05_pu_composite_calibration/scoring.py`.
+
+**Semantic difference from Step 2:** In Steps 2d–2e, `_cluster_episodes()` operates on a **compound mask** (days where *both* Hₛ ≥ threshold AND SSH_total ≥ threshold simultaneously). In Step 3, the same clustering algorithm is applied independently to **single-variable exceedance masks** — one for Hₛ and one for SSH_total — to produce two independent storm catalogs. The algorithmic logic (gap tolerance, merging rule) is identical; only the input mask semantics differ.
 
 Step 3 must implement the same gap convention for consistency. This is an open design decision if a different value is more scientifically appropriate (see Section 7).
 
@@ -104,7 +109,7 @@ The following caveats from Step 2 propagate to Step 3 and must be acknowledged i
 |-------|------|--------|-------|
 | Unified metocean dataset | `data/test/metocean_sc_full_unified_waverys_grid.nc` | NetCDF4, xarray-readable | Variables: `VHM0` (Hₛ, daily max, m), `zos` (SSH, 00:00 UTC daily, m). Dimensions: `time`, `latitude`, `longitude`. Time: 1993–2025 daily. Full domain runs require the production dataset in `data/raw/`. |
 | Step 2e optimal threshold pair | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` | CSV | Columns: `thr_hs_pct`, `thr_ssh_pct` (float fractions, e.g. 0.90 = q90). Single-row file. |
-| Municipality–grid reference | `outputs/preprocessing/municipality_grid_ref.csv` | CSV | Columns: `municipality`, `grid_lat`, `grid_lon`, `hs_valid_frac`, `ssh_valid_frac`, `data_quality`. Maps municipalities from BOTH event databases (expanded + legacy, 27 union municipalities) to their nearest valid ocean grid point. Used in Step 2 for event matching; in Step 3, it provides the set of coastal grid points to process. Municipality labels are optional metadata — the core catalog object is grid-point-based. |
+| Municipality–grid reference | `outputs/preprocessing/municipality_grid_ref.csv` | CSV | Columns: `municipality`, `muni_lat`, `muni_lon`, `grid_lat`, `grid_lon`, `grid_dist_km`, `hs_valid_frac`, `ssh_valid_frac`, `data_quality`, `coord_source`. Maps 27 union municipalities (expanded + legacy event databases) to their nearest valid ocean grid point. **For the SC test domain:** this file defines the set of coastal grid points to process. **For the full-domain production run:** grid points should be extracted directly from the metocean dataset using a coastal mask (see Domain Expansion below). Municipality labels are always optional metadata — the core catalog object is grid-point-based. |
 | FES2022 tide model | `data/tide_models_clipped_brasil/fes2022b/` | Model binary files | Accessed via `eo-tides` Python library. Same path used by Steps 2c–2e. |
 
 ### Notes on the unified dataset
@@ -156,7 +161,7 @@ Per-entry schema:
   "thr_hs_abs": 2.34,
   "storms": [
     {
-      "event_id": "hs_LAG_19990815",
+      "event_id": "hs_-27.60_-48.60_19990815",
       "date_start": "1999-08-15",
       "date_end": "1999-08-17",
       "duration_days": 3,
@@ -172,11 +177,13 @@ Per-entry schema:
 }
 ```
 
+**Note:** `municipality` is optional metadata (nullable). When a grid point is not associated with a municipality (e.g., in the full-domain run), this field should be `null`.
+
 #### SSH_total storm catalog
 
 **File:** `outputs/storm_catalog/catalog_ssh_total_storms.json`
 
-Same schema as Hₛ catalog, replacing `hs` references with `ssh_total`:
+Same schema as Hₛ catalog, replacing `hs` references with `ssh_total`. The `municipality` field is likewise optional (nullable).
 
 ```json
 {
@@ -193,7 +200,7 @@ Same schema as Hₛ catalog, replacing `hs` references with `ssh_total`:
 
 | Attribute | Description | Units |
 |-----------|-------------|-------|
-| `event_id` | Unique identifier: `<var>_<muni_code>_<YYYYMMDD>` | string |
+| `event_id` | Unique identifier: `<var>_<lat>_<lon>_<YYYYMMDD>` (e.g. `hs_-27.60_-48.60_19990815`) | string |
 | `date_start` | First day of threshold exceedance | ISO date |
 | `date_end` | Last day of threshold exceedance | ISO date |
 | `duration_days` | Number of days in episode | days |
@@ -207,9 +214,11 @@ Same schema as Hₛ catalog, replacing `hs` references with `ssh_total`:
 
 | File | Description |
 |------|-------------|
-| `outputs/storm_catalog/tables/tab_SC_hs_storms_summary.csv` | One row per Hₛ storm event: all per-event attributes in flat tabular form |
-| `outputs/storm_catalog/tables/tab_SC_ssh_total_storms_summary.csv` | One row per SSH_total storm event |
-| `outputs/storm_catalog/tables/tab_SC_catalog_metadata.csv` | Per-grid-point metadata: n_storms, mean_duration, mean_peak, data coverage, NaN fraction |
+| `outputs/storm_catalog/tables/tab_SC3_hs_storms_summary.csv` | One row per Hₛ storm event: all per-event attributes in flat tabular form |
+| `outputs/storm_catalog/tables/tab_SC3_ssh_total_storms_summary.csv` | One row per SSH_total storm event |
+| `outputs/storm_catalog/tables/tab_SC3_catalog_metadata.csv` | Per-grid-point metadata: n_storms, mean_duration, mean_peak, data coverage, NaN fraction |
+
+**Naming convention:** The `SC3` prefix follows the project's step-based table naming (cf. `TC4_`, `TC5_` for Steps 2d/2e). Replace with an appropriate domain label for production runs if needed.
 
 ### 4.4 Run metadata
 
@@ -243,7 +252,7 @@ The following is a granular step-by-step implementation plan. Each numbered item
 1. Load `tab_TC5_optimal_pair_pu.csv` and extract `thr_hs_pct` and `thr_ssh_pct`. Validate that both are in [0.5, 1.0].
 2. Load the unified metocean NetCDF dataset using `xarray`. Confirm presence of `VHM0` and `zos` variables and the expected `time`, `latitude`, `longitude` dimensions.
 3. Load `municipality_grid_ref.csv`. Filter to grid points with `data_quality == "ok"` and `hs_valid_frac > 0` (or a configurable minimum coverage fraction).
-4. Identify the unique set of coastal grid points to process (from the municipality–grid reference).
+4. Identify the unique set of coastal grid points to process. **SC test domain:** extract unique `(grid_lat, grid_lon)` pairs from `municipality_grid_ref.csv`. **Full-domain production:** extract all coastal ocean grid points from the unified dataset (grid cells adjacent to the land mask). The implementation should support both modes via the config file.
 
 ### 5.2 Threshold computation and catalog periods
 
@@ -251,8 +260,8 @@ The following is a granular step-by-step implementation plan. Each numbered item
 
 ### 5.3 Compute SSH_total per grid point
 
-6. For each unique grid point in the municipality–grid reference, compute the FES2022 daily-maximum tidal series using `tides.build_tide_cache(records, daily_max=True)` from Step 2c.
-7. Compute SSH_total = zos + tide_daily_max using `tides.add_tide_to_ssh()` from Step 2c.
+6. For each unique coastal grid point, compute the FES2022 daily-maximum tidal series by calling `_compute_daily_max_tides(lat, lon, time_index)` from Step 2c's `tides.py` (see §2.3 interface note). The `time_index` should span the full metocean record (1993–2025).
+7. Compute SSH_total = zos + tide_daily_max using `add_tide_to_ssh()` from Step 2c.
 8. Validate that SSH_total is not all-NaN for each grid point. Log a warning for grid points where tide computation fails or returns all-NaN.
 
 ### 5.4 Compute local percentile thresholds
@@ -274,7 +283,7 @@ The following is a granular step-by-step implementation plan. Each numbered item
 ### 5.6 Segment consecutive exceedances into storm episodes
 
 15. For each grid point and each variable, apply the `_cluster_episodes()` logic (gap tolerance = `EPISODE_MAX_GAP_DAYS = 1`): consecutive exceedance days separated by at most 1 non-exceedance day are merged into a single episode.
-16. Assign a unique `event_id` to each episode: `<var_prefix>_<muni_code>_<YYYYMMDD>` where `<YYYYMMDD>` is the episode start date.
+16. Assign a unique `event_id` to each episode: `<var_prefix>_<lat>_<lon>_<YYYYMMDD>` where `<lat>/<lon>` are the grid-point coordinates (formatted to 2 decimal places) and `<YYYYMMDD>` is the episode start date. This grid-point-based ID is consistent with the catalog's spatial design and does not depend on municipality labeling.
 
 ### 5.7 Compute per-event attributes
 
@@ -291,7 +300,7 @@ The following is a granular step-by-step implementation plan. Each numbered item
 18. Assemble the Hₛ catalog as a list of per-grid-point entries (each with grid metadata + storm list).
 19. Assemble the SSH_total catalog with the same structure.
 20. Write both catalogs to JSON: `outputs/storm_catalog/catalog_hs_storms.json` and `outputs/storm_catalog/catalog_ssh_total_storms.json`.
-21. Flatten to CSV summary tables: `tab_SC_hs_storms_summary.csv` and `tab_SC_ssh_total_storms_summary.csv`.
+21. Flatten to CSV summary tables: `tab_SC3_hs_storms_summary.csv` and `tab_SC3_ssh_total_storms_summary.csv`.
 
 ### 5.9 Generate diagnostic figures and QA tables
 
@@ -324,9 +333,9 @@ src/03_storm_catalog_generation/
 │                                  save_catalog_json()         — serializes catalog to JSON
 │                                  save_catalog_csv()          — flattens catalog to CSV summary
 ├── tides.py                     # Thin wrapper around Step 2c tides.py
-│                                  get_tide_cache_for_grid_points() — calls build_tide_cache
+│                                  get_tide_cache_for_grid_points() — calls _compute_daily_max_tides per point
 │                                  compute_ssh_total_series()       — calls add_tide_to_ssh
-│                                  NOTE: do not duplicate Step 2c logic; import from tidal_sensitivity
+│                                  NOTE: call Step 2c low-level functions directly (see §2.3 interface note)
 ├── segmentation.py              # Storm detection and episode segmentation
 │                                  compute_local_threshold()  — percentile from finite values
 │                                  build_exceedance_mask()    — boolean Series
