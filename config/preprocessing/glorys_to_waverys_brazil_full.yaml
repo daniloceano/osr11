@@ -1,0 +1,79 @@
+# =============================================================================
+# Preprocessing configuration — Full Brazilian coast (PRODUCTION)
+# =============================================================================
+#
+# Produces the unified metocean dataset for the entire eastern Brazilian
+# coastline, optionally including pre-computed FES2022 tides and SSH_total.
+#
+# This is the RECOMMENDED production workflow:
+#   1. Download full-domain GLORYS + WAVERYS (download_config_brazil_full.yml)
+#   2. Run this preprocessing to produce the unified dataset
+#   3. Run Step 3 in production mode consuming the pre-computed SSH_total
+#
+# Usage:
+#   python -m src.01_data_preparation.preprocessing.interpolate_glorys_to_waverys_grid \
+#       --config config/preprocessing/glorys_to_waverys_brazil_full.yaml
+#
+# NOTE: When compute_tides is enabled, the script will compute FES2022
+#       daily-max tides for all coastal grid points in parallel. This is
+#       CPU-intensive and should be run on a multi-core server.
+# =============================================================================
+
+# --- Input files ---
+# Can be a single file, glob pattern, or directory of monthly NetCDFs.
+# The preprocessing script auto-discovers and concatenates files internally
+# using xarray.open_mfdataset — no external CDO required.
+#
+# Examples:
+#   Single file:   data/raw/glorys_brazil_full.nc
+#   Glob pattern:  data/raw/glorys/glorys_zos_*.nc
+#   Directory:     data/raw/glorys/     (auto-discovers *.nc files)
+input:
+  glorys:  data/raw/glorys/
+  waverys: data/raw/waverys/
+
+# --- Output ---
+output:
+  file: data/unified/metocean_brazil_unified_waverys_grid.nc
+
+# --- Spatial interpolation ---
+interpolation:
+  method: linear   # bilinear interpolation GLORYS → WAVERYS grid
+
+# --- Temporal resampling ---
+temporal:
+  resample_method: max   # WAVERYS 3-hourly → daily max (for extremes)
+
+# --- Variable names ---
+variables:
+  glorys_sea_level:       zos
+  waverys_wave_height:    VHM0
+  waverys_wave_direction: VMDR
+
+# =============================================================================
+# TIDE AND SSH_TOTAL COMPUTATION (optional, recommended for production)
+# =============================================================================
+#
+# When enabled, the preprocessing pipeline will:
+#   1. Identify coastal grid points on the WAVERYS grid (same logic as Step 3)
+#   2. Compute FES2022 daily-max tides for each coastal point
+#   3. Compute SSH_total = zos + tide_daily_max
+#   4. Store tide_daily_max and SSH_total as variables in the unified dataset
+#
+# This eliminates the ~8 min/point tide bottleneck from Step 3 runtime.
+# For 1000+ coastal points, the savings are enormous.
+
+tides:
+  enabled: true
+  model: "FES2022"
+  model_dir: "data/tide_models_clipped_brasil"
+  coastline_shp: "data/ne_10m_coastline/ne_10m_coastline.shp"
+  coastal_max_dist_km: 50.0    # max distance to coastline for tide computation
+  # Parallelization settings for tide computation
+  parallel:
+    max_workers: 100             # number of processes for tide computation
+    backend: "multiprocessing"   # CPU-bound → use processes, not threads
+  # Tide output variable names (stored in the unified NetCDF)
+  output_vars:
+    tide_daily_max: "tide_daily_max"    # FES2022 daily max tide (m)
+    ssh_total: "SSH_total"              # zos + tide_daily_max (m)

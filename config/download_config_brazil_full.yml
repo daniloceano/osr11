@@ -1,0 +1,74 @@
+# =============================================================================
+# Download configuration — Full eastern Brazilian coast (PRODUCTION)
+# =============================================================================
+#
+# This config requests the full metocean domain for the OSR11 production run.
+# Intended for execution on a multi-core server (up to ~110 cores).
+#
+# Bounding box rationale:
+#   - Lat: 5°N to 34°S covers the full Brazilian coastline from the
+#     northern border (Amapá) to the southern limit (Chuí, RS).
+#     An extra ~2° of margin is included on each side to avoid edge
+#     effects during interpolation and coastal-distance computation.
+#   - Lon: 55°W to 28°W covers the continental shelf with generous
+#     offshore margin (WAVERYS at 0.2° resolution needs grid points
+#     well beyond the coast).
+#
+# Download strategy:
+#   Monthly partitioning (one file per calendar month × product).
+#   This is the most robust strategy because:
+#     1. Each file is ~50-200 MB (manageable, no memory issues)
+#     2. Failure of one month does not invalidate others
+#     3. --resume skips already-downloaded months automatically
+#     4. Monthly granularity matches CMEMS server-side chunking
+#     5. 396 months (1993-01 to 2025-12) per product → 792 tasks total
+#
+# Parallelization:
+#   ThreadPoolExecutor handles I/O-bound CMEMS API calls.
+#   max_workers=80 is a safe default for 110 cores (leaves headroom for
+#   the OS and monitoring). Adjust via --workers CLI flag.
+#
+# Usage:
+#   python -m src.01_data_preparation.acquisition.download_cmems_parallel \
+#       --config config/download_config_brazil_full.yml \
+#       --workers 80 --resume
+#
+# Estimated download size:
+#   GLORYS (zos, 1/12° daily, 33y): ~80-120 GB
+#   WAVERYS (VHM0+VMDR, 0.2° 3-hourly, 33y): ~40-60 GB
+#   Total: ~120-180 GB
+#
+# Estimated time (80 concurrent workers, good network):
+#   ~2-4 hours depending on CMEMS server load.
+# =============================================================================
+
+# Spatial bounding box — full eastern Brazilian coast with margin
+bbox:
+  lon_min: -55.0
+  lon_max: -28.0
+  lat_min: -35.0
+  lat_max: 6.0
+
+# Time period (full GLORYS12/WAVERYS reanalysis overlap)
+period:
+  start: "1993-01-01"
+  end:   "2025-12-31"
+
+# Output directory (relative to project root)
+output_dir: "data/raw"
+
+# Parallel download settings
+parallel:
+  max_workers: 80   # safe default for 110-core server; override with --workers
+
+# GLORYS12 — sea surface height
+glorys:
+  product_id: "GLOBAL_MULTIYEAR_PHY_001_030"
+  dataset_id: "cmems_mod_glo_phy_my_0.083deg_P1D-m"
+  variables: ["zos"]
+
+# WAVERYS — wave fields
+waverys:
+  product_id: "GLOBAL_MULTIYEAR_WAV_001_032"
+  dataset_id: "cmems_mod_glo_wav_my_0.2deg_PT3H-i"
+  variables: ["VHM0", "VMDR"]

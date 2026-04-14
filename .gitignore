@@ -18,6 +18,8 @@ data/processed/
 data/interim/
 data/tide_models_clipped_brasil
 data/tide_models_clipped_brasil/*
+data/unified/*.nc
+data/cache/*.nc
 !data/raw/**/.gitkeep
 !data/processed/.gitkeep
 
@@ -29,10 +31,11 @@ outputs/south_sc_test_data_exploratory/*
 outputs/preliminary_compound/*
 outputs/tidal_sensitivity/*
 outputs/threshold_calibration/*
+outputs/storm_catalog/
 
 # Logs
 logs/*.log
-logs/download_status.json
+logs/download_status*.json
 !logs/.gitkeep
 nohup.out
 */nohup.out

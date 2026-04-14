@@ -39,8 +39,10 @@ data/
 │   └── fes2022b/ocean_tide_20241025/        # FES2022b model: 45 tidal constituents (NetCDF)
 │
 └── raw/                                     # Full-resolution reanalysis downloads — NOT committed
-    ├── glorys/                              # GLORYS12 sea-level NetCDF files
-    └── waverys/                             # WAVERYS wave NetCDF files
+    ├── glorys/                              # GLORYS12 sea-level NetCDF — full Brazil (to be downloaded)
+    ├── waverys/                             # WAVERYS wave NetCDF — full Brazil (to be downloaded)
+    ├── glorys_sc/                           # GLORYS12 SC-domain files [-30,−20°S]×[-50,−40°W] (test/reference)
+    └── waverys_sc/                          # WAVERYS SC-domain files [-30,−20°S]×[-50,−40°W] (test/reference)
 ```
 
 ---

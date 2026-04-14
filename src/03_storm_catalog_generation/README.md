@@ -120,7 +120,7 @@ Variable names in the unified NetCDF:
 - `VHM0` — significant wave height (m), daily maximum from 3-hourly WAVERYS
 - `zos` — sea surface height above geoid (m), daily 00:00 UTC from GLORYS12
 
-SSH_total is computed at runtime by adding FES2022 tide — it is not pre-stored in the unified dataset.
+SSH_total is either pre-computed in the unified dataset (production mode with `tides.enabled: true` in preprocessing) or computed at runtime via FES2022 (legacy test mode). See "SSH_total resolution modes" above.
 
 ### Domain expansion: full eastern Brazil coast
 
@@ -130,9 +130,21 @@ Step 3 is designed to produce storm catalogs for the **entire eastern coast of B
 2. **Unified dataset production:** Step 1 (data preparation) must be rerun to produce a unified NetCDF covering the extended domain. The same regridding approach (GLORYS12 → WAVERYS grid) applies.
 3. **FES2022 tide model coverage:** The clipped tide model files in `data/tide_models_clipped_brasil/` must cover the full domain. If the current clip is SC-only, an extended clip is needed.
 4. **Municipality-grid reference scope:** For the full domain, the coastal grid-point catalog is the primary object. Municipality labeling (if desired) requires an extended reference mapping or a reverse-geocoding API.
-5. **Computational considerations:** The full domain will have ~1000+ coastal grid points (vs. ~10 for SC). Tide computation via `eo-tides` may become a bottleneck; consider caching or parallelization.
+5. **Computational considerations:** The full domain will have ~500–1000 coastal grid points (vs. ~53 for SC). Tide computation has been moved to the preprocessing step (`compute_tides_parallel.py`), which uses `ProcessPoolExecutor` with up to 100 workers. Step 3 auto-detects pre-computed `SSH_total` in the dataset and skips runtime tide computation entirely.
 
 The test-domain run (SC coast) serves as the proof-of-concept. The full-domain run is the production target.
+
+### SSH_total resolution modes (Phase 2 — tide integration)
+
+Step 3 supports three modes for obtaining SSH_total, controlled by `TIDE_MODE` in the config or `--tide-mode` CLI flag:
+
+| Mode | Behavior | Use case |
+|------|----------|----------|
+| `auto` (default) | Detect what's in the dataset: if `SSH_total` exists → use it; elif `tide_daily_max` + `zos` → reconstruct; else → compute FES2022 at runtime | General-purpose, works with any dataset |
+| `precomputed` | Require `SSH_total` in dataset, fail if absent | Production: after preprocessing with tides enabled |
+| `runtime` | Always compute FES2022 at runtime (~10 s / grid point) | Legacy: backward-compatible with test fixture |
+
+**Recommended production workflow:** Run preprocessing with `tides.enabled: true` → use `--tide-mode auto` or `--tide-mode precomputed` in Step 3.
 
 ---
 

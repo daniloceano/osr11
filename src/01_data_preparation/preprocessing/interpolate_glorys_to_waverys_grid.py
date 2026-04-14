@@ -32,6 +32,7 @@ python -m src.preprocessing.interpolate_glorys_to_waverys_grid \
 from __future__ import annotations
 
 import argparse
+import glob
 import logging
 import sys
 from pathlib import Path
@@ -65,18 +66,87 @@ def load_config(path: str | Path) -> dict:
 # I/O
 # ---------------------------------------------------------------------------
 
+def _resolve_input_files(path_spec: str | Path) -> list[Path]:
+    """Resolve a path specification to a sorted list of NetCDF files.
+
+    Supports three forms:
+    - A single .nc file:  "/data/raw/glorys_brazil_full.nc"
+    - A glob pattern:     "/data/raw/glorys/glorys_zos_????.nc"
+                          "/data/raw/glorys/glorys_zos_*.nc"
+    - A directory:        "/data/raw/glorys/"  (auto-discovers *.nc files)
+
+    Duplicated downloads (files with '_(1)' suffix) are automatically excluded.
+    """
+    p = Path(path_spec)
+
+    if p.is_dir():
+        files = sorted(p.glob("*.nc"))
+    elif "*" in str(p) or "?" in str(p):
+        files = sorted(Path(f) for f in glob.glob(str(p)))
+    elif p.is_file():
+        return [p]
+    else:
+        raise FileNotFoundError(
+            f"Input path not found: {path_spec!r}.  "
+            f"Expected a file, directory, or glob pattern."
+        )
+
+    # Exclude duplicate downloads from CMEMS (e.g. *_(1).nc, *_(2).nc)
+    files = [f for f in files if "_(" not in f.name]
+
+    if not files:
+        raise FileNotFoundError(
+            f"No NetCDF files found matching: {path_spec!r}"
+        )
+
+    return files
+
+
+def _open_dataset(path_spec: str | Path, label: str) -> xr.Dataset:
+    """Open one or many NetCDF files as a single xarray Dataset.
+
+    For multiple files, uses ``xr.open_mfdataset`` with ``combine='by_coords'``
+    which handles concatenation along the time dimension automatically.
+    """
+    files = _resolve_input_files(path_spec)
+
+    if len(files) == 1:
+        log.info("Loading %s from single file: %s", label, files[0])
+        return xr.open_dataset(files[0])
+    else:
+        log.info(
+            "Loading %s from %d files: %s … %s",
+            label, len(files), files[0].name, files[-1].name,
+        )
+        ds = xr.open_mfdataset(
+            [str(f) for f in files],
+            combine="by_coords",
+            data_vars="minimal",
+            coords="minimal",
+            compat="override",
+        )
+        log.info("  Concatenated %s: %s", label, dict(ds.sizes))
+        return ds
+
+
 def load_glorys(path: str | Path, var: str) -> xr.Dataset:
-    """Open GLORYS file and keep only *var* (sea-level variable)."""
+    """Open GLORYS file(s) and keep only *var* (sea-level variable).
+
+    Supports single file, glob pattern, or directory of monthly NetCDFs.
+    """
     log.info("Loading GLORYS from %s  [var=%s]", path, var)
-    ds = xr.open_dataset(path)
+    ds = _open_dataset(path, label="GLORYS")
     _check_variable(ds, var, label="GLORYS")
     return ds[[var]]
 
 
 def load_waverys(path: str | Path, var_hs: str, var_dir: str) -> xr.Dataset:
-    """Open WAVERYS file and keep *var_hs* and *var_dir*."""
+    """Open WAVERYS file(s) and keep *var_hs* and *var_dir*.
+
+    Supports single file, glob pattern, or directory of monthly NetCDFs.
+    """
     log.info("Loading WAVERYS from %s  [vars=%s, %s]", path, var_hs, var_dir)
-    ds = xr.open_dataset(path)
+    ds = _open_dataset(path, label="WAVERYS")
     _check_variable(ds, var_hs, label="WAVERYS")
     _check_variable(ds, var_dir, label="WAVERYS")
     return ds[[var_hs, var_dir]]
@@ -390,7 +460,13 @@ def print_summary(
 # ---------------------------------------------------------------------------
 
 def main(config_path: str | Path) -> None:
-    """Run the full interpolation pipeline."""
+    """Run the full interpolation pipeline.
+
+    If the config includes a ``tides`` section with ``enabled: true``,
+    FES2022 daily-max tides and SSH_total are computed and added to the
+    unified dataset. This is the recommended production workflow — it
+    eliminates the tide computation bottleneck from Step 3.
+    """
     cfg = load_config(config_path)
 
     var_zos = cfg["variables"]["glorys_sea_level"]
@@ -412,7 +488,7 @@ def main(config_path: str | Path) -> None:
         ds_glorys, ds_waverys_daily, interp_method
     )
 
-    # 4. Build and save unified dataset
+    # 4. Build unified dataset
     ds_unified = build_unified_dataset(
         ds_glorys_interp,
         ds_waverys_daily,
@@ -423,8 +499,92 @@ def main(config_path: str | Path) -> None:
         resample_method=resample_method,
     )
 
+    # 5. Optional: compute FES2022 tides and SSH_total
+    tides_cfg = cfg.get("tides", {})
+    if tides_cfg.get("enabled", False):
+        ds_unified = _add_tides_and_ssh_total(ds_unified, tides_cfg, var_zos, var_hs)
+
     save_dataset(ds_unified, cfg["output"]["file"])
     print_summary(cfg, ds_unified, var_zos, var_hs, var_dir)
+
+
+def _add_tides_and_ssh_total(
+    ds: xr.Dataset,
+    tides_cfg: dict,
+    var_zos: str,
+    var_hs: str,
+) -> xr.Dataset:
+    """Compute FES2022 tides and SSH_total, adding them to the dataset.
+
+    This is the production-mode preprocessing step that pre-computes
+    tides so Step 3 can consume SSH_total directly from the NetCDF.
+    """
+    from .compute_tides_parallel import (
+        compute_ssh_total,
+        compute_tides_parallel,
+        identify_coastal_points_for_tides,
+    )
+    from datetime import datetime, timezone
+
+    log.info("=" * 60)
+    log.info("TIDE COMPUTATION — adding tide_daily_max and SSH_total")
+    log.info("=" * 60)
+
+    tide_model = tides_cfg.get("model", "FES2022")
+    tide_model_dir = tides_cfg.get("model_dir", "data/tide_models_clipped_brasil")
+    coastline_shp = tides_cfg.get("coastline_shp", "data/ne_10m_coastline/ne_10m_coastline.shp")
+    max_dist_km = tides_cfg.get("coastal_max_dist_km", 50.0)
+
+    par_cfg = tides_cfg.get("parallel", {})
+    max_workers = par_cfg.get("max_workers", 4)
+
+    out_vars = tides_cfg.get("output_vars", {})
+    tide_var_name = out_vars.get("tide_daily_max", "tide_daily_max")
+    ssh_total_var_name = out_vars.get("ssh_total", "SSH_total")
+
+    # Cache path — adjacent to output file
+    output_dir = Path(ds.encoding.get("source", "")).parent if ds.encoding.get("source") else Path(".")
+    cache_path = Path("data/cache/tide_daily_max_cache.nc")
+
+    # Identify coastal grid points
+    coastal_points = identify_coastal_points_for_tides(
+        ds, coastline_shp, max_dist_km=max_dist_km, hs_var=var_hs,
+    )
+
+    # Compute tides in parallel
+    tide_da = compute_tides_parallel(
+        ds=ds,
+        coastal_points=coastal_points,
+        tide_model=tide_model,
+        tide_model_dir=tide_model_dir,
+        max_workers=max_workers,
+        cache_path=cache_path,
+    )
+
+    # Compute SSH_total
+    ssh_total_da = compute_ssh_total(ds, tide_da, zos_var=var_zos)
+
+    # Add to dataset
+    ds[tide_var_name] = tide_da
+    ds[ssh_total_var_name] = ssh_total_da.astype(np.float32)
+
+    # Update global attributes
+    ds.attrs["tide_computation"] = (
+        f"{tide_model} daily-max tides pre-computed at "
+        f"{len(coastal_points)} coastal grid points"
+    )
+    ds.attrs["SSH_total_definition"] = (
+        f"SSH_total = {var_zos}(00:00 UTC) + tide_daily_max"
+    )
+    ds.attrs["tide_precomputed"] = "true"
+    ds.attrs["tide_model"] = tide_model
+    ds.attrs["tide_computation_date"] = datetime.now(timezone.utc).isoformat()
+
+    log.info(
+        "Added %s and %s to unified dataset (%d coastal points)",
+        tide_var_name, ssh_total_var_name, len(coastal_points),
+    )
+    return ds
 
 
 if __name__ == "__main__":
@@ -436,7 +596,23 @@ if __name__ == "__main__":
         required=True,
         help="Path to YAML configuration file (e.g. config/preprocessing/glorys_to_waverys_test.yaml)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="Override max_workers for parallel tide computation (production mode).",
+    )
     args = parser.parse_args()
+
+    # Allow CLI to override tide workers
+    if args.workers:
+        _cfg = load_config(args.config)
+        if "tides" in _cfg:
+            _cfg.setdefault("tides", {}).setdefault("parallel", {})["max_workers"] = args.workers
+            # Re-save won't work with YAML roundtrip, so we patch at runtime:
+            import functools
+            _original_load = load_config
+            load_config = functools.wraps(_original_load)(lambda p: _cfg)
 
     try:
         main(args.config)

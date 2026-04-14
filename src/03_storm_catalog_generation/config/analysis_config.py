@@ -96,7 +96,32 @@ LOG_DIR = OUTPUT_ROOT / "logs"
 
 HS_VAR = "VHM0"           # significant wave height (m), daily max
 SSH_VAR = "zos"            # sea surface height above geoid (m), 00:00 UTC
-SSH_TOTAL_VAR = "zos_total"  # computed at runtime: zos + tide_daily_max
+SSH_TOTAL_VAR = "SSH_total"  # pre-computed in preprocessing, or computed at runtime
+TIDE_DAILY_MAX_VAR = "tide_daily_max"  # pre-computed FES2022 daily-max tide
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TIDE / SSH_TOTAL MODE
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Controls how SSH_total is obtained for storm catalog generation.
+# Three modes are supported:
+#
+# "auto" (DEFAULT, RECOMMENDED)
+#     Detect at runtime which variables are available in the unified NetCDF:
+#     - If SSH_total exists → use it directly (fastest, production mode)
+#     - Elif tide_daily_max + zos exist → reconstruct SSH_total = zos + tide
+#     - Else → fall back to on-the-fly FES2022 computation (legacy mode)
+#
+# "precomputed"
+#     Require SSH_total to be present in the dataset. Fail if absent.
+#     Use this to enforce production-mode behavior.
+#
+# "runtime"
+#     Always compute FES2022 tides at runtime, ignoring any pre-computed
+#     fields. This is the legacy behavior from the test-mode smoke test.
+#     Slow (~10 s/point × N points). Only appropriate for small domains.
+#
+TIDE_MODE = "auto"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # THRESHOLD PARAMETERS
@@ -128,7 +153,7 @@ COASTAL_MAX_DIST_KM = 50.0
 MIN_VALID_FRAC = 0.80
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TIDE CONFIGURATION
+# TIDE CONFIGURATION (for runtime mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Tide variable name (used internally)
