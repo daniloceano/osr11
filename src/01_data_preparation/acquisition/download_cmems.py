@@ -192,7 +192,7 @@ def download_product(
         start_datetime=period["start"],
         end_datetime=period["end"],
         output_filename=str(output_path),
-        force_download=True,
+        overwrite=True,
     )
 
     log.info("Saved: %s", output_path)
