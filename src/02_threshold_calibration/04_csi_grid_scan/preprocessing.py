@@ -27,14 +27,19 @@ This ensures that:
 - Layer 1 (hit/miss): causal windows are evaluated within the validated period.
 - Layer 2 (false alarms): the scan is restricted to the validated period, so F only
   counts episodes the database is in a position to validate or reject.
-- Quantile thresholds: computed from the clipped series (~25 years instead of ~32).
-  Statistical robustness is preserved: ~9,100 daily observations per grid point.
 
-Design decision: clipping the full input dataset (rather than only passing a
-restricted time_index to run_false_alarms) is the cleaner approach because it
-makes both the threshold computation and the false alarm scan consistent with the
-same temporal domain. It also keeps main.py simple: one preprocessing call, one
-unified time_index downstream.
+Note on threshold computation
+-----------------------------
+Quantile thresholds are computed from the FULL climatological series at each grid
+point (the entire metocean record, typically 1993–2025), NOT from the clipped
+validated-period series.  This ensures that percentile values reflect the complete
+climatological distribution.  The validated period restriction applies only to the
+evaluation scan (Layers 1 and 2), not to the threshold computation itself.
+
+In practice, main.py builds event records from the full dataset (which stores the
+full climatological series in ``rec.hs_clim`` / ``rec.ssh_clim``), then uses
+``clip_to_validated_period`` only to obtain the validated-period bounds for
+constructing the scan ``time_index``.
 
 Assumptions
 -----------

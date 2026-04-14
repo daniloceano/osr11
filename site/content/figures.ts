@@ -244,6 +244,14 @@ export const tc5Figures: FigureItem[] = [
     group: 'Sensitivity',
     part: 'Step 2e',
   },
+  {
+    filename: 'tc5_summary/fig_TC5_S4_sensitivity_gap_days.png',
+    title: 'Episode Gap Sensitivity — Score vs Gap Tolerance',
+    caption:
+      'Sensitivity of the PU composite score and optimal threshold pair to alternative episode gap tolerance values (0, 1, 2, 3 days). The gap tolerance controls how many non-exceedance days can separate consecutive exceedance days within a single episode (EPISODE_MAX_GAP_DAYS). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested values. Score improves monotonically with larger gaps (fewer, longer episodes reduce burden), but the effect is modest (Score ranges from -3.22 at gap=0 to -3.02 at gap=3).',
+    group: 'Sensitivity',
+    part: 'Step 2e',
+  },
   // Audit figures (A series)
   {
     filename: 'tc5_summary/fig_TC5_A1_qi_distribution.png',

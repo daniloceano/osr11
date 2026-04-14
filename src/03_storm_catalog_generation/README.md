@@ -12,7 +12,9 @@
 
 ### Scientific rationale
 
-Step 3 applies the empirically calibrated compound event detection thresholds (from Step 2e) to the full 1993–2025 metocean record to produce independent storm catalogs for sea-level (SSH_total) and wave (Hₛ) extremes at each coastal grid point. A "storm" is defined as a continuous period during which a variable exceeds its local threshold. Consecutive exceedance days within a configurable gap tolerance are merged into a single storm episode.
+Step 3 applies the empirically calibrated compound event detection thresholds (from Step 2e) to the full 1993–2025 metocean record to produce independent storm catalogs for sea-level (SSH_total) and wave (Hₛ) extremes at each **coastal grid point along the entire eastern coast of Brazil**. A "storm" is defined as a continuous period during which a variable exceeds its local threshold. Consecutive exceedance days within a configurable gap tolerance are merged into a single storm episode.
+
+The core output object is the **coastal grid-point catalog**, not a municipality-centered catalog. If a simple and robust API-based method exists to identify the nearest municipality for each coastal grid point, that information can be included as optional metadata, but municipality labeling is not a required dependency for Step 3.
 
 Storm segmentation is the operationalization of the peaks-over-threshold (POT) philosophy adopted throughout Step 2. It converts a continuous time series of exceedance days into a structured list of discrete, bounded episodes, each characterized by its temporal extent and intensity.
 
@@ -34,12 +36,12 @@ The following methodological commitments are fixed by the Step 2 implementation 
 
 | Variable | Threshold | Source file |
 |----------|-----------|-------------|
-| Hₛ (VHM0) | q90 of the local climatological series (validated period) | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` → column `thr_hs_pct` |
-| SSH_total (zos_total) | q90 of the local climatological series (validated period) | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` → column `thr_ssh_pct` |
+| Hₛ (VHM0) | q90 of the local climatological series (full metocean record) | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` → column `thr_hs_pct` |
+| SSH_total (zos_total) | q90 of the local climatological series (full metocean record) | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` → column `thr_ssh_pct` |
 
 Thresholds are **local percentiles** — they are computed independently at each coastal grid point from the local time series, not as a single global value. This is mandatory for consistency with all Step 2 analyses.
 
-The validated period for threshold computation in Step 2e was 1998–2020. Step 3 should compute local percentile thresholds from this same period (or the full available series if scientifically justified — see Section 7 for the open design decision). The storm catalog itself, however, should be generated from the **full 1993–2025 series**.
+**Threshold computation period (authoritative decision from Step 2e corrections):** Thresholds are computed from the **full metocean record** (1993–2025), not from the validated period. The validated period (1998–2020) restricts only the event-matching scan (where detected episodes are compared against reported events), not the climatological series from which percentile thresholds are derived. This ensures maximum statistical robustness and eliminates edge effects at the boundaries of the event-record period. The storm catalog is also generated from the full 1993–2025 series.
 
 ### 2.2 SSH_total mandatory definition
 
@@ -88,11 +90,11 @@ The causal window [D-2, D-1, D, D+1 00Z] from Steps 2b–2e is specific to thres
 
 The following caveats from Step 2 propagate to Step 3 and must be acknowledged in Step 3 documentation:
 
-1. **NaN grid points:** Approximately 50% of northern SC municipalities have partial or complete NaN coverage due to GLORYS12/WAVERYS resolution near complex coastal geometries. These grid points produce NaN thresholds and empty catalogs. They must be tracked and logged, not silently dropped.
+1. **NaN grid points:** Some coastal grid points have partial or complete NaN coverage due to GLORYS12/WAVERYS resolution near complex coastal geometries. The municipality-grid matching (Step 2 preprocessing) assigns each municipality to its **nearest valid ocean grid point** from the combined GLORYS12+WAVERYS dataset, but some grid points still have degraded coverage. These grid points produce NaN thresholds and empty catalogs. They must be tracked and logged, not silently dropped.
 2. **No seasonal decomposition:** Thresholds are computed from the annual series without seasonal block-maxima approaches. This means threshold values are climatological, not season-specific.
 3. **Tidal asynchronism:** SSH_total = zos(00:00 UTC) + tide_daily_max is a physical approximation. This propagates into the SSH_total storm catalog.
 4. **GLORYS12 daily resolution:** Sub-daily SSH information is not available. Storm timing from the SSH_total catalog is accurate only to ±1 day.
-5. **Threshold period vs. catalog period:** Thresholds from the validated period (1998–2020) may be applied to periods outside that range (1993–1997, 2021–2025). Events in those years may be over- or under-detected relative to the calibrated sensitivity.
+5. **Threshold period resolved:** Thresholds are now computed from the full metocean record (1993–2025), not the validated period. This eliminates the previous caveat about applying validated-period thresholds to years outside that range. The only remaining caveat is that the event-matching validation scan (used in Step 2e to compute recall and PU scores) was restricted to 1998–2020 by the event database coverage, so the detection performance metrics are strictly validated only for that period.
 
 ---
 
@@ -102,7 +104,7 @@ The following caveats from Step 2 propagate to Step 3 and must be acknowledged i
 |-------|------|--------|-------|
 | Unified metocean dataset | `data/test/metocean_sc_full_unified_waverys_grid.nc` | NetCDF4, xarray-readable | Variables: `VHM0` (Hₛ, daily max, m), `zos` (SSH, 00:00 UTC daily, m). Dimensions: `time`, `latitude`, `longitude`. Time: 1993–2025 daily. Full domain runs require the production dataset in `data/raw/`. |
 | Step 2e optimal threshold pair | `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` | CSV | Columns: `thr_hs_pct`, `thr_ssh_pct` (float fractions, e.g. 0.90 = q90). Single-row file. |
-| Municipality–grid reference | `outputs/preprocessing/municipality_grid_ref.csv` | CSV | Columns: `municipality`, `grid_lat`, `grid_lon`, `hs_valid_frac`, `ssh_valid_frac`, `data_quality`. Links each municipality to its nearest valid ocean grid point. |
+| Municipality–grid reference | `outputs/preprocessing/municipality_grid_ref.csv` | CSV | Columns: `municipality`, `grid_lat`, `grid_lon`, `hs_valid_frac`, `ssh_valid_frac`, `data_quality`. Maps municipalities from BOTH event databases (expanded + legacy, 27 union municipalities) to their nearest valid ocean grid point. Used in Step 2 for event matching; in Step 3, it provides the set of coastal grid points to process. Municipality labels are optional metadata — the core catalog object is grid-point-based. |
 | FES2022 tide model | `data/tide_models_clipped_brasil/fes2022b/` | Model binary files | Accessed via `eo-tides` Python library. Same path used by Steps 2c–2e. |
 
 ### Notes on the unified dataset
@@ -114,6 +116,18 @@ Variable names in the unified NetCDF:
 - `zos` — sea surface height above geoid (m), daily 00:00 UTC from GLORYS12
 
 SSH_total is computed at runtime by adding FES2022 tide — it is not pre-stored in the unified dataset.
+
+### Domain expansion: full eastern Brazil coast
+
+Step 3 is designed to produce storm catalogs for the **entire eastern coast of Brazil**, not just the Santa Catarina test domain used in Step 2. This requires:
+
+1. **Additional CMEMS data download:** GLORYS12 (zos) and WAVERYS (VHM0) covering the full eastern Brazilian coast (~5°S to ~34°S, ~52°W to ~30°W or as appropriate for the coastal strip). The current test fixture covers only SC. A production-scale download must be performed before the full-domain run.
+2. **Unified dataset production:** Step 1 (data preparation) must be rerun to produce a unified NetCDF covering the extended domain. The same regridding approach (GLORYS12 → WAVERYS grid) applies.
+3. **FES2022 tide model coverage:** The clipped tide model files in `data/tide_models_clipped_brasil/` must cover the full domain. If the current clip is SC-only, an extended clip is needed.
+4. **Municipality-grid reference scope:** For the full domain, the coastal grid-point catalog is the primary object. Municipality labeling (if desired) requires an extended reference mapping or a reverse-geocoding API.
+5. **Computational considerations:** The full domain will have ~1000+ coastal grid points (vs. ~10 for SC). Tide computation via `eo-tides` may become a bottleneck; consider caching or parallelization.
+
+The test-domain run (SC coast) serves as the proof-of-concept. The full-domain run is the production target.
 
 ---
 
@@ -206,7 +220,8 @@ Same schema as Hₛ catalog, replacing `hs` references with `ssh_total`:
   "run_date": "2026-...",
   "dataset": "metocean_sc_full_unified_waverys_grid.nc",
   "period_full_series": ["1993-01-01", "2025-12-31"],
-  "period_threshold_computation": ["1998-01-01", "2020-12-31"],
+  "period_threshold_computation": "full_record",
+  "period_validation_scan": ["1998-01-01", "2020-12-31"],
   "thr_hs_pct": 0.90,
   "thr_ssh_pct": 0.90,
   "episode_max_gap_days": 1,
@@ -230,11 +245,9 @@ The following is a granular step-by-step implementation plan. Each numbered item
 3. Load `municipality_grid_ref.csv`. Filter to grid points with `data_quality == "ok"` and `hs_valid_frac > 0` (or a configurable minimum coverage fraction).
 4. Identify the unique set of coastal grid points to process (from the municipality–grid reference).
 
-### 5.2 Clip dataset to analysis period
+### 5.2 Threshold computation and catalog periods
 
-5. Clip the unified dataset to the validated calibration period for threshold computation (1998–2020, same as Step 2e). Retain the full series (1993–2025) separately for catalog generation.
-   - Thresholds are computed from the validated period for consistency with Step 2e.
-   - The storm catalog is generated from the full series.
+5. Load the full 1993–2025 metocean series. Thresholds are computed from the **full record** (not a clipped validated period). This is consistent with the corrected Step 2e implementation, which computes percentile thresholds from the full metocean record and restricts only the event-matching scan to the validated period (1998–2020). The storm catalog is also generated from the full series.
 
 ### 5.3 Compute SSH_total per grid point
 
@@ -244,8 +257,8 @@ The following is a granular step-by-step implementation plan. Each numbered item
 
 ### 5.4 Compute local percentile thresholds
 
-9. For each grid point, extract the Hₛ series clipped to the validated period (1998–2020) and compute the local q90 threshold using `series.quantile(thr_hs_pct)` on finite values only.
-10. Repeat for SSH_total: extract the validated-period series and compute the local q90 threshold.
+9. For each grid point, extract the Hₛ series from the **full metocean record** (1993–2025) and compute the local q90 threshold using `series.quantile(thr_hs_pct)` on finite values only.
+10. Repeat for SSH_total: extract the full-record series and compute the local q90 threshold.
 11. Store thresholds in a per-grid-point lookup dict: `{(lat, lon): {"thr_hs": float, "thr_ssh": float}}`.
 12. For grid points where the threshold is NaN (all-NaN series), log the point and mark it as skipped.
 
@@ -366,18 +379,13 @@ These are genuine open questions that require human review before coding begins.
 
 **Recommendation before implementation:** Danilo should decide whether to keep `EPISODE_MAX_GAP_DAYS = 1` (consistent with calibration) or use a different physically motivated value for the catalog. If changed, document the rationale in the config.
 
-### 7.2 Threshold percentile computation period
+### 7.2 Threshold percentile computation period — RESOLVED
 
-**Current State 2e approach:** Thresholds computed from the validated period (1998–2020, clipped to match event database coverage).
+**Decision (authoritative, implemented in Step 2e corrections):** Thresholds are computed from the **full metocean record** (1993–2025). This corresponds to option (B) from the original question.
 
-**Open question:** For the storm catalog (which spans 1993–2025), should thresholds be computed from:
-- (A) The validated period (1998–2020) — strict consistency with Step 2e
-- (B) The full series (1993–2025) — maximum statistical robustness for threshold estimation
-- (C) A fixed "reference period" (e.g., 1993–2020) — standard climatological approach
+**Rationale:** The validated period (1998–2020) restricts only the event-matching scan where detected episodes are compared against reported events. The climatological percentile computation should use the longest available record for maximum statistical robustness. This distinction was implemented in the corrective pass for Steps 2d and 2e (see `build_event_records()` now called with `ds_full` before temporal clipping).
 
-Option (A) is most consistent with Step 2e but uses only ~25 years. Option (B) uses ~32 years but introduces mild inconsistency with Step 2e (different threshold values). Option (C) is a common compromise.
-
-**Recommendation before implementation:** Danilo should decide. The choice should be documented in `analysis_config.py` and mentioned in any manuscript methods section.
+**This is no longer an open question.** Step 3 should compute thresholds from the full record.
 
 ### 7.3 NaN coverage threshold
 

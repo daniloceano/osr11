@@ -38,28 +38,20 @@ D-2, D-1, D, D+1 00Z
 
 The window is **asymmetric**: it accepts antecedents (the forcing may precede the reported impact) and includes D+1 00Z as an operational tolerance for the midnight-UTC snapshot convention. Compound episodes detected after D+1 are **not** counted as matches.
 
-## Temporal domain restriction (preprocessing)
+## Threshold computation vs. validated scan
 
-Before the grid scan, the unified dataset is clipped to the period covered by the
-reported events database, extended by the causal window margins:
+**Threshold computation:** Local percentile thresholds are computed from the **full metocean record** (1993–2025, ~12,053 daily observations per grid point). This ensures maximum statistical robustness and eliminates edge effects at the boundaries of the event database period.
+
+**Validation scan:** The event-matching scan (Layers 1 and 2) is restricted to the period covered by the reported events database, extended by the causal window margins:
 
 ```
 t_start = min(event_dates) + min(offsets)   [earliest event − 2 days]
 t_end   = max(event_dates) + max(offsets)   [latest event + 1 day]
 ```
 
-**Why this matters:** The unified dataset spans 1993–2025 but the SC disaster database
-covers only 1998–2023. Any compound episode in 1993–1997 or 2024–2025 has no validation
-event to pair with and would be automatically counted as a false alarm. This inflates F,
-distorts FAR, and shifts the optimal threshold pair towards artificially restrictive
-combinations. Clipping the dataset to the validated period eliminates this bias.
+**Why restrict the scan:** The SC disaster database covers only 1998–2023. Any compound episode in 1993–1997 or 2024–2025 has no validation event to pair with and would be automatically counted as a false alarm. This inflates F, distorts FAR, and shifts the optimal threshold pair towards artificially restrictive combinations. Clipping the scan to the validated period eliminates this bias while keeping thresholds derived from the full climatological record.
 
-**Effect on thresholds:** Local percentile thresholds are now computed from the clipped
-series (~25 years, ~9,100 daily observations per grid point). This is statistically
-equivalent to the full 32-year series for percentile estimation purposes.
-
-Implementation: `src/04_threshold_calibration/preprocessing.py`, function
-`clip_to_validated_period()`. Called from `main.py` immediately after loading.
+Implementation: `preprocessing.py::clip_to_validated_period()`. Event records are built from the full dataset via `build_event_records(ds_full, ...)` before temporal clipping.
 
 ## What is reused from previous steps
 

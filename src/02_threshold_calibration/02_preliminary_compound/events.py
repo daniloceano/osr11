@@ -73,6 +73,7 @@ _SOUTH_SC_COORDS: dict[str, tuple[float, float]] = {
     "Florianópolis":                 (-27.60, -48.55),
     "Palhoça":                       (-27.65, -48.67),
     "Tijucas":                       (-27.24, -48.64),
+    "Biguaçu":                       (-27.49, -48.63),
     # ── Central-south sector ──────────────────────────────────────────────────
     # Garopaba already listed under South sector above
     # ── Central-north sector ──────────────────────────────────────────────────
@@ -90,6 +91,7 @@ _SOUTH_SC_COORDS: dict[str, tuple[float, float]] = {
     "Araquari":                      (-26.37, -48.72),
     "São Francisco do Sul":          (-26.24, -48.64),
     "Itapoá":                        (-26.11, -48.62),
+    "Joinville":                     (-26.30, -48.74),
 }
 
 # ── Reference table paths (resolution priority order) ─────────────────────────
@@ -182,13 +184,20 @@ def build_event_records(
         # Grid point for this municipality
         if muni in muni_grid:
             target_lat, target_lon = muni_grid[muni]
-        else:
-            # Use hardcoded coordinates if available
-            target_lat = float(lat_grid[len(lat_grid) // 2])
-            target_lon = float(lon_grid[len(lon_grid) // 2])
+        elif muni in _SOUTH_SC_COORDS:
+            # Use hardcoded approximate coordinates for the municipality
+            target_lat, target_lon = _SOUTH_SC_COORDS[muni]
             log.warning(
-                "  Municipality '%s' not in grid map; will search for nearest valid point.", muni
+                "  Municipality '%s' not in grid map; using hardcoded coords (%.2f, %.2f).",
+                muni, target_lat, target_lon,
             )
+        else:
+            log.warning(
+                "  Municipality '%s' has no grid mapping and no hardcoded coords; skipping.",
+                muni,
+            )
+            skipped += 1
+            continue
 
         # Find nearest grid cell with BOTH variables having valid data
         grid_lat, grid_lon, dist_km = _find_nearest_valid_point(
@@ -295,25 +304,29 @@ def _load_from_preprocessing_ref(
     """
     df_ref = pd.read_csv(_PREPROCESSING_REF)
     result: dict[str, tuple[float, float]] = {}
-    skipped = []
+    flagged = []
     for _, row in df_ref.iterrows():
         muni = str(row.get("municipality", ""))
         lat  = float(row.get("grid_lat", np.nan))
         lon  = float(row.get("grid_lon", np.nan))
         quality = str(row.get("data_quality", "ok"))
-        if pd.notna(lat) and pd.notna(lon) and quality != "insufficient_data":
+        if pd.notna(lat) and pd.notna(lon):
+            # Include ALL municipalities — even those with insufficient_data
+            # quality.  The preprocessing ref already selects the nearest valid
+            # ocean point; excluding insufficient_data entries would cause the
+            # downstream code to fall back to a less optimal grid point.
             result[muni] = (lat, lon)
-        elif quality == "insufficient_data":
-            skipped.append(muni)
-    if skipped:
+            if quality == "insufficient_data":
+                flagged.append(muni)
+    if flagged:
         log.warning(
-            "Preprocessing ref: %d municipalities have insufficient data coverage "
-            "and will fall back to the nearest available valid point: %s",
-            len(skipped), skipped,
+            "Preprocessing ref: %d municipalities have reduced data coverage "
+            "but are mapped to the nearest available valid ocean point: %s",
+            len(flagged), flagged,
         )
     log.info(
         "Preprocessing reference loaded: %d municipalities mapped (%d flagged)",
-        len(result), len(skipped),
+        len(result), len(flagged),
     )
     return result
 

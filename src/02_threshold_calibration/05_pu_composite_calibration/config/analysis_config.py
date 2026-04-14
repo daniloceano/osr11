@@ -49,7 +49,7 @@ Temporal and spatial conventions:
         - SSH_total = zos(00:00 UTC) + tide(daily max)
         - VHM0 (Hₛ) = daily maximum from 3-hourly WAVERYS
         - Directional matching window: [D-2, D-1, D, D+1 00Z]
-        - Local percentile thresholds computed from validated period
+        - Local percentile thresholds computed from full metocean record
 
 Weight interpretation (default values from methodology document):
     - w1, w2, w3: Composite score component weights (sum to 1.0)
@@ -241,6 +241,11 @@ SENSITIVITY_ALPHA = [
 # Effective domain budget = value × n_municipalities at run time.
 SENSITIVITY_B_TARGET = [6.0, 12.0, 18.0, 24.0]
 
+# Alternative episode gap tolerance values (in days).
+# Maximum gap between compound days that are merged into the same episode.
+# Tests how episode clustering granularity affects the PU score.
+SENSITIVITY_GAP_DAYS = [0, 1, 2, 3]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # CONSOLIDATED CONFIGURATION DICTIONARY
 # ══════════════════════════════════════════════════════════════════════════════
@@ -305,4 +310,5 @@ CFG: dict = {
     "sensitivity_weights": SENSITIVITY_WEIGHTS,
     "sensitivity_alpha": SENSITIVITY_ALPHA,
     "sensitivity_b_target": SENSITIVITY_B_TARGET,
+    "sensitivity_gap_days": SENSITIVITY_GAP_DAYS,
 }

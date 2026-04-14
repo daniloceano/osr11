@@ -18,21 +18,24 @@ Step 2e addresses this by:
 3. Applying a **soft penalty** weighted by episode plausibility
 4. Performing an **independent threshold sweep** — Step 2d thresholds are NOT used
 
-### Reported Events Database
+### Combined Positive-Event Set
 
-Step 2e uses the expanded documentary database:
+Step 2e uses BOTH reported-event databases as its positive set P:
 
-- **File:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv`
-- **Methodology:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_repository_methodology.md`
-- **Events:** 56 documented `ressaca` episodes (1998–2020)
-- **Sources:** Academic theses/dissertations, news archives, technical reports, Civil Defense materials
-- **Curation:** Each event has explicit marine-forcing evidence, traceable source citations, and municipality-level resolution
+1. **Expanded documentary database** (primary):
+   - **File:** `data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv`
+   - **Events:** 56 documented `ressaca` episodes (1998–2020, 14 municipalities)
+   - **Sources:** Academic theses/dissertations, news archives, technical reports
 
-The expanded database was curated specifically to support PU calibration by providing:
-- Higher event density through forensic documentary search
-- Source traceability (URL + title for each event)
-- Explicit coastal-marine impact criteria (not generic flood reports)
-- Municipality × date deduplication with episode-level logic
+2. **Legacy Leal et al. (2024) database:**
+   - **File:** `data/reported events/reported_events_Karine_sc.csv`
+   - **Events:** 91 unique (municipality, date) rows (1998–2020, 22 municipalities)
+
+**Combined positive set:** 147 unique (municipality, date) pairs, 27 union municipalities. The legacy database also serves as the E_i evidence source for unmatched episode audit.
+
+### Threshold Computation Period
+
+Percentile thresholds are computed from the **full metocean record** (1993–2025), not from the validated period. The validated period (1998–2020) restricts only the event-matching scan (Layers 1 and 2). This ensures maximum statistical robustness for threshold estimation.
 
 ## Methodological Framework
 
@@ -92,14 +95,14 @@ The rationale:
 | From | What | Role |
 |------|------|------|
 | Step 1 | `data/test/metocean_sc_full_unified_waverys_grid.nc` | Unified metocean dataset |
-| Documentary search | `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` | **Primary positive set P** (56 events) |
-| Legacy database | `reported_events_Karine_sc.csv` | **E_i evidence source** for unmatched episodes |
+| Documentary search | `ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv` | Combined positive set component (56 events) |
+| Legacy database | `reported_events_Karine_sc.csv` | Combined positive set component (91 events) + E_i evidence source |
 | Step 2b | Event record infrastructure, municipality→grid matching | Infrastructure reuse |
 | Step 2c | SSH_total definition (zos + FES2022 daily max tide) | Variable definition |
 | Step 2d | CSI optimal pair and metrics | **Comparison only — NOT used for threshold selection** |
 | Manual (optional) | `data/audit/unmatched_episode_audit.csv` | E_i override for specific episodes |
 
-**Step 2e performs its own independent threshold sweep.** The CSI-optimal thresholds from Step 2d are retained only for methodological comparison. The expanded documentary database (56 events) is the positive set P; the legacy database (105 rows / 91 unique disaster IDs) serves as a corroborating evidence source for E_i.
+**Step 2e performs its own independent threshold sweep.** The CSI-optimal thresholds from Step 2d are retained only for methodological comparison. The combined positive-event set (147 events from both databases) is the positive set P. The legacy database additionally serves as the E_i evidence source for unmatched episode audit.
 
 ## What This Step Produces
 
@@ -109,7 +112,12 @@ The rationale:
 | `tab_TC5_pu_metrics_full.csv` | Composite score across all threshold pairs |
 | `tab_TC5_pu_metrics_ranked.csv` | Ranked by optimal selection hierarchy |
 | `tab_TC5_optimal_pair_pu.csv` | Optimal threshold pair under PU framework |
-| `tab_TC5_sensitivity_*.csv` | Sensitivity analysis results |
+| `tab_TC5_sensitivity_weights.csv` | Weight sensitivity results |
+| `tab_TC5_sensitivity_alpha.csv` | Alpha sensitivity results |
+| `tab_TC5_sensitivity_b_target.csv` | B_target sensitivity results |
+| `tab_TC5_sensitivity_gap_days.csv` | Episode gap tolerance sensitivity results |
+| `tab_TC5_event_capture_status.csv` | Per-event capture status at optimal pair |
+| `tab_TC5_positive_event_union_audit.csv` | Combined positive-event provenance audit |
 | `fig_TC5_H1_score_heatmap.png` | Composite score heatmap |
 | `fig_TC5_H2_recall_heatmap.png` | R_pos heatmap |
 | `fig_TC5_S1_csi_vs_pu_comparison.png` | CSI vs PU optimal pair comparison |
@@ -142,15 +150,26 @@ src/02_threshold_calibration/05_pu_composite_calibration/
 |--------|------------------------|------------------------|
 | **Purpose** | Diagnostic exploration | Threshold calibration |
 | **Objective** | Maximize CSI | Maximize composite score |
-| **Events database** | Leal et al. (91 rows / 72 unique storms) | Expanded documentary (56 rows) |
-| **Positive count P** | 91 (municipality×event pairs) | 56 (municipality×date pairs) |
+| **Events database** | Leal et al. (91 rows / 72 unique storms) | Combined: expanded (56) + legacy (91) = 147 events |
+| **Positive count P** | 91 (municipality×event pairs) | 147 (combined municipality×date pairs, 27 municipalities) |
 | **Unmatched episodes** | Counted as F (hard false alarms) | Weighted by plausibility qᵢ |
 | **Under-reporting** | Not addressed | Explicitly modeled |
 | **Threshold output** | CSI-optimal (comparison only) | PU-optimal (final calibrated pair) |
 
 **Step 2d was diagnostic, not prescriptive.** It revealed that classical CSI metrics fail under incomplete reporting (FAR=0.984). The CSI-optimal thresholds from Step 2d are **not used** by Step 2e or any subsequent step. Step 2e performs its own independent threshold sweep and produces the **final calibrated threshold pair** for use in Step 3 (Storm Catalog Generation).
 
-**Event count note:** The legacy database has 105 raw CSV rows → 91 valid rows after removing entries with missing date/municipality/disaster_id → 72 unique disaster IDs (storms). Step 2d uses 91 as the denominator (municipality×event pairs). Step 2e uses P=56 from the expanded database.
+**Event count note:** The legacy database has 105 raw CSV rows → 91 valid rows → 72 unique disaster IDs (storms). Step 2d uses 91 as the denominator. Step 2e uses P=147 from the combined positive-event set (expanded 56 + legacy 91, 0 exact overlaps, 27 union municipalities).
+
+## Sensitivity Analysis
+
+Four dimensions of sensitivity are tested, all with the optimal pair confirmed at q90/q90:
+
+| Experiment | Parameter | Values tested | Result |
+|-----------|-----------|---------------|--------|
+| Weights | (w₁, w₂, w₃) | high_recall, balanced, default | q90/q90 stable |
+| Alpha | (α_E, α_I, α_C) | evidence_heavy, intensity_moderate, default | q90/q90 stable |
+| B_target | Per-municipality budget | 6, 12, 18, 24 ep/yr/muni | q90/q90 stable |
+| Gap days | EPISODE_MAX_GAP_DAYS | 0, 1, 2, 3 | q90/q90 stable; Score: -3.22 → -3.02 |
 
 ## Context Coherence: Northern-Sector Exposure
 

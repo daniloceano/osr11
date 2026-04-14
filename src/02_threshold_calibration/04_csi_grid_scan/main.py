@@ -30,19 +30,20 @@ Pipeline
 7. [--false-alarms] Layer 2: false alarm count from validated-period scan
 8. [--summary] Compute CSI/POD/FAR, select optimal pair, save tables and figures
 
-Temporal domain restriction (Step 2)
--------------------------------------
-The unified dataset spans 1993–2025 but the validation database (Leal et al., 2024)
-covers only 1998–2023. Scanning the full series in Layer 2 inflates F with compound
-episodes in unvalidated years (1993–1997, 2024–2025), which distorts FAR and CSI.
+Threshold computation vs. validated scan
+-----------------------------------------
+Percentile thresholds are computed from the FULL metocean record (1993–2025),
+ensuring that the climatological distribution is not truncated by the event
+database period.  The validation scan (Layers 1 and 2) is restricted to the
+period covered by the event database (~1998–2023), so that episodes in
+unvalidated years are not spuriously classified as false alarms.
 
-The preprocessing step clips the dataset to:
+The scan time_index is restricted to:
 
     [min(event_dates) + min(offsets), max(event_dates) + max(offsets)]
 
 i.e., typically from ~1997-12-30 to ~2023-MM-DD+1 (exact dates depend on the
-event database). This restricts both the false alarm scan and the quantile
-threshold computation to the same validated temporal domain.
+event database).
 
 SSH_total rationale
 -------------------
@@ -78,7 +79,7 @@ import sys
 from pathlib import Path
 
 _script_dir   = Path(__file__).resolve().parent
-_project_root = _script_dir.parents[3]
+_project_root = _script_dir.parents[2]
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
@@ -167,29 +168,41 @@ def main(args: argparse.Namespace | None = None) -> None:
     log.info("=" * 68)
 
     # ── Load data (reuse preliminary_compound loaders) ─────────────────────────
-    ds        = load_unified_dataset()
+    import pandas as pd
+    ds_full   = load_unified_dataset()
     df_events = load_reported_events()
 
-    # ── Preprocessing: clip dataset to validated temporal domain ────────────────
-    #
-    # The unified dataset spans 1993–2025; the reported events cover 1998–2023.
-    # Without this step, Layer 2 scans ~7 unvalidated years and classifies any
-    # compound episode there as a false alarm, inflating F artificially.
-    # Clipping anchors both quantile thresholds and the false alarm scan to the
-    # same validated period. See src/04_threshold_calibration/preprocessing.py
-    # for the full rationale.
-    import pandas as pd
-    ds, _t_clip_start, _t_clip_end = clip_to_validated_period(
-        ds, df_events, CFG["match_window_offsets"]
-    )
-    time_index = pd.DatetimeIndex(ds.time.values)
-
-    # ── Build event records (reuse preliminary_compound events module) ──────────
-    records = build_event_records(ds, df_events)
+    # ── Build event records from the FULL dataset ─────────────────────────────
+    # Event records extract climatological series (hs_clim, ssh_clim) from the
+    # dataset.  Using the FULL dataset ensures that percentile thresholds are
+    # computed from the entire metocean record (1993–2025), not only the
+    # validated period.  This is the correct approach: thresholds should reflect
+    # the full climatological distribution, while the validation scan (Layers 1
+    # and 2) is restricted to the period where event records exist.
+    records = build_event_records(ds_full, df_events)
     if not records:
         log.error("No event records built. Check data and configuration.")
         sys.exit(1)
     log.info("Built %d event records.", len(records))
+
+    # ── Restrict scan to validated temporal domain ────────────────────────────
+    # The unified dataset spans 1993–2025; the reported events cover 1998–2023.
+    # Without temporal restriction, Layer 2 (false alarm detection) scans
+    # unvalidated years and inflates F artificially.  The scan time_index is
+    # therefore restricted to the validated period, while the climatological
+    # series (used for threshold computation) retain the full record.
+    _, _t_clip_start, _t_clip_end = clip_to_validated_period(
+        ds_full, df_events, CFG["match_window_offsets"]
+    )
+    time_index = pd.DatetimeIndex(
+        ds_full.time.sel(time=slice(_t_clip_start, _t_clip_end)).values
+    )
+    log.info(
+        "Scan restricted to validated period: %s → %s (%d steps). "
+        "Thresholds computed from full record (%d steps).",
+        _t_clip_start.date(), _t_clip_end.date(), len(time_index),
+        int(ds_full.sizes["time"]),
+    )
 
     # ── Compute FES2022 tidal series (reuse tidal_sensitivity.tides) ────────────
     # daily_max=True: evaluate FES2022 at hourly resolution and retain the daily

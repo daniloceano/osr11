@@ -37,9 +37,13 @@ _MODULE_ALIASES: dict[str, str] = {
     "preprocessing":              "01_data_preparation/preprocessing",
 
     # STEP 2 — Threshold Calibration (umbrella)
-    "threshold_calibration":      "02_threshold_calibration",
+    "threshold_calibration_umbrella": "02_threshold_calibration",
 
     # STEP 2 sub-steps (legacy aliases for backward compatibility)
+    # NOTE: "threshold_calibration" intentionally maps to 04_csi_grid_scan (not the
+    # umbrella) because all existing `from src.threshold_calibration.*` imports are
+    # inside 04_csi_grid_scan files and reference modules within that directory.
+    "threshold_calibration":      "02_threshold_calibration/04_csi_grid_scan",
     "exploratory_data_analysis":  "02_threshold_calibration/01_exploratory_data_analysis",
     "explore_test_data_south_sc": "02_threshold_calibration/01_exploratory_data_analysis",  # legacy
     "preliminary_compound":       "02_threshold_calibration/02_preliminary_compound",

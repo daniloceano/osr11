@@ -40,15 +40,20 @@ Pipeline (--all)
 10. [--figures]    Generate heatmaps and comparison figures
 11. [--summary]    Save all output tables and print summary
 
-Validated temporal domain
--------------------------
-Clips to [min(expanded_event_dates) − 2 days, max(expanded_event_dates) + 1 day].
-This restricts both threshold computation and the false-alarm scan to the period
-covered by the expanded documentary database (1998–2020 approximately).
+Threshold computation vs. validated scan
+-----------------------------------------
+Percentile thresholds are computed from the FULL metocean record (1993–2025),
+ensuring that the climatological distribution is not truncated by the event
+database period.  The validation scan (Layers 1 and 2) is restricted to the
+period covered by the event databases (~1998–2020), so that episodes in
+unvalidated years are not spuriously classified as false positives.
+
+    Threshold percentiles: computed from full record (rec.hs_clim, ssh_total_clim)
+    Scan time_index: restricted to [min(event_dates) − 2 days, max(event_dates) + 1 day]
 
 n_years calculation
 -------------------
-The number of validated years is derived from the clipped dataset's time range:
+The number of validated years is derived from the scan time range:
     n_years = (t_end - t_start).days / 365.25
 This is used to normalise the annual burden B(θ).
 """
@@ -158,12 +163,12 @@ def _load_data_and_records(cfg: dict):
             records (which may drop unmapped municipalities).
     """
     # ── Load combined positive-event set ──────────────────────────────────────
-    ds = load_unified_dataset(cfg["unified_file"])
+    ds_full = load_unified_dataset(cfg["unified_file"])
     events_combined, events_provenance = load_combined_events(
         cfg["events_file"], cfg["events_file_legacy"]
     )
     # Compute union city count BEFORE build_event_records (which may drop cities
-    # not in municipality_grid_ref.csv — currently Biguaçu, Imbituba, Joinville, Laguna)
+    # without a valid grid point in the combined dataset)
     n_union_cities = int(events_combined["municipality"].nunique())
 
     # Retain legacy_df separately for audit E_i calculation (audit.py still uses it)
@@ -175,24 +180,13 @@ def _load_data_and_records(cfg: dict):
     events_provenance.to_csv(tab_dir / "tab_TC5_event_provenance.csv", index=False)
     log.info("Saved: tab_TC5_event_provenance.csv (%d rows)", len(events_provenance))
 
-    # ── Clip to validated temporal domain ─────────────────────────────────────
-    ds, t_start, t_end = clip_to_validated_period(
-        ds, events_combined, cfg["match_window_offsets"]
-    )
-    time_index = pd.DatetimeIndex(ds.time.values)
-
-    n_years = (t_end - t_start).days / 365.25
-    log.info(
-        "Validated period: %s → %s  (%.1f years)",
-        t_start.date(), t_end.date(), n_years,
-    )
-
-    # ── Build event records ───────────────────────────────────────────────────
-    # build_event_records accepts any DataFrame with 'municipality', 'date',
-    # 'disaster_id' columns. Municipalities without a valid grid association
-    # (Biguaçu, Imbituba, Joinville, Laguna from expanded DB) will be silently
-    # dropped — those events are structural misses (no grid point to evaluate).
-    records = build_event_records(ds, events_combined)
+    # ── Build event records from the FULL dataset ─────────────────────────────
+    # Event records extract climatological series (hs_clim, ssh_clim) from the
+    # dataset.  Using the FULL dataset ensures that percentile thresholds are
+    # computed from the entire metocean record (1993–2025), not only the
+    # validated period.  Thresholds must reflect the full climatological
+    # distribution; validation/evaluation is restricted separately below.
+    records = build_event_records(ds_full, events_combined)
     if not records:
         log.error("No event records built from combined events database.")
         sys.exit(1)
@@ -202,7 +196,28 @@ def _load_data_and_records(cfg: dict):
         len(records), len(events_combined), len(events_combined) - len(records),
     )
 
-    return ds, time_index, records, events_combined, legacy_df, n_years, n_union_cities
+    # ── Restrict scan to validated temporal domain ─────────────────────────────
+    # The full dataset spans 1993–2025; the event databases cover ~1998–2020.
+    # The scan (Layers 1 and 2) is restricted to the validated period so that
+    # episodes in unvalidated years are not counted as false positives.
+    # Thresholds, however, are computed from the full climatological series
+    # (already stored in the event records' hs_clim / ssh_clim).
+    _, t_start, t_end = clip_to_validated_period(
+        ds_full, events_combined, cfg["match_window_offsets"]
+    )
+    time_index = pd.DatetimeIndex(
+        ds_full.time.sel(time=slice(t_start, t_end)).values
+    )
+
+    n_years = (t_end - t_start).days / 365.25
+    log.info(
+        "Validated period: %s → %s  (%.1f years). "
+        "Thresholds from full record (%d steps).",
+        t_start.date(), t_end.date(), n_years,
+        int(ds_full.sizes["time"]),
+    )
+
+    return ds_full, time_index, records, events_combined, legacy_df, n_years, n_union_cities
 
 
 def main(args: argparse.Namespace | None = None) -> None:
@@ -544,6 +559,10 @@ def main(args: argparse.Namespace | None = None) -> None:
             n_years=n_years,
             P=P,
             cfg=CFG,
+            records=records,
+            ssh_total_cache=ssh_total_cache,
+            time_index=time_index,
+            legacy_df=legacy_df,
         )
 
     # ── Figures ───────────────────────────────────────────────────────────────

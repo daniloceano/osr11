@@ -16,6 +16,7 @@ env/
 data/raw/
 data/processed/
 data/interim/
+data/tide_models_clipped_brasil
 data/tide_models_clipped_brasil/*
 !data/raw/**/.gitkeep
 !data/processed/.gitkeep
@@ -59,4 +60,3 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
-

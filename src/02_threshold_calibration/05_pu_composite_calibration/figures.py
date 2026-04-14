@@ -13,6 +13,7 @@ fig_TC5_H4_fsoft_heatmap.png        — F_soft(θ)/P across 9×9 threshold grid
 fig_TC5_S1_csi_vs_pu.png            — CSI optimal pair vs PU optimal pair comparison
 fig_TC5_S2_sensitivity_weights.png  — Weight sensitivity: optimal pair stability
 fig_TC5_S3_sensitivity_b_target.png — B_target sensitivity: Score vs B_target
+fig_TC5_S4_sensitivity_gap_days.png — Gap days sensitivity: Score vs EPISODE_MAX_GAP_DAYS
 fig_TC5_A1_qi_distribution.png      — Distribution of q_i values across all episodes
 fig_TC5_A2_city_source_audit.png    — Municipality audit map on SC coast (cartopy)
 fig_TC5_E1_event_capture.png        — Peak Hₛ per event sorted by coastal sector;
@@ -437,6 +438,56 @@ def plot_sensitivity_b_target(
     ax.grid(alpha=0.3)
 
     # Convert to integer percentile if using legacy fractional columns
+    hs_vals  = df_sens[hs_col]  if pct_scale == 1 else df_sens[hs_col]  * 100
+    ssh_vals = df_sens[ssh_col] if pct_scale == 1 else df_sens[ssh_col] * 100
+
+    ax2 = ax.twinx()
+    ax2.plot(x_vals, hs_vals,  "s--", color="#d62728", alpha=0.7, label="Hₛ threshold (q%)")
+    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="SSH threshold (q%)")
+    ax2.set_ylabel("Optimal threshold percentile (%)", fontsize=10)
+    ax2.set_ylim(40, 100)
+
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, fontsize=9, loc="lower right")
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    log.info("Saved: %s", output_path.name)
+
+
+# ── EPISODE_MAX_GAP_DAYS sensitivity ─────────────────────────────────────────
+
+def plot_sensitivity_gap_days(
+    df_sens: pd.DataFrame,
+    output_path: Path,
+) -> None:
+    """Plot composite Score and optimal threshold pair vs. EPISODE_MAX_GAP_DAYS.
+
+    X-axis: gap_days (integer days)
+    Left Y: composite Score
+    Right Y: optimal Hₛ and SSH threshold percentiles
+
+    Analogous to fig_TC5_S3 (B_target sensitivity) but for episode gap tolerance.
+    """
+    if df_sens.empty:
+        return
+
+    x_vals = df_sens["gap_days"]
+
+    # Resolve threshold columns
+    hs_col, ssh_col = _resolve_threshold_pct_cols(df_sens)
+    pct_scale = 1 if hs_col == "hs_percentile" else 100
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(x_vals, df_sens["Score"], "o-", color="#2ca02c", label="Composite Score")
+    ax.set_xlabel("EPISODE_MAX_GAP_DAYS (days)", fontsize=10)
+    ax.set_ylabel("Composite Score", fontsize=11)
+    ax.set_title("Composite Score vs. Episode Gap Tolerance", fontsize=12)
+    ax.grid(alpha=0.3)
+    ax.set_xticks(sorted(x_vals.unique()))
+
     hs_vals  = df_sens[hs_col]  if pct_scale == 1 else df_sens[hs_col]  * 100
     ssh_vals = df_sens[ssh_col] if pct_scale == 1 else df_sens[ssh_col] * 100
 
@@ -1172,6 +1223,11 @@ def run_all_figures(
     if b_path.exists():
         df_b = pd.read_csv(b_path)
         plot_sensitivity_b_target(df_b, summary_dir / "fig_TC5_S3_sensitivity_b_target.png")
+
+    g_path = tab_dir / "tab_TC5_sensitivity_gap_days.csv"
+    if g_path.exists():
+        df_g = pd.read_csv(g_path)
+        plot_sensitivity_gap_days(df_g, summary_dir / "fig_TC5_S4_sensitivity_gap_days.png")
 
     # ── q_i distribution at optimal pair ─────────────────────────────────────
     if not audit_df.empty:

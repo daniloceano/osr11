@@ -47,14 +47,14 @@ export const methodologySteps: MethodStep[] = [
         id: 'step-2d',
         label: '2d — CSI Grid Scan (Diagnostic)',
         description:
-          '81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR indicates Civil Defense under-reporting. This step is diagnostic; Step 2e is the final calibration.',
+          '81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Percentile thresholds computed from the full metocean record (1993–2025); validation scan restricted to 1998–2020. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1261, CSI=0.0155, FAR=0.984). High FAR indicates Civil Defense under-reporting. This step is diagnostic; Step 2e is the final calibration.',
         status: 'done',
       },
       {
         id: 'step-2e',
         label: '2e — PU Composite Calibration (Final)',
         description:
-          'Independent threshold sweep using a positive-unlabeled (PU) composite score against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020). Score balances positive recall, operational burden, and soft unmatched penalty. Independently confirms q90/q90 (R_pos=0.268) as the final calibrated threshold pair. Robust to weight, target, and database choices.',
+          'Independent threshold sweep using a positive-unlabeled (PU) composite score against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020). Thresholds from full metocean record; validation scan restricted to event-database period. Score balances positive recall (w1=0.60), operational burden (w2=0.20), and soft unmatched penalty (w3=0.20). Independently confirms q90/q90 (H=35, R_pos=0.238, B=0.428, Score=-3.159). Robust across all 4 sensitivity dimensions: weights, alpha, B_target, and episode gap tolerance.',
         status: 'done',
       },
     ],

@@ -52,7 +52,7 @@ import pandas as pd
 import xarray as xr
 
 # ── Project root on sys.path ────────────────────────────────────────────────────
-_ROOT = Path(__file__).resolve().parents[2]
+_ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
@@ -66,7 +66,8 @@ log = logging.getLogger(__name__)
 
 # ── Paths ───────────────────────────────────────────────────────────────────────
 UNIFIED_FILE = _ROOT / "data/test/metocean_sc_full_unified_waverys_grid.nc"
-EVENTS_FILE  = _ROOT / "data/reported events/reported_events_Karine_sc.csv"
+EVENTS_FILE_LEGACY   = _ROOT / "data/reported events/reported_events_Karine_sc.csv"
+EVENTS_FILE_EXPANDED = _ROOT / "data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv"
 OUTPUT_DIR   = _ROOT / "outputs/preprocessing"
 OUTPUT_FILE  = OUTPUT_DIR / "municipality_grid_ref.csv"
 
@@ -99,6 +100,7 @@ _SOUTH_SC_COORDS: dict[str, tuple[float, float]] = {
     "Florianópolis":                 (-27.60, -48.55),
     "Palhoça":                       (-27.65, -48.67),
     "Tijucas":                       (-27.24, -48.64),
+    "Biguaçu":                       (-27.49, -48.63),
     # Central-north sector
     "Bombinhas":                     (-27.13, -48.50),
     "Porto Belo":                    (-27.16, -48.54),
@@ -114,6 +116,7 @@ _SOUTH_SC_COORDS: dict[str, tuple[float, float]] = {
     "Araquari":                      (-26.37, -48.72),
     "São Francisco do Sul":          (-26.24, -48.64),
     "Itapoá":                        (-26.11, -48.62),
+    "Joinville":                     (-26.30, -48.74),
 }
 
 
@@ -250,9 +253,10 @@ def _find_best_grid_point(
 def main() -> None:
     log.info("=" * 68)
     log.info("OSR11 — Preprocessing: municipality–grid reference table")
-    log.info("Input  (unified): %s", UNIFIED_FILE)
-    log.info("Input  (events) : %s", EVENTS_FILE)
-    log.info("Output          : %s", OUTPUT_FILE)
+    log.info("Input  (unified) : %s", UNIFIED_FILE)
+    log.info("Input  (legacy)  : %s", EVENTS_FILE_LEGACY)
+    log.info("Input  (expanded): %s", EVENTS_FILE_EXPANDED)
+    log.info("Output           : %s", OUTPUT_FILE)
     log.info("=" * 68)
 
     # ── Load inputs ────────────────────────────────────────────────────────────
@@ -260,12 +264,22 @@ def main() -> None:
     ds = xr.open_dataset(UNIFIED_FILE)
     log.info("  time=%d  lat=%d  lon=%d", ds.sizes["time"], ds.sizes["latitude"], ds.sizes["longitude"])
 
-    log.info("Loading reported events...")
-    df_events = pd.read_csv(EVENTS_FILE)
-    # The raw CSV uses "Municipalities"; rename to match the project convention
-    if "Municipalities" in df_events.columns and "municipality" not in df_events.columns:
-        df_events = df_events.rename(columns={"Municipalities": "municipality"})
-    municipalities = sorted(df_events["municipality"].dropna().unique().tolist())
+    # Load BOTH event databases and collect the union of municipalities
+    log.info("Loading reported events (legacy + expanded)...")
+    df_legacy = pd.read_csv(EVENTS_FILE_LEGACY)
+    if "Municipalities" in df_legacy.columns and "municipality" not in df_legacy.columns:
+        df_legacy = df_legacy.rename(columns={"Municipalities": "municipality"})
+    munis_legacy = set(df_legacy["municipality"].dropna().unique())
+
+    munis_expanded = set()
+    if EVENTS_FILE_EXPANDED.exists():
+        df_expanded = pd.read_csv(EVENTS_FILE_EXPANDED)
+        # Expanded CSV uses "city" column
+        col = "city" if "city" in df_expanded.columns else "municipality"
+        munis_expanded = set(df_expanded[col].dropna().unique())
+        log.info("  Expanded database: %d unique municipalities", len(munis_expanded))
+
+    municipalities = sorted(munis_legacy | munis_expanded)
     log.info("  Unique municipalities: %d", len(municipalities))
 
     # ── Build reference table ──────────────────────────────────────────────────
