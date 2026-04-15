@@ -16,11 +16,20 @@ Compound event definition (Step 4 minimal):
   - SSH_total_only:  SSH_total storm with no temporal overlap with any Hs storm
   - compound:        Group of Hs + SSH_total storms sharing at least one day
 
-Intensity definitions:
-  - For Hs_only:        peak Hs during the storm
-  - For SSH_total_only: peak SSH_total during the storm
-  - For compound:       joint_intensity = peak_hs + peak_ssh_total (additive)
-  - compound also reports: compound_peak_hs, compound_peak_ssh_total
+Compound intensity — normalized (domain-wide):
+  Raw peak values of Hs and SSH_total are in different physical units and have
+  different spatial gradients (Hs increases offshore; SSH_total depends on shelf
+  geometry and tidal regime). A simple additive combination (peak_hs + peak_ssh)
+  creates a metric dominated by whichever variable has larger absolute values
+  and is not comparable across grid points with different baseline magnitudes.
+
+  Instead, we normalize each component against the domain-wide distribution:
+    hs_peak_norm  = clip((hs_peak - Q05_hs) / (Q95_hs - Q05_hs), 0, 1)
+    ssh_peak_norm = clip((ssh_peak - Q05_ssh) / (Q95_ssh - Q05_ssh), 0, 1)
+    compound_intensity_norm = 0.5 * (hs_peak_norm + ssh_peak_norm)
+
+  This yields a dimensionless [0, 1] score comparable across all grid points.
+  Q05/Q95 are computed from ALL compound event peaks across the full domain.
 
 Period: full series from run_metadata.json (1993-01-01 to 2025-12-31)
 
@@ -181,7 +190,12 @@ def percentile_safe(values: list[float], q: float) -> float | None:
 
 
 def compute_grid_metrics(classified: dict, n_years: float) -> dict:
-    """Compute summary metrics from classified storms at one grid point."""
+    """Compute summary metrics from classified storms at one grid point.
+
+    Compound intensity fields that require domain-wide normalization are
+    populated later by ``normalize_compound_intensity()``; they are set
+    to None here as placeholders.
+    """
 
     hs_only = classified["hs_only"]
     ssh_only = classified["ssh_only"]
@@ -215,10 +229,14 @@ def compute_grid_metrics(classified: dict, n_years: float) -> dict:
         "ssh_only_p95_peak": None,
         "ssh_only_max_peak": None,
 
-        # ── Compound intensity ──
-        "compound_mean_joint_intensity": None,
-        "compound_p95_joint_intensity": None,
-        "compound_max_joint_intensity": None,
+        # ── Compound intensity (normalized — filled later) ──
+        "compound_mean_intensity_norm": None,
+        "compound_p95_intensity_norm": None,
+        "compound_max_intensity_norm": None,
+        # Normalized components (filled later)
+        "compound_mean_hs_peak_norm": None,
+        "compound_mean_ssh_peak_norm": None,
+        # Raw peaks retained for auditability
         "compound_mean_peak_hs": None,
         "compound_mean_peak_ssh_total": None,
     }
@@ -236,16 +254,75 @@ def compute_grid_metrics(classified: dict, n_years: float) -> dict:
         metrics["ssh_only_max_peak"] = round(float(np.max(peaks)), 4)
 
     if n_compound > 0:
-        ji = [c["joint_intensity"] for c in compound]
         hs_peaks = [c["compound_peak_hs"] for c in compound]
         ssh_peaks = [c["compound_peak_ssh_total"] for c in compound]
-        metrics["compound_mean_joint_intensity"] = round(float(np.mean(ji)), 4)
-        metrics["compound_p95_joint_intensity"] = round(percentile_safe(ji, 95), 4)
-        metrics["compound_max_joint_intensity"] = round(float(np.max(ji)), 4)
         metrics["compound_mean_peak_hs"] = round(float(np.mean(hs_peaks)), 4)
         metrics["compound_mean_peak_ssh_total"] = round(float(np.mean(ssh_peaks)), 4)
 
     return metrics
+
+
+def normalize_compound_intensity(
+    all_classified: list[dict],
+    results: list[dict],
+) -> dict:
+    """Compute domain-wide normalization, then fill compound intensity fields.
+
+    Returns a dict with the normalization reference values used.
+    """
+    # Collect ALL compound event peaks across the domain
+    all_hs_peaks = []
+    all_ssh_peaks = []
+    for classified in all_classified:
+        for c in classified["compound"]:
+            all_hs_peaks.append(c["compound_peak_hs"])
+            all_ssh_peaks.append(c["compound_peak_ssh_total"])
+
+    if not all_hs_peaks:
+        return {"hs_ref_low": None, "hs_ref_high": None,
+                "ssh_ref_low": None, "ssh_ref_high": None}
+
+    hs_ref_low = float(np.percentile(all_hs_peaks, 5))
+    hs_ref_high = float(np.percentile(all_hs_peaks, 95))
+    ssh_ref_low = float(np.percentile(all_ssh_peaks, 5))
+    ssh_ref_high = float(np.percentile(all_ssh_peaks, 95))
+
+    hs_range = max(hs_ref_high - hs_ref_low, 1e-9)
+    ssh_range = max(ssh_ref_high - ssh_ref_low, 1e-9)
+
+    print(f"\n  Normalization refs (domain-wide compound peaks):")
+    print(f"    Hs:  Q05={hs_ref_low:.4f} m,  Q95={hs_ref_high:.4f} m")
+    print(f"    SSH: Q05={ssh_ref_low:.4f} m,  Q95={ssh_ref_high:.4f} m")
+
+    # For each grid point, normalize compound events and compute stats
+    for classified, entry in zip(all_classified, results):
+        compound = classified["compound"]
+        if not compound:
+            continue
+
+        int_norms = []
+        hs_norms = []
+        ssh_norms = []
+        for c in compound:
+            hn = np.clip((c["compound_peak_hs"] - hs_ref_low) / hs_range, 0, 1)
+            sn = np.clip((c["compound_peak_ssh_total"] - ssh_ref_low) / ssh_range, 0, 1)
+            ci = 0.5 * (hn + sn)
+            int_norms.append(float(ci))
+            hs_norms.append(float(hn))
+            ssh_norms.append(float(sn))
+
+        entry["compound_mean_intensity_norm"] = round(float(np.mean(int_norms)), 4)
+        entry["compound_p95_intensity_norm"] = round(float(np.percentile(int_norms, 95)), 4)
+        entry["compound_max_intensity_norm"] = round(float(np.max(int_norms)), 4)
+        entry["compound_mean_hs_peak_norm"] = round(float(np.mean(hs_norms)), 4)
+        entry["compound_mean_ssh_peak_norm"] = round(float(np.mean(ssh_norms)), 4)
+
+    return {
+        "hs_ref_low": round(hs_ref_low, 4),
+        "hs_ref_high": round(hs_ref_high, 4),
+        "ssh_ref_low": round(ssh_ref_low, 4),
+        "ssh_ref_high": round(ssh_ref_high, 4),
+    }
 
 
 def main():
@@ -276,8 +353,9 @@ def main():
         key = (round(gp["grid_lat"], 5), round(gp["grid_lon"], 5))
         ssh_index[key] = gp
 
-    # ── Process each grid point ────────────────────────────────────────────
+    # ── Process each grid point (pass 1: classify + per-point metrics) ─────
     results = []
+    all_classified = []
     n_compound_total = 0
     n_hs_only_total = 0
     n_ssh_only_total = 0
@@ -310,6 +388,7 @@ def main():
             **metrics,
         }
         results.append(entry)
+        all_classified.append(classified)
 
         if (i + 1) % 100 == 0:
             print(f"  Processed {i + 1}/{len(hs_catalog)} grid points...")
@@ -318,6 +397,9 @@ def main():
     print(f"  Hs_only total:        {n_hs_only_total:,}")
     print(f"  SSH_total_only total:  {n_ssh_only_total:,}")
     print(f"  Compound total:        {n_compound_total:,}")
+
+    # ── Pass 2: domain-wide normalization of compound intensity ─────────────
+    norm_refs = normalize_compound_intensity(all_classified, results)
 
     # ── Build output ───────────────────────────────────────────────────────
     output = {
@@ -343,9 +425,12 @@ def main():
                 "SSH_total storm with no temporal overlap with any Hs storm "
                 "at the same grid point."
             ),
-            "joint_intensity_definition": (
-                "Additive: peak_hs + peak_ssh_total within the compound event."
+            "compound_intensity_definition": (
+                "Normalized compound intensity: 0.5 * (hs_peak_norm + ssh_peak_norm), "
+                "where each component is scaled to [0, 1] using domain-wide Q05/Q95 "
+                "of compound event peaks. Dimensionless and comparable across grid points."
             ),
+            "compound_intensity_normalization": norm_refs,
             "n_hs_only_total": n_hs_only_total,
             "n_ssh_only_total": n_ssh_only_total,
             "n_compound_total": n_compound_total,

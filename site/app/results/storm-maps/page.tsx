@@ -69,7 +69,7 @@ export default function StormMapsPage() {
               <DefinitionCard
                 color="#756bb1"
                 title="Compound"
-                body="Temporal overlap between an Hₛ storm and an SSH_total storm at the same grid point (shared ≥ 1 calendar day). Joint intensity = peak Hₛ + peak SSH_total."
+                body="Temporal overlap between an Hₛ storm and an SSH_total storm at the same grid point (shared ≥ 1 calendar day). Intensity is a normalized [0–1] score: 0.5 × (Hₛ_norm + SSH_norm), where each component is scaled via domain-wide Q05/Q95."
               />
             </div>
           </div>
@@ -116,8 +116,11 @@ export default function StormMapsPage() {
                   <strong className="text-gray-800">Intensity definitions.</strong>{' '}
                   For Hₛ-only storms, intensity = peak daily Hₛ during the episode.
                   For SSH_total-only storms, intensity = peak daily SSH_total.
-                  For compound events, joint intensity = peak Hₛ + peak SSH_total (additive).
-                  The additive definition captures the combined hazard magnitude but does not imply physical superposition.
+                  For compound events, intensity is a normalized dimensionless score [0–1]:
+                  each component (peak Hₛ, peak SSH_total) is scaled to [0, 1] using domain-wide
+                  5th and 95th percentiles of all compound event peaks, then averaged with equal
+                  weight (0.5 × Hₛ_norm + 0.5 × SSH_norm). This ensures comparability across
+                  grid points regardless of differences in baseline wave height or tidal regime.
                 </p>
                 <p>
                   <strong className="text-gray-800">Limitations.</strong>{' '}

@@ -21,9 +21,11 @@ export interface GridPoint {
   ssh_only_mean_peak: number | null;
   ssh_only_p95_peak: number | null;
   ssh_only_max_peak: number | null;
-  compound_mean_joint_intensity: number | null;
-  compound_p95_joint_intensity: number | null;
-  compound_max_joint_intensity: number | null;
+  compound_mean_intensity_norm: number | null;
+  compound_p95_intensity_norm: number | null;
+  compound_max_intensity_norm: number | null;
+  compound_mean_hs_peak_norm: number | null;
+  compound_mean_ssh_peak_norm: number | null;
   compound_mean_peak_hs: number | null;
   compound_mean_peak_ssh_total: number | null;
 }
@@ -36,7 +38,13 @@ export interface StormMapsData {
     compound_definition: string;
     hs_only_definition: string;
     ssh_only_definition: string;
-    joint_intensity_definition: string;
+    compound_intensity_definition: string;
+    compound_intensity_normalization?: {
+      hs_ref_low: number;
+      hs_ref_high: number;
+      ssh_ref_low: number;
+      ssh_ref_high: number;
+    };
     n_hs_only_total: number;
     n_ssh_only_total: number;
     n_compound_total: number;
@@ -83,20 +91,26 @@ const INTENSITY_METRICS: Record<EventClass, MetricDef[]> = {
     { key: 'max', label: 'Maximum peak SSH_total', unit: 'm', field: 'ssh_only_max_peak' },
   ],
   compound: [
-    { key: 'mean_ji', label: 'Mean joint intensity', unit: 'm', field: 'compound_mean_joint_intensity' },
-    { key: 'p95_ji', label: '95th-pctl joint intensity', unit: 'm', field: 'compound_p95_joint_intensity' },
-    { key: 'max_ji', label: 'Max joint intensity', unit: 'm', field: 'compound_max_joint_intensity' },
-    { key: 'mean_hs', label: 'Mean compound peak Hₛ', unit: 'm', field: 'compound_mean_peak_hs' },
-    { key: 'mean_ssh', label: 'Mean compound peak SSH_total', unit: 'm', field: 'compound_mean_peak_ssh_total' },
+    { key: 'mean_norm', label: 'Mean normalized intensity', unit: '[0–1]', field: 'compound_mean_intensity_norm' },
+    { key: 'p95_norm', label: '95th-pctl normalized intensity', unit: '[0–1]', field: 'compound_p95_intensity_norm' },
+    { key: 'max_norm', label: 'Max normalized intensity', unit: '[0–1]', field: 'compound_max_intensity_norm' },
+    { key: 'mean_hs_norm', label: 'Mean Hₛ component (norm)', unit: '[0–1]', field: 'compound_mean_hs_peak_norm' },
+    { key: 'mean_ssh_norm', label: 'Mean SSH component (norm)', unit: '[0–1]', field: 'compound_mean_ssh_peak_norm' },
   ],
 };
 
 /* ── Color scales ──────────────────────────────────────────────────────── */
 
-const COLOR_RAMPS: Record<EventClass, string[]> = {
-  hs_only: ['#eff3ff', '#bdd7e7', '#6baed6', '#3182bd', '#08519c'],
-  ssh_only: ['#edf8fb', '#b2e2e2', '#66c2a4', '#2ca25f', '#006d2c'],
-  compound: ['#f2f0f7', '#cbc9e2', '#9e9ac8', '#756bb1', '#54278f'],
+/* Color ramps keyed by metric type, not event class */
+const COLOR_RAMPS: Record<MetricGroup, string[]> = {
+  occurrence: [
+    '#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c',
+    '#fc4e2a','#e31a1c','#bd0026','#800026','#4a0066',
+  ],
+  intensity: [
+    '#E6F7FF','#A6DEF7','#4CBFE6','#0099D1','#007AB8',
+    '#1AA64C','#8CCC00','#E6CC00','#FF8000','#D90000',
+  ],
 };
 
 function interpolateColor(ramp: string[], t: number): string {
@@ -179,8 +193,8 @@ export default function CoastalStormMap({ data, coastline }: Props) {
     const valid = vals.filter((v): v is number => v !== null);
     const mn = valid.length > 0 ? Math.min(...valid) : 0;
     const mx = valid.length > 0 ? Math.max(...valid) : 1;
-    return { values: vals, vMin: mn, vMax: mx, ramp: COLOR_RAMPS[eventClass] };
-  }, [data.grid_points, currentMetric.field, eventClass]);
+    return { values: vals, vMin: mn, vMax: mx, ramp: COLOR_RAMPS[metricGroup] };
+  }, [data.grid_points, currentMetric.field, metricGroup]);
 
   // SVG dimensions (responsive)
   const svgWidth = 600;
@@ -434,6 +448,7 @@ export default function CoastalStormMap({ data, coastline }: Props) {
 function formatValue(v: number, unit: string): string {
   if (unit.includes('yr')) return v.toFixed(1);
   if (unit === 'm') return v.toFixed(2);
+  if (unit === '[0–1]') return v.toFixed(3);
   if (unit === 'storms' || unit === 'events') return Math.round(v).toString();
   return v.toFixed(2);
 }
