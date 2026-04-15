@@ -8,7 +8,7 @@ Built with Next.js 16, React 19, and Tailwind CSS 4.
 
 This site presents preliminary research results from the OSR11 project at IAG-USP, focusing on the characterization of compound wave–surge extreme events along the Brazilian coast using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS).
 
-**Current scope:** Southern Santa Catarina test domain (1993–2025)
+**Current scope:** Full Brazilian coast (1993–2025), 808 coastal grid points
 
 ## 🚀 Quick Start
 
@@ -49,12 +49,14 @@ site/
 │   ├── Hero.tsx            # Landing hero section
 │   ├── Footer.tsx          # Site footer
 │   ├── FigureGallery.tsx   # Scientific figure viewer
+│   ├── CoastalStormMap.tsx  # Interactive SVG storm map (808 grid points)
 │   └── ...
 ├── content/                 # Content data (figures, project metadata)
 │   ├── project.ts          # Project text and metadata
 │   └── figures.ts          # Figure definitions
 ├── public/                  # Static assets (served at root /)
-│   └── figures/            # Analysis output figures (PNG)
+│   ├── figures/            # Analysis output figures (PNG)
+│   └── data/               # JSON data for interactive maps
 ├── lib/                     # Utility functions
 ├── DEPLOYMENT.md           # Vercel deployment guide
 ├── THEME.md                # Design system documentation
@@ -104,9 +106,12 @@ After running the analysis pipeline and generating new figures:
 # 1. Copy figures from outputs to site
 cp -r outputs/south_sc_test_data_exploratory/figures/* site/public/figures/
 
-# 2. Update figure metadata in content/figures.ts if needed
+# 2. Regenerate storm maps data (after re-running Steps 3/4)
+conda run -n osr11 python -m src.site.export_storm_maps_data
 
-# 3. Commit and push
+# 3. Update figure metadata in content/figures.ts if needed
+
+# 4. Commit and push
 git add site/
 git commit -m "Update analysis figures"
 git push

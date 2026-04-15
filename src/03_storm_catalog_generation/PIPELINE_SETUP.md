@@ -12,8 +12,11 @@ Run these steps **in order** before executing Step 3.
 |-----------|----------|--------|--------|
 | `data/raw/glorys_sc/` | 399 monthly GLORYS files (incl. 3 duplicates `_(1)`) | SC coast [-30,−20°S] × [-50,−40°W] | ✅ Downloaded |
 | `data/raw/waverys_sc/` | 399 monthly WAVERYS files (incl. 3 duplicates `_(1)`) | SC coast [-30,−20°S] × [-50,−40°W] | ✅ Downloaded |
-| `data/raw/glorys/` | *(empty — waiting for full-Brazil download)* | — | ⏳ Pending |
-| `data/raw/waverys/` | *(empty — waiting for full-Brazil download)* | — | ⏳ Pending |
+| `data/raw/glorys/` | 396 monthly GLORYS files (Jan 1993 – Dec 2025) | Full Brazil [-35°S,+6°N] × [-55°W,-28°W] | ✅ Downloaded (14.38 GB) |
+| `data/raw/waverys/` | 396 monthly WAVERYS files (Jan 1993 – Dec 2025) | Full Brazil [-35°S,+6°N] × [-55°W,-28°W] | ✅ Downloaded (14.38 GB) |
+| `data/unified/` | `metocean_brazil_unified_waverys_grid.nc` | Full Brazil, 206×136 grid, 12053 days | ✅ Preprocessed (1.6 GB) |
+| `outputs/storm_catalog/` | Hs + SSH_total catalogs, 808 grid points | Full Brazilian coast | ✅ Step 3 complete |
+| `site/public/data/` | `storm_maps_grid_metrics.json` | 808 grid points, 3 event classes | ✅ Exported for site |
 
 The SC-domain files were downloaded during an initial test phase.  
 They are preserved for reference and for test fixture regeneration, but are
@@ -192,10 +195,45 @@ debug logging, parallelization guidelines).
 ```
 outputs/storm_catalog/
   logs/run_metadata.json          # Run summary with storm counts
-  catalog_hs_storms.json          # Hs storm catalog
-  catalog_ssh_total_storms.json   # SSH_total storm catalog
+  catalog_hs_storms.json          # Hs storm catalog (29 MB, 404,535 storms)
+  catalog_ssh_total_storms.json   # SSH_total storm catalog (25 MB, 324,929 storms)
+  tables/tab_SC3_catalog_metadata.csv     # Per-grid-point QA metadata
+  tables/tab_SC3_hs_storms_summary.csv    # Flat CSV: one row per Hs storm
+  tables/tab_SC3_ssh_total_storms_summary.csv  # Flat CSV: one row per SSH storm
   figures/                        # QA figures (one per coastal grid point)
 ```
+
+---
+
+## Step 4 — Export storm maps data for the site
+
+### What this step does
+
+1. Reads both Step 3 catalogs (Hs storms, SSH_total storms).
+2. At each grid point, detects **compound events** via temporal overlap:
+   - compound: Hs storm and SSH_total storm share ≥ 1 calendar day.
+   - Hs_only: Hs storm with no overlap with any SSH_total storm.
+   - SSH_total_only: SSH_total storm with no overlap with any Hs storm.
+3. Computes per-grid-point metrics: counts, annual means, mean/p95/max intensity.
+4. Exports a single JSON for the site's `/results/storm-maps` page.
+
+### Run
+
+```bash
+conda run -n osr11 python -m src.site.export_storm_maps_data
+```
+
+### Expected output
+
+```
+site/public/data/storm_maps_grid_metrics.json   # ~0.4 MB, 808 grid points
+```
+
+### Production results (April 2026)
+
+- 306,256 Hs-only storms
+- 228,426 SSH_total-only storms
+- 96,031 compound events
 
 ---
 
@@ -205,19 +243,22 @@ outputs/storm_catalog/
 # 0. Environment
 conda activate osr11
 
-# 1. Download (run once, ~hours depending on connection)
+# 1. Download (run once, ~75 min with 15 workers)
 python src/01_data_preparation/acquisition/download_cmems_parallel.py \
     --config config/download_config_brazil_full.yml \
-    --workers 100
+    --workers 15
 
-# 2. Preprocessing (~10-20 min)
+# 2. Preprocessing (~45 min with 100 tide workers)
 python -m src.01_data_preparation.preprocessing.interpolate_glorys_to_waverys_grid \
     --config config/preprocessing/glorys_to_waverys_brazil_full.yaml \
-    --workers 50
+    --workers 100
 
 # 3. Storm catalog (~1-5 min with 20 workers)
 python -m src.03_storm_catalog_generation.main \
     --mode production --tide-mode auto --workers 20
+
+# 4. Export for site (~2 min)
+python -m src.site.export_storm_maps_data
 ```
 
 ---

@@ -31,33 +31,40 @@ export const resultCards: ResultCard[] = [
   {
     id: 'compound-detection',
     title: 'Step 3 — Storm Catalog Generation',
-    subtitle: 'Independent wave and surge storm catalogs · POT · q90/q90 thresholds (from Step 2e)',
-    status: 'planned',
+    subtitle: '808 grid points · 404,535 Hₛ storms · 324,929 SSH_total storms · 1993–2025',
+    status: 'done',
     description:
-      'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using the calibrated thresholds (q90/q90 from Step 2e). Apply peaks-over-threshold to the full 1993–2025 series; merge consecutive exceedances into discrete storm events.',
+      'Independent storm catalogs for Hₛ and SSH_total at each coastal grid point using calibrated q90/q90 thresholds (Step 2e). Peaks-over-threshold applied to the full 1993–2025 WAVERYS + GLORYS12 record; consecutive exceedances merged into discrete storm episodes (gap ≤ 1 day).',
     rationale:
       'The storm catalogs are the foundation for compound event detection in Step 4. By identifying independent Hₛ and SSH_total storm episodes first, the temporal overlap analysis can be conducted systematically.',
     outputs: [
-      'Hₛ storm catalog per grid point (start, end, duration, peak, integrated intensity)',
-      'SSH_total storm catalog per grid point',
-      'Structured JSON format for downstream analysis',
+      '404,535 Hₛ storm episodes across 808 coastal grid points',
+      '324,929 SSH_total storm episodes across 808 coastal grid points',
+      'Per-grid-point metadata: thresholds, storm counts, data quality',
+      'Structured JSON catalogs + flat CSV summaries for downstream analysis',
     ],
+    href: '/results/storm-maps',
+    parts: ['Storm Catalogs', 'Storm Maps'],
   },
   {
     id: 'compound-events',
     title: 'Step 4 — Compound Event Detection',
-    subtitle: 'Joint wave–surge exceedances along the Brazilian coast',
-    status: 'planned',
+    subtitle: '96,031 compound events · temporal overlap of Hₛ + SSH_total storms',
+    status: 'in-progress',
     description:
-      'Identify compound events as temporal overlaps between independent sea-level and wave storms from the Step 3 catalogs. Compute co-occurrence statistics: frequency, intensity, duration, peak time lags, and seasonal distribution.',
+      'Compound events identified as temporal overlaps between Hₛ and SSH_total storms at the same grid point (≥ 1 shared calendar day). Classification: Hₛ-only (306,256), SSH_total-only (228,426), compound (96,031). Interactive storm maps with occurrence and intensity metrics per class.',
     rationale:
       'The compound event catalog is the primary scientific deliverable of the hazard phase and the foundation for validation, risk mapping, and physical interpretation.',
     outputs: [
-      'Compound event catalog for the full study domain',
-      'Co-occurrence statistics: frequency, intensity, seasonality',
-      'Municipal-scale hotspot maps',
-      'Comparison of compound vs. individual extreme statistics',
+      '96,031 compound events detected across 808 coastal grid points',
+      '306,256 Hₛ-only and 228,426 SSH_total-only storms classified',
+      'Per-grid-point occurrence maps (total count, annual mean)',
+      'Per-grid-point intensity maps (mean, p95, max peak values)',
+      'Joint intensity (peak Hₛ + peak SSH_total) for compound events',
+      'Interactive storm maps on the results website',
     ],
+    href: '/results/storm-maps',
+    parts: ['Classification', 'Occurrence Maps', 'Intensity Maps'],
   },
   {
     id: 'validation',
