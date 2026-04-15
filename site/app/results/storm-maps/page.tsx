@@ -72,6 +72,23 @@ export default function StormMapsPage() {
                 body="Temporal overlap between an Hₛ storm and an SSH_total storm at the same grid point (shared ≥ 1 calendar day). Intensity is a normalized [0–1] score: 0.5 × (Hₛ_norm + SSH_norm), where each component is scaled via domain-wide Q05/Q95."
               />
             </div>
+            <div className="mt-4">
+              <div className="rounded-lg border border-dashed border-orange-300 bg-orange-50/50 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: '#d95f02' }} />
+                  <h3 className="text-sm font-bold text-gray-900">zos (no tide)</h3>
+                  <span className="rounded-full border border-orange-300 bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700 uppercase">
+                    diagnostic
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Raw dynamic sea surface height from GLORYS12 (<code className="text-[11px] bg-gray-100 px-1 rounded">zos</code>), <strong>without</strong> the tidal component.
+                  Provided for comparison with the canonical SSH_total analysis only.
+                  Uses the same q90 percentile, but the threshold is computed independently on the zos series.
+                  This is <strong>not</strong> the official sea-level analysis.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -126,6 +143,14 @@ export default function StormMapsPage() {
                   <strong className="text-gray-800">Limitations.</strong>{' '}
                   Daily temporal resolution means sub-daily co-occurrence is not resolved.
                   Nearshore wave transformation (shoaling, refraction) is not represented in the 0.2° WAVERYS grid.
+                </p>
+                <p>
+                  <strong className="text-gray-800">Diagnostic layer: zos (no tide).</strong>{' '}
+                  An optional diagnostic layer shows storms detected on the raw GLORYS12 dynamic SSH
+                  (<code className="text-[11px] bg-gray-100 px-1 rounded">zos</code>) without the tidal component.
+                  This allows visual comparison of how tides affect the spatial pattern of sea-level extremes.
+                  The threshold is computed independently from the zos series (same q90 percentile).
+                  This layer does not participate in the canonical event classification or compound detection.
                 </p>
               </div>
             </div>

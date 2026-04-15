@@ -28,6 +28,13 @@ export interface GridPoint {
   compound_mean_ssh_peak_norm: number | null;
   compound_mean_peak_hs: number | null;
   compound_mean_peak_ssh_total: number | null;
+  // zos diagnostic layer (no tide)
+  zos_raw_thr: number | null;
+  zos_raw_count_total: number;
+  zos_raw_count_annual_mean: number;
+  zos_raw_mean_peak: number | null;
+  zos_raw_p95_peak: number | null;
+  zos_raw_max_peak: number | null;
 }
 
 export interface StormMapsData {
@@ -48,11 +55,13 @@ export interface StormMapsData {
     n_hs_only_total: number;
     n_ssh_only_total: number;
     n_compound_total: number;
+    zos_raw_definition?: string;
+    n_zos_raw_total?: number;
   };
   grid_points: GridPoint[];
 }
 
-type EventClass = 'hs_only' | 'ssh_only' | 'compound';
+type EventClass = 'hs_only' | 'ssh_only' | 'compound' | 'zos_raw';
 type MetricGroup = 'occurrence' | 'intensity';
 
 interface MetricDef {
@@ -77,6 +86,10 @@ const OCCURRENCE_METRICS: Record<EventClass, MetricDef[]> = {
     { key: 'total', label: 'Total count', unit: 'events', field: 'compound_count_total' },
     { key: 'annual', label: 'Annual mean', unit: 'events yr⁻¹', field: 'compound_count_annual_mean' },
   ],
+  zos_raw: [
+    { key: 'total', label: 'Total count', unit: 'storms', field: 'zos_raw_count_total' },
+    { key: 'annual', label: 'Annual mean', unit: 'storms yr⁻¹', field: 'zos_raw_count_annual_mean' },
+  ],
 };
 
 const INTENSITY_METRICS: Record<EventClass, MetricDef[]> = {
@@ -96,6 +109,11 @@ const INTENSITY_METRICS: Record<EventClass, MetricDef[]> = {
     { key: 'max_norm', label: 'Max normalized intensity', unit: '[0–1]', field: 'compound_max_intensity_norm' },
     { key: 'mean_hs_norm', label: 'Mean Hₛ component (norm)', unit: '[0–1]', field: 'compound_mean_hs_peak_norm' },
     { key: 'mean_ssh_norm', label: 'Mean SSH component (norm)', unit: '[0–1]', field: 'compound_mean_ssh_peak_norm' },
+  ],
+  zos_raw: [
+    { key: 'mean', label: 'Mean peak zos', unit: 'm', field: 'zos_raw_mean_peak' },
+    { key: 'p95', label: '95th-pctl peak zos', unit: 'm', field: 'zos_raw_p95_peak' },
+    { key: 'max', label: 'Maximum peak zos', unit: 'm', field: 'zos_raw_max_peak' },
   ],
 };
 
@@ -150,12 +168,14 @@ const CLASS_LABELS: Record<EventClass, string> = {
   hs_only: 'Hₛ only',
   ssh_only: 'SSH_total only',
   compound: 'Compound',
+  zos_raw: 'zos (no tide)',
 };
 
 const CLASS_COLORS: Record<EventClass, string> = {
   hs_only: '#3182bd',
   ssh_only: '#2ca25f',
   compound: '#756bb1',
+  zos_raw: '#d95f02',
 };
 
 /* ── Component ─────────────────────────────────────────────────────────── */
@@ -242,6 +262,20 @@ export default function CoastalStormMap({ data, coastline }: Props) {
                 {CLASS_LABELS[cls]}
               </button>
             ))}
+            <div className="w-px bg-gray-300" />
+            <button
+              onClick={() => setEventClass('zos_raw')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                eventClass === 'zos_raw'
+                  ? 'text-white'
+                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+              }`}
+              style={eventClass === 'zos_raw' ? { backgroundColor: CLASS_COLORS.zos_raw } : undefined}
+              title="Diagnostic layer — not the canonical sea-level analysis"
+            >
+              {CLASS_LABELS.zos_raw}
+              <span className="ml-1 text-[8px] opacity-70">diag.</span>
+            </button>
           </div>
         </div>
 
@@ -384,9 +418,13 @@ export default function CoastalStormMap({ data, coastline }: Props) {
                 <div>Hₛ only: {hoveredPoint.hs_only_count_total} storms ({hoveredPoint.hs_only_count_annual_mean}/yr)</div>
                 <div>SSH only: {hoveredPoint.ssh_only_count_total} storms ({hoveredPoint.ssh_only_count_annual_mean}/yr)</div>
                 <div>Compound: {hoveredPoint.compound_count_total} events ({hoveredPoint.compound_count_annual_mean}/yr)</div>
+                <div className="border-t border-dashed border-gray-200 mt-0.5 pt-0.5 italic text-gray-400">
+                  zos (no tide): {hoveredPoint.zos_raw_count_total} storms ({hoveredPoint.zos_raw_count_annual_mean}/yr)
+                </div>
               </div>
               <div className="text-[10px] text-gray-400">
                 Thr: Hₛ = {hoveredPoint.thr_hs.toFixed(2)} m | SSH = {hoveredPoint.thr_ssh.toFixed(3)} m
+                {hoveredPoint.zos_raw_thr != null && ` | zos = ${hoveredPoint.zos_raw_thr.toFixed(3)} m`}
               </div>
             </div>
           </div>
@@ -416,12 +454,13 @@ export default function CoastalStormMap({ data, coastline }: Props) {
       </div>
 
       {/* ── Summary stats ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
-        {(['hs_only', 'ssh_only', 'compound'] as EventClass[]).map(cls => {
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {(['hs_only', 'ssh_only', 'compound', 'zos_raw'] as EventClass[]).map(cls => {
           const totalKey = cls === 'hs_only' ? 'n_hs_only_total'
             : cls === 'ssh_only' ? 'n_ssh_only_total'
+            : cls === 'zos_raw' ? 'n_zos_raw_total'
             : 'n_compound_total';
-          const total = data.metadata[totalKey as keyof typeof data.metadata] as number;
+          const total = (data.metadata[totalKey as keyof typeof data.metadata] as number) ?? 0;
           return (
             <div
               key={cls}

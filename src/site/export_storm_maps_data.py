@@ -52,6 +52,7 @@ CATALOG_DIR = ROOT / "outputs" / "storm_catalog"
 HS_CATALOG = CATALOG_DIR / "catalog_hs_storms.json"
 SSH_CATALOG = CATALOG_DIR / "catalog_ssh_total_storms.json"
 METADATA_FILE = CATALOG_DIR / "logs" / "run_metadata.json"
+UNIFIED_DATASET = ROOT / "data" / "unified" / "metocean_brazil_unified_waverys_grid.nc"
 OUTPUT_DIR = ROOT / "site" / "public" / "data"
 OUTPUT_FILE = OUTPUT_DIR / "storm_maps_grid_metrics.json"
 
@@ -325,6 +326,95 @@ def normalize_compound_intensity(
     }
 
 
+def compute_zos_diagnostic(
+    results: list[dict],
+    thr_ssh_pct: float,
+    n_years: float,
+    episode_max_gap_days: int,
+) -> int:
+    """Compute zos-raw (no tide) diagnostic storm metrics.
+
+    Opens the unified dataset, extracts the ``zos`` variable, and runs
+    threshold–exceedance–clustering at each grid point already present
+    in *results*.  Metrics are written directly into each result entry.
+
+    This is a **diagnostic / comparison** layer.  The canonical
+    sea-level analysis uses SSH_total (= zos + tide_daily_max).
+
+    Returns the domain-wide total storm count.
+    """
+    import xarray as xr
+
+    print("\n── zos diagnostic layer (raw dynamic SSH, no tide) ─────────────")
+    ds = xr.open_dataset(UNIFIED_DATASET)
+    lats = ds.latitude.values
+    lons = ds.longitude.values
+    zos_data = ds["zos"].values  # (time, lat, lon) float32
+    ds.close()
+    print(f"  Loaded zos: shape={zos_data.shape}")
+
+    pct_q = thr_ssh_pct * 100  # 0.9 → 90
+    n_zos_total = 0
+
+    for i, entry in enumerate(results):
+        lat_idx = int(np.argmin(np.abs(lats - entry["lat"])))
+        lon_idx = int(np.argmin(np.abs(lons - entry["lon"])))
+        series = zos_data[:, lat_idx, lon_idx]
+        valid = ~np.isnan(series)
+
+        if int(valid.sum()) == 0:
+            entry["zos_raw_thr"] = None
+            entry["zos_raw_count_total"] = 0
+            entry["zos_raw_count_annual_mean"] = 0.0
+            entry["zos_raw_mean_peak"] = None
+            entry["zos_raw_p95_peak"] = None
+            entry["zos_raw_max_peak"] = None
+            continue
+
+        thr = float(np.nanpercentile(series, pct_q))
+
+        # Exceedance indices (NaN → not exceedance)
+        exceed_idx = np.where((series >= thr) & valid)[0]
+
+        if len(exceed_idx) == 0:
+            entry["zos_raw_thr"] = round(thr, 4)
+            entry["zos_raw_count_total"] = 0
+            entry["zos_raw_count_annual_mean"] = 0.0
+            entry["zos_raw_mean_peak"] = None
+            entry["zos_raw_p95_peak"] = None
+            entry["zos_raw_max_peak"] = None
+            continue
+
+        # Cluster episodes (same gap convention as Step 3)
+        episodes: list[list[int]] = []
+        current = [exceed_idx[0]]
+        for idx in exceed_idx[1:]:
+            if idx - current[-1] <= episode_max_gap_days + 1:
+                current.append(idx)
+            else:
+                episodes.append(current)
+                current = [idx]
+        episodes.append(current)
+
+        n_storms = len(episodes)
+        n_zos_total += n_storms
+
+        peaks = np.array([float(np.nanmax(series[ep])) for ep in episodes])
+
+        entry["zos_raw_thr"] = round(thr, 4)
+        entry["zos_raw_count_total"] = n_storms
+        entry["zos_raw_count_annual_mean"] = round(n_storms / n_years, 2)
+        entry["zos_raw_mean_peak"] = round(float(peaks.mean()), 4)
+        entry["zos_raw_p95_peak"] = round(float(np.percentile(peaks, 95)), 4)
+        entry["zos_raw_max_peak"] = round(float(peaks.max()), 4)
+
+        if (i + 1) % 200 == 0:
+            print(f"  {i + 1}/{len(results)} grid points...")
+
+    print(f"  Total zos_raw storms: {n_zos_total:,}")
+    return n_zos_total
+
+
 def main():
     # ── Load catalogs ──────────────────────────────────────────────────────
     print("Loading Hs catalog...")
@@ -401,6 +491,11 @@ def main():
     # ── Pass 2: domain-wide normalization of compound intensity ─────────────
     norm_refs = normalize_compound_intensity(all_classified, results)
 
+    # ── Pass 3: zos diagnostic layer (raw dynamic SSH, no tide) ────────────
+    n_zos_raw_total = compute_zos_diagnostic(
+        results, run_meta["thr_ssh_pct"], n_years, run_meta["episode_max_gap_days"]
+    )
+
     # ── Build output ───────────────────────────────────────────────────────
     output = {
         "metadata": {
@@ -431,9 +526,16 @@ def main():
                 "of compound event peaks. Dimensionless and comparable across grid points."
             ),
             "compound_intensity_normalization": norm_refs,
+            "zos_raw_definition": (
+                "DIAGNOSTIC ONLY — not the canonical sea-level analysis. "
+                "Storm detection applied to raw dynamic SSH (zos from GLORYS12) "
+                "without tidal component, using local q90 threshold computed "
+                "on the zos series itself. For comparison with SSH_total only."
+            ),
             "n_hs_only_total": n_hs_only_total,
             "n_ssh_only_total": n_ssh_only_total,
             "n_compound_total": n_compound_total,
+            "n_zos_raw_total": n_zos_raw_total,
         },
         "grid_points": results,
     }
