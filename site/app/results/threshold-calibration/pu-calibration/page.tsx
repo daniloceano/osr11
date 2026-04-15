@@ -4,6 +4,8 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import StatusBadge from '@/components/StatusBadge';
 import FigureGallery from '@/components/FigureGallery';
+import ScoreDecompositionHeatmaps from '@/components/ScoreDecompositionHeatmaps';
+import QiDecompositionTable from '@/components/QiDecompositionTable';
 import { tc5Figures, tc5FigureGroups } from '@/content/figures';
 
 export const metadata = {
@@ -388,6 +390,34 @@ export default function PuCalibrationPage() {
                 against an incomplete impact database at daily resolution.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* ── Score Decomposition ────────────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-white py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">Score Decomposition</h2>
+            <p className="mb-6 text-sm text-gray-600 max-w-3xl">
+              Full decomposition of <strong>Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P</strong> across all 81
+              threshold pairs. Each heatmap shows one weighted term, making it transparent which component
+              dominates the final score at each pair. The optimal pair (q90/q90) is marked with a black border.
+            </p>
+            <ScoreDecompositionHeatmaps />
+          </div>
+        </div>
+
+        {/* ── q_i Decomposition ────────────────────────────────────────────── */}
+        <div className="border-b border-gray-200 bg-gray-50 py-14">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">Episode Confidence Decomposition (qᵢ)</h2>
+            <p className="mb-6 text-sm text-gray-600 max-w-3xl">
+              Per-episode breakdown of the confidence weight qᵢ at the optimal pair (q90/q90).
+              Shows the weighted contribution of each component — external evidence (α_E·Eᵢ),
+              physical intensity (α_I·Iᵢ), and context coherence (α_C·Cᵢ) — so that the
+              driver of each episode&apos;s penalty (1 − qᵢ) is immediately visible.
+              Sortable by any column. Filter by municipality or evidence status.
+            </p>
+            <QiDecompositionTable />
           </div>
         </div>
 

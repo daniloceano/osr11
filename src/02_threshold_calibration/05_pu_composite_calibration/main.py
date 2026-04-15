@@ -92,12 +92,14 @@ from src.pu_composite_calibration.scoring import (
     run_hits_misses_pu,
     run_unmatched_all_pairs,
     compute_pu_scores,
+    build_score_decomposition,
     rank_combinations_pu,
     select_optimal_pair_pu,
     get_event_capture_status,
 )
 from src.pu_composite_calibration.audit import (
     build_episode_audit_table,
+    build_qi_decomposition,
     attach_ssh_total_to_records,
 )
 
@@ -430,6 +432,21 @@ def main(args: argparse.Namespace | None = None) -> None:
 
         # ── Step 2d comparison table ───────────────────────────────────────────
         _save_csi_comparison(optimal, tab_dir)
+
+        # ── Score decomposition table ──────────────────────────────────────────
+        log.info("Building Score decomposition table...")
+        score_decomp_df = build_score_decomposition(
+            contingency_df, unmatched_episodes, audit_df, n_years, P, CFG,
+            n_municipalities=n_municipalities,
+        )
+        score_decomp_df.to_csv(tab_dir / "tab_TC5_score_decomposition.csv", index=False)
+        log.info("Saved: tab_TC5_score_decomposition.csv (%d rows)", len(score_decomp_df))
+
+        # ── q_i decomposition table (optimal pair only) ───────────────────────
+        log.info("Building q_i decomposition table for optimal pair...")
+        qi_decomp_df = build_qi_decomposition(audit_df, optimal)
+        qi_decomp_df.to_csv(tab_dir / "tab_TC5_qi_decomposition.csv", index=False)
+        log.info("Saved: tab_TC5_qi_decomposition.csv (%d episodes)", len(qi_decomp_df))
 
         # ── Per-event capture status at optimal pair (for TC5-E1 figure) ───────
         log.info("Computing per-event capture status at optimal pair...")

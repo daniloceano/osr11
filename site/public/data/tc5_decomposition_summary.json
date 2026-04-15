@@ -1,0 +1,125 @@
+{
+  "score_grid_size": 81,
+  "qi_episode_count": 3069,
+  "qi_mean_penalty": 0.77,
+  "qi_max_penalty": 0.971,
+  "qi_mean_qi": 0.23,
+  "qi_E1_pct": 0.0,
+  "qi_top5_penalty": [
+    {
+      "episode_id": "hs90_ssh90_BIG_20030317",
+      "municipality": "Bigua\u00e7u",
+      "q_i": 0.0288,
+      "penalty_component": 0.9712,
+      "E_i": 0,
+      "I_i": 0.0961,
+      "C_i": 0.0
+    },
+    {
+      "episode_id": "hs90_ssh90_FLO_20190203",
+      "municipality": "Florian\u00f3polis",
+      "q_i": 0.0569,
+      "penalty_component": 0.9431,
+      "E_i": 0,
+      "I_i": 0.0787,
+      "C_i": 0.3333
+    },
+    {
+      "episode_id": "hs90_ssh90_PAL_20190203",
+      "municipality": "Palho\u00e7a",
+      "q_i": 0.0569,
+      "penalty_component": 0.9431,
+      "E_i": 0,
+      "I_i": 0.0787,
+      "C_i": 0.3333
+    },
+    {
+      "episode_id": "hs90_ssh90_PAS_20030322",
+      "municipality": "Passo de Torres",
+      "q_i": 0.0632,
+      "penalty_component": 0.9368,
+      "E_i": 0,
+      "I_i": 0.0994,
+      "C_i": 0.3333
+    },
+    {
+      "episode_id": "hs90_ssh90_BAL_20111225",
+      "municipality": "Balne\u00e1rio Gaivota",
+      "q_i": 0.0636,
+      "penalty_component": 0.9364,
+      "E_i": 0,
+      "I_i": 0.1011,
+      "C_i": 0.3333
+    }
+  ],
+  "qi_top5_qi": [
+    {
+      "episode_id": "hs90_ssh90_ITA_20000812",
+      "municipality": "Itapo\u00e1",
+      "q_i": 0.8849,
+      "penalty_component": 0.1151,
+      "E_i": 1,
+      "I_i": 0.6163,
+      "C_i": 1.0
+    },
+    {
+      "episode_id": "hs90_ssh90_ITA_20050425",
+      "municipality": "Itapo\u00e1",
+      "q_i": 0.3747,
+      "penalty_component": 0.6253,
+      "E_i": 0,
+      "I_i": 0.9158,
+      "C_i": 1.0
+    },
+    {
+      "episode_id": "hs90_ssh90_S\u00c3O_20050425",
+      "municipality": "S\u00e3o Francisco do Sul",
+      "q_i": 0.3747,
+      "penalty_component": 0.6253,
+      "E_i": 0,
+      "I_i": 0.9158,
+      "C_i": 1.0
+    },
+    {
+      "episode_id": "hs90_ssh90_ITA_20030825",
+      "municipality": "Itapo\u00e1",
+      "q_i": 0.3663,
+      "penalty_component": 0.6337,
+      "E_i": 0,
+      "I_i": 0.8876,
+      "C_i": 1.0
+    },
+    {
+      "episode_id": "hs90_ssh90_S\u00c3O_20030825",
+      "municipality": "S\u00e3o Francisco do Sul",
+      "q_i": 0.3663,
+      "penalty_component": 0.6337,
+      "E_i": 0,
+      "I_i": 0.8876,
+      "C_i": 1.0
+    }
+  ],
+  "score_optimal": {
+    "hs_percentile": 90.0,
+    "ssh_percentile": 90.0,
+    "H": 35.0,
+    "M": 112.0,
+    "U": 3069.0,
+    "P": 147.0,
+    "Y": 22.38,
+    "R_pos": 0.2381,
+    "B_raw": 0.428087,
+    "B": 0.428087,
+    "F_soft": 2364.1803,
+    "term_recall_raw": 0.2381,
+    "term_burden_raw": 0.428087,
+    "term_fsoft_raw": 16.082859,
+    "w1": 0.6,
+    "w2": 0.2,
+    "w3": 0.2,
+    "term_recall_weighted": 0.14286,
+    "term_burden_weighted": -0.085617,
+    "term_fsoft_weighted": -3.216572,
+    "Score": -3.159329
+  }
+}

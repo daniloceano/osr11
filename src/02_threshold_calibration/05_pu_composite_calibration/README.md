@@ -109,6 +109,8 @@ The rationale:
 | Output | Description |
 |--------|-------------|
 | `tab_TC5_episode_audit.csv` | Per-episode audit table with qᵢ components |
+| `tab_TC5_score_decomposition.csv` | Full Score decomposition: all 81 pairs with raw/weighted terms |
+| `tab_TC5_qi_decomposition.csv` | qᵢ decomposition at optimal pair: per-episode weighted contributions |
 | `tab_TC5_pu_metrics_full.csv` | Composite score across all threshold pairs |
 | `tab_TC5_pu_metrics_ranked.csv` | Ranked by optimal selection hierarchy |
 | `tab_TC5_optimal_pair_pu.csv` | Optimal threshold pair under PU framework |
@@ -122,6 +124,53 @@ The rationale:
 | `fig_TC5_H2_recall_heatmap.png` | R_pos heatmap |
 | `fig_TC5_S1_csi_vs_pu_comparison.png` | CSI vs PU optimal pair comparison |
 | `fig_TC5_S2_sensitivity_weights.png` | Weight sensitivity analysis |
+
+### Score Decomposition Table (`tab_TC5_score_decomposition.csv`)
+
+Full equation-level decomposition for all 81 threshold pairs (21 columns):
+
+| Column | Description |
+|--------|-------------|
+| `hs_percentile` | Hₛ threshold as integer percentile (50–90) |
+| `ssh_percentile` | SSH_total threshold as integer percentile (50–90) |
+| `H`, `M`, `U` | Hits, misses, unmatched episodes |
+| `P` | Total positive events (evaluable) |
+| `Y` | Validated period length (years) |
+| `R_pos` | Positive recall = H/P |
+| `B_raw` | Raw burden = (H+U)/(Y × B_target_effective) before min(1, ·) clip |
+| `B` | Clipped burden = min(1, B_raw) |
+| `F_soft` | Soft unmatched penalty = Σ(1 − qᵢ) |
+| `term_recall_raw` | = R_pos (unweighted recall term) |
+| `term_burden_raw` | = B (unweighted burden term) |
+| `term_fsoft_raw` | = F_soft / P (unweighted normalised soft penalty) |
+| `w1`, `w2`, `w3` | Component weights (0.60, 0.20, 0.20) |
+| `term_recall_weighted` | = w₁ × R_pos |
+| `term_burden_weighted` | = −w₂ × B |
+| `term_fsoft_weighted` | = −w₃ × F_soft / P |
+| `Score` | = term_recall_weighted + term_burden_weighted + term_fsoft_weighted |
+
+### qᵢ Decomposition Table (`tab_TC5_qi_decomposition.csv`)
+
+Per-episode confidence decomposition at the optimal pair (22 columns):
+
+| Column | Description |
+|--------|-------------|
+| `episode_id` | Unique episode identifier |
+| `municipality` | Municipality name |
+| `date_start`, `date_end` | Episode date range |
+| `hs_peak`, `ssh_peak` | Peak Hₛ and SSH_total during episode |
+| `n_days` | Episode duration |
+| `E_i` | External evidence (0 or 1) |
+| `I_i` | Physical intensity score ∈ [0, 1] |
+| `C_season`, `C_multi`, `C_exposure` | Context coherence sub-indicators |
+| `C_i` | Composite context coherence = mean(C_season, C_multi, C_exposure) |
+| `alpha_E`, `alpha_I`, `alpha_C` | Confidence weight parameters (0.60, 0.30, 0.10) |
+| `contrib_E` | = α_E × E_i (external evidence contribution) |
+| `contrib_I` | = α_I × I_i (intensity contribution) |
+| `contrib_C` | = α_C × C_i (context contribution) |
+| `q_i_raw` | = contrib_E + contrib_I + contrib_C (before clip) |
+| `q_i` | = clip(q_i_raw, 0, 1) (final confidence weight) |
+| `penalty_component` | = 1 − q_i (this episode's contribution to F_soft) |
 
 ## Module Structure
 

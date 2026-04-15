@@ -16,8 +16,9 @@ Pipeline
                                          just counts) for one pair
 4. run_unmatched_all_pairs   — Layer 2 for all pairs
 5. compute_pu_scores         — assemble composite Score(θ) for all pairs
-6. rank_combinations_pu      — sort by Score descending
-7. select_optimal_pair_pu    — return the top-ranked pair
+6. build_score_decomposition — export full equation-level decomposition
+7. rank_combinations_pu      — sort by Score descending
+8. select_optimal_pair_pu    — return the top-ranked pair
 
 Score formula
 -------------
@@ -584,6 +585,96 @@ def compute_pu_scores(
         })
 
     return pd.DataFrame(rows)
+
+
+def build_score_decomposition(
+    contingency_df: pd.DataFrame,
+    unmatched_episodes: list[EpisodeRecord],
+    audit_df: pd.DataFrame,
+    n_years: float,
+    P: int,
+    cfg: dict,
+    n_municipalities: int | None = None,
+) -> pd.DataFrame:
+    """Build the full Score decomposition table for all threshold pairs.
+
+    For each pair, exports every intermediate quantity used to compute Score(θ)
+    so that the contribution of each term is transparent.
+
+    Returns
+    -------
+    DataFrame with columns:
+        hs_percentile, ssh_percentile, H, M, U, P, Y (n_years),
+        R_pos, B_raw, B, F_soft, term_recall_raw, term_burden_raw,
+        term_fsoft_raw, w1, w2, w3, term_recall_weighted,
+        term_burden_weighted, term_fsoft_weighted, Score
+    """
+    w1 = cfg["w1_recall"]
+    w2 = cfg["w2_burden"]
+    w3 = cfg["w3_soft_penalty"]
+    b_target_per_muni = cfg.get("b_target_per_municipality", cfg.get("b_target", 10.0))
+
+    if n_municipalities is None:
+        if unmatched_episodes:
+            n_municipalities = len({ep.municipality for ep in unmatched_episodes})
+        else:
+            n_municipalities = 1
+    b_target_effective = b_target_per_muni * n_municipalities
+
+    u_counts: dict[tuple, int] = {}
+    for ep in unmatched_episodes:
+        key = (ep.thr_hs_pct, ep.thr_ssh_pct)
+        u_counts[key] = u_counts.get(key, 0) + 1
+
+    rows: list[dict] = []
+    for _, row in contingency_df.iterrows():
+        hs_pct = row["thr_hs_pct"]
+        ssh_pct = row["thr_ssh_pct"]
+        H = int(row["H"])
+        M = int(row["M"])
+        U = u_counts.get((hs_pct, ssh_pct), 0)
+
+        R_pos = float(H) / float(P) if P > 0 else 0.0
+        b_raw = (H + U) / (n_years * b_target_effective) if (n_years > 0 and b_target_effective > 0) else 1.0
+        B = float(min(1.0, b_raw))
+        F_soft = compute_soft_penalty(audit_df, hs_pct, ssh_pct)
+
+        term_fsoft_raw = F_soft / P if P > 0 else 0.0
+        term_recall_weighted = w1 * R_pos
+        term_burden_weighted = -w2 * B
+        term_fsoft_weighted = -w3 * term_fsoft_raw
+        score = term_recall_weighted + term_burden_weighted + term_fsoft_weighted
+
+        rows.append({
+            "hs_percentile": round(hs_pct * 100),
+            "ssh_percentile": round(ssh_pct * 100),
+            "H": H,
+            "M": M,
+            "U": U,
+            "P": P,
+            "Y": round(n_years, 2),
+            "R_pos": round(R_pos, 6),
+            "B_raw": round(b_raw, 6),
+            "B": round(B, 6),
+            "F_soft": round(F_soft, 4),
+            "term_recall_raw": round(R_pos, 6),
+            "term_burden_raw": round(B, 6),
+            "term_fsoft_raw": round(term_fsoft_raw, 6),
+            "w1": w1,
+            "w2": w2,
+            "w3": w3,
+            "term_recall_weighted": round(term_recall_weighted, 6),
+            "term_burden_weighted": round(term_burden_weighted, 6),
+            "term_fsoft_weighted": round(term_fsoft_weighted, 6),
+            "Score": round(score, 6),
+        })
+
+    df = pd.DataFrame(rows)
+    log.info(
+        "Score decomposition table: %d rows × %d columns",
+        len(df), len(df.columns),
+    )
+    return df
 
 
 def rank_combinations_pu(df_scores: pd.DataFrame) -> pd.DataFrame:

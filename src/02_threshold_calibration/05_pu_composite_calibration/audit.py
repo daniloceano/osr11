@@ -418,6 +418,7 @@ def build_episode_audit_table(
         C_i        = compute_C_i(C_season, C_multi, C_exposure)
 
         # ── q_i ──────────────────────────────────────────────────────────────
+        q_i_raw = alpha_E * E_i + alpha_I * I_i + alpha_C * C_i
         q_i = compute_q_i(E_i, I_i, C_i, alpha_E, alpha_I, alpha_C)
 
         rows.append({
@@ -436,7 +437,15 @@ def build_episode_audit_table(
             "C_multi":      C_multi,
             "C_exposure":   C_exposure,
             "C_i":          round(C_i, 4),
+            "alpha_E":      alpha_E,
+            "alpha_I":      alpha_I,
+            "alpha_C":      alpha_C,
+            "contrib_E":    round(alpha_E * E_i, 4),
+            "contrib_I":    round(alpha_I * I_i, 4),
+            "contrib_C":    round(alpha_C * C_i, 4),
+            "q_i_raw":      round(q_i_raw, 4),
             "q_i":          round(q_i, 4),
+            "penalty_component": round(1.0 - q_i, 4),
         })
 
     df = pd.DataFrame(rows)
@@ -477,3 +486,49 @@ def attach_ssh_total_to_records(
         rec._ssh_total_clim = ssh_total
         muni_map[rec.municipality] = rec
     return muni_map
+
+
+def build_qi_decomposition(
+    audit_df: pd.DataFrame,
+    optimal: dict,
+) -> pd.DataFrame:
+    """Extract q_i decomposition table for the optimal threshold pair.
+
+    Filters the full audit table to the optimal pair and formats it for
+    transparent diagnosis of which terms drive each episode's q_i.
+
+    Parameters
+    ----------
+    audit_df : DataFrame from build_episode_audit_table (with decomposition columns).
+    optimal : dict with keys thr_hs_pct, thr_ssh_pct.
+
+    Returns
+    -------
+    DataFrame with user-friendly columns for the optimal pair only.
+    """
+    hs_pct = optimal["thr_hs_pct"]
+    ssh_pct = optimal["thr_ssh_pct"]
+    mask = (audit_df["thr_hs_pct"] == hs_pct) & (audit_df["thr_ssh_pct"] == ssh_pct)
+    df = audit_df[mask].copy()
+
+    cols = [
+        "episode_id", "municipality", "date_start", "date_end",
+        "hs_peak", "ssh_peak", "n_days",
+        "E_i", "I_i",
+        "C_season", "C_multi", "C_exposure", "C_i",
+        "alpha_E", "alpha_I", "alpha_C",
+        "contrib_E", "contrib_I", "contrib_C",
+        "q_i_raw", "q_i", "penalty_component",
+    ]
+    # Keep only columns that exist
+    cols = [c for c in cols if c in df.columns]
+    df = df[cols].sort_values("penalty_component", ascending=False).reset_index(drop=True)
+
+    log.info(
+        "q_i decomposition table (optimal pair q%.0f/q%.0f): %d episodes | "
+        "mean penalty=%.3f | max penalty=%.3f",
+        hs_pct * 100, ssh_pct * 100, len(df),
+        df["penalty_component"].mean() if not df.empty else 0.0,
+        df["penalty_component"].max() if not df.empty else 0.0,
+    )
+    return df
