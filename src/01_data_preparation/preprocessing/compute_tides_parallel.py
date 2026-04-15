@@ -213,20 +213,37 @@ def compute_tides_parallel(
     if cache_path and cache_path.exists():
         log.info("Loading tide cache from %s", cache_path)
         da_cache = xr.open_dataarray(cache_path)
-        # Check which points still need computation
-        already_done = set()
-        for pt_lat, pt_lon in coastal_points:
-            i_lat = int(np.argmin(np.abs(lat_vals - pt_lat)))
-            i_lon = int(np.argmin(np.abs(lon_vals - pt_lon)))
-            if not np.all(np.isnan(da_cache.values[:, i_lat, i_lon])):
-                already_done.add((pt_lat, pt_lon))
-        remaining = [p for p in coastal_points if p not in already_done]
-        log.info(
-            "Cache has %d/%d points. %d remaining.",
-            len(already_done), len(coastal_points), len(remaining),
+
+        # Validate cache dimensions match current grid
+        cache_ok = (
+            da_cache.sizes.get("latitude") == len(lat_vals)
+            and da_cache.sizes.get("longitude") == len(lon_vals)
+            and da_cache.sizes.get("time") == n_days
         )
-        if not remaining:
-            return da_cache
+        if not cache_ok:
+            log.warning(
+                "Cache grid mismatch (cache: %s, expected: time=%d lat=%d lon=%d). "
+                "Discarding stale cache.",
+                dict(da_cache.sizes), n_days, len(lat_vals), len(lon_vals),
+            )
+            da_cache.close()
+            da_cache = None
+            remaining = list(coastal_points)
+        else:
+            # Check which points still need computation
+            already_done = set()
+            for pt_lat, pt_lon in coastal_points:
+                i_lat = int(np.argmin(np.abs(lat_vals - pt_lat)))
+                i_lon = int(np.argmin(np.abs(lon_vals - pt_lon)))
+                if not np.all(np.isnan(da_cache.values[:, i_lat, i_lon])):
+                    already_done.add((pt_lat, pt_lon))
+            remaining = [p for p in coastal_points if p not in already_done]
+            log.info(
+                "Cache has %d/%d points. %d remaining.",
+                len(already_done), len(coastal_points), len(remaining),
+            )
+            if not remaining:
+                return da_cache
     else:
         remaining = list(coastal_points)
         da_cache = None

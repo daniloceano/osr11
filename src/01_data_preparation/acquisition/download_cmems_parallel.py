@@ -24,8 +24,10 @@ import calendar
 import json
 import logging
 import os
+import random
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timezone
@@ -40,10 +42,18 @@ from download_cmems import load_config
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
+# Force line-buffering so logs appear immediately in nohup.out / redirected files
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(line_buffering=True)
+
+_handler = logging.StreamHandler(sys.stdout)
+_handler.flush = sys.stdout.flush  # ensure flush after every record
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
+    handlers=[_handler],
 )
 log = logging.getLogger("osr11.parallel")
 
@@ -203,29 +213,53 @@ def _resolve_dataset_id(product_id: str) -> str:
 # Worker
 # ---------------------------------------------------------------------------
 
+MAX_RETRIES = 5
+RETRY_BASE_DELAY = 10  # seconds
+
+
 def run_task(task: DownloadTask, tracker: StatusTracker) -> None:
     tracker.mark_running(task.task_id)
     out = Path(task.output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    log.info("[START] %s → %s", task.task_id, out.name)
-    try:
-        copernicusmarine.subset(
-            dataset_id        = task.dataset_id,
-            variables         = task.variables,
-            minimum_longitude = task.bbox["lon_min"],
-            maximum_longitude = task.bbox["lon_max"],
-            minimum_latitude  = task.bbox["lat_min"],
-            maximum_latitude  = task.bbox["lat_max"],
-            start_datetime    = task.month_start,
-            end_datetime      = task.month_end,
-            output_filename   = str(out),
-            overwrite         = True,
-        )
-        tracker.mark_done(task.task_id)
-        log.info("[DONE]  %s", task.task_id)
-    except Exception as exc:
-        tracker.mark_failed(task.task_id, str(exc))
-        log.error("[FAIL]  %s — %s", task.task_id, exc)
+
+    last_error = ""
+    for attempt in range(1, MAX_RETRIES + 1):
+        log.info("[START] %s → %s (attempt %d/%d)", task.task_id, out.name, attempt, MAX_RETRIES)
+        try:
+            copernicusmarine.subset(
+                dataset_id        = task.dataset_id,
+                variables         = task.variables,
+                minimum_longitude = task.bbox["lon_min"],
+                maximum_longitude = task.bbox["lon_max"],
+                minimum_latitude  = task.bbox["lat_min"],
+                maximum_latitude  = task.bbox["lat_max"],
+                start_datetime    = task.month_start,
+                end_datetime      = task.month_end,
+                output_filename   = str(out),
+                overwrite         = True,
+            )
+            # Verify the file was actually created and is not tiny (header-only)
+            if out.exists() and out.stat().st_size > 100_000:
+                tracker.mark_done(task.task_id)
+                log.info("[DONE]  %s (%.1f MB)", task.task_id, out.stat().st_size / 1e6)
+                return
+            else:
+                size_kb = out.stat().st_size / 1e3 if out.exists() else 0
+                last_error = f"Output too small ({size_kb:.0f} KB) — likely server error"
+                log.warning("[RETRY] %s — %s", task.task_id, last_error)
+                if out.exists():
+                    out.unlink()
+        except Exception as exc:
+            last_error = str(exc) or repr(exc)
+            log.warning("[RETRY] %s (attempt %d) — %s", task.task_id, attempt, last_error)
+
+        if attempt < MAX_RETRIES:
+            delay = RETRY_BASE_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 5)
+            log.info("[WAIT]  %s — backoff %.0fs before attempt %d", task.task_id, delay, attempt + 1)
+            time.sleep(delay)
+
+    tracker.mark_failed(task.task_id, last_error)
+    log.error("[FAIL]  %s — exhausted %d retries — %s", task.task_id, MAX_RETRIES, last_error)
 
 
 # ---------------------------------------------------------------------------

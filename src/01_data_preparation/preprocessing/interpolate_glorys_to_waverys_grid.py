@@ -397,7 +397,11 @@ def build_unified_dataset(
 # ---------------------------------------------------------------------------
 
 def save_dataset(ds: xr.Dataset, path: str | Path) -> None:
-    """Save dataset to NetCDF with lossless compression."""
+    """Save dataset to NetCDF with lossless compression.
+
+    Writes to a temporary file first, then atomically renames to avoid
+    corrupted output if the process is interrupted.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -406,8 +410,10 @@ def save_dataset(ds: xr.Dataset, path: str | Path) -> None:
         for var in ds.data_vars
     }
 
+    tmp_path = path.with_suffix(".nc.tmp")
     log.info("Saving unified dataset to %s …", path)
-    ds.to_netcdf(path, encoding=encoding)
+    ds.to_netcdf(tmp_path, encoding=encoding)
+    tmp_path.rename(path)
     log.info("  Saved: %.1f MB", path.stat().st_size / 1e6)
 
 
@@ -617,5 +623,5 @@ if __name__ == "__main__":
     try:
         main(args.config)
     except Exception as exc:
-        log.error("Pipeline failed: %s", exc)
+        log.error("Pipeline failed: %s", exc, exc_info=True)
         sys.exit(1)
