@@ -1,10 +1,41 @@
-# Step 3 — Storm Catalog Generation
+# Step 3 — Hazard Characterization of Extreme and Compound Coastal Events
 
 **Part of the OSR11 Pipeline**  
 **Location:** `src/03_storm_catalog_generation/`  
-**Status:** Implemented — smoke test passed on SC fixture (test mode)  
+**Status:** In progress — storm catalogs generated, submodules 3.2–3.8 implemented  
 **Preceded by:** Step 2 (Threshold Calibration, complete)  
-**Followed by:** Step 4 (Compound Event Detection)
+**Followed by:** Step 4 (Exposure Analysis)
+
+---
+
+## Overview
+
+Step 3 is the central hazard characterization block. It first generates independent
+storm catalogs (Submodule 3.1), then runs seven additional analysis submodules:
+
+| Submodule | Directory | Description |
+|-----------|-----------|-------------|
+| 3.1 Storm Catalogs | `main.py`, `segmentation.py` | POT detection + episode clustering |
+| 3.2 Compound Detection | `02_compound_detection/` | Temporal overlap → compound events |
+| 3.3 Duration & Persistence | `03_duration_persistence/` | Per-grid duration/inter-event stats |
+| 3.4 Monthly Seasonality | `04_monthly_seasonality/` | Monthly climatology, peak month |
+| 3.5 Trend Analysis | `05_trends/` | Mann–Kendall + Sen slope (9 series) |
+| 3.6 Univariate EVA | `06_univariate_eva/` | POT–GPD return levels (2–50 yr) |
+| 3.7 Dependence | `07_dependence/` | Hs–SSH τ, ρ, χ, χ̄ |
+| 3.8 Site Export | `08_site_export/` | Unified JSON for results website |
+
+### Running
+
+```bash
+# 3.1 — Storm catalogs
+conda run -n osr python -m src.03_storm_catalog_generation.main --mode brazil
+
+# 3.2–3.8 — All submodules
+conda run -n osr python -m src.03_storm_catalog_generation.hazard_characterization --module all
+
+# Individual submodule
+conda run -n osr python -m src.03_storm_catalog_generation.hazard_characterization --module compound
+```
 
 ---
 

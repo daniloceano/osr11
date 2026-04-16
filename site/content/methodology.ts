@@ -61,52 +61,112 @@ export const methodologySteps: MethodStep[] = [
   },
   {
     id: 'step-3',
-    label: 'STEP 3 — Storm Catalog Generation',
+    label: 'STEP 3 — Hazard Characterization',
     description:
-      'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using the calibrated thresholds (q90/q90 from Step 2e). Apply peaks-over-threshold to the full 1993–2025 series; merge consecutive exceedances into discrete storm events; record start, end, duration, peak, and integrated intensity in structured JSON format.',
-    status: 'planned',
+      'The central analysis block. Generates independent storm catalogs for Hₛ and SSH_total '
+      + 'at each coastal grid point (q90/q90 from Step 2e), then runs the full hazard '
+      + 'characterization suite: compound detection, duration/persistence, seasonality, '
+      + 'Mann–Kendall trend analysis, POT–GPD extreme value analysis, and Hs–SSH dependence (τ, ρ, χ, χ̄).',
+    status: 'in-progress',
     stepNumber: 3,
     isCurrent: true,
+    subSteps: [
+      {
+        id: 'step-3-1',
+        label: '3.1 — Storm Catalogs',
+        description:
+          'POT detection + episode clustering on the full 1993–2025 record. '
+          + '808 coastal grid points, 404k Hₛ storms, 325k SSH_total storms.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-2',
+        label: '3.2 — Compound Detection',
+        description:
+          'Temporal overlap of Hₛ/SSH_total storms → compound events. '
+          + 'Union-find grouping, overlap duration, peak lag, normalized intensity.',
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-3',
+        label: '3.3 — Duration & Persistence',
+        description:
+          'Per-grid-point persistence statistics: mean/p95/max duration, '
+          + 'inter-event times, integrated intensity.',
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-4',
+        label: '3.4 — Monthly Seasonality',
+        description:
+          'Monthly counts, peak month, seasonal split (DJF/MAM/JJA/SON) '
+          + 'for Hₛ, SSH_total, and compound events.',
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-5',
+        label: '3.5 — Trend Analysis',
+        description:
+          'Mann–Kendall + Sen slope for 9 annual series. '
+          + 'Modified MK (Hamed & Rao 1998) when autocorrelation detected.',
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-6',
+        label: '3.6 — Univariate EVA',
+        description:
+          'POT–GPD on declustered storm peaks. Return levels for '
+          + '2, 5, 10, 20, 50 years with delta-method confidence intervals.',
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-7',
+        label: '3.7 — Dependence Analysis',
+        description:
+          'Hs–SSH_total statistical dependence from compound event pairs: '
+          + "Kendall's τ, Spearman's ρ, extremal dependence χ and χ̄.",
+        status: 'in-progress',
+      },
+      {
+        id: 'step-3-8',
+        label: '3.8 — Site Export',
+        description:
+          'Unified JSON export of all metrics for the results website interactive maps.',
+        status: 'in-progress',
+      },
+    ],
   },
   {
     id: 'step-4',
-    label: 'STEP 4 — Compound Event Detection',
+    label: 'STEP 4 — Exposure Analysis',
     description:
-      'Identify compound events as temporal overlaps between independent sea-level and wave storms from the Step 3 catalogs. Compute co-occurrence statistics: frequency, intensity, duration, peak time lags, and seasonal distribution.',
+      'Quantify compound hazard exposure: mean annual frequency, intensity, temporal trends, and recurrence. Combine into a Compound Exposure Hazard Index.',
     status: 'planned',
     stepNumber: 4,
   },
   {
     id: 'step-5',
-    label: 'STEP 5 — Exposure Analysis',
+    label: 'STEP 5 — Vulnerability Analysis',
     description:
-      'Quantify compound hazard exposure along the SC coast: mean annual frequency, intensity metrics, temporal trends, and recurrence estimates. Combine into a Compound Exposure Hazard Index.',
+      'Construct coastal vulnerability index integrating social indicators (IBGE), physical-territorial variables (Macrodiagnóstico da Zona Costeira), and historical damage records (S2ID/Atlas Digital).',
     status: 'planned',
     stepNumber: 5,
   },
   {
     id: 'step-6',
-    label: 'STEP 6 — Vulnerability Analysis',
+    label: 'STEP 6 — Risk Integration',
     description:
-      'Construct coastal vulnerability index integrating social indicators (IBGE), physical-territorial variables (Macrodiagnóstico da Zona Costeira), and historical damage records (S2ID/Atlas Digital).',
+      'Produce coastal risk maps by combining hazard, exposure, and vulnerability components. Generate risk classes and identify priority hotspots for adaptation planning.',
     status: 'planned',
     stepNumber: 6,
   },
   {
     id: 'step-7',
-    label: 'STEP 7 — Risk Integration',
+    label: 'STEP 7 — Physical Interpretation (Optional)',
     description:
-      'Produce coastal risk maps by combining hazard, exposure, and vulnerability components. Generate risk classes (Low / Moderate / High / Very High) and identify priority hotspots for adaptation planning.',
+      'Select the most severe compound events and characterize synoptic conditions using ERA5. Discuss dominant atmospheric mechanisms and assess uncertainties.',
     status: 'planned',
     stepNumber: 7,
-  },
-  {
-    id: 'step-8',
-    label: 'STEP 8 — Physical Interpretation (Optional)',
-    description:
-      'Select the most severe compound events and characterize synoptic conditions using ERA5. Discuss dominant atmospheric mechanisms and assess uncertainties in threshold choices.',
-    status: 'planned',
-    stepNumber: 8,
   },
 ];
 

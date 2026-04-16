@@ -51,8 +51,17 @@ _MODULE_ALIASES: dict[str, str] = {
     "csi_grid_scan":              "02_threshold_calibration/04_csi_grid_scan",
     "pu_composite_calibration":   "02_threshold_calibration/05_pu_composite_calibration",
 
-    # STEP 3 — Storm Catalog Generation
+    # STEP 3 — Storm Catalog Generation / Hazard Characterization
     "storm_catalog_generation":   "03_storm_catalog_generation",
+    "storm_catalogs":             "03_storm_catalog_generation/01_storm_catalogs",
+    "compound_detection":         "03_storm_catalog_generation/02_compound_detection",
+    "duration_persistence":       "03_storm_catalog_generation/03_duration_persistence",
+    "monthly_seasonality":        "03_storm_catalog_generation/04_monthly_seasonality",
+    "trends":                     "03_storm_catalog_generation/05_trends",
+    "univariate_eva":             "03_storm_catalog_generation/06_univariate_eva",
+    "dependence":                 "03_storm_catalog_generation/07_dependence",
+    "site_export":                "03_storm_catalog_generation/08_site_export",
+    "shared":                     "03_storm_catalog_generation/shared",
 }
 
 

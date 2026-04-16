@@ -29,42 +29,40 @@ export const resultCards: ResultCard[] = [
     parts: ['2a — EDA', '2b — Preliminary', '2c — Tidal', '2d — CSI Scan', '2e — PU Calibration'],
   },
   {
-    id: 'compound-detection',
-    title: 'Step 3 — Storm Catalog Generation',
-    subtitle: '808 grid points · 404,535 Hₛ storms · 324,929 SSH_total storms · 1993–2025',
-    status: 'done',
-    description:
-      'Independent storm catalogs for Hₛ and SSH_total at each coastal grid point using calibrated q90/q90 thresholds (Step 2e). Peaks-over-threshold applied to the full 1993–2025 WAVERYS + GLORYS12 record; consecutive exceedances merged into discrete storm episodes (gap ≤ 1 day).',
-    rationale:
-      'The storm catalogs are the foundation for compound event detection in Step 4. By identifying independent Hₛ and SSH_total storm episodes first, the temporal overlap analysis can be conducted systematically.',
-    outputs: [
-      '404,535 Hₛ storm episodes across 808 coastal grid points',
-      '324,929 SSH_total storm episodes across 808 coastal grid points',
-      'Per-grid-point metadata: thresholds, storm counts, data quality',
-      'Structured JSON catalogs + flat CSV summaries for downstream analysis',
-    ],
-    href: '/results/storm-maps',
-    parts: ['Storm Catalogs', 'Storm Maps'],
-  },
-  {
-    id: 'compound-events',
-    title: 'Step 4 — Compound Event Detection',
-    subtitle: '96,031 compound events · temporal overlap of Hₛ + SSH_total storms',
+    id: 'hazard-characterization',
+    title: 'Step 3 — Hazard Characterization',
+    subtitle: '808 grid points · storm catalogs + 7 analysis submodules · 1993–2025',
     status: 'in-progress',
     description:
-      'Compound events identified as temporal overlaps between Hₛ and SSH_total storms at the same grid point (≥ 1 shared calendar day). Classification: Hₛ-only (306,256), SSH_total-only (228,426), compound (96,031). Interactive storm maps with occurrence and intensity metrics per class.',
+      'Central analysis block: independent storm catalogs for Hₛ and SSH_total (q90/q90), '
+      + 'followed by compound detection, duration/persistence, monthly seasonality, '
+      + 'Mann–Kendall trends, POT–GPD EVA, and Hs–SSH dependence (τ, ρ, χ, χ̄). '
+      + '404k Hₛ storms, 325k SSH_total storms, ~96k compound events across 808 coastal grid points.',
     rationale:
-      'The compound event catalog is the primary scientific deliverable of the hazard phase and the foundation for validation, risk mapping, and physical interpretation.',
+      'The storm catalogs are the foundation for all downstream hazard characterization. '
+      + 'The submodule suite quantifies frequency, intensity, seasonality, trends, return levels, '
+      + 'and dependence — providing a complete statistical portrait of compound coastal hazards.',
     outputs: [
-      '96,031 compound events detected across 808 coastal grid points',
-      '306,256 Hₛ-only and 228,426 SSH_total-only storms classified',
-      'Per-grid-point occurrence maps (total count, annual mean)',
-      'Per-grid-point intensity maps (mean, p95, max peak values)',
-      'Joint intensity (peak Hₛ + peak SSH_total) for compound events',
-      'Interactive storm maps on the results website',
+      '3.1: 404,535 Hₛ + 324,929 SSH_total storm episodes (JSON + CSV)',
+      '3.2: ~96k compound events, classification (Hₛ-only / SSH-only / compound), overlap metrics',
+      '3.3: Per-grid persistence statistics (mean/p95/max duration, inter-event times)',
+      '3.4: Monthly climatology, peak month, seasonal DJF/MAM/JJA/SON split',
+      '3.5: Mann–Kendall + Sen slope trends for 9 annual series per grid point',
+      '3.6: POT–GPD return levels (2, 5, 10, 20, 50 yr) with delta-method CIs',
+      '3.7: Kendall τ, Spearman ρ, extremal χ and χ̄ for Hs–SSH compound pairs',
+      '3.8: Unified JSON for interactive maps on the results website',
     ],
     href: '/results/storm-maps',
-    parts: ['Classification', 'Occurrence Maps', 'Intensity Maps'],
+    parts: [
+      '3.1 — Storm Catalogs',
+      '3.2 — Compound Detection',
+      '3.3 — Duration & Persistence',
+      '3.4 — Seasonality',
+      '3.5 — Trends',
+      '3.6 — EVA',
+      '3.7 — Dependence',
+      '3.8 — Site Export',
+    ],
   },
   {
     id: 'validation',

@@ -1,12 +1,15 @@
 """
-Configuration for Step 3 — Storm Catalog Generation.
+Configuration for Step 3 — Hazard Characterization of Extreme and Compound
+Coastal Events.
 
 Part of the OSR11 pipeline.
 Location: src/03_storm_catalog_generation/
 
 This step applies the PU-optimal thresholds from Step 2e to the full metocean
 record (1993–2025) and produces independent storm catalogs for Hs and SSH_total
-at each coastal grid point.
+at each coastal grid point, then runs the full hazard characterization suite:
+compound detection, duration/persistence, seasonality, trends (Mann–Kendall +
+Sen slope), univariate EVA (POT–GPD), and dependence analysis (τ, ρ, χ, χ̄).
 
 Threshold source:
     The sole authoritative threshold pair is from Step 2e (PU Composite
@@ -89,6 +92,14 @@ CATALOG_DIR = OUTPUT_ROOT
 TAB_DIR = OUTPUT_ROOT / "tables"
 FIG_DIR = OUTPUT_ROOT / "figures"
 LOG_DIR = OUTPUT_ROOT / "logs"
+
+# ── Hazard characterization submodule outputs ─────────────────────────────────
+COMPOUND_DIR = OUTPUT_ROOT / "compound"
+DURATION_DIR = OUTPUT_ROOT / "duration_persistence"
+SEASONALITY_DIR = OUTPUT_ROOT / "seasonality"
+TRENDS_DIR = OUTPUT_ROOT / "trends"
+EVA_DIR = OUTPUT_ROOT / "eva"
+DEPENDENCE_DIR = OUTPUT_ROOT / "dependence"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # VARIABLE NAMES (as in the unified NetCDF file)

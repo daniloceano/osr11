@@ -1,10 +1,14 @@
-# SCIENTIFIC_NOTES — Step 3: Storm Catalog Generation
+# SCIENTIFIC_NOTES — Step 3: Hazard Characterization of Extreme and Compound Coastal Events
 
 ## Research Questions
 
 1. How are extreme ocean events (wave height, sea level) formally identified and cataloged along the entire Brazilian coast?
 2. What is the spatial distribution of storm frequency and intensity for Hₛ and SSH_total independently?
 3. How sensitive is the resulting catalog to the threshold definition, gap tolerance, and data quality requirements?
+4. What fraction of extreme events are compound (simultaneous waves + sea level)? How do compound events differ from univariate events in intensity, duration, and spatial distribution?
+5. Are there statistically significant trends in storm frequency, intensity, or duration over the 33-year record?
+6. What are the return levels for extreme Hₛ and SSH_total at each coastal grid point?
+7. How strongly are wave height and sea level extremes statistically dependent during compound events?
 
 ---
 
@@ -175,17 +179,151 @@ The Hₛ catalog contains more storms than the SSH_total catalog across the doma
 
 ## Next Steps
 
-1. **Step 4 — Compound event detection**: Temporal intersection of Hₛ and SSH_total catalogs to identify compound events. Classification into Hₛ-only, SSH_total-only, and compound classes. Normalized intensity metric for compound events.
+1. **Step 4 — Exposure of population and infrastructure**: Spatial intersection of hazard maps with census data, infrastructure layers, and land-use to quantify exposed assets.
 2. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
-3. **Return period estimation**: Fit extreme value distributions (GEV, GPD) to the annual maxima or POT catalogs at each grid point. Requires catalog as input.
-4. **Temporal trend analysis**: Test for trends in storm frequency and intensity over the 33-year record using Mann-Kendall or equivalent non-parametric tests.
+3. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. Requires dependence analysis as input (Step 3.7).
+
+---
+
+## Hazard Characterization — Extended Framework
+
+### 2025-05 — Restructuring Step 3
+
+Step 3 has been expanded from "Storm Catalog Generation" to **"Hazard Characterization of Extreme and Compound Coastal Events"**. The former Steps 4–8 (compound detection, trends, EVA, etc.) are now submodules within Step 3, reflecting the fact that all these analyses operate on the same storm catalogs and share the same per-grid-point spatial framework.
+
+### Submodule 3.2 — Compound Event Detection
+
+**Definition**: A compound event at grid point $(i,j)$ exists when an Hₛ storm and an SSH_total storm overlap in time (share at least one calendar day). The compound event spans the union of all overlapping storms. If multiple Hₛ storms overlap the same SSH_total storm (or vice-versa), the resulting compound event covers the union.
+
+Classification:
+- **Hₛ-only**: Hₛ storm with no temporal overlap with any SSH_total storm
+- **SSH_total-only**: SSH_total storm with no temporal overlap with any Hₛ storm
+- **Compound**: Group of Hₛ + SSH_total storms sharing at least one day
+
+**Normalized compound intensity**:
+
+$$
+I_{\text{norm}}^{\text{compound}} = \frac{1}{2}\left(\hat{H}_s + \hat{S}\right), \quad \hat{H}_s = \text{clip}\!\left(\frac{H_s^{\text{peak}} - Q_{05}^{H_s}}{Q_{95}^{H_s} - Q_{05}^{H_s}},\, 0,\, 1\right)
+$$
+
+where $Q_{05}$, $Q_{95}$ are computed from all compound event peaks across the full domain (not per grid point). This ensures comparability across space.
+
+**Overlap metrics**: overlap_duration_days, peak_lag_days (time between Hₛ peak and SSH_total peak).
+
+### Submodule 3.3 — Duration & Persistence
+
+Per-grid-point summary statistics for Hₛ, SSH_total, and compound events:
+- storm_count_total, annual_mean
+- mean/p95/max duration (days)
+- mean integrated intensity
+- mean inter-event time (days) — time between consecutive episodes, characterizing return frequency
+
+### Submodule 3.4 — Monthly Seasonality
+
+Monthly climatology without circular statistics (unnecessary for discrete monthly counts):
+- monthly_counts (12 values) and monthly_share (fractions)
+- peak_month (month with highest count)
+- seasonal_counts: DJF, MAM, JJA, SON
+
+Applied independently for Hₛ, SSH_total, and compound events.
+
+### Submodule 3.5 — Trend Analysis (Mann–Kendall + Sen Slope)
+
+**Mann–Kendall test** (Mann 1945, Kendall 1975) applied to annual time series:
+
+$$
+S = \sum_{i=1}^{n-1}\sum_{j=i+1}^{n} \text{sign}(x_j - x_i)
+$$
+
+**Z-score** with continuity correction and tie adjustment. **Modified Mann–Kendall** (Hamed & Rao 1998) applied when significant lag-1 autocorrelation is detected:
+
+$$
+\text{Var}^*(S) = \text{Var}(S) \times \frac{n}{S^*}, \quad \frac{n}{S^*} = 1 + \frac{2}{n}\sum_{i=1}^{n-1}(n-i)\,r_i
+$$
+
+**Sen slope estimator** (Sen 1968):
+$$
+b = \text{median}\left\{\frac{x_j - x_i}{j - i}\right\}_{i < j}
+$$
+
+**Nine annual series tested**:
+1. annual Hₛ storm count
+2. annual SSH_total storm count
+3. annual compound event count
+4. annual mean Hₛ peak value
+5. annual mean SSH_total peak value
+6. annual mean compound normalized intensity
+7. annual mean Hₛ duration
+8. annual mean SSH_total duration
+9. annual mean overlap duration
+
+### Submodule 3.6 — Univariate EVA (POT–GPD)
+
+**Peaks-Over-Threshold with Generalized Pareto Distribution** applied to declustered storm peaks from the catalogs.
+
+Excesses: $y = x - u$ where $u$ is the local q90 threshold.
+
+GPD density:
+$$
+f(y;\, \xi,\, \sigma) = \frac{1}{\sigma}\left(1 + \xi\frac{y}{\sigma}\right)^{-(1+1/\xi)}, \quad y > 0
+$$
+
+Return level for return period $T$ (years):
+$$
+x_T = u + \frac{\sigma}{\xi}\left[(T\lambda)^{\xi} - 1\right], \quad \xi \neq 0
+$$
+
+where $\lambda = n_{\text{exceed}} / n_{\text{years}}$ is the mean exceedance rate.
+
+**Minimum sample**: 10 exceedances required for GPD fit. Return periods: 2, 5, 10, 20, 50 years.
+
+**Confidence intervals**: Delta method (approximate) based on the observed Fisher information.
+
+**Independence guarantee**: Storm peaks are algebraically independent — the POT clustering in the catalog (gap ≤ 1 day) ensures one peak per meteorological event.
+
+### Submodule 3.7 — Dependence Analysis (Hₛ–SSH_total)
+
+Paired samples: $(H_s^{\text{peak}},\, \text{SSH}_{\text{total}}^{\text{peak}})$ from each compound event at each grid point.
+
+**Kendall's τ**: rank correlation, robust to outliers, non-parametric.
+
+**Spearman's ρ**: monotone rank correlation.
+
+**Extremal dependence coefficient χ** (Coles et al. 1999):
+$$
+\chi = \lim_{u \to 1} P\bigl(F_Y(Y) > u \mid F_X(X) > u\bigr)
+$$
+
+Estimated empirically at quantile $u = 0.95$. χ > 0 indicates asymptotic dependence.
+
+**Sub-asymptotic coefficient χ̄**:
+$$
+\bar{\chi} = \frac{2\log P(F_X(X) > u)}{\log P(F_X(X) > u,\, F_Y(Y) > u)} - 1
+$$
+
+Interpretation: χ̄ = 1 (perfect dependence), χ̄ = 0 (independence), χ̄ < 0 (negative dependence).
+
+**Minimum samples**: τ/ρ require ≥ 5 pairs; χ/χ̄ require ≥ 20 compound events for stable tail estimates.
+
+Reference: Camus et al. (2021), *Earth's Future*, e2021EF002055.
 
 ---
 
 ## References
 
-- Reguero, B. G., Losada, I. J., & Méndez, F. J. (2019). A recent increase in global wave power as a consequence of oceanic warming. *Nature Communications*, 10(1), 205. https://doi.org/10.1038/s41467-018-08066-0
+- Camus, P., et al. (2021). Coastal compound flooding potential and present sensitivity to sea-level rise. *Earth's Future*, 9, e2021EF002055. https://doi.org/10.1029/2021EF002055
 - Cavaleri, L., et al. (2024). Wave climate variability in the South Atlantic. *Ocean Modelling*, 191, 102415.
-- Lellouche, J.-M., et al. (2021). The Copernicus Global 1/12° Oceanic and Sea Ice GLORYS12 Reanalysis. *Front. Earth Sci.*, 9, 698876. https://doi.org/10.3389/feart.2021.698876
+- Coles, S. (2001). *An Introduction to Statistical Modeling of Extreme Values*. Springer.
+- Coles, S. G., Heffernan, J. E., & Tawn, J. A. (1999). Dependence measures for extreme value analyses. *Extremes*, 2(4), 339–365.
+- Davison, A. C. & Smith, R. L. (1990). Models for exceedances over high thresholds. *JRSS-B*, 52, 393–442.
+- Ferro, C. A. T. & Segers, J. (2003). Inference for clusters of extreme values. *JRSS-B*, 65, 545–556.
+- Hamed, K. H. & Rao, A. R. (1998). A modified Mann-Kendall trend test for autocorrelated data. *J. Hydrology*, 204, 182–196.
+- Kendall, M. G. (1975). *Rank Correlation Methods*. Griffin, London.
 - Law-Chune, S., et al. (2021). WAVERYS: a CMEMS global wave reanalysis during the altimetry period. *Ocean Dynamics*, 71, 357–379. https://doi.org/10.1007/s10236-020-01433-w
+- Lellouche, J.-M., et al. (2021). The Copernicus Global 1/12° Oceanic and Sea Ice GLORYS12 Reanalysis. *Front. Earth Sci.*, 9, 698876. https://doi.org/10.3389/feart.2021.698876
 - Lyard, F. H., et al. (2021). FES2014 global ocean tide atlas: design and performance. *Ocean Science*, 17(3), 615–649. https://doi.org/10.5194/os-17-615-2021
+- Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13(3), 245–259.
+- Petroliagkis, T. I., et al. (2018). Statistical dependence between storm surge, wave height and wave period in European waters. *Coastal Engineering*, 133, 34–47.
+- Reguero, B. G., Losada, I. J., & Méndez, F. J. (2019). A recent increase in global wave power as a consequence of oceanic warming. *Nature Communications*, 10(1), 205. https://doi.org/10.1038/s41467-018-08066-0
+- Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall's tau. *JASA*, 63(324), 1379–1389.
+- Zscheischler, J., et al. (2020). A typology of compound weather and climate events. *Nature Reviews Earth & Environment*, 1, 333–347. https://doi.org/10.1038/s43017-020-0060-z

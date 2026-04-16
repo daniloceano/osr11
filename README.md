@@ -4,8 +4,8 @@
 
 **Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
 **Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
-**Status:** Threshold calibration complete — storm catalog generation in progress  
-**Current implementation:** Full Santa Catarina coast (threshold calibration complete; Step 3 next)
+**Status:** Hazard characterization in progress (Step 3 submodules implemented)  
+**Current implementation:** Full Brazilian coast (808 grid points; storm catalogs complete; characterization submodules ready)
 
 ---
 
@@ -165,47 +165,35 @@ The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos −
 
 ---
 
-### **STEP 3 — Storm Catalog Generation**
+### **STEP 3 — Hazard Characterization of Extreme and Compound Coastal Events**
 
-For each coastal grid point, construct independent storm catalogs by identifying threshold exceedances (using the PU-optimal thresholds from Step 2e) and merging consecutive exceedances into single storm events. For each identified storm, record:
+The most comprehensive analysis step. Applies the PU-optimal thresholds from Step 2e to the full 1993–2025 record, generates independent storm catalogs for Hₛ and SSH_total, and then runs the complete suite of hazard characterization analyses:
 
-- Start time
-- End time  
-- Duration
-- Peak value
-- Full time series of values during the event
-- Integrated intensity (time-integrated magnitude)
+| Submodule | Analysis | Key outputs |
+|-----------|----------|-------------|
+| **3.1 Storm Catalogs** | POT detection + episode clustering | Per-grid-point JSON catalogs for Hₛ and SSH_total |
+| **3.2 Compound Detection** | Temporal overlap of Hₛ/SSH_total storms | Compound events, overlap duration, peak lag, normalized intensity |
+| **3.3 Duration & Persistence** | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
+| **3.4 Monthly Seasonality** | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
+| **3.5 Trend Analysis** | Mann–Kendall + Sen slope (9 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
+| **3.6 Univariate EVA** | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
+| **3.7 Dependence Analysis** | Hs–SSH_total statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
+| **3.8 Site Export** | Unified JSON for results website | All metrics merged per grid point |
 
-Generate separate catalogs for sea-level storms and wave storms. Save catalogs in structured JSON format for reproducibility and downstream analysis.
+**Status:** 🔄 In progress (catalogs complete; submodules 3.2–3.8 implemented, pending execution)  
+**Implementation:** `src/03_storm_catalog_generation/`  
+**Run:**
+```bash
+# Generate storm catalogs (3.1)
+python -m src.03_storm_catalog_generation.main --all
 
-**Status:** 🔄 Planned  
-**Implementation:** To be developed
-
----
-
-### **STEP 4 — Compound Event Detection**
-
-Compare sea-level storm catalogs and wave storm catalogs at each grid point. Classify a **compound event** when a sea-level storm and a wave storm overlap in time. Record:
-
-- Overlap duration
-- Peak time lag (time difference between Hₛ peak and SSH peak)
-- Joint peak intensity
-
-Optionally impose a minimum overlap duration threshold. From the resulting compound event catalog, compute:
-
-- Annual frequency of compound events
-- Mean and upper-percentile joint intensity
-- Mean, minimum, and maximum overlap duration
-- Time between successive compound events
-- Seasonality (monthly climatology)
-- Spatial distribution
-
-**Status:** 🔄 Planned  
-**Implementation:** To be developed
+# Run hazard characterization submodules (3.2–3.8)
+python -m src.03_storm_catalog_generation.hazard_characterization --module all
+```
 
 ---
 
-### **STEP 5 — Exposure Analysis**
+### **STEP 4 — Exposure Analysis**
 
 Quantify compound hazard exposure using indicators derived from the compound event catalog:
 
@@ -218,12 +206,12 @@ Quantify compound hazard exposure using indicators derived from the compound eve
 
 Normalize indicators to a common scale and optionally combine into a **Compound Exposure Hazard Index** for mapping purposes.
 
-**Status:** 🔄 Planned (Phase 5)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
 
-### **STEP 6 — Vulnerability Analysis**
+### **STEP 5 — Vulnerability Analysis**
 
 Construct a coastal vulnerability index by integrating:
 
@@ -245,12 +233,12 @@ Construct a coastal vulnerability index by integrating:
 
 Standardize variables, apply weighting schemes, and combine into a spatially explicit **Vulnerability Index** at municipal or coastal segment scale.
 
-**Status:** 🔄 Planned (Phase 6)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
 
-### **STEP 7 — Risk Integration**
+### **STEP 6 — Risk Integration**
 
 Produce the main applied outcome: a **coastal risk map of compound wave–surge events** for Brazil.
 
@@ -262,12 +250,12 @@ Produce the main applied outcome: a **coastal risk map of compound wave–surge 
 5. Cross-reference hotspots with municipalities presenting reported impacts in S2ID/Atlas Digital
 6. Produce maps, tables, and summary statistics for stakeholder communication
 
-**Status:** 🔄 Planned (Phase 6)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
 
-### **STEP 8 — Physical Interpretation (Optional)**
+### **STEP 7 — Physical Interpretation (Optional)**
 
 As an optional validation and interpretation stage:
 
@@ -279,7 +267,7 @@ As an optional validation and interpretation stage:
 
 This stage strengthens the physical interpretation and overall robustness of the study.
 
-**Status:** 🔄 Planned (Phase 8)  
+**Status:** 🔄 Planned  
 **Implementation:** To be developed
 
 ---
@@ -297,22 +285,17 @@ The repository currently contains:
 
 ✅ **STEP 2 — Threshold Calibration** (all sub-steps 2a–2e complete)
 
-- **Sub-step 2a** — Exploratory Data Analysis (`src/02_threshold_calibration/01_exploratory_data_analysis/`):
-  Spatial maximum maps, time series, reported events EDA, municipality–grid association, per-sector boxplots, statistical analyses
+- **Sub-step 2a** — Exploratory Data Analysis
+- **Sub-step 2b** — Preliminary Compound Analysis
+- **Sub-step 2c** — Tidal Sensitivity
+- **Sub-step 2d** — CSI Grid Scan (diagnostic)
+- **Sub-step 2e** — PU Composite Calibration (final)
 
-- **Sub-step 2b** — Preliminary Compound Analysis (`src/02_threshold_calibration/02_preliminary_compound/`):
-  Domain: full SC (5 sectors, 22 municipalities, 91 events); key finding: 2/91 concurrent Hₛ + SSH (zos, without tide) q90 exceedances
+🔄 **STEP 3 — Hazard Characterization** (catalogs complete; submodules 3.2–3.8 implemented, pending full execution)
+- Storm catalogs generated (808 grid points, 404k Hₛ storms, 325k SSH_total storms)
+- Submodules 3.2–3.8 implemented, ready for production run
 
-- **Sub-step 2c** — Tidal Sensitivity (`src/02_threshold_calibration/03_tidal_sensitivity/`):
-  SSH_total = zos + FES2022 daily max tide; detection at q90: 22 → 26 events. Establishes canonical SSH_total definition.
-
-- **Sub-step 2d** — CSI Grid Scan — **DIAGNOSTIC** (`src/02_threshold_calibration/04_csi_grid_scan/`):
-  81 threshold pairs evaluated; optimal pair q90/q90 (H=21, M=70, F=1 298, CSI=0.0151, FAR=0.984). High FAR (98.4%) reveals Civil Defense database incompleteness; demonstrates that classical CSI is unsuitable. Thresholds from this step are NOT used in subsequent steps.
-
-- **Sub-step 2e** — PU Composite Calibration — **FINAL CALIBRATION** (`src/02_threshold_calibration/05_pu_composite_calibration/`):
-  Independent threshold sweep using the combined positive-event set (147 events, 27 municipalities). PU composite score confirms q90/q90 as the final calibrated threshold pair. **Authoritative source of thresholds for Step 3.**
-
-🔄 **Steps 3–8** — Planned, not yet implemented
+🔄 **Steps 4–7** — Planned, not yet implemented
 
 ---
 
@@ -383,11 +366,36 @@ osr11/
 │           ├── config/analysis_config.py     #     Configuration
 │           └── README.md, RUN.md, SCIENTIFIC_NOTES.md, INTEGRATION_NOTES.md
 │
+│   └── 03_storm_catalog_generation/          # STEP 3 — Hazard Characterization
+│       ├── main.py                           #   CLI orchestrator (catalog generation)
+│       ├── hazard_characterization.py        #   CLI orchestrator (submodules 3.2–3.8)
+│       ├── segmentation.py, metrics.py       #   POT detection + episode attributes
+│       ├── io.py, tides.py, figures.py       #   I/O, tides, QA figures
+│       ├── config/analysis_config.py         #   Configuration
+│       ├── shared/catalog_utils.py           #   Shared I/O utilities
+│       ├── 02_compound_detection/            #   Submodule 3.2 — Compound events
+│       ├── 03_duration_persistence/          #   Submodule 3.3 — Duration statistics
+│       ├── 04_monthly_seasonality/           #   Submodule 3.4 — Seasonality
+│       ├── 05_trends/                        #   Submodule 3.5 — Mann–Kendall trends
+│       ├── 06_univariate_eva/                #   Submodule 3.6 — POT–GPD EVA
+│       ├── 07_dependence/                    #   Submodule 3.7 — Hs–SSH dependence
+│       ├── 08_site_export/                   #   Submodule 3.8 — Site JSON export
+│       └── SCIENTIFIC_NOTES.md               #   Science documentation
+│
 ├── outputs/                                  # Analysis outputs (not committed, .gitignore)
 │   ├── south_sc_test_data_exploratory/       #   Step 2a outputs
 │   ├── preliminary_compound/                 #   Step 2b outputs
 │   ├── tidal_sensitivity/                    #   Step 2c outputs
-│   └── threshold_calibration/                #   Step 2d and 2e outputs
+│   ├── threshold_calibration/                #   Step 2d and 2e outputs
+│   └── storm_catalog/                        #   Step 3 outputs
+│       ├── catalog_hs_storms.json            #     Hₛ storm catalog
+│       ├── catalog_ssh_total_storms.json     #     SSH_total storm catalog
+│       ├── compound/                         #     Compound detection outputs
+│       ├── duration_persistence/             #     Persistence metrics
+│       ├── seasonality/                      #     Monthly climatology
+│       ├── trends/                           #     Trend analysis
+│       ├── eva/                              #     Return levels
+│       └── dependence/                       #     Dependence metrics
 ├── logs/                                     # Execution logs (not committed, .gitignore)
 └── site/                                     # Scientific results website (Next.js + Tailwind CSS)
     ├── README.md                             # Site documentation
