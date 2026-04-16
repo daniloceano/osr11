@@ -338,7 +338,7 @@ def run_compound_detection(
     for hs_gp in hs_catalog:
         lat = hs_gp["grid_lat"]
         lon = hs_gp["grid_lon"]
-        key = (round(lat, 5), round(lon, 5))
+        key = (round(lat, 4), round(lon, 4))
 
         ssh_gp = ssh_index.get(key)
         if ssh_gp is None:

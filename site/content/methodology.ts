@@ -67,9 +67,9 @@ export const methodologySteps: MethodStep[] = [
       + 'at each coastal grid point (q90/q90 from Step 2e), then runs the full hazard '
       + 'characterization suite: compound detection, duration/persistence, seasonality, '
       + 'Mann–Kendall trend analysis, POT–GPD extreme value analysis, and Hs–SSH dependence (τ, ρ, χ, χ̄).',
-    status: 'in-progress',
+    status: 'done',
     stepNumber: 3,
-    isCurrent: true,
+    isCurrent: false,
     subSteps: [
       {
         id: 'step-3-1',
@@ -85,7 +85,7 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Temporal overlap of Hₛ/SSH_total storms → compound events. '
           + 'Union-find grouping, overlap duration, peak lag, normalized intensity.',
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-3',
@@ -93,7 +93,7 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Per-grid-point persistence statistics: mean/p95/max duration, '
           + 'inter-event times, integrated intensity.',
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-4',
@@ -101,7 +101,7 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Monthly counts, peak month, seasonal split (DJF/MAM/JJA/SON) '
           + 'for Hₛ, SSH_total, and compound events.',
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-5',
@@ -109,7 +109,7 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Mann–Kendall + Sen slope for 9 annual series. '
           + 'Modified MK (Hamed & Rao 1998) when autocorrelation detected.',
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-6',
@@ -117,7 +117,7 @@ export const methodologySteps: MethodStep[] = [
         description:
           'POT–GPD on declustered storm peaks. Return levels for '
           + '2, 5, 10, 20, 50 years with delta-method confidence intervals.',
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-7',
@@ -125,14 +125,14 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Hs–SSH_total statistical dependence from compound event pairs: '
           + "Kendall's τ, Spearman's ρ, extremal dependence χ and χ̄.",
-        status: 'in-progress',
+        status: 'done',
       },
       {
         id: 'step-3-8',
         label: '3.8 — Site Export',
         description:
           'Unified JSON export of all metrics for the results website interactive maps.',
-        status: 'in-progress',
+        status: 'done',
       },
     ],
   },

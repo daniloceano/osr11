@@ -126,7 +126,7 @@ The 50 km coastal buffer was computed using geodesic distance from each WAVERYS 
 
 ## Results and Interpretation
 
-### Production Run (2025-04-15)
+### Production Run — Storm Catalogs (2025-04-15)
 
 | Metric | Value |
 |--------|-------|
@@ -140,12 +140,27 @@ The 50 km coastal buffer was computed using geodesic distance from each WAVERYS 
 
 The Hₛ catalog contains more storms than the SSH_total catalog across the domain. This is consistent with the higher temporal autocorrelation of wave height (swell persistence) compared to sea level anomalies, which leads to more frequent but shorter SSH exceedance episodes when using the same gap tolerance.
 
+### Hazard Characterization — Full Pipeline Run (2025-05-16)
+
+All 7 submodules executed successfully in 90.6 seconds. 808/808 grid points processed for all modules. No grid points were dropped or had missing data in any module.
+
+| Module | Runtime | Key Output |
+|--------|---------|------------|
+| 3.2 Compound | 14.5 s | 96,031 compound events (across 808 pts) |
+| 3.3 Duration | 8.3 s | Duration statistics for 808 pts |
+| 3.4 Seasonality | 8.3 s | Monthly climatology for 808 pts |
+| 3.5 Trends | 31.8 s | Mann–Kendall for 9 series × 808 pts |
+| 3.6 EVA | 22.4 s | GPD return levels for 808 pts |
+| 3.7 Dependence | 1.3 s | τ, ρ, χ, χ̄ for 808 pts |
+| 3.8 Site Export | 4.0 s | 2.4 MB unified JSON (87 fields/pt) |
+
 ### Spatial Patterns (qualitative)
 
 - **Hₛ**: Annual storm frequency is highest along the southern Brazilian coast (25–35°S), decreasing equatorward. Peak intensities follow the same gradient, reflecting the dominance of extratropical cyclones as wave generators.
 - **SSH_total**: Storm frequency shows a more complex spatial pattern influenced by shelf width, tidal amplitude, and exposure to both tropical and extratropical forcing. The widest continental shelves (Amazon mouth, southern Santa Catarina) show distinct regimes.
+- **Compound events**: Higher compound rates in the south (~4–6 yr⁻¹) vs. northeast (~1–3 yr⁻¹). The dependence structure (τ, ρ) is moderate positive throughout, with stronger coupling in the south.
 
-**[PRELIMINARY]** Detailed spatial analysis maps are available on the results website (`/results/storm-maps`).
+Detailed interactive maps are available on the results website (`/results/hazard-characterization`).
 
 ---
 
@@ -180,8 +195,9 @@ The Hₛ catalog contains more storms than the SSH_total catalog across the doma
 ## Next Steps
 
 1. **Step 4 — Exposure of population and infrastructure**: Spatial intersection of hazard maps with census data, infrastructure layers, and land-use to quantify exposed assets.
-2. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
-3. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. Requires dependence analysis as input (Step 3.7).
+2. **Validation against reported events**: Cross-reference compound catalog with the Leal et al. (2024) SC disaster database and the expanded S2ID registry.
+3. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
+4. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. The dependence analysis (Step 3.7) provides empirical input for copula selection.
 
 ---
 

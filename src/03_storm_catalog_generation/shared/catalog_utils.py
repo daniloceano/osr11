@@ -105,7 +105,7 @@ def build_grid_index(catalog: list[dict]) -> dict[tuple[float, float], dict]:
     """Build a lookup dict: (lat, lon) -> grid-point catalog entry."""
     idx = {}
     for gp in catalog:
-        key = (round(gp["grid_lat"], 5), round(gp["grid_lon"], 5))
+        key = (round(gp["grid_lat"], 4), round(gp["grid_lon"], 4))
         idx[key] = gp
     return idx
 

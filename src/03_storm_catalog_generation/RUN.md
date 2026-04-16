@@ -1,4 +1,4 @@
-# RUN.md — Step 3: Storm Catalog Generation
+# RUN.md — Step 3: Hazard Characterization
 
 Quick-start guide for running Step 3.
 
@@ -6,7 +6,7 @@ Quick-start guide for running Step 3.
 
 1. **Conda environment** activated:
    ```bash
-   conda activate osr11
+   conda activate osr
    ```
 
 2. **Step 2 complete:** The PU-optimal threshold file must exist at:
@@ -41,7 +41,7 @@ Step 3 supports three modes for obtaining SSH_total:
 ## Run: Test mode (SC domain, legacy tides)
 
 ```bash
-python -m src.03_storm_catalog_generation.main --mode test --tide-mode runtime
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode test --tide-mode runtime
 ```
 
 This computes FES2022 tides on-the-fly (~8 min for 53 grid points).
@@ -52,15 +52,15 @@ This computes FES2022 tides on-the-fly (~8 min for 53 grid points).
 
 ```bash
 # Sequential (suitable for small domains)
-python -m src.03_storm_catalog_generation.main --mode production --tide-mode auto
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode production --tide-mode auto
 
 # Parallel (recommended for 100+ grid points)
-python -m src.03_storm_catalog_generation.main --mode production --tide-mode auto --workers 20
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode production --tide-mode auto --workers 20
 ```
 
 Or explicitly enforce pre-computed mode (fails if SSH_total is missing):
 ```bash
-python -m src.03_storm_catalog_generation.main --mode production --tide-mode precomputed --workers 20
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode production --tide-mode precomputed --workers 20
 ```
 
 ### Parallelization
@@ -77,20 +77,38 @@ The `--workers N` flag controls the number of processes for the catalog-building
 
 ---
 
-## Individual phases
+## Individual phases (3.1 — Storm Catalogs)
 
 ```bash
 # Phase 1 — validate inputs
-python -m src.03_storm_catalog_generation.main --phase load-validate --mode test
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --phase load-validate --mode test
 
 # Phase 2 — resolve SSH_total (auto-detect method)
-python -m src.03_storm_catalog_generation.main --phase tides --mode test
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --phase tides --mode test
 
 # Phase 3 — build catalogs
-python -m src.03_storm_catalog_generation.main --phase catalog --mode test
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --phase catalog --mode test
 
 # Phase 4 — QA figures
-python -m src.03_storm_catalog_generation.main --phase figures --mode test
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --phase figures --mode test
+```
+
+---
+
+## Submodules 3.2–3.8 (Hazard Characterization)
+
+```bash
+# Run all submodules (compound → duration → seasonality → trends → EVA → dependence → site export)
+python -m src.03_storm_catalog_generation.hazard_characterization --module all
+
+# Individual submodules
+python -m src.03_storm_catalog_generation.hazard_characterization --module compound
+python -m src.03_storm_catalog_generation.hazard_characterization --module duration
+python -m src.03_storm_catalog_generation.hazard_characterization --module seasonality
+python -m src.03_storm_catalog_generation.hazard_characterization --module trends
+python -m src.03_storm_catalog_generation.hazard_characterization --module eva
+python -m src.03_storm_catalog_generation.hazard_characterization --module dependence
+python -m src.03_storm_catalog_generation.hazard_characterization --module site_export
 ```
 
 ---
@@ -107,6 +125,8 @@ python -m src.03_storm_catalog_generation.main --mode test --log-level DEBUG
 
 All outputs go to `outputs/storm_catalog/`:
 
+### 3.1 — Storm Catalogs
+
 | Path | Description |
 |------|-------------|
 | `catalog_hs_storms.json` | Hₛ storm catalog (JSON, full detail) |
@@ -118,6 +138,30 @@ All outputs go to `outputs/storm_catalog/`:
 | `figures/fig_SC3_duration_distribution.png` | Duration histogram |
 | `figures/fig_SC3_seasonal_climatology.png` | Monthly climatology |
 | `logs/run_metadata.json` | Run provenance (includes tide_mode_used) |
+
+### 3.2–3.8 — Hazard Characterization Submodules
+
+| Path | Description |
+|------|-------------|
+| `compound/compound_catalog.json` | Compound event catalog |
+| `compound/compound_metrics.csv` | Per-grid compound summary |
+| `compound/compound_summary.json` | Domain-wide summary |
+| `duration_persistence/duration_persistence_metrics.json` | Per-grid duration stats |
+| `duration_persistence/duration_persistence_metrics.csv` | Duration flat table |
+| `seasonality/seasonality_metrics.json` | Monthly/seasonal climatology |
+| `seasonality/seasonality_summary.csv` | Per-grid peak month + counts |
+| `trends/trend_metrics.json` | Mann–Kendall + Sen slope (9 series) |
+| `trends/trend_metrics.csv` | Trends flat table |
+| `eva/eva_metrics.json` | GPD return levels |
+| `eva/eva_return_levels.csv` | Return levels flat table |
+| `dependence/dependence_metrics.json` | τ, ρ, χ, χ̄ per grid point |
+| `dependence/dependence_metrics.csv` | Dependence flat table |
+
+### Site Export
+
+| Path | Description |
+|------|-------------|
+| `site/public/data/hazard_characterization_grid_metrics.json` | Unified 87-field JSON for results website |
 
 ---
 

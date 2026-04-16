@@ -18,7 +18,7 @@ import xarray as xr
 
 from src.exploratory_data_analysis.coastal import find_coastal_points
 
-from .config import analysis_config as cfg
+from ..config import analysis_config as cfg
 
 log = logging.getLogger(__name__)
 

@@ -90,7 +90,7 @@ def run_site_export() -> dict:
 
     # Load submodule outputs
     compound_data = _load_json(COMPOUND_DIR / "compound_catalog.json")
-    duration_data = _load_json(DURATION_DIR / "persistence_metrics.json")
+    duration_data = _load_json(DURATION_DIR / "duration_persistence_metrics.json")
     season_data = _load_json(SEASON_DIR / "seasonality_metrics.json")
     trends_data = _load_json(TRENDS_DIR / "trend_metrics.json")
     eva_data = _load_json(EVA_DIR / "eva_metrics.json")
@@ -122,17 +122,22 @@ def run_site_export() -> dict:
         comp = compound_idx.get(key, {})
         entry["compound_count_total"] = comp.get("compound_count_total", 0)
         entry["compound_count_annual_mean"] = _safe_round(comp.get("compound_count_annual_mean"))
-        entry["compound_mean_intensity_norm"] = _safe_round(comp.get("compound_mean_intensity_norm"))
-        entry["compound_p95_intensity_norm"] = _safe_round(comp.get("compound_p95_intensity_norm"))
-        entry["compound_max_intensity_norm"] = _safe_round(comp.get("compound_max_intensity_norm"))
+        entry["compound_mean_intensity_norm"] = _safe_round(comp.get("mean_compound_intensity_norm"))
+        entry["compound_p95_intensity_norm"] = _safe_round(comp.get("p95_compound_intensity_norm"))
+        entry["compound_max_intensity_norm"] = _safe_round(comp.get("max_compound_intensity_norm"))
+        entry["compound_mean_overlap_duration"] = _safe_round(comp.get("mean_overlap_duration"))
+        entry["compound_mean_peak_lag_days"] = _safe_round(comp.get("mean_peak_lag_days"))
 
         # ── Duration & persistence ──
         dur = duration_idx.get(key, {})
-        for prefix in ("hs", "ssh_total", "compound"):
+        for prefix in ("hs", "ssh_total"):
             entry[f"{prefix}_storm_count_total"] = dur.get(f"{prefix}_storm_count_total")
+            entry[f"{prefix}_storm_count_annual_mean"] = _safe_round(dur.get(f"{prefix}_storm_count_annual_mean"))
             entry[f"{prefix}_mean_duration_days"] = _safe_round(dur.get(f"{prefix}_mean_duration_days"))
             entry[f"{prefix}_p95_duration_days"] = _safe_round(dur.get(f"{prefix}_p95_duration_days"))
             entry[f"{prefix}_max_duration_days"] = _safe_round(dur.get(f"{prefix}_max_duration_days"))
+            entry[f"{prefix}_mean_integrated_intensity"] = _safe_round(dur.get(f"{prefix}_mean_integrated_intensity"))
+            entry[f"{prefix}_mean_interevent_time_days"] = _safe_round(dur.get(f"{prefix}_mean_interevent_time_days"))
 
         # ── Seasonality ──
         sea = season_idx.get(key, {})

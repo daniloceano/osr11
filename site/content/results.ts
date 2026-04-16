@@ -32,7 +32,7 @@ export const resultCards: ResultCard[] = [
     id: 'hazard-characterization',
     title: 'Step 3 — Hazard Characterization',
     subtitle: '808 grid points · storm catalogs + 7 analysis submodules · 1993–2025',
-    status: 'in-progress',
+    status: 'done',
     description:
       'Central analysis block: independent storm catalogs for Hₛ and SSH_total (q90/q90), '
       + 'followed by compound detection, duration/persistence, monthly seasonality, '
@@ -52,7 +52,7 @@ export const resultCards: ResultCard[] = [
       '3.7: Kendall τ, Spearman ρ, extremal χ and χ̄ for Hs–SSH compound pairs',
       '3.8: Unified JSON for interactive maps on the results website',
     ],
-    href: '/results/storm-maps',
+    href: '/results/hazard-characterization',
     parts: [
       '3.1 — Storm Catalogs',
       '3.2 — Compound Detection',

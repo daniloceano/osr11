@@ -2,7 +2,7 @@
 
 **Part of the OSR11 Pipeline**  
 **Location:** `src/03_storm_catalog_generation/`  
-**Status:** In progress — storm catalogs generated, submodules 3.2–3.8 implemented  
+**Status:** Complete — all 8 submodules implemented, executed, and validated  
 **Preceded by:** Step 2 (Threshold Calibration, complete)  
 **Followed by:** Step 4 (Exposure Analysis)
 
@@ -15,7 +15,7 @@ storm catalogs (Submodule 3.1), then runs seven additional analysis submodules:
 
 | Submodule | Directory | Description |
 |-----------|-----------|-------------|
-| 3.1 Storm Catalogs | `main.py`, `segmentation.py` | POT detection + episode clustering |
+| 3.1 Storm Catalogs | `01_storm_catalogs/main.py` | POT detection + episode clustering |
 | 3.2 Compound Detection | `02_compound_detection/` | Temporal overlap → compound events |
 | 3.3 Duration & Persistence | `03_duration_persistence/` | Per-grid duration/inter-event stats |
 | 3.4 Monthly Seasonality | `04_monthly_seasonality/` | Monthly climatology, peak month |
@@ -24,11 +24,40 @@ storm catalogs (Submodule 3.1), then runs seven additional analysis submodules:
 | 3.7 Dependence | `07_dependence/` | Hs–SSH τ, ρ, χ, χ̄ |
 | 3.8 Site Export | `08_site_export/` | Unified JSON for results website |
 
+### Architecture
+
+```
+src/03_storm_catalog_generation/
+├── __init__.py                        # Architecture docs
+├── hazard_characterization.py         # Orchestrator for 3.2–3.8
+├── config/
+│   ├── __init__.py
+│   └── analysis_config.py             # All Step 3 configuration
+├── shared/
+│   ├── __init__.py
+│   └── catalog_utils.py               # Shared I/O helpers for 3.2–3.8
+├── 01_storm_catalogs/
+│   ├── __init__.py
+│   ├── main.py                        # 4-phase catalog pipeline (711 lines)
+│   ├── io.py                          # I/O helpers
+│   ├── segmentation.py                # Core POT/episode clustering
+│   ├── metrics.py                     # Per-episode attributes
+│   ├── figures.py                     # QA diagnostic plots
+│   └── tides.py                       # FES2022 wrapper
+├── 02_compound_detection/detection.py
+├── 03_duration_persistence/persistence.py
+├── 04_monthly_seasonality/seasonality.py
+├── 05_trends/trends.py
+├── 06_univariate_eva/eva.py
+├── 07_dependence/dependence.py
+└── 08_site_export/export.py
+```
+
 ### Running
 
 ```bash
-# 3.1 — Storm catalogs
-conda run -n osr python -m src.03_storm_catalog_generation.main --mode brazil
+# 3.1 — Storm catalogs (production, full Brazil)
+conda run -n osr python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode brazil
 
 # 3.2–3.8 — All submodules
 conda run -n osr python -m src.03_storm_catalog_generation.hazard_characterization --module all

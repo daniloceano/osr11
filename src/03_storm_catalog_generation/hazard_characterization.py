@@ -26,7 +26,7 @@ Prerequisites
     - Storm catalogs: outputs/storm_catalog/catalog_hs_storms.json
                       outputs/storm_catalog/catalog_ssh_total_storms.json
     - Run metadata:   outputs/storm_catalog/logs/run_metadata.json
-    These are produced by ``python -m src.03_storm_catalog_generation.main``.
+    These are produced by ``python -m src.03_storm_catalog_generation.01_storm_catalogs.main``.
 """
 from __future__ import annotations
 
@@ -78,8 +78,8 @@ def run_duration():
     log.info("═" * 60)
     log.info("MODULE: Duration & Persistence")
     log.info("═" * 60)
-    results = mod.run_persistence()
-    mod.save_persistence_results(results)
+    results = mod.run_duration_persistence()
+    mod.save_duration_results(results)
     n = len(results.get("grid_results", []))
     log.info("Duration/persistence complete: %d grid points", n)
 

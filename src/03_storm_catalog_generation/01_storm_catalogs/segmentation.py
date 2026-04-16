@@ -20,7 +20,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .config import analysis_config as cfg
+from ..config import analysis_config as cfg
 from .metrics import compute_episode_attributes
 
 log = logging.getLogger(__name__)

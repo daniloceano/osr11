@@ -8,7 +8,7 @@ coastal grid point.
 Usage
 -----
     cd <project_root>
-    python -m src.03_storm_catalog_generation.main [--all | --phase PHASE]
+    python -m src.03_storm_catalog_generation.01_storm_catalogs.main [--all | --phase PHASE]
 
 Phases
 ------
@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .config import analysis_config as cfg
+from ..config import analysis_config as cfg
 
 log = logging.getLogger("step3")
 

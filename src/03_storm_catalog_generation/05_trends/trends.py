@@ -286,7 +286,7 @@ def build_annual_series(
 
     hs_storms = key_hs.get("storms", []) if key_hs else []
     ssh_storms = key_ssh.get("storms", []) if key_ssh else []
-    compound_key = (round(grid_lat, 5), round(grid_lon, 5))
+    compound_key = (round(grid_lat, 4), round(grid_lon, 4))
     compound_events = compound_catalog.get(compound_key, [])
 
     # Initialize annual arrays
@@ -390,7 +390,7 @@ def run_trends(
         with open(compound_path) as f:
             compound_data = json.load(f)
         for gp in compound_data:
-            key = (round(gp["grid_lat"], 5), round(gp["grid_lon"], 5))
+            key = (round(gp["grid_lat"], 4), round(gp["grid_lon"], 4))
             compound_catalog[key] = gp.get("compound_events", [])
 
     # Build grid point list from Hs catalog

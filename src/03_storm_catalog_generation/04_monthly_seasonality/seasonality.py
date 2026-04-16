@@ -132,7 +132,7 @@ def run_seasonality(
         with open(compound_path) as f:
             compound_data = json.load(f)
         for gp in compound_data:
-            key = (round(gp["grid_lat"], 5), round(gp["grid_lon"], 5))
+            key = (round(gp["grid_lat"], 4), round(gp["grid_lon"], 4))
             compound_catalog[key] = gp.get("compound_events", [])
 
     ssh_index = build_grid_index(ssh_catalog)
@@ -141,7 +141,7 @@ def run_seasonality(
     for hs_gp in hs_catalog:
         lat = hs_gp["grid_lat"]
         lon = hs_gp["grid_lon"]
-        key = (round(lat, 5), round(lon, 5))
+        key = (round(lat, 4), round(lon, 4))
 
         ssh_gp = ssh_index.get(key)
         hs_storms = hs_gp.get("storms", [])
