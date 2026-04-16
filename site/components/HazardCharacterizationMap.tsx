@@ -121,9 +121,16 @@ const RAMP_DIVERGING = [
   '#fddbc7', '#f4a582', '#d6604d', '#b2182b',
 ];
 
+// Cyclic seasonal ramp: DJF=red, MAM=yellow, JJA=blue, SON=green, Dec→red
 const RAMP_MONTH = [
-  '#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf',
-  '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026', '#67001f',
+  '#d73027', '#fc8d59',   // Jan, Feb  — DJF (red)
+  '#fec44f', '#fee090',   // Mar, Apr  — MAM (yellow)
+  '#d9ef8b',              // May       — MAM→JJA transition
+  '#91bfdb', '#4575b4',   // Jun, Jul  — JJA (blue)
+  '#313695',              // Aug       — JJA (deep blue)
+  '#1a9850', '#66bd63',   // Sep, Oct  — SON (green)
+  '#a6d96a',              // Nov       — SON→DJF transition
+  '#a50026',              // Dec       — DJF (dark red, closing cycle)
 ];
 
 function getRamp(tab: AnalysisTab, field: string): string[] {
@@ -416,20 +423,38 @@ export default function HazardCharacterizationMap({ data, coastline }: Props) {
           <div className="mb-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
             {metric.label}
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-gray-500 font-mono w-12 text-right">
-              {isMonth ? 'Jan' : fmtVal(vMin, metric.unit)}
-            </span>
-            <div
-              className="h-3 w-24 rounded-sm"
-              style={{ background: `linear-gradient(to right, ${ramp.join(', ')})` }}
-            />
-            <span className="text-[10px] text-gray-500 font-mono w-12">
-              {isMonth ? 'Dec' : fmtVal(vMax, metric.unit)}
-            </span>
-          </div>
-          {isDiverging && (
-            <div className="mt-0.5 text-center text-[9px] text-gray-400">← decrease · increase →</div>
+          {isMonth ? (
+            <>
+              <div
+                className="h-3 w-full rounded-sm"
+                style={{ background: `linear-gradient(to right, ${ramp.join(', ')})` }}
+              />
+              <div className="mt-1 flex justify-between text-[9px] text-gray-500 font-medium">
+                <span style={{ color: '#d73027' }}>DJF</span>
+                <span style={{ color: '#fec44f' }}>MAM</span>
+                <span style={{ color: '#4575b4' }}>JJA</span>
+                <span style={{ color: '#1a9850' }}>SON</span>
+                <span style={{ color: '#a50026' }}>D</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-gray-500 font-mono w-12 text-right">
+                  {fmtVal(vMin, metric.unit)}
+                </span>
+                <div
+                  className="h-3 w-24 rounded-sm"
+                  style={{ background: `linear-gradient(to right, ${ramp.join(', ')})` }}
+                />
+                <span className="text-[10px] text-gray-500 font-mono w-12">
+                  {fmtVal(vMax, metric.unit)}
+                </span>
+              </div>
+              {isDiverging && (
+                <div className="mt-0.5 text-center text-[9px] text-gray-400">← decrease · increase →</div>
+              )}
+            </>
           )}
         </div>
       </div>
