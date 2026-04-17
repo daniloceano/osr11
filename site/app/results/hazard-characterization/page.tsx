@@ -107,7 +107,9 @@ export default function HazardCharacterizationPage() {
                 <p>
                   <strong className="text-gray-800">Dependence structure.</strong>{' '}
                   Kendall&apos;s τ and Spearman&apos;s ρ measure rank correlation between Hₛ and SSH_total peaks in compound events.
-                  Extremal dependence coefficients χ (asymptotic) and χ̄ (sub-asymptotic) quantify joint tail behavior.
+                  Extremal dependence coefficients χ (asymptotic) and χ̄ (sub-asymptotic) quantify joint tail behavior;
+                  χ̄ is most informative when χ ≈ 0, indicating the strength of residual tail association under asymptotic independence
+                  (Ledford &amp; Tawn, 1996).
                 </p>
                 <p>
                   <strong className="text-gray-800">Limitations.</strong>{' '}

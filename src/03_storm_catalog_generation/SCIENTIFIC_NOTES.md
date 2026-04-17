@@ -305,30 +305,36 @@ Paired samples: $(H_s^{\text{peak}},\, \text{SSH}_{\text{total}}^{\text{peak}})$
 
 **Spearman's ρ**: monotone rank correlation.
 
-**Extremal dependence coefficient χ** (Coles et al. 1999):
+**Extremal dependence coefficient χ** (Coles, Heffernan & Tawn, 1999):
 $$
 \chi = \lim_{u \to 1} P\bigl(F_Y(Y) > u \mid F_X(X) > u\bigr)
 $$
 
-Estimated empirically at quantile $u = 0.95$. χ > 0 indicates asymptotic dependence.
+Estimated empirically at quantile $u = 0.95$. If χ > 0, the variables are **asymptotically dependent** — their extremes tend to co-occur even in the limit. If χ = 0, they are **asymptotically independent**.
 
-**Sub-asymptotic coefficient χ̄**:
+**Sub-asymptotic coefficient χ̄** (Ledford & Tawn, 1996; 1997; Coles et al., 1999):
 $$
 \bar{\chi} = \frac{2\log P(F_X(X) > u)}{\log P(F_X(X) > u,\, F_Y(Y) > u)} - 1
 $$
 
-Interpretation: χ̄ = 1 (perfect dependence), χ̄ = 0 (independence), χ̄ < 0 (negative dependence).
+**Interpretation — χ and χ̄ must be read jointly**:
+- If **χ > 0**: asymptotic dependence; χ̄ = 1 by definition and is not informative.
+- If **χ = 0** (asymptotic independence): χ̄ ∈ (−1, 1] measures the **residual strength** or **rate of decay** toward independence in the joint tail.
+  - χ̄ close to 1: the joint tail decays slowly (strong sub-asymptotic association — "near-dependence").
+  - χ̄ close to 0: faster decay toward independence.
+  - χ̄ < 0: negative association in the tails (rare in metocean compound events).
+
+In practice, with n ≈ 250–320 compound events per grid point and the empirical estimator at u = 0.95, the effective number of pairs above threshold is ~12–16. This makes the distinction between χ = 0 (asymptotic independence) and small positive χ unreliable. **The χ/χ̄ values reported here should be interpreted as screening diagnostics, not as definitive classifications of the tail dependence class.** Rigorous classification would require bootstrap confidence intervals or parametric tail models (e.g., bivariate threshold exceedances), which are deferred to future bivariate EVA.
 
 **Minimum samples**: τ/ρ require ≥ 5 pairs; χ/χ̄ require ≥ 20 compound events for stable tail estimates.
 
-Reference: Camus et al. (2021), *Earth's Future*, e2021EF002055.
+Reference: Coles et al. (1999); Ledford & Tawn (1996, 1997); Camus et al. (2021).
 
 ---
 
 ## References
 
-- Camus, P., et al. (2021). Coastal compound flooding potential and present sensitivity to sea-level rise. *Earth's Future*, 9, e2021EF002055. https://doi.org/10.1029/2021EF002055
-- Cavaleri, L., et al. (2024). Wave climate variability in the South Atlantic. *Ocean Modelling*, 191, 102415.
+- Camus, P., Haigh, I. D., Nasr, A. A., Wahl, T., Darby, S. E., & Nicholls, R. J. (2021). Regional analysis of multivariate compound flooding potential: sensitivity analysis and spatial patterns. *Natural Hazards and Earth System Sciences*, 21, 2021–2042. https://doi.org/10.5194/nhess-21-2021-2021
 - Coles, S. (2001). *An Introduction to Statistical Modeling of Extreme Values*. Springer.
 - Coles, S. G., Heffernan, J. E., & Tawn, J. A. (1999). Dependence measures for extreme value analyses. *Extremes*, 2(4), 339–365.
 - Davison, A. C. & Smith, R. L. (1990). Models for exceedances over high thresholds. *JRSS-B*, 52, 393–442.
@@ -336,10 +342,14 @@ Reference: Camus et al. (2021), *Earth's Future*, e2021EF002055.
 - Hamed, K. H. & Rao, A. R. (1998). A modified Mann-Kendall trend test for autocorrelated data. *J. Hydrology*, 204, 182–196.
 - Kendall, M. G. (1975). *Rank Correlation Methods*. Griffin, London.
 - Law-Chune, S., et al. (2021). WAVERYS: a CMEMS global wave reanalysis during the altimetry period. *Ocean Dynamics*, 71, 357–379. https://doi.org/10.1007/s10236-020-01433-w
-- Lellouche, J.-M., et al. (2021). The Copernicus Global 1/12° Oceanic and Sea Ice GLORYS12 Reanalysis. *Front. Earth Sci.*, 9, 698876. https://doi.org/10.3389/feart.2021.698876
-- Lyard, F. H., et al. (2021). FES2014 global ocean tide atlas: design and performance. *Ocean Science*, 17(3), 615–649. https://doi.org/10.5194/os-17-615-2021
+- Ledford, A. W. & Tawn, J. A. (1996). Statistics for near independence in multivariate extreme values. *Biometrika*, 83(1), 169–187.
+- Ledford, A. W. & Tawn, J. A. (1997). Modelling dependence within joint tail regions. *Journal of the Royal Statistical Society: Series B*, 59(2), 475–499.
+- Lellouche, J.-M., Greiner, E., Bourdallé-Badie, R., Garric, G., Melet, A., Drévillon, M., et al. (2021). The Copernicus Global 1/12° Oceanic and Sea Ice GLORYS12 Reanalysis. *Frontiers in Earth Science*, 9, 698876. https://doi.org/10.3389/feart.2021.698876
+- Lyard, F. H., Lefevre, F., Letellier, T., & Francis, O. (2021). FES2014 global ocean tide atlas: design and performance. *Ocean Science*, 17(3), 615–649. https://doi.org/10.5194/os-17-615-2021 *(Note: no peer-reviewed publication exists for FES2022; the FES2014 paper describes the model framework. FES2022 is documented in Carrere, L. et al. (2022), "A new barotropic tide model for global ocean: FES2022", Ocean Surface Topography Science Team Meeting, conference abstract.)*
 - Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13(3), 245–259.
-- Petroliagkis, T. I., et al. (2018). Statistical dependence between storm surge, wave height and wave period in European waters. *Coastal Engineering*, 133, 34–47.
+- Petroliagkis, T. I. (2018). Estimations of statistical dependence as joint return period modulator of compound events — Part 1: Storm surge and wave height. *Natural Hazards and Earth System Sciences*, 18, 1937–1953. https://doi.org/10.5194/nhess-18-1937-2018
 - Reguero, B. G., Losada, I. J., & Méndez, F. J. (2019). A recent increase in global wave power as a consequence of oceanic warming. *Nature Communications*, 10(1), 205. https://doi.org/10.1038/s41467-018-08066-0
 - Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall's tau. *JASA*, 63(324), 1379–1389.
+- Wahl, T., Jain, S., Bender, J., Meyers, S. D., & Luther, M. E. (2015). Increasing risk of compound flooding from storm surge and rainfall for major US cities. *Nature Climate Change*, 5, 1093–1097. https://doi.org/10.1038/nclimate2736
+- Yue, S., Pilon, P., Phinney, B., & Cavadias, G. (2002). The influence of autocorrelation on the ability to detect trend in hydrological series. *Hydrological Processes*, 16(9), 1807–1829.
 - Zscheischler, J., et al. (2020). A typology of compound weather and climate events. *Nature Reviews Earth & Environment*, 1, 333–347. https://doi.org/10.1038/s43017-020-0060-z

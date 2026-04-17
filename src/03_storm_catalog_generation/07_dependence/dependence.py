@@ -26,14 +26,18 @@ Minimum sample size:
     τ and ρ require a minimum of 5 paired samples.
 
 References:
-    - Camus, P., et al. (2021). Coastal compound flooding potential and
-      present sensitivity to sea-level rise. Earth's Future, 9,
-      e2021EF002055. (τ, ρ, tail dependence)
-    - Petroliagkis, T. I., et al. (2018). Statistical dependence between
-      storm surge, wave height and wave period in European waters.
-      Coastal Engineering, 133, 34–47.
     - Coles, S. G., Heffernan, J. E. & Tawn, J. A. (1999). Dependence
       measures for extreme value analyses. Extremes, 2, 339–365.
+    - Ledford, A. W. & Tawn, J. A. (1996). Statistics for near independence
+      in multivariate extreme values. Biometrika, 83(1), 169–187.
+    - Ledford, A. W. & Tawn, J. A. (1997). Modelling dependence within
+      joint tail regions. JRSS-B, 59(2), 475–499.
+    - Camus, P., Haigh, I. D., Nasr, A. A., Wahl, T., Darby, S. E., &
+      Nicholls, R. J. (2021). Regional analysis of multivariate compound
+      flooding potential. NHESS, 21, 2021–2042.
+    - Petroliagkis, T. I. (2018). Estimations of statistical dependence as
+      joint return period modulator of compound events — Part 1: Storm
+      surge and wave height. NHESS, 18, 1937–1953.
 """
 from __future__ import annotations
 
@@ -107,10 +111,13 @@ def compute_chi_bar(u: np.ndarray, v: np.ndarray, quantile: float = 0.95) -> flo
 
     χ̄ = 2 * log(P(F_X(X) > u)) / log(P(F_X(X) > u, F_Y(Y) > u)) - 1
 
-    Interpretation:
-        χ̄ = 1: perfect dependence
-        χ̄ = 0: independence
-        χ̄ < 0: negative dependence
+    Interpretation (must be read jointly with χ):
+        If χ > 0: asymptotic dependence; χ̄ = 1 by definition (not informative).
+        If χ = 0 (asymptotic independence): χ̄ ∈ (−1, 1] measures residual
+        strength of tail association (Ledford & Tawn, 1996; 1997).
+            χ̄ close to 1: slow decay → strong sub-asymptotic association
+            χ̄ close to 0: faster decay toward independence
+            χ̄ < 0: negative tail association
 
     Parameters
     ----------

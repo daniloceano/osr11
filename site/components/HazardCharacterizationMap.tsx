@@ -103,8 +103,8 @@ const METRICS: Record<AnalysisTab, MetricDef[]> = {
   dependence: [
     { key: 'tau', label: "Kendall's τ", unit: '–', field: 'tau', description: 'Rank correlation between Hₛ and SSH peaks in compound events' },
     { key: 'rho', label: "Spearman's ρ", unit: '–', field: 'rho' },
-    { key: 'chi', label: 'Extremal χ', unit: '–', field: 'chi', description: 'Tail dependence coefficient' },
-    { key: 'chi_bar', label: 'Extremal χ̄', unit: '–', field: 'chi_bar' },
+    { key: 'chi', label: 'Extremal χ', unit: '–', field: 'chi', description: 'Asymptotic tail dependence: χ > 0 means extremes tend to co-occur in the limit' },
+    { key: 'chi_bar', label: 'Extremal χ̄', unit: '–', field: 'chi_bar', description: 'Sub-asymptotic association: informative when χ ≈ 0; higher χ̄ = stronger residual tail dependence' },
     { key: 'n_pairs', label: 'Compound pairs', unit: 'events', field: 'n_compound_pairs' },
   ],
 };
