@@ -38,7 +38,7 @@ export default function Hero() {
 
         {/* Abstract */}
         <p className="mb-8 max-w-3xl text-base leading-relaxed text-gray-600">
-          Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast face compound coastal flooding—where meteorological tides (storm surges) coincide with extreme wave events. This project quantifies these joint hazards using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS), validates detection frameworks against observed disasters, and integrates exposure and vulnerability data to produce coastal risk maps for adaptation planning.
+          Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast face compound coastal flooding—where meteorological tides (storm surges) coincide with extreme wave events. This project quantifies these joint hazards using CMEMS multiyear reanalyses (GLORYS12 and WAVERYS) across 808 coastal grid points (1993–2025). Reported disaster records support threshold calibration. Hazard characterization is integrated with municipal-scale exposure spatialization and social vulnerability to produce compound coastal risk indices for adaptation planning.
         </p>
 
         {/* Stat chips */}
@@ -47,7 +47,7 @@ export default function Hero() {
             { label: 'Study Period', value: '1993–2025' },
             { label: 'Wave Data', value: 'WAVERYS (CMEMS)' },
             { label: 'Sea-Level Data', value: 'GLORYS12 (CMEMS)' },
-            { label: 'Current Domain', value: 'Santa Catarina coast' },
+            { label: 'Domain', value: 'Full Brazilian coast' },
           ].map((stat) => (
             <div
               key={stat.label}

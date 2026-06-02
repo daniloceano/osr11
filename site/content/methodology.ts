@@ -138,44 +138,59 @@ export const methodologySteps: MethodStep[] = [
   },
   {
     id: 'step-4',
-    label: 'STEP 4 — Exposure Analysis',
+    label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
     description:
-      'Quantify compound hazard exposure: mean annual frequency, intensity, temporal trends, and recurrence. Combine into a Compound Exposure Hazard Index.',
-    status: 'planned',
+      'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal / INPE). '
+      + 'Exposure is operationalized through spatial association of oceanic hazard metrics with coastal municipalities. '
+      + 'SVI_Coast_2022 was constructed from 10 IBGE Census variables via PCA for 281 municipalities (0–100). '
+      + 'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3. '
+      + 'Risk_Comp = (SVI/100) × norm(compound_c); Risk_Hazard = (SVI/100) × Hazard_Index.',
+    status: 'done',
     stepNumber: 4,
+    subSteps: [
+      {
+        id: 'step-4-1',
+        label: '4.1 — Exposure Spatialization',
+        description:
+          'Oceanic grid-point hazard metrics converted to shapefile and associated with coastal municipalities via spatial join. '
+          + 'The nearest grid point with the highest compound_c value is spatially overlaid per municipality.',
+        status: 'done',
+      },
+      {
+        id: 'step-4-2',
+        label: '4.2 — Social Vulnerability Index (SVI_Coast_2022)',
+        description:
+          'Ten IBGE Census 2022 variables (pop_house, pop_rent, pop_poverty, pop_agevul, pop_nonwhite, pop_illiterate, '
+          + 'pop_nowater, pop_nosewage, pop_nogarbage, pop_nopaving) standardized with StandardScaler, submitted to PCA. '
+          + 'PC1 sign adjusted so higher values = higher vulnerability. Normalized 0–100.',
+        status: 'done',
+      },
+      {
+        id: 'step-4-3',
+        label: '4.3 — Hazard Index & Risk Indices',
+        description:
+          'Hazard_Index = mean of norm(compound_c), norm(mean_overl), norm(mean_compo). '
+          + 'Risk_Comp = (SVI/100) × norm(compound_c). Risk_Hazard = (SVI/100) × Hazard_Index.',
+        status: 'done',
+      },
+    ],
   },
   {
     id: 'step-5',
-    label: 'STEP 5 — Vulnerability Analysis',
-    description:
-      'Construct coastal vulnerability index integrating social indicators (IBGE), physical-territorial variables (Macrodiagnóstico da Zona Costeira), and historical damage records (S2ID/Atlas Digital).',
-    status: 'planned',
-    stepNumber: 5,
-  },
-  {
-    id: 'step-6',
-    label: 'STEP 6 — Risk Integration',
-    description:
-      'Produce coastal risk maps by combining hazard, exposure, and vulnerability components. Generate risk classes and identify priority hotspots for adaptation planning.',
-    status: 'planned',
-    stepNumber: 6,
-  },
-  {
-    id: 'step-7',
-    label: 'STEP 7 — Physical Interpretation (Optional)',
+    label: 'STEP 5 — Physical Interpretation (Optional)',
     description:
       'Select the most severe compound events and characterize synoptic conditions using ERA5. Discuss dominant atmospheric mechanisms and assess uncertainties.',
     status: 'planned',
-    stepNumber: 7,
+    stepNumber: 5,
   },
 ];
 
 export const conceptualFramework = `
 The project is structured around a hazard–exposure–vulnerability–risk framework, following
 established practices in multi-hazard coastal risk assessment. The compound hazard component
-(wave and surge extremes) is the primary focus of the current phase. Exposure and vulnerability
-integration will follow once the hazard characterisation is validated and scaled to the
-full study domain.
+(wave and surge extremes) is the foundation. Hazard characterization is complete for the full
+Brazilian coast (808 grid points, 1993–2025). Exposure spatialization, social vulnerability,
+and risk integration are complete at municipal scale (281 coastal municipalities).
 
 The joint exceedance framework defines compound events as episodes in which both Hₛ and
 SSH_total (= GLORYS12 SSH + FES2022 astronomical tide, daily maximum) exceed their respective
@@ -183,10 +198,15 @@ extreme thresholds within a causal/antecedent matching window. The detection thr
 (Hₛ=q90, SSH_total=q90) are empirically established by Step 2e (PU Composite Calibration),
 which applies a positive-unlabeled framework against a combined positive-event set (147 events,
 27 municipalities) to address systematic under-reporting in the Civil Defense disaster database.
-The matching window [D-2, D-1, D, D+1 00Z] was established in Steps 2b–2d and is inherited
-by Step 2e. The CSI grid scan (Step 2d) served as a diagnostic exploration and confirmed
-that classical verification metrics are not suitable under database incompleteness (FAR=0.984).
-This approach follows Zscheischler et al. (2020) and Bekker and Davis (2020), consistent with
-the physical understanding that wave generation and surge propagation are driven by the same
-atmospheric systems at the regional scale.
+Reported coastal disaster records supported threshold selection and calibration — they are not
+a separate downstream validation product. The CSI grid scan (Step 2d) served as a diagnostic
+exploration and confirmed that classical verification metrics are not suitable under database
+incompleteness (FAR=0.984). This approach follows Zscheischler et al. (2020) and Bekker and
+Davis (2020), consistent with the physical understanding that wave generation and surge
+propagation are driven by the same atmospheric systems at the regional scale.
+
+Exposure is operationalized through spatial association of oceanic hazard metrics with coastal
+municipalities. The Social Vulnerability Index (SVI_Coast_2022, Lima et al. 2024) integrates
+10 IBGE Census 2022 variables via PCA for 281 municipalities. Risk indices (Risk_Comp and
+Risk_Hazard) combine SVI with compound-event frequency and Hazard_Index.
 `;

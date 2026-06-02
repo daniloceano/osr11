@@ -29,10 +29,10 @@ export const projectMeta = {
     },
   ],
   status: 'in-progress' as const,
-  statusLabel: 'Methodology Development and Exploratory Analysis',
+  statusLabel: 'Hazard Characterization Complete — Exposure, Vulnerability & Risk Integration Underway',
   dataRange: '1993–2025',
   region: 'South Atlantic Eastern Coast of Brazil',
-  focus: 'Santa Catarina coast — full domain (5 sectors)',
+  focus: 'Full Brazilian coast (808 grid points)',
 };
 
 export const projectContext = `
@@ -44,7 +44,7 @@ Isolated extreme wave or surge events already pose severe hazards. When they co-
 `;
 
 export const generalObjective = `
-Quantify the joint occurrence, intensity, and temporal structure of sea-level extremes and significant wave height extremes along the eastern coast of Brazil using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS), validate the compound event framework against observed coastal disaster events, and integrate hazard characterization with exposure and vulnerability data to produce coastal risk maps and identify priority hotspots for adaptation planning.
+Quantify the joint occurrence, intensity, and temporal structure of sea-level extremes and significant wave height extremes along the eastern coast of Brazil using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS). Reported coastal disaster records support threshold calibration through a CSI grid scan and a PU composite framework. Hazard characterization is integrated with municipal-scale exposure spatialization and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
 `;
 
 export const specificObjectives: ProjectObjective[] = [
@@ -54,9 +54,9 @@ export const specificObjectives: ProjectObjective[] = [
       'Compile, harmonize, and quality-check CMEMS oceanographic reanalyses (GLORYS12, WAVERYS), ERA5 atmospheric forcing, and Brazilian coastal disaster databases (S2ID, Atlas Digital, SC Civil Defense).',
   },
   {
-    label: 'Threshold calibration and validation',
+    label: 'Threshold calibration',
     description:
-      'Calibrate extreme event thresholds for sea level and significant wave height by comparing detected storms with historically reported disasters in Santa Catarina, establishing a pragmatic, empirically validated detection framework.',
+      'Calibrate extreme event thresholds for sea level and significant wave height using historically reported disasters in Santa Catarina as supporting evidence, establishing an empirically grounded detection framework through CSI grid scan (diagnostic) and PU Composite Calibration (final). Reported disasters support threshold selection, not a separate downstream validation product.',
   },
   {
     label: 'Storm catalog construction',
@@ -69,19 +69,19 @@ export const specificObjectives: ProjectObjective[] = [
       'Identify compound wave–surge events based on temporal overlap of independent storms, quantifying co-occurrence statistics, peak time lags, and overlap durations.',
   },
   {
-    label: 'Exposure mapping',
+    label: 'Exposure spatialization',
     description:
-      'Produce spatial exposure maps of compound event frequency, intensity, and temporal trends along the Brazilian coast.',
+      'Operationalize exposure through spatial association between oceanic compound-event hazard metrics and Brazilian coastal municipalities. Oceanic grid-point hazard metrics (frequency, duration, intensity) are assigned to municipalities through spatial join, so that municipalities adjacent to greater compound-event hazard are considered more exposed.',
   },
   {
-    label: 'Vulnerability integration',
+    label: 'Social vulnerability index',
     description:
-      'Integrate exposure layers with coastal vulnerability data—social indicators (IBGE), physical-territorial variables (Macrodiagnóstico da Zona Costeira e Marinha), and historical damage records—to construct a Vulnerability Index.',
+      'Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 281 coastal municipalities. Variables covering crowding, poverty, age vulnerability, race, literacy, and basic infrastructure are standardized with StandardScaler and submitted to PCA; PC1 (adjusted to increase with vulnerability) is normalized to 0–100.',
   },
   {
     label: 'Coastal risk mapping',
     description:
-      'Generate coastal risk maps by combining hazard, exposure, and vulnerability components, identifying priority hotspots for targeted adaptation measures.',
+      'Generate compound coastal risk indices (Risk_Comp and Risk_Hazard) by combining SVI_Coast_2022 with compound-event frequency and Hazard_Index, identifying priority hotspots for targeted adaptation measures.',
   },
   {
     label: 'Physical interpretation',
@@ -108,7 +108,7 @@ export const conceptualFramework = {
     },
     {
       term: 'Exposure',
-      definition: 'The spatial frequency, intensity, and duration of compound events at coastal locations, quantifying where and when hazards occur.'
+      definition: 'The spatial association between oceanic compound-event hazard metrics and Brazilian coastal municipalities. Oceanic grid points containing hazard metrics (frequency, duration, intensity) are assigned to adjacent coastal municipalities through spatial join. Municipalities adjacent to greater frequency, duration, and intensity of compound events are considered more exposed to the hazard.'
     },
     {
       term: 'Vulnerability',
@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Santa Catarina (SC) coast, using GLORYS12 and WAVERYS reanalyses interpolated to a common WAVERYS spatial grid (~29.4°S to 26.0°S). Step 1 (Data Preparation) is complete. Step 2 (Threshold Calibration) is complete: all five sub-steps are done. Steps 2a–2d established and diagnostically confirmed the q90/q90 threshold pair (CSI=0.0151). Step 2e (PU Composite Calibration) performed an independent threshold sweep using the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020) and a PU composite score — independently confirming q90/q90 (R_pos=0.268, robust to all sensitivity experiments). B_target_effective = 12 × 27 = 324 ep/yr. Step 3 (Storm Catalog Generation) is next.
+The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is underway: Karine Bastos Leal has produced SVI_Coast_2022 for 281 coastal municipalities and integrated it with hazard metrics to generate Hazard_Index, Risk_Comp, and Risk_Hazard indices.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -220,80 +220,86 @@ export const timelinePhases: TimelinePhase[] = [
   },
   {
     id: 'step-3',
-    label: 'STEP 3 — Storm Catalog Generation',
-    description: 'Construct independent storm catalogs for sea-level and wave extremes at each coastal grid point using calibrated thresholds (q90/q90 from Step 2d). Apply POT to the full 1993–2025 series; merge consecutive exceedances into discrete storm events; record start, end, duration, peak, and integrated intensity.',
-    status: 'planned',
+    label: 'STEP 3 — Hazard Characterization',
+    description: 'Storm catalog generation and full hazard characterization suite across the complete Brazilian coast. Applies PU-optimal q90/q90 thresholds to the full 1993–2025 record; 808 coastal grid points.',
+    status: 'done',
     stepNumber: 3,
     tasks: [
-      'Identify Hₛ and SSH_total threshold exceedances at each grid point',
-      'Merge consecutive exceedances into discrete storm events',
-      'Record start, end, duration, peak, integrated intensity',
-      'Save catalogs in structured JSON format',
+      '404,535 Hₛ + 324,929 SSH_total storm episodes generated ✓',
+      '~96k compound events detected across 808 coastal grid points ✓',
+      'Duration, seasonality, Mann–Kendall trends, POT–GPD EVA complete ✓',
+      'Hs–SSH dependence (τ, ρ, χ, χ̄) and site-export JSON complete ✓',
+    ],
+    subSteps: [
+      {
+        id: 'step-3-1',
+        label: '3.1 — Storm Catalogs',
+        description: 'POT detection + episode clustering on the full 1993–2025 record. 808 coastal grid points, 404k Hₛ storms, 325k SSH_total storms.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-2',
+        label: '3.2 — Compound Detection',
+        description: 'Temporal overlap of Hₛ/SSH_total storms → ~96k compound events. Union-find grouping, overlap duration, peak lag, normalized intensity.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-3',
+        label: '3.3 — Duration & Persistence',
+        description: 'Per-grid-point persistence statistics: mean/p95/max duration, inter-event times, integrated intensity.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-4',
+        label: '3.4 — Monthly Seasonality',
+        description: 'Monthly counts, peak month, seasonal split (DJF/MAM/JJA/SON) for Hₛ, SSH_total, and compound events.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-5',
+        label: '3.5 — Trend Analysis',
+        description: 'Mann–Kendall + Sen slope for 9 annual series. Modified MK (Hamed & Rao 1998) when autocorrelation detected.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-6',
+        label: '3.6 — Univariate EVA',
+        description: 'POT–GPD on declustered storm peaks. Return levels for 2, 5, 10, 20, 50 years with delta-method confidence intervals.',
+        status: 'done',
+      },
+      {
+        id: 'step-3-7',
+        label: '3.7 — Dependence Analysis',
+        description: "Hs–SSH_total statistical dependence from compound event pairs: Kendall's τ, Spearman's ρ, extremal dependence χ and χ̄.",
+        status: 'done',
+      },
+      {
+        id: 'step-3-8',
+        label: '3.8 — Site Export',
+        description: 'Unified JSON export of all metrics for the results website interactive maps.',
+        status: 'done',
+      },
     ],
   },
   {
     id: 'step-4',
-    label: 'STEP 4 — Compound Event Detection',
-    description: 'Identify compound events as temporal overlaps between sea-level storms and wave storms.',
-    status: 'planned',
+    label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
+    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces SVI_Coast_2022, Hazard_Index, Risk_Comp, and Risk_Hazard for 281 coastal municipalities.',
+    status: 'done',
     stepNumber: 4,
     tasks: [
-      'Compare sea-level and wave storm catalogs at each grid point',
-      'Classify compound events based on temporal overlap criterion',
-      'Record overlap duration, peak time lag, joint intensity',
-      'Compute annual frequency, seasonality, spatial distribution',
+      'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (281 municipalities) ✓',
+      'Exposure operationalized through spatial join of oceanic hazard metrics to municipalities ✓',
+      'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3 ✓',
+      'Risk_Comp = (SVI/100) × norm(compound_c); Risk_Hazard = (SVI/100) × Hazard_Index ✓',
     ],
   },
   {
     id: 'step-5',
-    label: 'STEP 5 — Exposure Analysis',
-    description: 'Quantify compound hazard exposure: frequency, intensity, trends, and recurrence along the SC coast.',
+    label: 'STEP 5 — Physical Interpretation (Optional)',
+    description: 'Characterize the synoptic and mesoscale atmospheric conditions (ERA5) associated with the most severe compound events, linking statistical hazard products to physical drivers.',
     status: 'planned',
     stepNumber: 5,
-    tasks: [
-      'Compute mean annual frequency of compound events',
-      'Calculate intensity metrics and overlap duration statistics',
-      'Estimate temporal trends (linear/non-parametric)',
-      'Normalize and combine into Compound Exposure Hazard Index',
-    ],
-  },
-  {
-    id: 'step-6',
-    label: 'STEP 6 — Vulnerability Analysis',
-    description: 'Construct coastal vulnerability index integrating social, physical-territorial, and historical damage layers.',
-    status: 'planned',
-    stepNumber: 6,
-    tasks: [
-      'Compile IBGE social indicators (population, income, infrastructure)',
-      'Extract Macrodiagnóstico physical-territorial variables',
-      'Integrate S2ID/Atlas Digital historical damage records',
-      'Standardize and combine into Vulnerability Index',
-    ],
-  },
-  {
-    id: 'step-7',
-    label: 'STEP 7 — Risk Integration',
-    description: 'Produce coastal risk map by combining hazard, exposure, and vulnerability components.',
-    status: 'planned',
-    stepNumber: 7,
-    tasks: [
-      'Rescale exposure and vulnerability to [0, 1]',
-      'Combine via weighted mean or multiplicative approach',
-      'Generate risk classes (Low / Moderate / High / Very High)',
-      'Identify priority hotspots and compare with reported impacts',
-    ],
-  },
-  {
-    id: 'step-8',
-    label: 'Extension to Full Brazilian Coastal Domain',
-    description: 'Scale validated pipeline to the complete Brazilian coast using full CMEMS downloads.',
-    status: 'planned',
-    stepNumber: 8,
-    tasks: [
-      'Download full-domain CMEMS reanalyses',
-      'Run Steps 3–7 pipeline for all coastal sectors',
-      'Produce regional climatology and trend analysis',
-      'Generate manuscript-quality figures and risk maps',
-    ],
+    tasks: [],
   },
 ];

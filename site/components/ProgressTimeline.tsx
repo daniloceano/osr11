@@ -16,10 +16,11 @@ export default function ProgressTimeline() {
           </p>
           <h2 className="text-3xl font-bold text-gray-900">Roadmap</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-600">
-            Full pipeline from data acquisition to risk integration. Steps 1 and 2 are complete.
-            Step 2 (Threshold Calibration) has five sub-steps, all done: 2a–2d complete, and
-            2e (PU Composite Calibration) is the final calibration — complete and authoritative.
-            Step 3 (Storm Catalog Generation) is the current phase.
+            Full pipeline from data acquisition to risk integration. Steps 1–3 are complete,
+            covering the full Brazilian coast (808 grid points, 1993–2025). Step 2 includes five
+            sub-steps (2a–2e), with PU Composite Calibration as the final authoritative threshold
+            selection. Step 3 (Hazard Characterization) is complete across all submodules.
+            Step 4 (Exposure, Vulnerability &amp; Risk Integration) is the current downstream product.
           </p>
         </div>
 
@@ -50,7 +51,7 @@ export default function ProgressTimeline() {
             />
           </div>
           <p className="mt-1.5 text-xs text-gray-400">
-            Steps 1–2 complete (2e PU calibration final) · Step 3 (Storm Catalog Generation) next
+            Steps 1–3 complete (hazard characterization done, 808 grid points) · Step 4 (Exposure, Vulnerability &amp; Risk) current
           </p>
         </div>
 

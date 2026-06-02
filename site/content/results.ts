@@ -65,34 +65,31 @@ export const resultCards: ResultCard[] = [
     ],
   },
   {
-    id: 'validation',
-    title: 'Validation Against Observed Disasters',
-    subtitle: 'Cross-referencing compound events with Leal et al. (2024) and S2ID',
-    status: 'planned',
-    description:
-      'Systematic cross-referencing of the compound event catalog with the Leal et al. (2024) Santa Catarina coastal disaster database and the national S2ID registry. Assessment of detection rates, false alarms, and temporal alignment between modelled events and reported impacts.',
-    rationale:
-      'Validation against independent observational records is critical to establish the physical credibility of the detected compound events and to identify systematic biases in the reanalysis representation of nearshore conditions.',
-    outputs: [
-      'Event-by-event match table (catalog vs. reported disasters)',
-      'Detection statistics (hit rate, miss rate, false alarm rate)',
-      'Case studies of high-impact missed or captured events',
-    ],
-  },
-  {
     id: 'risk-integration',
     title: 'Exposure, Vulnerability & Risk Integration',
-    subtitle: 'From hazard to compound coastal risk indicators',
-    status: 'planned',
+    subtitle: '281 coastal municipalities · SVI_Coast_2022 · Hazard_Index · Risk_Comp · Risk_Hazard',
+    status: 'done',
     description:
-      'Integration of compound hazard characterisation with municipal-scale exposure data (population, infrastructure) and social vulnerability proxies. Production of compound coastal risk indicators and hotspot maps suitable for adaptation planning and policy communication.',
+      'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '
+      + 'Exposure is operationalized by associating oceanic hazard metrics with Brazilian coastal municipalities through spatial join: '
+      + 'municipalities adjacent to greater compound-event frequency, duration, and intensity are considered more exposed. '
+      + 'Social vulnerability (SVI_Coast_2022) was constructed via PCA on 10 socioeconomic and infrastructure variables '
+      + 'from the 2022 IBGE Census for 281 coastal municipalities, normalized 0–100. '
+      + 'The Hazard_Index combines normalized frequency, mean overlap duration, and mean compound intensity. '
+      + 'Risk_Comp and Risk_Hazard integrate SVI with hazard metrics to identify priority coastal risk hotspots.',
     rationale:
-      'The hazard alone is insufficient for risk assessment. Combining frequency and intensity of compound events with information about who and what is exposed, and how resilient they are, transforms hazard maps into actionable risk products.',
+      'The hazard alone is insufficient for risk assessment. Reported coastal disaster records supported threshold calibration '
+      + '(Step 2, q90/q90 selection) but are not a separate downstream validation product. '
+      + 'Combining compound-event hazard with municipal-scale exposure spatialization and social vulnerability transforms '
+      + 'hazard maps into actionable risk indices for adaptation planning and policy communication. '
+      + 'Methodology follows Lima et al. (2024, Nat. Hazards).',
     outputs: [
-      'Exposure dataset for coastal municipalities',
-      'Vulnerability index (TBD)',
-      'Compound coastal risk maps',
-      'Municipal risk ranking',
+      'SVI_Coast_2022: Social Vulnerability Index (PCA on 10 IBGE Census variables, 281 municipalities, 0–100)',
+      'Exposure: spatial join of oceanic hazard metrics to coastal municipalities (frequency, duration, intensity)',
+      'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3',
+      'Risk_Comp = (SVI_Coast_2022 / 100) × norm(compound_c)',
+      'Risk_Hazard = (SVI_Coast_2022 / 100) × Hazard_Index',
+      'Future enhancement: interactive map layer for SVI_Coast_2022, Hazard_Index, Risk_Comp, and Risk_Hazard',
     ],
   },
 ];
