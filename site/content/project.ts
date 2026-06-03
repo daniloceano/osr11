@@ -29,7 +29,7 @@ export const projectMeta = {
     },
   ],
   status: 'in-progress' as const,
-  statusLabel: 'Hazard Characterization Complete — Exposure, Vulnerability & Risk Integration Underway',
+  statusLabel: 'Hazard Characterization and Municipal Risk Integration Complete — Physical Interpretation Planned',
   dataRange: '1993–2025',
   region: 'South Atlantic Eastern Coast of Brazil',
   focus: 'Full Brazilian coast (808 grid points)',
@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is underway: Karine Bastos Leal has produced SVI_Coast_2022 for 281 coastal municipalities and integrated it with hazard metrics to generate Hazard_Index, Risk_Comp, and Risk_Hazard indices.
+The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: Karine Bastos Leal produced SVI_Coast_2022 and integrated it with hazard metrics to generate Hazard_Index, Risk_Comp, and Risk_Hazard indices, now displayed in the interactive results panel.
 `;
 
 export const timelinePhases: TimelinePhase[] = [

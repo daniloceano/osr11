@@ -32,6 +32,7 @@ outputs/preliminary_compound/*
 outputs/tidal_sensitivity/*
 outputs/threshold_calibration/*
 outputs/storm_catalog/
+outputs/risk_index/
 
 # Logs
 logs/*.log

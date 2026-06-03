@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -191,12 +191,8 @@ export default function CoastalStormMap({ data, coastline }: Props) {
   const [metricIdx, setMetricIdx] = useState(0);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [svgClientWidth, setSvgClientWidth] = useState(600);
   const svgRef = useRef<SVGSVGElement>(null);
-
-  // Reset metric index when class or group changes
-  useEffect(() => {
-    setMetricIdx(0);
-  }, [eventClass, metricGroup]);
 
   const metrics = metricGroup === 'occurrence'
     ? OCCURRENCE_METRICS[eventClass]
@@ -223,6 +219,7 @@ export default function CoastalStormMap({ data, coastline }: Props) {
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
+    setSvgClientWidth(rect.width);
     setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, []);
 
@@ -251,7 +248,10 @@ export default function CoastalStormMap({ data, coastline }: Props) {
             {(['hs_only', 'ssh_only', 'compound'] as EventClass[]).map(cls => (
               <button
                 key={cls}
-                onClick={() => setEventClass(cls)}
+                onClick={() => {
+                  setEventClass(cls);
+                  setMetricIdx(0);
+                }}
                 className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                   eventClass === cls
                     ? 'text-white'
@@ -264,7 +264,10 @@ export default function CoastalStormMap({ data, coastline }: Props) {
             ))}
             <div className="w-px bg-gray-300" />
             <button
-              onClick={() => setEventClass('zos_raw')}
+              onClick={() => {
+                setEventClass('zos_raw');
+                setMetricIdx(0);
+              }}
               className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                 eventClass === 'zos_raw'
                   ? 'text-white'
@@ -288,7 +291,10 @@ export default function CoastalStormMap({ data, coastline }: Props) {
             {(['occurrence', 'intensity'] as MetricGroup[]).map(mg => (
               <button
                 key={mg}
-                onClick={() => setMetricGroup(mg)}
+                onClick={() => {
+                  setMetricGroup(mg);
+                  setMetricIdx(0);
+                }}
                 className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                   metricGroup === mg
                     ? 'bg-gray-900 text-white'
@@ -393,7 +399,7 @@ export default function CoastalStormMap({ data, coastline }: Props) {
           <div
             className="pointer-events-none absolute z-10 min-w-[200px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
             style={{
-              left: Math.min(tooltipPos.x + 12, svgRef.current ? svgRef.current.clientWidth - 220 : 400),
+              left: Math.max(8, Math.min(tooltipPos.x + 12, svgClientWidth - 220)),
               top: tooltipPos.y - 10,
               transform: 'translateY(-100%)',
             }}

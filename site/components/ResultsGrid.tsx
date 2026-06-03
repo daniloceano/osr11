@@ -12,8 +12,8 @@ export default function ResultsGrid() {
           <h2 className="text-3xl font-bold text-gray-900">Preliminary Results</h2>
           <p className="mt-3 max-w-2xl text-sm text-gray-700">
             The cards below summarise the methodological steps in this project — what has been
-            completed, what is in progress, and what is planned. Step 2 (Threshold Calibration) is complete, 
-            containing four sub-analyses. Click on completed steps to view detailed results and figures.
+            completed, what is in progress, and what is planned. Threshold calibration, hazard
+            characterization, and municipal risk integration now have detailed interactive result pages.
           </p>
         </div>
 

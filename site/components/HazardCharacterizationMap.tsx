@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -11,7 +11,7 @@ interface GridPoint {
   [key: string]: unknown;
 }
 
-interface HazardData {
+export interface HazardData {
   metadata: {
     generated_at: string;
     period: string;
@@ -205,10 +205,9 @@ export default function HazardCharacterizationMap({ data, coastline }: Props) {
   const [metricIdx, setMetricIdx] = useState(0);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [svgClientWidth, setSvgClientWidth] = useState(600);
   const [showSigOnly, setShowSigOnly] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
-
-  useEffect(() => { setMetricIdx(0); setShowSigOnly(false); }, [tab]);
 
   const metrics = METRICS[tab];
   const metric = metrics[metricIdx] || metrics[0];
@@ -240,6 +239,7 @@ export default function HazardCharacterizationMap({ data, coastline }: Props) {
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
+    setSvgClientWidth(rect.width);
     setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, []);
 
@@ -262,7 +262,11 @@ export default function HazardCharacterizationMap({ data, coastline }: Props) {
         {(Object.keys(TAB_LABELS) as AnalysisTab[]).map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTab(t);
+              setMetricIdx(0);
+              setShowSigOnly(false);
+            }}
             className={`rounded-md px-3 py-2 text-xs font-medium transition-colors ${
               tab === t
                 ? 'bg-white text-gray-900 shadow-sm'
@@ -379,7 +383,7 @@ export default function HazardCharacterizationMap({ data, coastline }: Props) {
           <div
             className="pointer-events-none absolute z-10 min-w-[220px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
             style={{
-              left: Math.min(tooltipPos.x + 12, svgRef.current ? svgRef.current.clientWidth - 240 : 400),
+              left: Math.max(8, Math.min(tooltipPos.x + 12, svgClientWidth - 240)),
               top: tooltipPos.y - 10,
               transform: 'translateY(-100%)',
             }}

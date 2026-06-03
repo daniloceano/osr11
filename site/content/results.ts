@@ -67,7 +67,7 @@ export const resultCards: ResultCard[] = [
   {
     id: 'risk-integration',
     title: 'Exposure, Vulnerability & Risk Integration',
-    subtitle: '281 coastal municipalities · SVI_Coast_2022 · Hazard_Index · Risk_Comp · Risk_Hazard',
+    subtitle: 'Municipal choropleth · SVI_Coast_2022 · Hazard_Index · Risk_Comp · Risk_Hazard',
     status: 'done',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '
@@ -89,7 +89,9 @@ export const resultCards: ResultCard[] = [
       'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3',
       'Risk_Comp = (SVI_Coast_2022 / 100) × norm(compound_c)',
       'Risk_Hazard = (SVI_Coast_2022 / 100) × Hazard_Index',
-      'Future enhancement: interactive map layer for SVI_Coast_2022, Hazard_Index, Risk_Comp, and Risk_Hazard',
+      'Interactive municipal choropleth with layer switching, popups, legend, statistics, and ranking table',
     ],
+    href: '/results/risk-integration',
+    parts: ['SVI', 'Hazard Index', 'Risk Comp', 'Risk Hazard'],
   },
 ];

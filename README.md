@@ -4,7 +4,7 @@
 
 **Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
 **Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
-**Status:** Hazard characterization complete — Exposure, Vulnerability & Risk Integration underway  
+**Status:** Hazard characterization and municipal risk integration complete — physical interpretation planned
 **Current implementation:** Full Brazilian coast (808 grid points, 1993–2025; all Step 3 submodules complete; municipal risk indices produced)
 
 ---
@@ -243,7 +243,24 @@ Where:
 - `Risk_Hazard` — Integrated coastal risk from SVI × Hazard_Index
 
 **Status:** ✅ Complete  
-**Note:** An interactive map layer for these indices (following the existing dynamic map pattern) is planned as a future website enhancement.
+**Website panel:** `/results/risk-integration` displays the shapefile-derived municipal choropleth with layer switching, popups, legend, statistics, and a ranking table.
+
+**Risk-index shapefile export:**
+Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
+
+```bash
+python -m src.site.export_risk_index_data
+```
+
+The exporter writes:
+- `site/public/data/risk_index_municipalities.geojson`
+- `site/public/data/risk_index_metadata.json`
+
+Detected shapefile aliases are recorded in the metadata. In the current export:
+- `SVI_Coast_2022` maps to `SVI_Coast_`
+- `Hazard_Index` maps to `Haz_index`
+- `Risk_Comp` maps to `Risk_comp`
+- `Risk_Hazard` maps to `Risk_harza`
 
 ---
 
@@ -517,6 +534,12 @@ npm run build        # Production build
 vercel --prod        # Deploy to Vercel (requires Vercel account)
 ```
 
+To regenerate the municipal risk-index web layer after Karine's shapefile changes:
+
+```bash
+python -m src.site.export_risk_index_data
+```
+
 See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` for site documentation.
 
 ---
@@ -542,7 +565,11 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
   - **2d** — CSI grid scan complete — diagnostic only (`src/02_threshold_calibration/04_csi_grid_scan/`)
   - **2e** — PU composite calibration complete — final calibrated thresholds (`src/02_threshold_calibration/05_pu_composite_calibration/`)
 
-- **Steps 3–8 (Storm catalogs, compound detection, risk mapping):** Methodology defined but not yet implemented. Future work will follow the 8-step algorithm described above.
+- **STEP 3 (Hazard Characterization):** Complete for the full Brazilian coast; interactive hazard panel available at `site/app/results/hazard-characterization/`.
+
+- **STEP 4 (Exposure, Vulnerability & Risk Integration):** Complete at municipal scale from Karine's `outputs/risk_index/` shapefile outputs; interactive risk panel available at `site/app/results/risk-integration/`.
+
+- **STEP 5 (Physical Interpretation):** Planned.
 
 ### Reproducibility
 

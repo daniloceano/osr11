@@ -42,8 +42,9 @@ site/
 │   ├── page.tsx             # Home page
 │   ├── globals.css          # Global styles and theme
 │   └── results/             
-│       └── south-sc/        # South SC analysis results page
-│           └── page.tsx
+│       ├── hazard-characterization/ # Step 3 interactive hazard panel
+│       ├── risk-integration/        # Exposure, vulnerability & risk panel
+│       └── south-sc/                # South SC analysis results page
 ├── components/              # React components
 │   ├── Navigation.tsx       # Top navigation bar
 │   ├── Hero.tsx            # Landing hero section
@@ -106,12 +107,15 @@ After running the analysis pipeline and generating new figures:
 # 1. Copy figures from outputs to site
 cp -r outputs/south_sc_test_data_exploratory/figures/* site/public/figures/
 
-# 2. Regenerate storm maps data (after re-running Steps 3/4)
+# 2. Regenerate storm maps data (after re-running Step 3)
 conda run -n osr11 python -m src.site.export_storm_maps_data
 
-# 3. Update figure metadata in content/figures.ts if needed
+# 3. Regenerate municipal risk-index data (after updating outputs/risk_index/)
+python -m src.site.export_risk_index_data
 
-# 4. Commit and push
+# 4. Update figure metadata in content/figures.ts if needed
+
+# 5. Commit and push
 git add site/
 git commit -m "Update analysis figures"
 git push
@@ -185,6 +189,21 @@ Edit `content/figures.ts` to:
 - Tailwind config: `tailwind.config.ts` (if needed)
 - Component styles: Inline Tailwind classes
 
+### Risk-Index Data
+
+Karine's risk-index shapefile outputs live in `../outputs/risk_index/`. The website consumes the converted files in `public/data/`:
+
+- `risk_index_municipalities.geojson`
+- `risk_index_metadata.json`
+
+Regenerate them from the repository root:
+
+```bash
+python -m src.site.export_risk_index_data
+```
+
+The metadata records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`, `Haz_index` -> `Hazard_Index`, `Risk_comp` -> `Risk_Comp`, and `Risk_harza` -> `Risk_Hazard`.
+
 ## 🧪 Development Tips
 
 ### Hot Reload
@@ -231,4 +250,3 @@ Research project © 2025 IAG-USP. Results are preliminary and subject to revisio
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
 - [Learn Next.js](https://nextjs.org/learn) - interactive Next.js tutorial
 - [Next.js GitHub](https://github.com/vercel/next.js) - feedback and contributions welcome
-

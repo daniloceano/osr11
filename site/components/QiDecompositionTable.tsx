@@ -29,6 +29,27 @@ interface QiRow {
 
 type SortKey = keyof QiRow;
 
+interface SortHeaderProps {
+  k: SortKey;
+  label: string;
+  sortKey: SortKey;
+  sortAsc: boolean;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+function SortHeader({ k, label, sortKey, sortAsc, onSort, className = '' }: SortHeaderProps) {
+  return (
+    <th
+      className={`px-2 py-1.5 text-left font-medium cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap ${className}`}
+      onClick={() => onSort(k)}
+    >
+      {label}
+      {sortKey === k && <span className="ml-0.5">{sortAsc ? '▲' : '▼'}</span>}
+    </th>
+  );
+}
+
 export default function QiDecompositionTable() {
   const [data, setData] = useState<QiRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,16 +113,6 @@ export default function QiDecompositionTable() {
   const meanContribI = data.reduce((s, r) => s + r.contrib_I, 0) / data.length;
   const meanContribC = data.reduce((s, r) => s + r.contrib_C, 0) / data.length;
 
-  const SortHeader = ({ k, label, className = '' }: { k: SortKey; label: string; className?: string }) => (
-    <th
-      className={`px-2 py-1.5 text-left font-medium cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap ${className}`}
-      onClick={() => handleSort(k)}
-    >
-      {label}
-      {sortKey === k && <span className="ml-0.5">{sortAsc ? '▲' : '▼'}</span>}
-    </th>
-  );
-
   return (
     <div className="space-y-4">
       {/* Summary */}
@@ -161,25 +172,24 @@ export default function QiDecompositionTable() {
         <table className="w-full text-[11px]">
           <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
             <tr>
-              <SortHeader k="municipality" label="Municipality" />
-              <SortHeader k="date_start" label="Start" />
-              <SortHeader k="date_end" label="End" />
-              <SortHeader k="hs_peak" label="Hₛ peak" />
-              <SortHeader k="ssh_peak" label="SSH peak" />
-              <SortHeader k="E_i" label="E_i" />
-              <SortHeader k="I_i" label="I_i" />
-              <SortHeader k="C_i" label="C_i" />
-              <SortHeader k="contrib_E" label="α_E·E_i" className="text-emerald-700" />
-              <SortHeader k="contrib_I" label="α_I·I_i" className="text-blue-700" />
-              <SortHeader k="contrib_C" label="α_C·C_i" className="text-violet-700" />
-              <SortHeader k="q_i" label="q_i" />
-              <SortHeader k="penalty_component" label="1−q_i" />
+              <SortHeader k="municipality" label="Municipality" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="date_start" label="Start" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="date_end" label="End" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="hs_peak" label="Hₛ peak" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="ssh_peak" label="SSH peak" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="E_i" label="E_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="I_i" label="I_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="C_i" label="C_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="contrib_E" label="α_E·E_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} className="text-emerald-700" />
+              <SortHeader k="contrib_I" label="α_I·I_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} className="text-blue-700" />
+              <SortHeader k="contrib_C" label="α_C·C_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} className="text-violet-700" />
+              <SortHeader k="q_i" label="q_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+              <SortHeader k="penalty_component" label="1−q_i" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {displayed.map((row) => {
               const penaltyPct = row.penalty_component * 100;
-              const bgRed = Math.round(penaltyPct * 2.2);
               return (
                 <tr
                   key={row.episode_id}

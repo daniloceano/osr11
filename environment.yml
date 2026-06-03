@@ -13,6 +13,8 @@ dependencies:
   - pandas
   - scipy
   - openpyxl       # .xlsx reading (reported events spreadsheet)
+  - geopandas      # shapefile/GeoJSON conversion for website data exports
+  - pyogrio        # fast vector I/O used by risk-index export
   - cartopy        # geographic maps (PlateCarree, NaturalEarth features)
   - rasterio     # required by eo-tides (install via conda-forge to avoid build issues)
   - pip:

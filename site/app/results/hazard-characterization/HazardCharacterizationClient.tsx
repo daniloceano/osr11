@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import HazardCharacterizationMap from '@/components/HazardCharacterizationMap';
+import type { HazardData } from '@/components/HazardCharacterizationMap';
 
 export default function HazardCharacterizationClient() {
-  const [data, setData] = useState<any | null>(null);
+  const [data, setData] = useState<HazardData | null>(null);
   const [coastline, setCoastline] = useState<number[][][] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +13,7 @@ export default function HazardCharacterizationClient() {
     Promise.all([
       fetch('/data/hazard_characterization_grid_metrics.json').then(r => {
         if (!r.ok) throw new Error(`Failed to load hazard data: ${r.status}`);
-        return r.json();
+        return r.json() as Promise<HazardData>;
       }),
       fetch('/data/brazil_coastline.json').then(r => {
         if (!r.ok) throw new Error(`Failed to load coastline: ${r.status}`);
