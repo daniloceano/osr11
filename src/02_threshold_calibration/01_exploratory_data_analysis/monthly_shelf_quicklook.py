@@ -4,6 +4,7 @@ The script computes, for each calendar month:
 
 * climatological monthly mean;
 * monthly q90;
+* monthly maximum;
 
 It can either plot all valid model cells or restrict the analysis to an
 external mask.  It is intentionally standalone so it can be run against either
@@ -72,7 +73,7 @@ log = logging.getLogger("monthly_shelf_quicklook")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create monthly climatology and q90 maps for VHM0 and zos."
+        description="Create monthly climatology, q90, and maximum maps for VHM0 and zos."
     )
     parser.add_argument(
         "--input",
@@ -224,6 +225,7 @@ def process_variable(
 
     masked = da.where(analysis_mask)
     monthly_mean = masked.groupby(f"{time_name}.month").mean(time_name, skipna=True)
+    monthly_max = masked.groupby(f"{time_name}.month").max(time_name, skipna=True)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="All-NaN slice encountered", category=RuntimeWarning)
         monthly_q = masked.groupby(f"{time_name}.month").quantile(q, dim=time_name, skipna=True)
@@ -231,11 +233,13 @@ def process_variable(
         monthly_q = monthly_q.drop_vars("quantile")
     monthly_mean = monthly_mean.rename(f"{var_name}_monthly_mean")
     monthly_q = monthly_q.rename(f"{var_name}_monthly_q{int(q * 100):02d}")
+    monthly_max = monthly_max.rename(f"{var_name}_monthly_max")
 
     out_ds = xr.Dataset(
         {
             monthly_mean.name: monthly_mean.astype("float32"),
             monthly_q.name: monthly_q.astype("float32"),
+            monthly_max.name: monthly_max.astype("float32"),
             "analysis_mask_on_grid": analysis_mask.astype("int8"),
         }
     )
@@ -272,10 +276,21 @@ def process_variable(
         cmap=cmap,
         diverging=diverging,
     )
+    plot_month_grid(
+        monthly_max,
+        title=f"{label} monthly maximum - {domain_label}",
+        label=f"Maximum {var_name} ({units})",
+        out_path=fig_dir / f"fig_monthly_max_{short_name}.png",
+        coastline=coastline,
+        dpi=dpi,
+        cmap=cmap,
+        diverging=diverging,
+    )
 
     stats = _summary_table(
         monthly_mean=monthly_mean,
         monthly_q=monthly_q,
+        monthly_max=monthly_max,
         var_name=var_name,
         short_name=short_name,
         nc_path=nc_path,
@@ -394,6 +409,7 @@ def _summary_table(
     *,
     monthly_mean: xr.DataArray,
     monthly_q: xr.DataArray,
+    monthly_max: xr.DataArray,
     var_name: str,
     short_name: str,
     nc_path: Path,
@@ -406,6 +422,7 @@ def _summary_table(
     for month in range(1, 13):
         mean_field = monthly_mean.sel(month=month)
         q_field = monthly_q.sel(month=month)
+        max_field = monthly_max.sel(month=month)
         rows.append(
             {
                 "variable": var_name,
@@ -419,6 +436,9 @@ def _summary_table(
                 f"monthly_q{int(q * 100):02d}_domain_mean": _nanmean(q_field),
                 f"monthly_q{int(q * 100):02d}_spatial_min": _nanmin(q_field),
                 f"monthly_q{int(q * 100):02d}_spatial_max": _nanmax(q_field),
+                "monthly_max_domain_mean": _nanmean(max_field),
+                "monthly_max_spatial_min": _nanmin(max_field),
+                "monthly_max_spatial_max": _nanmax(max_field),
                 "analysis_domain": domain_label,
                 "retained_cells": retained_cells,
                 "total_grid_cells": total_cells,
