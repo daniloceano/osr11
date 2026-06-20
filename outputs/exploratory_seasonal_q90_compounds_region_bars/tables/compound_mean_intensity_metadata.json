@@ -1,0 +1,18 @@
+{
+  "input": "data/unified/metocean_brazil_unified_waverys_grid.nc",
+  "hs_var": "VHM0",
+  "ssh_total_var": "SSH_total",
+  "quantile": 0.9,
+  "threshold_methods": [
+    "Global q90",
+    "Seasonal q90"
+  ],
+  "intensity_definition": "0.5 * (normalized Hs peak + normalized SSH_total peak), with Q05/Q95 normalization pooled across detected global-q90 and seasonal-q90 compound events.",
+  "normalization_refs": {
+    "hs_ref_low_q05": 1.19,
+    "hs_ref_high_q95": 3.95,
+    "ssh_total_ref_low_q05": 0.5605,
+    "ssh_total_ref_high_q95": 3.0673
+  },
+  "n_compound_event_rows": 195249
+}

@@ -1,0 +1,35 @@
+{
+  "input": "data/unified/metocean_brazil_unified_waverys_grid.nc",
+  "hs_var": "VHM0",
+  "ssh_total_var": "SSH_total",
+  "quantile": 0.9,
+  "threshold_period": [
+    "1993-01-01",
+    "2025-12-31"
+  ],
+  "seasonal_thresholds": "DJF/MAM/JJA/SON q90 per point and variable",
+  "max_gap_days": 1,
+  "n_analysis_points": 808,
+  "compound_events": {
+    "global_total": 96031,
+    "seasonal_total": 99218,
+    "delta_total": 3187,
+    "points_increased": 535,
+    "points_decreased": 252,
+    "points_unchanged": 21,
+    "mean_global_per_point": 118.85024752475248,
+    "mean_seasonal_per_point": 122.79455445544555,
+    "median_delta_per_point": 5.0
+  },
+  "compound_days": {
+    "global_total": 161692,
+    "seasonal_total": 156122,
+    "delta_total": -5570,
+    "points_increased": 317,
+    "points_decreased": 462,
+    "points_unchanged": 29,
+    "mean_global_per_point": 200.1138613861386,
+    "mean_seasonal_per_point": 193.22029702970298,
+    "median_delta_per_point": -3.0
+  }
+}
