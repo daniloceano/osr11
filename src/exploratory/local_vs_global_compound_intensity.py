@@ -508,34 +508,25 @@ def plot_all_stats_comparison_map(
     all_delta = np.concatenate(
         [field[np.isfinite(field)].ravel() for field in delta_fields if np.isfinite(field).any()]
     )
-    delta_limit = float(np.ceil(max(np.abs(all_delta).max(initial=0.05), 0.05) * 20.0) / 20.0)
-    delta_norm = TwoSlopeNorm(vmin=-delta_limit, vcenter=0.0, vmax=delta_limit)
+    delta_norm = TwoSlopeNorm(vmin=-0.3, vcenter=0.0, vmax=0.3)
 
-    fig = plt.figure(figsize=(8.6, 10.8))
-    gs = fig.add_gridspec(
-        nrows=len(STAT_SPECS),
-        ncols=4,
-        width_ratios=[0.055, 1.0, 1.0, 1.0],
-        left=0.045,
-        right=0.992,
-        bottom=0.102,
-        top=0.948,
-        wspace=-0.11,
-        hspace=0.035,
-    )
-    axes = [
-        [fig.add_subplot(gs[i, j + 1], projection=CRS) for j in range(3)]
-        for i in range(len(STAT_SPECS))
-    ]
-    label_axes = [fig.add_subplot(gs[i, 0]) for i in range(len(STAT_SPECS))]
-    intensity_mesh = None
-    delta_mesh = None
-
-    for i, (stat_key, stat_label) in enumerate(STAT_SPECS):
-        label_axes[i].axis("off")
-        label_axes[i].text(
-            0.5,
-            0.5,
+    fig_width, fig_height = 5.05, 9.8
+    fig = plt.figure(figsize=(fig_width, fig_height))
+    top = 0.928
+    bottom = 0.105
+    row_gap = 0.009
+    col_gap = 0.014
+    map_height = (top - bottom - row_gap * (len(STAT_SPECS) - 1)) / len(STAT_SPECS)
+    map_aspect = (extent[1] - extent[0]) / (extent[3] - extent[2])
+    map_width = map_aspect * map_height * (fig_height / fig_width)
+    left = 0.105
+    label_x = 0.032
+    axes = []
+    for i, (_, stat_label) in enumerate(STAT_SPECS):
+        y0 = top - (i + 1) * map_height - i * row_gap
+        fig.text(
+            label_x,
+            y0 + map_height / 2.0,
             stat_label,
             rotation=90,
             ha="center",
@@ -543,6 +534,16 @@ def plot_all_stats_comparison_map(
             fontsize=10,
             fontweight="bold",
         )
+        row_axes = []
+        for j in range(3):
+            x0 = left + j * (map_width + col_gap)
+            row_axes.append(fig.add_axes([x0, y0, map_width, map_height], projection=CRS))
+        axes.append(row_axes)
+
+    intensity_mesh = None
+    delta_mesh = None
+
+    for i, (stat_key, stat_label) in enumerate(STAT_SPECS):
         fields = [
             intensity_fields[("global", stat_key)],
             intensity_fields[("local", stat_key)],
@@ -580,8 +581,9 @@ def plot_all_stats_comparison_map(
 
     fig.canvas.draw()
     bottom_axes = axes[-1]
-    cbar_y = min(ax.get_position().y0 for ax in bottom_axes) - 0.045
-    cbar_h = 0.016
+    cbar_y = min(ax.get_position().y0 for ax in bottom_axes) - 0.042
+    cbar_h = 0.015
+    cbar_gap = 0.018
     intensity_pos_left = bottom_axes[0].get_position()
     intensity_pos_right = bottom_axes[1].get_position()
     delta_pos = bottom_axes[2].get_position()
@@ -589,17 +591,27 @@ def plot_all_stats_comparison_map(
         [
             intensity_pos_left.x0,
             cbar_y,
-            intensity_pos_right.x1 - intensity_pos_left.x0,
+            intensity_pos_right.x1 - intensity_pos_left.x0 - cbar_gap / 2.0,
             cbar_h,
         ]
     )
-    cax_delta = fig.add_axes([delta_pos.x0, cbar_y, delta_pos.width, cbar_h])
+    cax_delta = fig.add_axes(
+        [
+            delta_pos.x0 + cbar_gap / 2.0,
+            cbar_y,
+            delta_pos.width - cbar_gap / 2.0,
+            cbar_h,
+        ]
+    )
 
     cbar_intensity = fig.colorbar(intensity_mesh, cax=cax_intensity, orientation="horizontal")
     cbar_intensity.ax.tick_params(labelsize=8)
+    cbar_intensity.ax.get_xticklabels()[-1].set_ha("right")
     cbar_intensity.set_label("Compound intensity (norm.)", fontsize=9)
     cbar_delta = fig.colorbar(delta_mesh, cax=cax_delta, orientation="horizontal")
     cbar_delta.ax.tick_params(labelsize=8)
+    cbar_delta.set_ticks([-0.3, 0.0, 0.3])
+    cbar_delta.ax.get_xticklabels()[0].set_ha("left")
     cbar_delta.set_label("Delta local - global", fontsize=9)
 
     fig.suptitle(
