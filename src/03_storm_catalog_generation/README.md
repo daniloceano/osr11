@@ -19,7 +19,7 @@ storm catalogs (Submodule 3.1), then runs seven additional analysis submodules:
 | 3.2 Compound Detection | `02_compound_detection/` | Temporal overlap → compound events |
 | 3.3 Duration & Persistence | `03_duration_persistence/` | Per-grid duration/inter-event stats |
 | 3.4 Monthly Seasonality | `04_monthly_seasonality/` | Monthly climatology, peak month |
-| 3.5 Trend Analysis | `05_trends/` | Mann–Kendall + Sen slope (9 series) |
+| 3.5 Trend Analysis | `05_trends/` | Mann–Kendall + Sen slope (8 series) |
 | 3.6 Univariate EVA | `06_univariate_eva/` | POT–GPD return levels (2–50 yr) |
 | 3.7 Dependence | `07_dependence/` | Hs–SSH τ, ρ, χ, χ̄ |
 | 3.8 Site Export | `08_site_export/` | Unified JSON for results website |

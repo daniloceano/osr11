@@ -178,7 +178,11 @@ def _build_compound_event(
     hs_peak_dates = [hs_storms[i].get("peak_date", hs_storms[i]["date_start"]) for i in hs_indices]
     ssh_peak_dates = [ssh_storms[i].get("peak_date", ssh_storms[i]["date_start"]) for i in ssh_indices]
 
-    # Peak lag: days between Hs peak and SSH peak (positive = Hs peaks first)
+    # Peak lag = (Hs peak date) - (SSH peak date), in days.
+    # Sign convention (matches the computation below):
+    #   positive  -> Hs peak occurs AFTER  the SSH_total peak (Hs lags SSH)
+    #   negative  -> Hs peak occurs BEFORE the SSH_total peak (Hs leads SSH)
+    #   zero      -> same calendar day
     hs_peak_date = max(
         ((hs_storms[i]["peak_value"], hs_storms[i].get("peak_date", hs_storms[i]["date_start"]))
          for i in hs_indices),

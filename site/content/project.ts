@@ -258,7 +258,7 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-3-5',
         label: '3.5 — Trend Analysis',
-        description: 'Mann–Kendall + Sen slope for 9 annual series. Modified MK (Hamed & Rao 1998) when autocorrelation detected.',
+        description: 'Mann–Kendall + Sen slope for 8 annual series. Modified MK (Hamed & Rao 1998) when autocorrelation detected.',
         status: 'done',
       },
       {

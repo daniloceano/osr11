@@ -93,7 +93,7 @@ The unified metocean dataset (`metocean_brazil_unified_waverys_grid.nc`) was pre
 
 ### Two Independent Catalogs
 
-Step 3 deliberately produces **two separate, univariate catalogs** — one for Hₛ and one for SSH_total. The temporal intersection of these catalogs (compound event detection) is deferred to Step 4. This separation preserves methodological clarity:
+Step 3 deliberately produces **two separate, univariate catalogs** — one for Hₛ and one for SSH_total — in sub-module 3.1. The temporal intersection of these catalogs (compound event detection) is performed in a **separate sub-module, 3.2** (`02_compound_detection/`), operating on the two catalogs as inputs. (Historical note: in the pre-2025 numbering this intersection was called "Step 4"; the restructuring described below folded it into Step 3 as sub-module 3.2.) This separation preserves methodological clarity:
 
 - Each catalog can be validated, analyzed, and visualized independently.
 - Compound detection logic (overlap rules, intensity normalization) can evolve without re-running the storm detection.
@@ -149,7 +149,7 @@ All 7 submodules executed successfully in 90.6 seconds. 808/808 grid points proc
 | 3.2 Compound | 14.5 s | 96,031 compound events (across 808 pts) |
 | 3.3 Duration | 8.3 s | Duration statistics for 808 pts |
 | 3.4 Seasonality | 8.3 s | Monthly climatology for 808 pts |
-| 3.5 Trends | 31.8 s | Mann–Kendall for 9 series × 808 pts |
+| 3.5 Trends | 31.8 s | Mann–Kendall for 8 series × 808 pts |
 | 3.6 EVA | 22.4 s | GPD return levels for 808 pts |
 | 3.7 Dependence | 1.3 s | τ, ρ, χ, χ̄ for 808 pts |
 | 3.8 Site Export | 4.0 s | 2.4 MB unified JSON (87 fields/pt) |
@@ -194,7 +194,7 @@ Detailed interactive maps are available on the results website (`/results/hazard
 
 ## Next Steps
 
-1. **Step 4 — Exposure of population and infrastructure**: Spatial intersection of hazard maps with census data, infrastructure layers, and land-use to quantify exposed assets.
+1. **Step 4 — Exposure, vulnerability & risk integration**: A first municipal-scale integration is **complete** (external workflow; see the "Step 4" section below) — SVI_Coast_2022, Hazard_Index, Risk_Comp, Risk_Hazard for the coastal municipalities. Open follow-ups: revisit the equal-weight aggregation in light of the negative frequency↔intensity correlation, and bring the index computation into a versioned script in this repo.
 2. **Validation against reported events**: Cross-reference compound catalog with the Leal et al. (2024) SC disaster database and the expanded S2ID registry.
 3. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
 4. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. The dependence analysis (Step 3.7) provides empirical input for copula selection.
@@ -224,7 +224,21 @@ $$
 
 where $Q_{05}$, $Q_{95}$ are computed from all compound event peaks across the full domain (not per grid point). This ensures comparability across space.
 
-**Overlap metrics**: overlap_duration_days, peak_lag_days (time between Hₛ peak and SSH_total peak).
+**Overlap metrics**: overlap_duration_days, peak_lag_days.
+
+`peak_lag_days` $= t^{\text{peak}}_{H_s} - t^{\text{peak}}_{\text{SSH}}$ (calendar days). Sign convention:
+**positive ⇒ the Hₛ peak occurs *after* the SSH_total peak** (Hₛ lags); negative ⇒ Hₛ leads;
+zero ⇒ same day. (The site layer "Mean peak lag" uses this same convention.)
+
+**[CAVEAT — non-contiguous overlap]** `overlap_duration_days` is `len(hs_days ∩ ssh_days)`,
+where `hs_days` and `ssh_days` are the *unions* of all storm days in the compound group. When
+a group contains multiple Hₛ and/or SSH_total storms, this intersection can be **temporally
+discontinuous** (e.g. overlap on days 1–2 and again on days 7–8 → `overlap_duration_days = 4`
+but the event spans 8 days). `date_start`/`date_end` are the first/last overlap days, so the
+reported span can exceed `overlap_duration_days`. The metric therefore counts *total* shared
+days, not a single contiguous co-occurrence window; for multi-storm groups its physical
+interpretation as a single "overlap duration" is weaker. `union_duration_days` records the
+full event footprint for comparison.
 
 ### Submodule 3.3 — Duration & Persistence
 
@@ -251,7 +265,9 @@ $$
 S = \sum_{i=1}^{n-1}\sum_{j=i+1}^{n} \text{sign}(x_j - x_i)
 $$
 
-**Z-score** with continuity correction and tie adjustment. **Modified Mann–Kendall** (Hamed & Rao 1998) applied when significant lag-1 autocorrelation is detected:
+**Z-score** with continuity correction and tie adjustment. **Modified Mann–Kendall** (Hamed & Rao 1998) applied when significant lag-1 autocorrelation is detected (criterion $|r_1| > 1.96/\sqrt{n}$, only for $n \ge 10$):
+
+**[IMPLEMENTATION NOTE]** This implementation computes the variance-correction factor $n/S^*$ from the autocorrelation of the **raw (mean-removed) series across all lags** ($r_i$, $i=1\dots n-1$). The original Hamed & Rao (1998) procedure uses the autocorrelation of the **ranks** of the data and includes only the **statistically significant** $r_i$. The simplification here (all lags, raw values) is common in practice but tends to be slightly more conservative; the correction is clamped to $\ge 1$ so it can only inflate, never deflate, $\mathrm{Var}(S)$. See `trends.py:_modified_variance_correction`.
 
 $$
 \text{Var}^*(S) = \text{Var}(S) \times \frac{n}{S^*}, \quad \frac{n}{S^*} = 1 + \frac{2}{n}\sum_{i=1}^{n-1}(n-i)\,r_i
@@ -262,16 +278,23 @@ $$
 b = \text{median}\left\{\frac{x_j - x_i}{j - i}\right\}_{i < j}
 $$
 
-**Nine annual series tested**:
+**Eight annual series tested** (in `trends.py:TREND_METRICS`):
 1. annual Hₛ storm count
 2. annual SSH_total storm count
 3. annual compound event count
 4. annual mean Hₛ peak value
 5. annual mean SSH_total peak value
-6. annual mean compound normalized intensity
-7. annual mean Hₛ duration
-8. annual mean SSH_total duration
-9. annual mean overlap duration
+6. annual mean Hₛ duration
+7. annual mean SSH_total duration
+8. annual mean overlap duration
+
+**[NOT COMPUTED]** A ninth series — *annual mean compound normalized intensity* — is
+declared in `build_annual_series` but is never populated (no aggregation loop) and is
+intentionally **not** included in `TREND_METRICS`. Reason: per-grid-point annual means
+of the domain-normalized compound intensity are dominated by the few compound events
+per year and were judged too noisy for a robust Mann–Kendall slope. To add it, populate
+`series["annual_mean_compound_intensity_norm"]` from the compound events' intensity and
+register the metric in `TREND_METRICS`.
 
 ### Submodule 3.6 — Univariate EVA (POT–GPD)
 
@@ -293,7 +316,7 @@ where $\lambda = n_{\text{exceed}} / n_{\text{years}}$ is the mean exceedance ra
 
 **Minimum sample**: 10 exceedances required for GPD fit. Return periods: 2, 5, 10, 20, 50 years.
 
-**Confidence intervals**: Delta method (approximate) based on the observed Fisher information.
+**Confidence intervals**: Delta method (approximate), propagating the closed-form **asymptotic** (expected-information) variance–covariance matrix of the GPD MLE — $\mathrm{Var}(\sigma)=2\sigma^2/n$, $\mathrm{Var}(\xi)=(1+\xi)^2/n$, $\mathrm{Cov}(\sigma,\xi)=-\sigma(1+\xi)/n$ — through $\partial x_T/\partial\sigma$ and $\partial x_T/\partial\xi$. This is the expected (not the numerically observed) information; it is valid for $\xi > -0.5$ and is approximate for small samples. Profile-likelihood intervals are not implemented.
 
 **Independence guarantee**: Storm peaks are algebraically independent — the POT clustering in the catalog (gap ≤ 1 day) ensures one peak per meteorological event.
 
@@ -329,6 +352,82 @@ In practice, with n ≈ 250–320 compound events per grid point and the empiric
 **Minimum samples**: τ/ρ require ≥ 5 pairs; χ/χ̄ require ≥ 20 compound events for stable tail estimates.
 
 Reference: Coles et al. (1999); Ledford & Tawn (1996, 1997); Camus et al. (2021).
+
+---
+
+## Step 4 — Exposure, Vulnerability & Risk Integration (municipal scale)
+
+This section documents methodological decisions in the municipal risk integration so they
+are explicit in the scientific record. **The Hazard_Index / Risk_Comp / Risk_Hazard formulas
+are NOT computed by any script in this repository** — they are produced externally (QGIS /
+Python workflow by Karine Bastos Leal, INPE) and delivered as a shapefile,
+`outputs/risk_index/risk_index.shp`. The repository only *reads* the precomputed fields
+(`Haz_index`, `Risk_comp`, `Risk_harza`, `SVI_Coast_`) via `src/site/export_risk_index_data.py`
+and re-exports them as GeoJSON for the website. The formulas below were reproduced numerically
+from the exported data (agreement to ≤ 5×10⁻⁴, i.e. rounding only):
+
+$$
+\text{Hazard\_Index} = \tfrac{1}{3}\bigl[\,\text{norm}(\text{compound\_c}) + \text{norm}(\text{mean\_overl}) + \text{norm}(\text{mean\_compo})\,\bigr]
+$$
+$$
+\text{Risk\_Comp} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{norm}(\text{compound\_c}), \qquad
+\text{Risk\_Hazard} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{Hazard\_Index}
+$$
+
+where `norm(·)` is Min–Max scaling to [0, 1] across the coastal municipalities.
+
+**Provenance of the three hazard inputs** (per grid point, from sub-module 3.2):
+- `compound_c` = `compound_count_total` — the **absolute** compound-event count over the full
+  1993–2025 record (range 51–300 in the delivered set), **not** an annual rate.
+- `mean_overl` = `mean_overlap_duration`.
+- `mean_compo` = `mean_compound_intensity_norm`.
+
+**[DECISION — same grid point per municipality]** Each municipality is assigned the single
+oceanic grid point with the **highest `compound_c`** within its association (spatial join,
+performed in the external workflow). The three inputs are therefore the *coincident* values of
+that one grid point; the per-municipality `grid_lat`/`grid_lon` in the shapefile confirm a
+single point per municipality. The selection/join code is external and not auditable in this repo.
+
+**[DECISION — double / asymmetric normalization of `mean_compo`]** `mean_compo` is already a
+domain-wide normalized quantity (each event's intensity is clipped to [0,1] via
+$(\text{peak}-Q_{05})/(Q_{95}-Q_{05})$ in sub-module 3.2, then averaged per point). In
+Hazard_Index it is Min–Max normalized **again** across municipalities. The other two inputs
+(`compound_c`, `mean_overl`) are raw counts/durations normalized **once**. This makes the
+intensity term's normalization asymmetric relative to the other two (it is re-stretched to the
+full [0,1] municipal range). The effect is a rescaling, not an error, but it is **not an
+intentional weighting choice** and should be noted when interpreting the index.
+
+**[DECISION — equal 1/3 weights and the correlation structure]** The three components are
+combined with equal weights. Empirically, in the delivered set (280 municipalities) they are
+**not** mutually positively correlated:
+
+| Pair | Pearson r |
+|------|-----------|
+| compound_c × mean_overl | −0.41 |
+| compound_c × mean_compo | −0.39 |
+| mean_overl × mean_compo | +0.28 |
+
+Compound-event **frequency is negatively correlated with mean per-event duration and
+intensity** — municipalities with many compound events tend to have individually shorter/weaker
+ones. The simple 1/3 mean therefore partially averages opposing signals (hence the compressed
+observed range, Hazard_Index ∈ [0.19, 0.67] rather than [0, 1]). The equal-mean choice is
+defensible as a transparent, assumption-light aggregator, but the common justification "the
+components co-vary" does **not** hold here. A PCA (as used for the SVI) would capture a
+frequency↔intensity *trade-off* axis rather than a single "all high" gradient and is a
+reasonable alternative to consider in future work.
+
+**[DECISION — handling of municipalities with no compound events]** At grid-point level, points
+with zero compound events return `None` for `mean_overlap_duration` and
+`mean_compound_intensity_norm` (sub-module 3.2). In the delivered municipal set every selected
+grid point has ≥ 51 compound events, so this case does not arise in the final index. Where a
+municipality lacks hazard data it is left **null** (dropped from the hazard/risk layers, 280 of
+282 features populated) and retains only its SVI — it is **not** coerced to 0, and no NaN is
+propagated into the Min–Max normalization (computed over the populated municipalities only).
+
+**Social Vulnerability Index (SVI_Coast_2022)**: built from 10 IBGE/SIDRA 2022 socioeconomic
+and infrastructure variables, standardized (StandardScaler), reduced by PCA; PC1 is
+sign-adjusted so higher = more vulnerable and Min–Max normalized to 0–100. Method after Lima
+et al. (2024). This is the only part of the chain that uses PCA.
 
 ---
 

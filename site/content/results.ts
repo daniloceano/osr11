@@ -47,7 +47,7 @@ export const resultCards: ResultCard[] = [
       '3.2: ~96k compound events, classification (Hₛ-only / SSH-only / compound), overlap metrics',
       '3.3: Per-grid persistence statistics (mean/p95/max duration, inter-event times)',
       '3.4: Monthly climatology, peak month, seasonal DJF/MAM/JJA/SON split',
-      '3.5: Mann–Kendall + Sen slope trends for 9 annual series per grid point',
+      '3.5: Mann–Kendall + Sen slope trends for 8 annual series per grid point',
       '3.6: POT–GPD return levels (2, 5, 10, 20, 50 yr) with delta-method CIs',
       '3.7: Kendall τ, Spearman ρ, extremal χ and χ̄ for Hs–SSH compound pairs',
       '3.8: Unified JSON for interactive maps on the results website',

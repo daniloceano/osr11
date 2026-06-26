@@ -81,6 +81,49 @@ export default function RiskIntegrationPage() {
             <RiskIntegrationClient />
           </div>
         </div>
+
+        <div className="border-t border-gray-200 bg-gray-50 py-10">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className="mb-4 text-lg font-bold text-gray-900">Methodology &amp; Caveats</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
+                <p>
+                  <strong className="text-gray-800">Index definitions.</strong>{' '}
+                  Hazard_Index = ⅓·[norm(compound_c) + norm(mean_overl) + norm(mean_compo)];
+                  Risk_Comp = (SVI_Coast_2022 / 100)·norm(compound_c);
+                  Risk_Hazard = (SVI_Coast_2022 / 100)·Hazard_Index, where norm(·) is Min–Max
+                  scaling across municipalities. <strong>compound_c is the absolute compound-event
+                  count over 1993–2025 (not an annual rate).</strong> These indices are produced in an
+                  external workflow (Karine Bastos Leal, INPE) and read from a shapefile; this site
+                  only displays the delivered fields.
+                </p>
+                <p>
+                  <strong className="text-gray-800">Aggregation.</strong>{' '}
+                  The three hazard components are combined with equal 1/3 weights. In the delivered
+                  data they are not mutually positively correlated — compound-event frequency is
+                  <em> negatively</em> correlated with mean overlap duration and mean intensity
+                  (r ≈ −0.4) — so the simple mean partly averages opposing signals. mean_compo is a
+                  per-event normalized intensity that is Min–Max normalized a second time here.
+                </p>
+              </div>
+              <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
+                <p>
+                  <strong className="text-gray-800">Hazard provenance.</strong>{' '}
+                  Each municipality takes the values of the single oceanic grid point with the highest
+                  compound_c in its association. Municipalities without populated hazard fields are
+                  shown only for SVI and excluded from the hazard/risk layers.
+                </p>
+                <p>
+                  <strong className="text-gray-800">Underlying hazard caveats.</strong>{' '}
+                  Inherited from Step 3: daily resolution (sub-daily co-occurrence unresolved);
+                  SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
+                  level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
+                  coast-wide. Results are preliminary — do not cite without consulting the authors.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
       <Footer />
     </>

@@ -175,7 +175,7 @@ The most comprehensive analysis step. Applies the PU-optimal thresholds from Ste
 | **3.2 Compound Detection** | Temporal overlap of Hₛ/SSH_total storms | Compound events, overlap duration, peak lag, normalized intensity |
 | **3.3 Duration & Persistence** | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
 | **3.4 Monthly Seasonality** | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
-| **3.5 Trend Analysis** | Mann–Kendall + Sen slope (9 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
+| **3.5 Trend Analysis** | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
 | **3.6 Univariate EVA** | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
 | **3.7 Dependence Analysis** | Hs–SSH_total statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
 | **3.8 Site Export** | Unified JSON for results website | All metrics merged per grid point |
@@ -185,7 +185,7 @@ The most comprehensive analysis step. Applies the PU-optimal thresholds from Ste
 **Run:**
 ```bash
 # Generate storm catalogs (3.1)
-python -m src.03_storm_catalog_generation.main --all
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode production --tide-mode auto --workers 20
 
 # Run hazard characterization submodules (3.2–3.8)
 python -m src.03_storm_catalog_generation.hazard_characterization --module all
@@ -195,7 +195,7 @@ python -m src.03_storm_catalog_generation.hazard_characterization --module all
 
 ### **STEP 4 — Exposure, Vulnerability & Risk Integration**
 
-Integration of compound hazard characterization with municipal-scale exposure and social vulnerability (Karine Bastos Leal / INPE). Produces compound coastal risk indices for 281 coastal municipalities.
+Integration of compound hazard characterization with municipal-scale exposure and social vulnerability (Karine Bastos Leal / INPE). Produces compound coastal risk indices for the coastal municipalities (the delivered shapefile carries 282 municipality features with SVI; 280 of them have populated hazard/risk fields).
 
 #### Sub-step 4.1 — Exposure Spatialization
 
@@ -231,10 +231,12 @@ Risk_Hazard  = (SVI_Coast_2022 / 100) × Hazard_Index
 ```
 
 Where:
-- `compound_c` — frequency of compound events per grid point
-- `mean_overl` — mean overlap duration of compound events
-- `mean_compo` — mean compound event intensity
-- `norm()` — Min–Max normalization to [0, 1]
+- `compound_c` — **absolute count** of compound events at the grid point over 1993–2025 (`compound_count_total`, range ~51–300), not an annual rate
+- `mean_overl` — mean overlap duration of compound events (`mean_overlap_duration`)
+- `mean_compo` — mean **normalized** compound-event intensity (`mean_compound_intensity_norm`, already scaled to [0,1] domain-wide in Step 3.2)
+- `norm()` — Min–Max normalization to [0, 1] across municipalities
+
+> **Notes.** (1) These formulas are computed in an external workflow (Karine Bastos Leal, INPE) and delivered as `risk_index.shp`; no script in this repo computes them — `export_risk_index_data.py` only reads and re-exports the precomputed fields. The formulas above were reproduced numerically from the exported data (agreement ≤ 5×10⁻⁴). (2) `mean_compo` is normalized twice (once domain-wide in Step 3.2, again by `norm()` here) — a rescaling, asymmetric relative to the other two terms. (3) The three components are **negatively** correlated in the delivered data (frequency vs. duration/intensity, r ≈ −0.4); the equal-weight mean is a transparent choice but the components do not co-vary positively. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index

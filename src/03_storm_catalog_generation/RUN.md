@@ -116,7 +116,7 @@ python -m src.03_storm_catalog_generation.hazard_characterization --module site_
 ## Debug logging
 
 ```bash
-python -m src.03_storm_catalog_generation.main --mode test --log-level DEBUG
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main --mode test --log-level DEBUG
 ```
 
 ---
@@ -150,7 +150,7 @@ All outputs go to `outputs/storm_catalog/`:
 | `duration_persistence/duration_persistence_metrics.csv` | Duration flat table |
 | `seasonality/seasonality_metrics.json` | Monthly/seasonal climatology |
 | `seasonality/seasonality_summary.csv` | Per-grid peak month + counts |
-| `trends/trend_metrics.json` | Mann–Kendall + Sen slope (9 series) |
+| `trends/trend_metrics.json` | Mann–Kendall + Sen slope (8 series) |
 | `trends/trend_metrics.csv` | Trends flat table |
 | `eva/eva_metrics.json` | GPD return levels |
 | `eva/eva_return_levels.csv` | Return levels flat table |
@@ -191,6 +191,6 @@ python -m src.01_data_preparation.preprocessing.interpolate_glorys_to_waverys_gr
     --workers 50
 
 # 3. Run Step 3 (fast — tides already in the unified dataset)
-python -m src.03_storm_catalog_generation.main \
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main \
     --mode production --tide-mode auto --workers 20
 ```

@@ -7,16 +7,19 @@ time series derived from storm catalogs.
 Handles lag-1 autocorrelation via the modified Mann–Kendall approach
 (Hamed & Rao 1998) when significant autocorrelation is detected.
 
-Annual series candidates:
+Annual series tested (see TREND_METRICS — 8 series):
     - annual_hs_count
     - annual_ssh_total_count
     - annual_compound_count
     - annual_mean_hs_peak
     - annual_mean_ssh_total_peak
-    - annual_mean_compound_intensity_norm
     - annual_mean_hs_duration
     - annual_mean_ssh_total_duration
     - annual_mean_overlap_duration
+
+Note: ``annual_mean_compound_intensity_norm`` is allocated in ``build_annual_series``
+but is intentionally NOT populated nor registered in ``TREND_METRICS`` — see
+SCIENTIFIC_NOTES (Submodule 3.5) for the rationale.
 
 References:
     - Mann, H. B. (1945). Nonparametric tests against trend. Econometrica.

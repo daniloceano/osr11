@@ -102,7 +102,7 @@ const compoundAttributes: { field: string; definition: string; formula: string; 
   },
   {
     field: 'overlap_duration_days',
-    definition: 'Number of calendar days on which both an Hₛ storm and an SSH_total storm are simultaneously active — the core measure of joint persistence.',
+    definition: 'Number of calendar days on which both an Hₛ storm and an SSH_total storm are simultaneously active — the core measure of joint persistence. It counts the total shared days; when several episodes chain into one event these can be non-contiguous, so the event span (date_start→date_end) may exceed this count.',
     formula: '|Hₛ_days ∩ SSH_days|',
     units: 'days',
   },
@@ -132,7 +132,7 @@ const compoundAttributes: { field: string; definition: string; formula: string; 
   },
   {
     field: 'peak_lag_days',
-    definition: 'Lead/lag between the wave peak and the surge peak. Sign convention: positive ⇒ Hₛ peaks before SSH_total. Diagnoses the temporal structure of the compound forcing.',
+    definition: 'Lead/lag between the wave peak and the surge peak. Sign convention (matches the code): positive ⇒ Hₛ peaks AFTER SSH_total (wave lags surge); negative ⇒ Hₛ peaks first; zero ⇒ same day. Diagnoses the temporal structure of the compound forcing.',
     formula: 'date(peak_hs) − date(peak_ssh_total)',
     units: 'days (signed)',
   },
@@ -147,12 +147,12 @@ const compoundAttributes: { field: string; definition: string; formula: string; 
 const gridMetrics: { field: string; definition: string; formula: string }[] = [
   {
     field: 'compound_count_total',
-    definition: 'Total number of compound events detected at the grid point over 1993–2025.',
+    definition: 'Total number of compound events detected at the grid point over 1993–2025. This absolute count (≈51–300 across the coast) is the frequency term `compound_c` carried into the municipal risk integration (Step 4) — not the annual mean.',
     formula: 'n compound events',
   },
   {
     field: 'compound_count_annual_mean',
-    definition: 'Mean annual frequency of compound events — the primary hazard-frequency metric carried into the risk integration (Step 4).',
+    definition: 'Mean annual frequency of compound events — a per-year reading of the same signal, used in the maps. Both are exported; Step 4 consumes the total (compound_c).',
     formula: 'compound_count_total / n_years',
   },
   {
@@ -167,7 +167,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max compound_intensity_norm',
-    definition: 'Distribution of normalized compound intensity (see §6) across the grid point’s events — feeds the Hazard_Index.',
+    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events — feeds the Hazard_Index.',
     formula: 'mean, 95th pct, max of compound_intensity_norm',
   },
 ];
@@ -204,15 +204,17 @@ export default function CompoundDetectionPage() {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
-              Compound Event Detection
+              Step 3 Methodology
               <br />
-              <span className="text-blue-600">How wave–surge events are catalogued and measured</span>
+              <span className="text-blue-600">From storm catalogs to compound hazard characterization</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
-              This page is the article-standard specification of Step 3: how compound coastal events are
-              identified from the metocean record and every metric computed for them, with explicit
-              formulas, units, and assumptions. It is written for human audit — each definition maps
-              one-to-one onto the production code referenced in §7.
+              This page is the article-standard specification of Step 3: how individual wave and sea-level
+              storms are catalogued, how their temporal co-occurrence defines a <em>compound</em> event, and
+              how each grid point is then characterized (duration, seasonality, trends, return levels, and
+              wave–surge dependence) before the results feed the municipal risk index. Every definition is
+              given with its formula, units, and assumptions, and maps one-to-one onto the production code
+              referenced at the end.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -232,6 +234,26 @@ export default function CompoundDetectionPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Motivation ─────────────────────────────────────────── */}
+        <Section eyebrow="Motivation" title="What is a compound event — and why it matters">
+          <p className="mb-3 text-sm leading-relaxed text-gray-700">
+            Coastal flooding is rarely caused by a single driver acting alone. The most damaging episodes
+            on the Brazilian coast tend to occur when <strong>large waves</strong> and an{' '}
+            <strong>elevated total sea level</strong> strike at the same time: high water lets the waves
+            reach further inland, and energetic waves attack a shoreline that is already submerged. When two
+            hazards coincide and their joint impact exceeds the sum of their separate effects, it is a{' '}
+            <strong>compound event</strong> (Zscheischler et al. 2020).
+          </p>
+          <p className="text-sm leading-relaxed text-gray-700">
+            Step 3 turns 33 years of reanalysis (1993–2025) into an objective inventory of these
+            co-occurrences along the whole coast — 808 coastal grid points — and measures, for each one, how
+            often, how long, how strong, and how seasonally and inter-annually variable the compound hazard
+            is. Those measurements are what later feed the municipal risk index (Step 4). The sections below
+            follow the pipeline in order: from raw series, to single-variable storms, to compound events, to
+            the full hazard characterization.
+          </p>
+        </Section>
 
         {/* ── 0. Two-stage framing ───────────────────────────────── */}
         <Section eyebrow="Orientation" title="Calibration and detection are two distinct stages" tint="gray">
@@ -270,8 +292,25 @@ export default function CompoundDetectionPage() {
         {/* ── 1. Stage A: storm catalogs ─────────────────────────── */}
         <Section eyebrow="Stage A · Step 3.1" title="Building the single-variable storm catalogs">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            Hₛ and SSH_total are catalogued <strong>independently</strong> at every coastal grid point. A
-            "storm" is a peaks-over-threshold (POT) episode built in three deterministic steps.
+            The two drivers are <strong>significant wave height</strong> (Hₛ, from the WAVERYS wave
+            reanalysis) and <strong>total sea level</strong> (SSH_total). SSH_total is not observed directly;
+            it is built each day as the dynamic sea level from GLORYS12 plus the astronomical tide:
+          </p>
+          <Eq>{`SSH_total(t) = zos(t) |_00UTC  +  max_{0≤h<24} tide(t, h)     # FES2022 tide`}</Eq>
+          <p className="mb-3 text-sm leading-relaxed text-gray-700">
+            <strong>Why this composition?</strong> Coastal water level is the sum of a slow,
+            weather-driven component (storm surge / dynamic sea level, <code className="rounded bg-gray-100 px-1 text-xs">zos</code>)
+            and the deterministic astronomical tide. Combining them gives the level that actually meets the
+            coast. The <strong>daily-maximum</strong> tide is used so that a day flagged extreme corresponds
+            to the worst tidal phase of that day — a conservative, hazard-oriented choice. The trade-off:
+            <code className="rounded bg-gray-100 px-1 text-xs">zos</code> is sampled at 00:00 UTC while the
+            tide is the daily maximum, so the two do not share a timestamp and SSH_total slightly
+            <strong> overestimates</strong> the true instantaneous total level (see Assumptions).
+          </p>
+          <p className="mb-3 text-sm leading-relaxed text-gray-700">
+            Hₛ and SSH_total are then catalogued <strong>independently</strong> at every coastal grid point. A
+            "storm" is a peaks-over-threshold (POT) episode — POT means we keep only the days that exceed a
+            high threshold and group them into events — built in three deterministic steps.
           </p>
 
           <ol className="space-y-4 text-sm text-gray-700">
@@ -336,7 +375,7 @@ classes:     { Hs_only , SSH_total_only , compound }`}</Eq>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <MiniCard title="Why temporal overlap?" body="At the regional scale, wave generation and surge are driven by the same synoptic systems; co-occurrence in time is the operational signature of a compound driver (Zscheischler et al. 2020)." />
             <MiniCard title="Why union-find?" body="It guarantees a clean partition: each storm belongs to exactly one compound event, and chained overlaps are not double-counted." />
-            <MiniCard title="Daily resolution" body="Both datasets are daily, so overlap is resolved to the calendar day. Sub-daily lead/lag within a day cannot be distinguished (see §8)." />
+            <MiniCard title="Daily resolution" body="Both datasets are daily, so overlap is resolved to the calendar day. Sub-daily lead/lag within a day cannot be distinguished (see Assumptions)." />
           </div>
 
           <p className="mt-6 mb-2 text-sm font-semibold text-gray-900">Attributes computed per compound event</p>
@@ -394,33 +433,145 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
           </div>
         </Section>
 
-        {/* ── 5. Downstream dependence note ──────────────────────── */}
-        <Section eyebrow="Downstream use" title="From compound events to dependence structure">
+        {/* ── 5. Characterization suite ──────────────────────────── */}
+        <Section eyebrow="Stages 3.3–3.7" title="Characterizing the hazard at each grid point">
+          <p className="mb-5 text-sm leading-relaxed text-gray-700">
+            With the storm and compound catalogs in place, five complementary analyses summarize the hazard
+            at every grid point. Each answers a simple question first; the mechanics follow.
+          </p>
+
+          <div className="space-y-6 text-sm text-gray-700">
+            {/* 3.3 */}
+            <div>
+              <p className="font-semibold text-gray-900">3.3 · Duration &amp; persistence — “how long, and how often?”</p>
+              <p className="mt-1 leading-relaxed">
+                For Hₛ, SSH_total, and compound events separately, the catalog episodes are reduced to
+                distributional statistics: mean, 95th-percentile and maximum <strong>duration</strong> (days),
+                mean <strong>integrated intensity</strong> (the area above threshold, in m·day) and the mean
+                <strong> inter-event time</strong> — the typical gap between successive storms, a proxy for
+                how frequently a location is hit.
+              </p>
+            </div>
+
+            {/* 3.4 */}
+            <div>
+              <p className="font-semibold text-gray-900">3.4 · Seasonality — “when in the year?”</p>
+              <p className="mt-1 leading-relaxed">
+                Each event is binned by calendar month. The result is a 12-month count, the{' '}
+                <strong>peak month</strong>, and a split into the four meteorological seasons
+                (DJF, MAM, JJA, SON). No circular statistics are needed because months are discrete bins;
+                the aim is simply to show whether the hazard concentrates in, e.g., the austral winter
+                storm season.
+              </p>
+            </div>
+
+            {/* 3.5 */}
+            <div>
+              <p className="font-semibold text-gray-900">3.5 · Trends — “is the hazard changing over 1993–2025?”</p>
+              <p className="mt-1 leading-relaxed">
+                Two robust, non-parametric tools are applied to each annual series. The{' '}
+                <strong>Mann–Kendall (MK)</strong> test asks only whether values tend to go up or down by
+                counting the sign of every later-minus-earlier pair — it makes no assumption about the shape
+                of the trend. The <strong>Sen slope</strong> is the median of all pairwise slopes, a
+                magnitude estimate that ignores outliers.
+              </p>
+              <Eq>{`S = Σ_{i<j} sign(x_j − x_i)          # Mann–Kendall statistic
+Sen slope = median{ (x_j − x_i) / (j − i) }`}</Eq>
+              <p className="leading-relaxed">
+                Applied to <strong>8 annual series</strong> (storm counts for Hₛ / SSH_total / compound; mean
+                Hₛ and SSH_total peak; mean Hₛ and SSH_total duration; mean compound overlap duration), with
+                slope units of events·yr⁻¹, m·yr⁻¹ or days·yr⁻¹ per series. When a series shows significant
+                lag-1 autocorrelation, the <strong>modified MK</strong> variance of Hamed &amp; Rao (1998) is
+                used so the significance test is not over-confident.
+              </p>
+            </div>
+
+            {/* 3.6 */}
+            <div>
+              <p className="font-semibold text-gray-900">3.6 · Univariate extreme value analysis (EVA) — “how big is the rare event?”</p>
+              <p className="mt-1 leading-relaxed">
+                Return levels answer “what wave height (or sea level) is exceeded on average once every
+                <em> T</em> years?”. The storm peaks above the q90 threshold are fitted with a{' '}
+                <strong>Generalized Pareto Distribution (GPD)</strong> — the standard model for
+                peaks-over-threshold excesses — and the fitted curve is inverted to a return level:
+              </p>
+              <Eq>{`x_T = u + (σ/ξ) · [ (T·λ)^ξ − 1 ]      (ξ ≠ 0;  x_T = u + σ·ln(T·λ) when ξ ≈ 0)
+u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
+              <p className="leading-relaxed">
+                Return levels are reported for <strong>T = 2, 5, 10, 20, 50 years</strong>, in metres, for
+                both Hₛ and SSH_total. A grid point needs at least <strong>10 exceedances</strong> to be fit;
+                fewer and the GPD is left unfitted rather than forced.
+              </p>
+            </div>
+
+            {/* 3.7 */}
+            <div>
+              <p className="font-semibold text-gray-900">3.7 · Wave–surge dependence — “do the two drivers spike together?”</p>
+              <p className="mt-1 leading-relaxed">
+                The <code className="rounded bg-gray-100 px-1 text-xs">(peak_hs, peak_ssh_total)</code> pairs
+                from the compound events are the sample. <strong>Kendall’s τ</strong> and{' '}
+                <strong>Spearman’s ρ</strong> measure ordinary rank correlation; the extremal coefficients{' '}
+                <strong>χ</strong> (does co-occurrence persist into the extreme tail?) and{' '}
+                <strong>χ̄</strong> (how fast does it decay when it does not?) probe the joint tail. τ/ρ
+                require ≥ 5 pairs, χ/χ̄ ≥ 20 events; below that, points return nulls with metadata.
+              </p>
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm leading-relaxed text-gray-700">
+                  <strong className="text-amber-800">Read χ/χ̄ as screening, not verdict.</strong> With the
+                  empirical estimator at the u = 0.95 tail and only a few hundred events per point, just
+                  ~12–16 pairs sit above the tail threshold. That is too few to firmly separate asymptotic
+                  dependence from independence, so χ/χ̄ here are <strong>screening diagnostics</strong>, not
+                  definitive tail-dependence classifications. A rigorous classification would need bootstrap
+                  intervals or a parametric tail model (future bivariate EVA).
+                </p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* ── 6. Bridge to the risk index (Step 4) ───────────────── */}
+        <Section eyebrow="Hand-off" title="From hazard characterization to the municipal risk index" tint="gray">
+          <p className="mb-3 text-sm leading-relaxed text-gray-700">
+            Step 3 stops at the <strong>hazard</strong>: an objective, per-grid-point portrait of compound
+            coastal events. Step 4 (a separate, externally produced workflow) joins three of these hazard
+            metrics to each coastal municipality and combines them with a Social Vulnerability Index to form
+            the risk indices. The only quantities that cross the bridge are:
+          </p>
+          <ul className="mb-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
+            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — the absolute compound-event count (compound_count_total)</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — the mean overlap duration</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — the mean normalized compound intensity (defined above)</li>
+          </ul>
           <p className="text-sm leading-relaxed text-gray-700">
-            The <code className="rounded bg-gray-100 px-1 text-xs">(peak_hs, peak_ssh_total)</code> pairs of
-            the compound events are the sample for the wave–surge dependence analysis (Step 3.7): Kendall’s
-            τ and Spearman’s ρ (rank correlation) and the extremal coefficients χ and χ̄ (joint-tail
-            association). Stable estimation requires a minimum of <strong>20 compound events</strong> per
-            grid point for χ/χ̄ and <strong>5 pairs</strong> for τ/ρ; points below these counts return
-            nulls with metadata. This keeps the dependence portrait consistent with the compound-event
-            definition above — only genuinely co-occurring extremes contribute.
+            How these are normalized and weighted into Hazard_Index, Risk_Comp and Risk_Hazard is documented
+            on the{' '}
+            <Link href="/results/risk-integration" className="font-semibold text-blue-600 hover:underline">
+              Risk Integration
+            </Link>{' '}
+            page — not repeated here.
           </p>
         </Section>
 
-        {/* ── 6. Assumptions & limitations ───────────────────────── */}
+        {/* ── 7. Assumptions & limitations ───────────────────────── */}
         <Section eyebrow="For the auditor" title="Assumptions and limitations" tint="gray">
           <div className="grid gap-4 md:grid-cols-2">
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li><strong>Daily temporal resolution.</strong> Co-occurrence is resolved to the calendar day; sub-daily phasing of wave and surge peaks within a day is not resolvable, and peak_lag_days is therefore an integer-day quantity.</li>
               <li><strong>Local q90 thresholds.</strong> "Extreme" is relative to each grid point’s own climatology, not an absolute hazard level; comparisons across points are about <em>relative</em> exceedance.</li>
-              <li><strong>SSH_total construction.</strong> Total sea level is GLORYS12 zos at 00:00 UTC plus the FES2022 daily-maximum astronomical tide — it does not include wave setup or river/runoff contributions.</li>
+              <li><strong>SSH_total timing.</strong> Total sea level is GLORYS12 zos at 00:00 UTC plus the FES2022 daily-maximum tide. Because the two are not sampled at the same instant, SSH_total <strong>overestimates</strong> the true instantaneous total level by up to the within-day surge variation; it also omits wave setup and river/runoff.</li>
+              <li><strong>χ/χ̄ are screening diagnostics.</strong> Only ~12–16 pairs lie above the u = 0.95 tail per grid point, too few to firmly classify tail dependence; treat the χ/χ̄ maps as indicative, not definitive.</li>
             </ul>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li><strong>Gap tolerance.</strong> The 1-day episode gap and the ≥ 1-day overlap rule are deliberate, calibration-consistent choices; sensitivity to the gap was checked in Step 2e and found stable at q90/q90.</li>
               <li><strong>Equal-weight intensity.</strong> The 0.5/0.5 wave–surge weighting is a modelling assumption, not an impact-calibrated weight; site-specific damage functions could re-weight it.</li>
+              <li><strong>Regional calibration bias.</strong> The q90/q90 threshold pair was calibrated against reported Santa Catarina disaster events and then applied coast-wide; its optimality outside the SC sector is untested.</li>
               <li><strong>Reanalysis basis.</strong> Catalogs inherit any biases of WAVERYS, GLORYS12, and FES2022; they characterize the reanalysed ocean, not in-situ observations.</li>
             </ul>
           </div>
+          <p className="mt-5 rounded-lg border border-gray-300 bg-white px-4 py-3 text-xs leading-relaxed text-gray-600">
+            <strong className="text-gray-800">Status.</strong> These are preliminary results, subject to
+            revision — please do not cite without consulting the authors.
+          </p>
         </Section>
 
         {/* ── 7. Provenance / reproducibility ────────────────────── */}
@@ -443,8 +594,12 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
                   ['Per-storm attributes (peak, duration, integrated intensity)', '01_storm_catalogs/metrics.py'],
                   ['Overlap rule, union-find grouping, compound attributes, intensity normalization', '02_compound_detection/detection.py'],
                   ['EPISODE_MAX_GAP_DAYS = 1; threshold source (Step 2e); SSH_total definition', 'config/analysis_config.py'],
-                  ['Per-grid-point persistence aggregation', '03_duration_persistence/persistence.py'],
+                  ['Per-grid-point persistence aggregation (duration, inter-event time)', '03_duration_persistence/persistence.py'],
+                  ['Monthly/seasonal climatology (peak month, DJF/MAM/JJA/SON)', '04_monthly_seasonality/seasonality.py'],
+                  ['Mann–Kendall + Sen slope (8 series); modified MK (Hamed & Rao 1998)', '05_trends/trends.py'],
+                  ['POT–GPD fit and return levels (2–50 yr)', '06_univariate_eva/eva.py'],
                   ['Wave–surge dependence (τ, ρ, χ, χ̄) from compound pairs', '07_dependence/dependence.py'],
+                  ['Unified per-grid-point JSON consumed by the hazard maps', '08_site_export/export.py'],
                   ['Calibration matching window [D-2…D+1 00Z] (Step 2 only)', '02_threshold_calibration/04_csi_grid_scan/windows.py'],
                 ].map(([rule, src]) => (
                   <tr key={src} className="odd:bg-white even:bg-gray-50/50">
@@ -478,8 +633,12 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
           <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
             <li>Zscheischler, J. et al. (2020). A typology of compound weather and climate events. <em>Nature Reviews Earth &amp; Environment</em>, 1, 333–347.</li>
             <li>Camus, P. et al. (2021). Compound coastal flooding potential. (Wave–surge co-occurrence framing.)</li>
+            <li>Coles, S. (2001). <em>An Introduction to Statistical Modeling of Extreme Values</em>. Springer. (POT–GPD return levels.)</li>
             <li>Ledford, A. W. &amp; Tawn, J. A. (1996). Statistics for near independence in multivariate extreme values. <em>Biometrika</em>, 83(1), 169–187.</li>
             <li>Coles, S. G., Heffernan, J. E. &amp; Tawn, J. A. (1999). Dependence measures for extreme value analyses. <em>Extremes</em>, 2, 339–365.</li>
+            <li>Mann, H. B. (1945). Nonparametric tests against trend. <em>Econometrica</em>, 13(3), 245–259.</li>
+            <li>Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall’s tau. <em>JASA</em>, 63(324), 1379–1389.</li>
+            <li>Hamed, K. H. &amp; Rao, A. R. (1998). A modified Mann–Kendall trend test for autocorrelated data. <em>J. Hydrology</em>, 204, 182–196.</li>
           </ul>
         </Section>
       </main>

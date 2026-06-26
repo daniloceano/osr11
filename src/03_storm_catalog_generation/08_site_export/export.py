@@ -10,7 +10,7 @@ Output fields per grid point:
     - Compound detection: counts, rates, intensity (normalized)
     - Duration & persistence: storm_count, mean/p95/max duration, intensity
     - Seasonality: monthly counts, peak month, seasonal split
-    - Trends: Mann–Kendall slopes + significance for 9 annual series
+    - Trends: Mann–Kendall slopes + significance for 8 annual series
     - EVA: GPD parameters + return levels (2, 5, 10, 20, 50 yr)
     - Dependence: τ, ρ, χ, χ̄
 

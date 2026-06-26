@@ -67,7 +67,7 @@ const METRICS: Record<AnalysisTab, MetricDef[]> = {
     { key: 'intensity', label: 'Mean normalized intensity', unit: '[0–1]', field: 'compound_mean_intensity_norm' },
     { key: 'p95_int', label: 'P95 normalized intensity', unit: '[0–1]', field: 'compound_p95_intensity_norm' },
     { key: 'overlap', label: 'Mean overlap duration', unit: 'days', field: 'compound_mean_overlap_duration' },
-    { key: 'lag', label: 'Mean peak lag (Hₛ→SSH)', unit: 'days', field: 'compound_mean_peak_lag_days' },
+    { key: 'lag', label: 'Mean peak lag (Hₛ − SSH)', unit: 'days', field: 'compound_mean_peak_lag_days', description: 'Mean of (Hₛ peak date − SSH_total peak date): positive = Hₛ peaks after SSH_total (lags); negative = Hₛ peaks first' },
   ],
   duration: [
     { key: 'hs_mean', label: 'Hₛ mean storm duration', unit: 'days', field: 'hs_mean_duration_days' },

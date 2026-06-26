@@ -76,7 +76,21 @@ export default function HazardCharacterizationPage() {
         {/* ── Methodology notes ──────────────────────────────────────── */}
         <div className="border-t border-gray-200 bg-gray-50 py-10">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Methodology Notes</h2>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-lg font-bold text-gray-900">Methodology Notes</h2>
+              <Link
+                href="/methodology/compound-detection"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:underline"
+              >
+                Read the full Step 3 methodology
+                <ChevronSvg />
+              </Link>
+            </div>
+            <p className="mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
+              A condensed summary follows; the linked page gives the full pipeline in order — storm catalogs,
+              compound detection, the characterization suite, and the hand-off to the municipal risk index —
+              with formulas and assumptions.
+            </p>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
@@ -94,7 +108,8 @@ export default function HazardCharacterizationPage() {
                   <strong className="text-gray-800">Trend testing.</strong>{' '}
                   Mann–Kendall test for monotonic trend significance (α = 0.05).
                   Sen slope estimator for robust magnitudes.
-                  Applied to annual storm counts, mean peak intensity, and mean duration for Hₛ, SSH_total, and compound events.
+                  Applied to 8 annual series: storm counts (Hₛ, SSH_total, compound), mean peak
+                  (Hₛ, SSH_total), mean storm duration (Hₛ, SSH_total), and mean compound overlap duration.
                 </p>
               </div>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
@@ -109,11 +124,16 @@ export default function HazardCharacterizationPage() {
                   Kendall&apos;s τ and Spearman&apos;s ρ measure rank correlation between Hₛ and SSH_total peaks in compound events.
                   Extremal dependence coefficients χ (asymptotic) and χ̄ (sub-asymptotic) quantify joint tail behavior;
                   χ̄ is most informative when χ ≈ 0, indicating the strength of residual tail association under asymptotic independence
-                  (Ledford &amp; Tawn, 1996).
+                  (Ledford &amp; Tawn, 1996). With only ~12–16 effective pairs above the u = 0.95 tail threshold per grid point,
+                  χ/χ̄ here are <strong>screening diagnostics, not definitive tail-dependence classifications</strong>.
                 </p>
                 <p>
                   <strong className="text-gray-800">Limitations.</strong>{' '}
                   Daily temporal resolution means sub-daily co-occurrence cannot be resolved.
+                  SSH_total combines GLORYS zos sampled at 00:00 UTC with the daily-maximum FES2022 tide — these do not
+                  share the same timestamp, so SSH_total overestimates the true instantaneous total sea level.
+                  The q90/q90 detection thresholds were calibrated against reported Santa Catarina events and applied
+                  coast-wide; their optimality outside SC is untested.
                   GPD parameter estimation may be unreliable for grid points with few exceedances.
                   Trend significance over 33 years is limited for low-frequency events.
                 </p>

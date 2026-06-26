@@ -16,7 +16,7 @@ Run these steps **in order** before executing Step 3.
 | `data/raw/waverys/` | 396 monthly WAVERYS files (Jan 1993 – Dec 2025) | Full Brazil [-35°S,+6°N] × [-55°W,-28°W] | ✅ Downloaded (14.38 GB) |
 | `data/unified/` | `metocean_brazil_unified_waverys_grid.nc` | Full Brazil, 206×136 grid, 12053 days | ✅ Preprocessed (1.6 GB) |
 | `outputs/storm_catalog/` | Hs + SSH_total catalogs, 808 grid points | Full Brazilian coast | ✅ Step 3 complete |
-| `site/public/data/` | `storm_maps_grid_metrics.json` | 808 grid points, 3 event classes | ✅ Exported for site |
+| `site/public/data/` | `hazard_characterization_grid_metrics.json` (3.8, primary) + legacy `storm_maps_grid_metrics.json` | 808 grid points | ✅ Exported for site |
 
 The SC-domain files were downloaded during an initial test phase.  
 They are preserved for reference and for test fixture regeneration, but are
@@ -181,7 +181,7 @@ outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv
 ### Run
 
 ```bash
-python -m src.03_storm_catalog_generation.main \
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main \
   --mode production \
   --tide-mode auto \
   --workers 20
@@ -205,29 +205,47 @@ outputs/storm_catalog/
 
 ---
 
-## Step 4 — Export storm maps data for the site
+## Site exports — two distinct JSONs
 
-### What this step does
+There are **two** site-export paths, both currently live and consumed by different pages.
+Do not confuse them.
 
-1. Reads both Step 3 catalogs (Hs storms, SSH_total storms).
-2. At each grid point, detects **compound events** via temporal overlap:
-   - compound: Hs storm and SSH_total storm share ≥ 1 calendar day.
-   - Hs_only: Hs storm with no overlap with any SSH_total storm.
-   - SSH_total_only: SSH_total storm with no overlap with any Hs storm.
-3. Computes per-grid-point metrics: counts, annual means, mean/p95/max intensity.
-4. Exports a single JSON for the site's `/results/storm-maps` page.
+### A. Full hazard-characterization export (current, primary)
 
-### Run
+Built by sub-module **3.8** (`08_site_export/export.py`), run as part of the hazard
+characterization pipeline (`hazard_characterization --module all` / `--module site_export`).
+It merges **all** sub-module outputs (compound, duration, seasonality, trends, EVA,
+dependence) into one JSON consumed by **`/results/hazard-characterization`**.
+
+```bash
+python -m src.03_storm_catalog_generation.hazard_characterization --module site_export
+```
+
+Output:
+
+```
+site/public/data/hazard_characterization_grid_metrics.json   # ~2.4 MB, 808 grid points
+```
+
+### B. Legacy storm-maps export (compound-only, still consumed)
+
+The older, narrower export in `src/site/export_storm_maps_data.py` produces a
+compound/3-class-only JSON consumed by **`/results/storm-maps`**. The 3.8 export above
+supersedes it for new work, but the `/results/storm-maps` page still reads this file, so
+it is kept until that page is retired or repointed.
 
 ```bash
 conda run -n osr11 python -m src.site.export_storm_maps_data
 ```
 
-### Expected output
+Output:
 
 ```
 site/public/data/storm_maps_grid_metrics.json   # ~0.4 MB, 808 grid points
 ```
+
+Compound detection itself lives in sub-module **3.2** (`02_compound_detection/`); both
+exports read its results rather than re-detecting.
 
 ### Production results (April 2026)
 
@@ -253,11 +271,14 @@ python -m src.01_data_preparation.preprocessing.interpolate_glorys_to_waverys_gr
     --config config/preprocessing/glorys_to_waverys_brazil_full.yaml \
     --workers 100
 
-# 3. Storm catalog (~1-5 min with 20 workers)
-python -m src.03_storm_catalog_generation.main \
+# 3a. Storm catalogs / sub-module 3.1 (~1-5 min with 20 workers)
+python -m src.03_storm_catalog_generation.01_storm_catalogs.main \
     --mode production --tide-mode auto --workers 20
 
-# 4. Export for site (~2 min)
+# 3b. Hazard characterization sub-modules 3.2–3.8 (incl. full site export)
+python -m src.03_storm_catalog_generation.hazard_characterization --module all
+
+# 4. (optional) Legacy compound-only export for the /results/storm-maps page
 python -m src.site.export_storm_maps_data
 ```
 

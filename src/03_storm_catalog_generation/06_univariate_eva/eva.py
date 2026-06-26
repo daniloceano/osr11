@@ -14,7 +14,10 @@ Methodology:
     3. Fit GPD(ξ, σ) to the excesses via maximum likelihood (scipy).
     4. Compute return levels: x_T = u + (σ/ξ) * ((T * λ)^ξ - 1)
        where u = threshold, λ = mean exceedances per year, T = return period.
-    5. Estimate confidence intervals via profile likelihood or delta method.
+    5. Estimate confidence intervals via the delta method, using the closed-form
+       asymptotic (expected-information) variance–covariance matrix of the GPD MLE
+       — Var(σ)=2σ²/n, Var(ξ)=(1+ξ)²/n, Cov(σ,ξ)=−σ(1+ξ)/n. Profile-likelihood
+       intervals are not currently implemented.
 
 Independence guarantee:
     Storm peaks are independent by construction — the POT clustering in Step 3
