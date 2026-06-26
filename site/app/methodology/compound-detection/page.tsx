@@ -22,7 +22,12 @@ function Chevron() {
 function Eq({ children }: { children: React.ReactNode }) {
   return (
     <div className="my-3 overflow-x-auto rounded-lg border border-gray-200 bg-gray-900 px-4 py-3">
-      <code className="whitespace-pre text-xs leading-relaxed text-gray-100 md:text-sm">{children}</code>
+      <code
+        className="block whitespace-pre text-xs leading-relaxed text-gray-100 md:text-sm"
+        style={{ background: 'transparent', padding: 0, borderRadius: 0 }}
+      >
+        {children}
+      </code>
     </div>
   );
 }
