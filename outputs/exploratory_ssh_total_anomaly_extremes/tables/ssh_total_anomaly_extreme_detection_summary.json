@@ -1,0 +1,35 @@
+{
+  "input": "/p1-swell/danilocs/osr11/data/unified/metocean_brazil_unified_waverys_grid.nc",
+  "ssh_catalog": "/p1-swell/danilocs/osr11/outputs/storm_catalog/catalog_ssh_total_storms.json",
+  "hs_var": "VHM0",
+  "ssh_total_var": "SSH_total",
+  "quantile": 0.9,
+  "period": [
+    "1993-01-01",
+    "2025-12-31"
+  ],
+  "max_gap_days": 1,
+  "n_analysis_points": 808,
+  "anomaly_definition": "SSH_total anomaly = SSH_total - long-term mean SSH_total at each grid point",
+  "translation_invariance_note": "With local per-point quantile thresholds, subtracting a pointwise mean shifts the series and the threshold by the same amount. Event masks are expected to be unchanged apart from numerical precision.",
+  "threshold_translation_error_abs_max": 0.0,
+  "ssh_total_episode_counts": {
+    "raw_total": 324929,
+    "anomaly_total": 324929,
+    "delta_total": 0,
+    "points_changed": 0,
+    "points_with_mask_difference": 0,
+    "max_abs_delta_per_point": 0
+  },
+  "compound_event_counts": {
+    "raw_total": 96031,
+    "anomaly_total": 96031,
+    "delta_total": 0,
+    "points_changed": 0,
+    "max_abs_delta_per_point": 0
+  },
+  "catalog_consistency": {
+    "points_different_from_catalog": 0,
+    "max_abs_delta_vs_catalog": 0
+  }
+}
