@@ -18,13 +18,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib.colors import TwoSlopeNorm
+from matplotlib.colors import BoundaryNorm
 
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_INPUT = ROOT / "data/unified/metocean_brazil_unified_waverys_grid.nc"
 DEFAULT_OUTPUT_DIR = ROOT / "outputs/monthly_quicklook_brazil_all"
 DEFAULT_COASTLINE = ROOT / "data/ne_10m_coastline/ne_10m_coastline.shp"
+COLOR_INTERVAL = 0.05
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,10 +73,14 @@ def plot_mean_map(
     if finite.size == 0:
         raise ValueError("No finite values available to plot.")
 
-    vmax = float(np.nanpercentile(np.abs(finite), 98))
-    if np.isclose(vmax, 0.0):
-        vmax = float(np.nanmax(np.abs(finite)))
-    norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
+    vmin = np.floor(float(np.nanmin(finite)) / COLOR_INTERVAL) * COLOR_INTERVAL
+    vmax = np.ceil(float(np.nanmax(finite)) / COLOR_INTERVAL) * COLOR_INTERVAL
+    if np.isclose(vmin, vmax):
+        vmin -= COLOR_INTERVAL
+        vmax += COLOR_INTERVAL
+    boundaries = np.arange(vmin, vmax + COLOR_INTERVAL * 0.5, COLOR_INTERVAL)
+    cmap = plt.get_cmap("RdBu_r", len(boundaries) - 1)
+    norm = BoundaryNorm(boundaries, cmap.N)
 
     crs = ccrs.PlateCarree()
     fig = plt.figure(figsize=(7.2, 9.6))
@@ -86,7 +91,7 @@ def plot_mean_map(
         values,
         transform=crs,
         shading="auto",
-        cmap="RdBu_r",
+        cmap=cmap,
         norm=norm,
     )
 
@@ -127,8 +132,17 @@ def plot_mean_map(
     grid.xlabel_style = {"size": 8}
     grid.ylabel_style = {"size": 8}
 
-    colorbar = fig.colorbar(mesh, ax=ax, orientation="vertical", pad=0.025, shrink=0.82)
+    colorbar = fig.colorbar(
+        mesh,
+        ax=ax,
+        orientation="vertical",
+        pad=0.025,
+        shrink=0.82,
+        ticks=boundaries,
+        spacing="proportional",
+    )
     colorbar.set_label("Mean zos (m)")
+    colorbar.ax.tick_params(labelsize=8)
 
     period = mean_zos.attrs.get("period", "")
     ax.set_title(
