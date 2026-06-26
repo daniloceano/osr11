@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { methodologySteps, conceptualFramework } from '@/content/methodology';
 import StatusBadge from './StatusBadge';
 
@@ -132,6 +133,19 @@ export default function MethodologyFlowchart() {
                             );
                           })}
                         </div>
+                      )}
+
+                      {/* Detail-page link (article-standard methodology) */}
+                      {step.href && (
+                        <Link
+                          href={step.href}
+                          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                        >
+                          {step.hrefLabel ?? 'Read the detailed methodology'}
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
                       )}
                     </div>
                   </div>

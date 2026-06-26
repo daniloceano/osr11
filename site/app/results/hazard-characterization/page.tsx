@@ -60,7 +60,7 @@ export default function HazardCharacterizationPage() {
               <ModuleCard color="#2171b5" title="3.3 Duration" body="Storm episode duration statistics: mean, median, P95. Inter-event times and persistence." />
               <ModuleCard color="#238b45" title="3.4 Seasonality" body="Monthly/seasonal storm frequency. Peak month for Hₛ, SSH, and compound events." />
               <ModuleCard color="#d94801" title="3.5 Trends" body="Mann–Kendall + Sen slope for annual storm counts, peak intensity, and mean duration (1993–2025)." />
-              <ModuleCard color="#cb181d" title="3.6 EVA" body="GPD-based return levels: 2, 5, 10, 25, 50-yr for Hₛ and SSH_total peaks-over-threshold." />
+              <ModuleCard color="#cb181d" title="3.6 EVA" body="GPD-based return levels: 2, 5, 10, 20, 50-yr for Hₛ and SSH_total peaks-over-threshold." />
               <ModuleCard color="#6a51a3" title="3.7 Dependence" body="Wave–surge correlation: Kendall τ, Spearman ρ, extremal dependence coefficients χ and χ̄." />
             </div>
           </div>
@@ -101,8 +101,8 @@ export default function HazardCharacterizationPage() {
                 <p>
                   <strong className="text-gray-800">Extreme value analysis.</strong>{' '}
                   Generalized Pareto Distribution (GPD) fitted to storm peak exceedances above the q90 threshold.
-                  Return levels estimated for 2, 5, 10, 25, and 50-year return periods.
-                  Grid points with &lt; 30 exceedances are excluded.
+                  Return levels estimated for 2, 5, 10, 20, and 50-year return periods.
+                  Grid points with &lt; 10 exceedances are excluded.
                 </p>
                 <p>
                   <strong className="text-gray-800">Dependence structure.</strong>{' '}

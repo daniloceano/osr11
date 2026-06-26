@@ -164,14 +164,14 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-2b',
         label: '2b — Preliminary Compound Analysis',
-        description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 22 of 91 events show concurrent SSH-only exceedances at q90.',
+        description: 'First-pass inspection of joint Hₛ and SSH exceedances at q90 during the 91 reported SC coastal disasters (full coast, 5 sectors, 22 municipalities). 22 of 91 events (24%) show at least one day of concurrent Hₛ and SSH q90 exceedance, across 10 municipalities.',
         status: 'done',
         tasks: [
           'Per-event ±3-day time-series windows (MagicA POT) — 91 events ✓',
           'q90 thresholds from full 1993–2025 climatological series ✓',
           'Concomitance metrics (Hₛ and SSH joint exceedances) ✓',
           'Cross-event summary figures and metrics table ✓',
-          '22 of 91 events show concurrent SSH-only exceedances at q90 ✓',
+          '22 of 91 events show concurrent Hₛ and SSH exceedances at q90 ✓',
         ],
       },
       {

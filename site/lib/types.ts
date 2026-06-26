@@ -29,6 +29,10 @@ export interface MethodStep {
   isCurrent?: boolean;
   stepNumber?: number;
   subSteps?: SubStep[];
+  /** Optional link to a dedicated, article-standard detail page for this step. */
+  href?: string;
+  /** Optional short call-to-action label shown on the clickable card. */
+  hrefLabel?: string;
 }
 
 export interface ResultCard {
