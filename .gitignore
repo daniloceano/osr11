@@ -33,6 +33,8 @@ outputs/tidal_sensitivity/*
 outputs/threshold_calibration/*
 outputs/storm_catalog/
 outputs/risk_index/
+# Regeneratable NetCDF data under quicklook outputs (keep figures, drop data)
+outputs/monthly_quicklook_brazil_all/data/
 
 # Logs
 logs/*.log
