@@ -20,6 +20,7 @@ from cartopy.io import shapereader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import xarray as xr
 from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
 
 
@@ -50,6 +51,13 @@ INTENSITY_CMAP = LinearSegmentedColormap.from_list(
 
 log = logging.getLogger("local_vs_global_compound_intensity")
 
+STAT_SPECS = [
+    ("mean", "Mean"),
+    ("q90", "Q90"),
+    ("q95", "Q95"),
+    ("max", "Maximum"),
+]
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -69,7 +77,8 @@ def main() -> None:
 
     fig_dir = args.output_dir / "figures"
     tab_dir = args.output_dir / "tables"
-    for directory in (fig_dir, tab_dir):
+    data_dir = args.output_dir / "data"
+    for directory in (fig_dir, tab_dir, data_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
     catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
@@ -84,6 +93,11 @@ def main() -> None:
     point_metrics_path = tab_dir / "compound_intensity_global_vs_local_by_point.csv"
     point_metrics.to_csv(point_metrics_path, index=False)
     log.info("Wrote %s", point_metrics_path)
+
+    grid_ds = to_grid_dataset(point_metrics, args, global_refs)
+    grid_path = data_dir / "compound_intensity_global_vs_local_metrics_grid.nc"
+    grid_ds.to_netcdf(grid_path)
+    log.info("Wrote %s", grid_path)
 
     metadata = {
         "catalog": str(args.catalog),
@@ -100,17 +114,30 @@ def main() -> None:
             "compound events in the domain. The local panel computes Q05/Q95 "
             "separately for the compound events at each grid point."
         ),
+        "statistics": {
+            key: label for key, label in STAT_SPECS
+        },
+        "processed_grid": str(grid_path),
     }
     metadata_path = tab_dir / "compound_intensity_global_vs_local_metadata.json"
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     log.info("Wrote %s", metadata_path)
 
-    plot_comparison_map(
+    plot_all_stats_comparison_map(
         point_metrics,
-        out_path=fig_dir / "fig_compound_mean_intensity_global_vs_local_normalization.png",
+        out_path=fig_dir / "fig_compound_intensity_stats_global_vs_local_normalization.png",
         coastline=args.coastline,
         dpi=args.dpi,
     )
+    for stat_key, stat_label in STAT_SPECS:
+        plot_stat_comparison_map(
+            point_metrics,
+            stat_key=stat_key,
+            stat_label=stat_label,
+            out_path=fig_dir / f"fig_compound_{stat_key}_intensity_global_vs_local_normalization.png",
+            coastline=args.coastline,
+            dpi=args.dpi,
+        )
 
 
 def flatten_events(catalog: list[dict]) -> pd.DataFrame:
@@ -177,8 +204,12 @@ def compute_point_metrics(catalog: list[dict], global_refs: dict[str, float]) ->
                 local_refs["local_ssh_ref_high"],
             )
 
-        global_mean = safe_mean(global_intensity)
-        local_mean = safe_mean(local_intensity)
+        global_stats = summarize_intensity(global_intensity)
+        local_stats = summarize_intensity(local_intensity)
+        deltas = {
+            key: safe_difference(local_stats[key], global_stats[key])
+            for key, _ in STAT_SPECS
+        }
         rows.append(
             {
                 "grid_lat": float(point["grid_lat"]),
@@ -188,11 +219,27 @@ def compute_point_metrics(catalog: list[dict], global_refs: dict[str, float]) ->
                 "production_mean_compound_intensity_norm": point.get(
                     "mean_compound_intensity_norm"
                 ),
-                "global_mean_compound_intensity_norm_recomputed": global_mean,
-                "local_mean_compound_intensity_norm": local_mean,
-                "delta_local_minus_global": safe_difference(local_mean, global_mean),
-                "local_p95_compound_intensity_norm": safe_percentile(local_intensity, 95),
-                "local_max_compound_intensity_norm": safe_max(local_intensity),
+                "production_p95_compound_intensity_norm": point.get(
+                    "p95_compound_intensity_norm"
+                ),
+                "production_max_compound_intensity_norm": point.get(
+                    "max_compound_intensity_norm"
+                ),
+                "global_mean_compound_intensity_norm": global_stats["mean"],
+                "global_mean_compound_intensity_norm_recomputed": global_stats["mean"],
+                "global_q90_compound_intensity_norm": global_stats["q90"],
+                "global_q95_compound_intensity_norm": global_stats["q95"],
+                "global_max_compound_intensity_norm": global_stats["max"],
+                "local_mean_compound_intensity_norm": local_stats["mean"],
+                "local_q90_compound_intensity_norm": local_stats["q90"],
+                "local_q95_compound_intensity_norm": local_stats["q95"],
+                "local_p95_compound_intensity_norm": local_stats["q95"],
+                "local_max_compound_intensity_norm": local_stats["max"],
+                "delta_mean_local_minus_global": deltas["mean"],
+                "delta_q90_local_minus_global": deltas["q90"],
+                "delta_q95_local_minus_global": deltas["q95"],
+                "delta_max_local_minus_global": deltas["max"],
+                "delta_local_minus_global": deltas["mean"],
                 **local_refs,
             }
         )
@@ -214,6 +261,15 @@ def normalized_compound_intensity(
     hs_norm = np.clip((hs_peaks - hs_ref_low) / hs_range, 0.0, 1.0)
     ssh_norm = np.clip((ssh_peaks - ssh_ref_low) / ssh_range, 0.0, 1.0)
     return 0.5 * (hs_norm + ssh_norm)
+
+
+def summarize_intensity(values: np.ndarray) -> dict[str, float | None]:
+    return {
+        "mean": safe_mean(values),
+        "q90": safe_percentile(values, 90),
+        "q95": safe_percentile(values, 95),
+        "max": safe_max(values),
+    }
 
 
 def safe_mean(values: np.ndarray) -> float | None:
@@ -247,9 +303,54 @@ def load_summary_refs(path: Path) -> dict | None:
     return data.get("normalization_refs")
 
 
-def plot_comparison_map(
+def to_grid_dataset(
+    point_metrics: pd.DataFrame,
+    args: argparse.Namespace,
+    global_refs: dict[str, float],
+) -> xr.Dataset:
+    lat_vals = np.array(sorted(point_metrics["grid_lat"].dropna().unique()), dtype=float)
+    lon_vals = np.array(sorted(point_metrics["grid_lon"].dropna().unique()), dtype=float)
+    fields = ["compound_count_total"]
+    for stat_key, _ in STAT_SPECS:
+        fields.extend(
+            [
+                f"global_{stat_key}_compound_intensity_norm",
+                f"local_{stat_key}_compound_intensity_norm",
+                f"delta_{stat_key}_local_minus_global",
+            ]
+        )
+
+    data_vars = {}
+    for field in fields:
+        data_vars[field] = (
+            ("latitude", "longitude"),
+            field_from_points(point_metrics, lat_vals, lon_vals, field),
+        )
+
+    return xr.Dataset(
+        data_vars=data_vars,
+        coords={"latitude": lat_vals, "longitude": lon_vals},
+        attrs={
+            "analysis": "Exploratory global-vs-local compound-intensity normalization",
+            "catalog": str(args.catalog),
+            "summary": str(args.summary),
+            "normalization": (
+                "Global uses domain-wide Q05/Q95 peak references; local uses Q05/Q95 "
+                "peak references computed independently at each grid point."
+            ),
+            "hs_ref_low": float(global_refs["hs_ref_low"]),
+            "hs_ref_high": float(global_refs["hs_ref_high"]),
+            "ssh_ref_low": float(global_refs["ssh_ref_low"]),
+            "ssh_ref_high": float(global_refs["ssh_ref_high"]),
+        },
+    )
+
+
+def plot_stat_comparison_map(
     point_metrics: pd.DataFrame,
     *,
+    stat_key: str,
+    stat_label: str,
     out_path: Path,
     coastline: Path,
     dpi: int,
@@ -263,19 +364,19 @@ def plot_comparison_map(
         point_metrics,
         lat_vals,
         lon_vals,
-        "global_mean_compound_intensity_norm_recomputed",
+        f"global_{stat_key}_compound_intensity_norm",
     )
     local_field = field_from_points(
         point_metrics,
         lat_vals,
         lon_vals,
-        "local_mean_compound_intensity_norm",
+        f"local_{stat_key}_compound_intensity_norm",
     )
     delta_field = field_from_points(
         point_metrics,
         lat_vals,
         lon_vals,
-        "delta_local_minus_global",
+        f"delta_{stat_key}_local_minus_global",
     )
 
     delta_abs = np.abs(delta_field[np.isfinite(delta_field)])
@@ -297,13 +398,13 @@ def plot_comparison_map(
     panels = [
         (
             global_field,
-            "Current: domain-wide Q05/Q95",
+            "Global Q05/Q95",
             INTENSITY_CMAP,
             {"vmin": 0.0, "vmax": 1.0},
         ),
         (
             local_field,
-            "Test: local Q05/Q95",
+            "Local Q05/Q95",
             INTENSITY_CMAP,
             {"vmin": 0.0, "vmax": 1.0},
         ),
@@ -349,13 +450,132 @@ def plot_comparison_map(
 
     cbar_intensity = fig.colorbar(intensity_mesh, cax=cax_intensity, orientation="horizontal")
     cbar_intensity.ax.tick_params(labelsize=8)
-    cbar_intensity.set_label("Mean compound intensity (norm.)", fontsize=9)
+    cbar_intensity.set_label(f"{stat_label} compound intensity (norm.)", fontsize=9)
 
     cbar_delta = fig.colorbar(delta_mesh, cax=cax_delta, orientation="horizontal")
     cbar_delta.ax.tick_params(labelsize=8)
     cbar_delta.set_label("Delta local - domain-wide", fontsize=9)
 
-    fig.suptitle("Compound-event mean intensity normalization test", fontsize=12)
+    fig.suptitle(f"Compound-event {stat_label.lower()} intensity normalization test", fontsize=12)
+    fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.04)
+    plt.close(fig)
+    log.info("Wrote %s", out_path)
+
+
+def plot_all_stats_comparison_map(
+    point_metrics: pd.DataFrame,
+    *,
+    out_path: Path,
+    coastline: Path,
+    dpi: int,
+) -> None:
+    lat_vals = np.array(sorted(point_metrics["grid_lat"].dropna().unique()), dtype=float)
+    lon_vals = np.array(sorted(point_metrics["grid_lon"].dropna().unique()), dtype=float)
+    geoms = coastline_geometries(coastline)
+    extent = map_extent(lon_vals, lat_vals)
+
+    delta_fields = [
+        field_from_points(
+            point_metrics,
+            lat_vals,
+            lon_vals,
+            f"delta_{stat_key}_local_minus_global",
+        )
+        for stat_key, _ in STAT_SPECS
+    ]
+    all_delta = np.concatenate(
+        [field[np.isfinite(field)].ravel() for field in delta_fields if np.isfinite(field).any()]
+    )
+    delta_limit = float(np.ceil(max(np.abs(all_delta).max(initial=0.05), 0.05) * 20.0) / 20.0)
+    delta_norm = TwoSlopeNorm(vmin=-delta_limit, vcenter=0.0, vmax=delta_limit)
+
+    fig = plt.figure(figsize=(13.2, 14.4))
+    gs = fig.add_gridspec(
+        nrows=len(STAT_SPECS) + 1,
+        ncols=4,
+        height_ratios=[1.0, 1.0, 1.0, 1.0, 0.04],
+        width_ratios=[0.08, 1.0, 1.0, 1.0],
+        wspace=0.035,
+        hspace=0.13,
+    )
+    axes = [
+        [fig.add_subplot(gs[i, j + 1], projection=CRS) for j in range(3)]
+        for i in range(len(STAT_SPECS))
+    ]
+    label_axes = [fig.add_subplot(gs[i, 0]) for i in range(len(STAT_SPECS))]
+    cax_intensity = fig.add_subplot(gs[-1, 1:3])
+    cax_delta = fig.add_subplot(gs[-1, 3])
+    intensity_mesh = None
+    delta_mesh = None
+
+    for i, (stat_key, stat_label) in enumerate(STAT_SPECS):
+        label_axes[i].axis("off")
+        label_axes[i].text(
+            0.5,
+            0.5,
+            stat_label,
+            rotation=90,
+            ha="center",
+            va="center",
+            fontsize=10,
+            fontweight="bold",
+        )
+        fields = [
+            field_from_points(
+                point_metrics,
+                lat_vals,
+                lon_vals,
+                f"global_{stat_key}_compound_intensity_norm",
+            ),
+            field_from_points(
+                point_metrics,
+                lat_vals,
+                lon_vals,
+                f"local_{stat_key}_compound_intensity_norm",
+            ),
+            delta_fields[i],
+        ]
+        titles = ["Global Q05/Q95", "Local Q05/Q95", "Local - global"]
+        for j, ax in enumerate(axes[i]):
+            if j < 2:
+                mesh = ax.pcolormesh(
+                    lon_vals,
+                    lat_vals,
+                    fields[j],
+                    shading="auto",
+                    cmap=INTENSITY_CMAP,
+                    vmin=0.0,
+                    vmax=1.0,
+                    transform=CRS,
+                )
+                intensity_mesh = mesh
+            else:
+                mesh = ax.pcolormesh(
+                    lon_vals,
+                    lat_vals,
+                    fields[j],
+                    shading="auto",
+                    cmap="RdBu_r",
+                    norm=delta_norm,
+                    transform=CRS,
+                )
+                delta_mesh = mesh
+
+            if i == 0:
+                ax.set_title(titles[j], fontsize=10)
+            format_map_axis(ax, extent, geoms, row=i, col=j)
+
+    cbar_intensity = fig.colorbar(intensity_mesh, cax=cax_intensity, orientation="horizontal")
+    cbar_intensity.ax.tick_params(labelsize=8)
+    cbar_intensity.set_label("Compound intensity (norm.)", fontsize=9)
+    cbar_delta = fig.colorbar(delta_mesh, cax=cax_delta, orientation="horizontal")
+    cbar_delta.ax.tick_params(labelsize=8)
+    cbar_delta.set_label("Delta local - global", fontsize=9)
+
+    fig.suptitle(
+        "Compound-event intensity statistics: global vs local normalization",
+        fontsize=12,
+    )
     fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
     log.info("Wrote %s", out_path)
@@ -378,6 +598,22 @@ def field_from_points(
         i_lon = lon_index[round(float(row.grid_lon), 4)]
         field[i_lat, i_lon] = float(value)
     return field
+
+
+def format_map_axis(ax, extent: list[float], geoms: list, *, row: int, col: int) -> None:
+    ax.set_extent(extent, crs=CRS)
+    ax.set_facecolor("#f4f1ea")
+    if geoms:
+        ax.add_geometries(geoms, CRS, facecolor="none", edgecolor="0.15", linewidth=0.45)
+    else:
+        ax.coastlines(resolution="10m", linewidth=0.5)
+    gl = ax.gridlines(draw_labels=True, linewidth=0.25, color="0.55", alpha=0.45)
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.left_labels = col == 0
+    gl.bottom_labels = row == len(STAT_SPECS) - 1
+    gl.xlabel_style = {"size": 7}
+    gl.ylabel_style = {"size": 7}
 
 
 def map_extent(lon: np.ndarray, lat: np.ndarray) -> list[float]:

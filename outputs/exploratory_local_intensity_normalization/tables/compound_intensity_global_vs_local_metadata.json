@@ -15,5 +15,12 @@
     "ssh_ref_low": 0.5675,
     "ssh_ref_high": 3.0438
   },
-  "intensity_definition": "0.5 * (normalized peak_hs + normalized peak_ssh_total). The current/global panel uses Q05/Q95 references pooled across all compound events in the domain. The local panel computes Q05/Q95 separately for the compound events at each grid point."
+  "intensity_definition": "0.5 * (normalized peak_hs + normalized peak_ssh_total). The current/global panel uses Q05/Q95 references pooled across all compound events in the domain. The local panel computes Q05/Q95 separately for the compound events at each grid point.",
+  "statistics": {
+    "mean": "Mean",
+    "q90": "Q90",
+    "q95": "Q95",
+    "max": "Maximum"
+  },
+  "processed_grid": "/Users/danilocoutodesouza/Documents/Programs_and_scripts/osr11/outputs/exploratory_local_intensity_normalization/data/compound_intensity_global_vs_local_metrics_grid.nc"
 }
