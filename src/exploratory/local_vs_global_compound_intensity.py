@@ -474,37 +474,60 @@ def plot_all_stats_comparison_map(
     geoms = coastline_geometries(coastline)
     extent = map_extent(lon_vals, lat_vals)
 
-    delta_fields = [
-        field_from_points(
-            point_metrics,
-            lat_vals,
-            lon_vals,
-            f"delta_{stat_key}_local_minus_global",
+    intensity_fields: dict[tuple[str, str], np.ndarray] = {}
+    delta_fields = []
+    for stat_key, _ in STAT_SPECS:
+        for prefix in ("global", "local"):
+            intensity_fields[(prefix, stat_key)] = field_from_points(
+                point_metrics,
+                lat_vals,
+                lon_vals,
+                f"{prefix}_{stat_key}_compound_intensity_norm",
+            )
+        delta_fields.append(
+            field_from_points(
+                point_metrics,
+                lat_vals,
+                lon_vals,
+                f"delta_{stat_key}_local_minus_global",
+            )
         )
-        for stat_key, _ in STAT_SPECS
-    ]
+
+    all_intensity = np.concatenate(
+        [
+            field[np.isfinite(field)].ravel()
+            for field in intensity_fields.values()
+            if np.isfinite(field).any()
+        ]
+    )
+    intensity_vmin = float(np.nanmin(all_intensity)) if all_intensity.size else 0.0
+    intensity_vmax = float(np.nanmax(all_intensity)) if all_intensity.size else 1.0
+    if intensity_vmax <= intensity_vmin:
+        intensity_vmax = intensity_vmin + 1e-6
+
     all_delta = np.concatenate(
         [field[np.isfinite(field)].ravel() for field in delta_fields if np.isfinite(field).any()]
     )
     delta_limit = float(np.ceil(max(np.abs(all_delta).max(initial=0.05), 0.05) * 20.0) / 20.0)
     delta_norm = TwoSlopeNorm(vmin=-delta_limit, vcenter=0.0, vmax=delta_limit)
 
-    fig = plt.figure(figsize=(13.2, 14.4))
+    fig = plt.figure(figsize=(8.6, 10.8))
     gs = fig.add_gridspec(
-        nrows=len(STAT_SPECS) + 1,
+        nrows=len(STAT_SPECS),
         ncols=4,
-        height_ratios=[1.0, 1.0, 1.0, 1.0, 0.04],
-        width_ratios=[0.08, 1.0, 1.0, 1.0],
-        wspace=0.035,
-        hspace=0.13,
+        width_ratios=[0.055, 1.0, 1.0, 1.0],
+        left=0.045,
+        right=0.992,
+        bottom=0.102,
+        top=0.948,
+        wspace=-0.11,
+        hspace=0.035,
     )
     axes = [
         [fig.add_subplot(gs[i, j + 1], projection=CRS) for j in range(3)]
         for i in range(len(STAT_SPECS))
     ]
     label_axes = [fig.add_subplot(gs[i, 0]) for i in range(len(STAT_SPECS))]
-    cax_intensity = fig.add_subplot(gs[-1, 1:3])
-    cax_delta = fig.add_subplot(gs[-1, 3])
     intensity_mesh = None
     delta_mesh = None
 
@@ -521,18 +544,8 @@ def plot_all_stats_comparison_map(
             fontweight="bold",
         )
         fields = [
-            field_from_points(
-                point_metrics,
-                lat_vals,
-                lon_vals,
-                f"global_{stat_key}_compound_intensity_norm",
-            ),
-            field_from_points(
-                point_metrics,
-                lat_vals,
-                lon_vals,
-                f"local_{stat_key}_compound_intensity_norm",
-            ),
+            intensity_fields[("global", stat_key)],
+            intensity_fields[("local", stat_key)],
             delta_fields[i],
         ]
         titles = ["Global Q05/Q95", "Local Q05/Q95", "Local - global"]
@@ -544,8 +557,8 @@ def plot_all_stats_comparison_map(
                     fields[j],
                     shading="auto",
                     cmap=INTENSITY_CMAP,
-                    vmin=0.0,
-                    vmax=1.0,
+                    vmin=intensity_vmin,
+                    vmax=intensity_vmax,
                     transform=CRS,
                 )
                 intensity_mesh = mesh
@@ -565,6 +578,23 @@ def plot_all_stats_comparison_map(
                 ax.set_title(titles[j], fontsize=10)
             format_map_axis(ax, extent, geoms, row=i, col=j)
 
+    fig.canvas.draw()
+    bottom_axes = axes[-1]
+    cbar_y = min(ax.get_position().y0 for ax in bottom_axes) - 0.045
+    cbar_h = 0.016
+    intensity_pos_left = bottom_axes[0].get_position()
+    intensity_pos_right = bottom_axes[1].get_position()
+    delta_pos = bottom_axes[2].get_position()
+    cax_intensity = fig.add_axes(
+        [
+            intensity_pos_left.x0,
+            cbar_y,
+            intensity_pos_right.x1 - intensity_pos_left.x0,
+            cbar_h,
+        ]
+    )
+    cax_delta = fig.add_axes([delta_pos.x0, cbar_y, delta_pos.width, cbar_h])
+
     cbar_intensity = fig.colorbar(intensity_mesh, cax=cax_intensity, orientation="horizontal")
     cbar_intensity.ax.tick_params(labelsize=8)
     cbar_intensity.set_label("Compound intensity (norm.)", fontsize=9)
@@ -575,6 +605,7 @@ def plot_all_stats_comparison_map(
     fig.suptitle(
         "Compound-event intensity statistics: global vs local normalization",
         fontsize=12,
+        y=0.988,
     )
     fig.savefig(out_path, dpi=dpi, bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
