@@ -42,6 +42,8 @@ except Exception:
 ROOT = Path(__file__).resolve().parents[2]
 RISK_DIR = ROOT / "outputs" / "risk_index"
 RISK_SHP = RISK_DIR / "risk_index.shp"
+CURRENT_RISK_GEOJSON = ROOT / "site" / "public" / "data" / "risk_index_municipalities.geojson"
+CURRENT_RISK_METADATA = ROOT / "site" / "public" / "data" / "risk_index_metadata.json"
 OCEAN_HAZARD_CANDIDATES = (
     ROOT / "outputs" / "storm_catalog" / "compound" / "compound_metrics.csv",
     ROOT / "site" / "public" / "data" / "hazard_characterization_grid_metrics.json",
@@ -172,6 +174,56 @@ def _where_clause(fields: list[str]) -> str:
 
 
 def read_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    if CURRENT_RISK_GEOJSON.exists():
+        gdf = gpd.read_file(CURRENT_RISK_GEOJSON)
+        source_crs = str(gdf.crs) if gdf.crs else OUTPUT_CRS
+        if gdf.crs is None:
+            gdf = gdf.set_crs(OUTPUT_CRS)
+        elif str(gdf.crs).upper() != OUTPUT_CRS:
+            gdf = gdf.to_crs(OUTPUT_CRS)
+
+        required_layers = ("SVI_Coast_2022", "Hazard_Index", "Risk_Hazard")
+        missing_layers = [key for key in required_layers if key not in gdf.columns]
+        if missing_layers:
+            raise RuntimeError(
+                f"Current risk GeoJSON is missing required fields: {', '.join(missing_layers)}"
+            )
+
+        web_metadata = {}
+        if CURRENT_RISK_METADATA.exists():
+            web_metadata = json.loads(CURRENT_RISK_METADATA.read_text())
+
+        layer_keys = [key for key in ("SVI_Coast_2022", "Hazard_Index", "Risk_Comp", "Risk_Hazard") if key in gdf.columns]
+        layer_aliases = {
+            key: web_metadata.get("field_aliases", {}).get("layers", {}).get(key, key)
+            for key in layer_keys
+        }
+        support_aliases = {
+            key: key
+            for key in ("municipality_name", "state", "municipality_code", "compound_c", "mean_overl", "mean_compo")
+            if key in gdf.columns
+        }
+        stats = {key: _numeric_stats(gdf[key]) for key in layer_keys}
+        metadata = {
+            "source_path": _relative(CURRENT_RISK_GEOJSON),
+            "metadata_path": _relative(CURRENT_RISK_METADATA) if CURRENT_RISK_METADATA.exists() else None,
+            "source_crs": source_crs,
+            "output_crs": OUTPUT_CRS,
+            "source_feature_count": int(len(gdf)),
+            "filtered_feature_count": int(len(gdf)),
+            "schema_geometry": "GeoJSON",
+            "scope": web_metadata.get("scope", "compound_count_only"),
+            "geometry_type_counts": gdf.geometry.geom_type.value_counts().to_dict(),
+            "field_aliases": {
+                "layers": layer_aliases,
+                "support": support_aliases,
+            },
+            "risk_panel_key": "Risk_Hazard",
+            "stats": stats,
+            "simplification": web_metadata.get("simplification"),
+        }
+        return gdf, metadata
+
     required_components = (".shp", ".shx", ".dbf", ".prj")
     missing_components = [suffix for suffix in required_components if not (RISK_DIR / f"risk_index{suffix}").exists()]
     if missing_components:
@@ -306,7 +358,12 @@ def read_ocean_hazard_data() -> tuple[pd.DataFrame, dict[str, Any]]:
     )
     hazard_mode = "read"
     hazard_components: list[str] = []
-    if "Hazard_Index" in aliases:
+    if "compound_c" in aliases:
+        df["compound_c"] = pd.to_numeric(raw[aliases["compound_c"]], errors="coerce")
+        df["Hazard_Index"] = df["compound_c"]
+        hazard_mode = "compound_count_only_current_scope"
+        hazard_components = ["compound_c"]
+    elif "Hazard_Index" in aliases:
         df["Hazard_Index"] = pd.to_numeric(raw[aliases["Hazard_Index"]], errors="coerce")
     else:
         required_components = ("compound_c", "mean_overl", "mean_compo")
@@ -401,8 +458,8 @@ def _colorbar_label(key: str, compact: bool = False) -> str:
     if compact:
         compact_labels = {
             "SVI_Coast_2022": "SVI (0-100)",
-            "Hazard_Index": "Hazard Index",
-            "Risk_Hazard": "Integrated Risk",
+            "Hazard_Index": "Count Hazard",
+            "Risk_Hazard": "Count Risk",
             "Risk_Comp": "Risk_Comp",
         }
         if key in compact_labels:
@@ -410,9 +467,9 @@ def _colorbar_label(key: str, compact: bool = False) -> str:
     if key == "SVI_Coast_2022":
         return "Social Vulnerability Index (0-100)"
     if key == "Hazard_Index":
-        return "Hazard Index (relative)"
+        return "Compound-count Hazard Index (relative)"
     if key == "Risk_Hazard":
-        return "Integrated Risk Index (relative)"
+        return "Compound-count Risk Index (relative)"
     if key == "Risk_Comp":
         return "Frequency-weighted Risk Index (relative)"
     return key
@@ -477,7 +534,7 @@ def _save_figure(fig: plt.Figure, stem: str) -> list[str]:
 
 def make_figure_1(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str) -> list[str]:
     layers = [
-        ("Hazard_Index", "A", "Physical compound-event hazard"),
+        ("Hazard_Index", "A", "Compound-event count hazard"),
         ("SVI_Coast_2022", "B", "Social vulnerability"),
         (risk_key, "C", "Integrated risk" if risk_key == "Risk_Hazard" else "Risk_Comp fallback"),
     ]
@@ -497,7 +554,7 @@ def make_figure_1(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, ris
             compact_cbar_label=True,
         )
     fig.suptitle(
-        "Municipal-scale components of coastal compound-event risk along the Brazilian coast",
+        "Municipal-scale compound-count coastal risk along the Brazilian coast",
         fontsize=12.5,
         fontweight="bold",
         y=0.955,
@@ -525,7 +582,7 @@ def make_figure_2(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, ris
     if risk_key != "Risk_Hazard":
         title = "Relative coastal risk based on Risk_Comp fallback"
     else:
-        title = "Relative integrated coastal risk associated with compound wave-surge events"
+        title = "Relative coastal risk from compound-event count and social vulnerability"
 
     fig = plt.figure(figsize=(11.4, 7.6), constrained_layout=False)
     gs = fig.add_gridspec(
@@ -623,7 +680,7 @@ def make_figure_2(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, ris
     ax_rank.text(
         0.0,
         0.21,
-        "Risk_Hazard =\n(SVI_Coast_2022 / 100) x Hazard_Index",
+        "Hazard_Index = norm(compound_c)\nRisk_Hazard =\n(SVI_Coast_2022 / 100) x Hazard_Index",
         transform=ax_rank.transAxes,
         fontsize=7.5,
         color="#475569",
@@ -642,7 +699,7 @@ def make_figure_3(
     fig.subplots_adjust(left=0.075, right=0.88, top=0.93, bottom=0.105)
     values = ocean_df["Hazard_Index"]
     norm = Normalize(float(values.min()), float(values.max()))
-    _setup_map_axis(ax, "Original oceanic compound-event hazard points")
+    _setup_map_axis(ax, "Original oceanic compound-event count points")
     _plot_coastline(ax, coastline)
     scatter = ax.scatter(
         ocean_df["longitude"],
@@ -657,7 +714,7 @@ def make_figure_3(
         zorder=5,
     )
     cbar = fig.colorbar(scatter, ax=ax, orientation="vertical", fraction=0.04, pad=0.025)
-    if ocean_meta["hazard_index_mode"] == "compound_count_only":
+    if ocean_meta["hazard_index_mode"] in {"compound_count_only", "compound_count_only_current_scope"}:
         cbar.set_label("Compound-event count", fontsize=8)
     else:
         cbar.set_label("Oceanic Hazard_Index (relative)", fontsize=8)
@@ -667,6 +724,7 @@ def make_figure_3(
         "read": "Hazard_Index read directly from source.",
         "computed_minmax_mean": "Hazard_Index computed as mean of min-max normalized count, overlap duration, and intensity.",
         "compound_count_only": "Fallback: only compound-event count was available.",
+        "compound_count_only_current_scope": "Current scope: compound-event count is used as the hazard signal.",
     }[ocean_meta["hazard_index_mode"]]
     fig.text(
         0.075,
@@ -694,7 +752,7 @@ def main() -> None:
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "risk_shapefile": risk_meta,
+        "risk_data": risk_meta,
         "ocean_hazard": ocean_meta,
         "outputs": generated,
         "interpretation_caveat": (
@@ -709,7 +767,7 @@ def main() -> None:
 
     print("\nOSR11 article risk figures generated")
     print("------------------------------------")
-    print(f"Risk shapefile: {_relative(RISK_SHP)}")
+    print(f"Risk data: {risk_meta['source_path']}")
     print(f"Risk features used: {risk_meta['filtered_feature_count']} / {risk_meta['source_feature_count']}")
     print(f"Risk panel: {risk_key}")
     print("Risk field aliases:")

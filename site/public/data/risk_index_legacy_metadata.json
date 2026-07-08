@@ -34,12 +34,9 @@
   "field_aliases": {
     "layers": {
       "SVI_Coast_2022": "SVI_Coast_",
-      "Hazard_Index": "derived:norm(compound_c)",
-      "Risk_Comp": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
-      "Risk_Hazard": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
-      "Legacy_Hazard_Index": "Haz_index",
-      "Legacy_Risk_Comp": "Risk_comp",
-      "Legacy_Risk_Hazard": "Risk_harza"
+      "Hazard_Index": "Haz_index",
+      "Risk_Comp": "Risk_comp",
+      "Risk_Hazard": "Risk_harza"
     },
     "support": {
       "municipality_code": "CD_MUN",
@@ -117,42 +114,14 @@
     "Risk_harza",
     "Haz_index"
   ],
-  "scope": "compound_count_only",
+  "scope": "legacy_multimetric",
   "available_layers": [
-    {
-      "key": "Risk_Hazard",
-      "label": "Current final coastal risk",
-      "unit": "index",
-      "description": "(SVI_Coast_2022 / 100) x Hazard_Index, where Hazard_Index is norm(compound_c).",
-      "actual_field": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
-      "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 0.33163,
-        "mean": 0.09367,
-        "median": 0.08104
-      }
-    },
-    {
-      "key": "Hazard_Index",
-      "label": "Compound-event frequency hazard",
-      "unit": "index",
-      "description": "Min-Max normalized compound-event count (compound_c) over 1993-2025.",
-      "actual_field": "derived:norm(compound_c)",
-      "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 1.0,
-        "mean": 0.267671,
-        "median": 0.170683
-      }
-    },
     {
       "key": "SVI_Coast_2022",
       "label": "Social Vulnerability Index",
       "unit": "0-100",
       "description": "Social Vulnerability Index from IBGE/SIDRA 2022 variables, PCA/PC1 normalized to 0-100.",
-      "actual_field": "SVI_Coast_2022",
+      "actual_field": "SVI_Coast_",
       "stats": {
         "count": 282,
         "min": 0.0,
@@ -160,13 +129,51 @@
         "mean": 46.773424,
         "median": 48.425629
       }
+    },
+    {
+      "key": "Hazard_Index",
+      "label": "Legacy multi-metric compound-event hazard index",
+      "unit": "index",
+      "description": "Legacy mean of normalized compound-event frequency, mean overlap duration, and mean compound-event intensity.",
+      "actual_field": "Haz_index",
+      "stats": {
+        "count": 280,
+        "min": 0.191,
+        "max": 0.667,
+        "mean": 0.425875,
+        "median": 0.432
+      }
+    },
+    {
+      "key": "Risk_Comp",
+      "label": "Risk based on SVI and compound-event frequency",
+      "unit": "index",
+      "description": "(SVI_Coast_2022 / 100) x normalized compound-event frequency.",
+      "actual_field": "Risk_comp",
+      "stats": {
+        "count": 280,
+        "min": 0.0,
+        "max": 0.332,
+        "mean": 0.093689,
+        "median": 0.081
+      }
+    },
+    {
+      "key": "Risk_Hazard",
+      "label": "Legacy integrated coastal risk",
+      "unit": "index",
+      "description": "Legacy (SVI_Coast_2022 / 100) x multi-metric Hazard_Index.",
+      "actual_field": "Risk_harza",
+      "stats": {
+        "count": 280,
+        "min": 0.0,
+        "max": 0.583,
+        "mean": 0.202729,
+        "median": 0.2
+      }
     }
   ],
   "missing_expected_layers": [],
-  "legacy_outputs": {
-    "geojson": "site/public/data/risk_index_legacy_municipalities.geojson",
-    "metadata": "site/public/data/risk_index_legacy_metadata.json"
-  },
   "numeric_stats": {
     "SVI_Coast_2022": {
       "count": 282,
@@ -177,40 +184,19 @@
     },
     "Hazard_Index": {
       "count": 280,
-      "min": 0.0,
-      "max": 1.0,
-      "mean": 0.267671,
-      "median": 0.170683
-    },
-    "Risk_Comp": {
-      "count": 280,
-      "min": 0.0,
-      "max": 0.33163,
-      "mean": 0.09367,
-      "median": 0.08104
-    },
-    "Risk_Hazard": {
-      "count": 280,
-      "min": 0.0,
-      "max": 0.33163,
-      "mean": 0.09367,
-      "median": 0.08104
-    },
-    "Legacy_Hazard_Index": {
-      "count": 280,
       "min": 0.191,
       "max": 0.667,
       "mean": 0.425875,
       "median": 0.432
     },
-    "Legacy_Risk_Comp": {
+    "Risk_Comp": {
       "count": 280,
       "min": 0.0,
       "max": 0.332,
       "mean": 0.093689,
       "median": 0.081
     },
-    "Legacy_Risk_Hazard": {
+    "Risk_Hazard": {
       "count": 280,
       "min": 0.0,
       "max": 0.583,
@@ -237,16 +223,100 @@
       "max": 0.5724,
       "mean": 0.34568,
       "median": 0.3422
+    },
+    "grid_lat": {
+      "count": 280,
+      "min": -33.6,
+      "max": 4.2,
+      "mean": -13.369286,
+      "median": -10.6
+    },
+    "grid_lon": {
+      "count": 280,
+      "min": -53.0,
+      "max": -34.6,
+      "mean": -42.034286,
+      "median": -41.6
+    },
+    "PC1": {
+      "count": 282,
+      "min": -5.054925,
+      "max": 5.752334,
+      "mean": 0.0,
+      "median": 0.178558
+    },
+    "pop_house": {
+      "count": 282,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.26936,
+      "median": 0.234691
+    },
+    "pop_rent": {
+      "count": 282,
+      "min": 0.036871,
+      "max": 0.502606,
+      "mean": 0.22853,
+      "median": 0.230772
+    },
+    "pop_poverty": {
+      "count": 282,
+      "min": 0.042194,
+      "max": 0.81488,
+      "mean": 0.412776,
+      "median": 0.43289
+    },
+    "pop_agevul": {
+      "count": 282,
+      "min": 0.193559,
+      "max": 0.410462,
+      "mean": 0.290762,
+      "median": 0.283525
+    },
+    "pop_nonwhite": {
+      "count": 282,
+      "min": 0.127927,
+      "max": 0.972848,
+      "mean": 0.647745,
+      "median": 0.720877
+    },
+    "pop_illiterate": {
+      "count": 282,
+      "min": 0.0119,
+      "max": 0.2779,
+      "mean": 0.108745,
+      "median": 0.10235
+    },
+    "pop_nowater": {
+      "count": 282,
+      "min": 0.004776,
+      "max": 0.970677,
+      "mean": 0.295414,
+      "median": 0.241794
+    },
+    "pop_nosewage": {
+      "count": 282,
+      "min": 0.003491,
+      "max": 0.999353,
+      "mean": 0.692004,
+      "median": 0.760244
+    },
+    "pop_nogarbage": {
+      "count": 282,
+      "min": 0.002036,
+      "max": 0.984364,
+      "mean": 0.197074,
+      "median": 0.132153
+    },
+    "pop_nopaving": {
+      "count": 282,
+      "min": 0.002754,
+      "max": 0.81716,
+      "mean": 0.280685,
+      "median": 0.255257
     }
   },
   "methodology": {
-    "SVI_Coast_2022": "IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized with StandardScaler, submitted to PCA, PC1 sign-adjusted so higher values mean higher vulnerability, then normalized 0-100.",
-    "exposure": "Oceanic compound-event metrics remain associated with coastal municipalities by the existing spatial join, selecting the associated grid point with the highest compound_c.",
-    "Hazard_Index": "Current scope: norm(compound_c). Overlap duration and compound-event intensity are retained as diagnostics/legacy fields, but are not included in the current hazard layer because of interpretation uncertainty near river mouths.",
-    "Risk_Comp": "(SVI_Coast_2022 / 100) x norm(compound_c). Kept as a compatibility alias for the current final risk.",
-    "Risk_Hazard": "(SVI_Coast_2022 / 100) x Hazard_Index, with Hazard_Index = norm(compound_c)."
-  },
-  "legacy_methodology": {
     "SVI_Coast_2022": "IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized with StandardScaler, submitted to PCA, PC1 sign-adjusted so higher values mean higher vulnerability, then normalized 0-100.",
     "exposure": "Oceanic compound-event hazard metrics spatialized and associated with coastal municipalities by spatial join.",
     "Hazard_Index": "[norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3.",

@@ -6,18 +6,28 @@ import RiskIntegrationMap, {
   type RiskMetadata,
 } from '@/components/RiskIntegrationMap';
 
-export default function RiskIntegrationClient() {
+interface RiskIntegrationClientProps {
+  dataUrl?: string;
+  metadataUrl?: string;
+  loadingLabel?: string;
+}
+
+export default function RiskIntegrationClient({
+  dataUrl = '/data/risk_index_municipalities.geojson',
+  metadataUrl = '/data/risk_index_metadata.json',
+  loadingLabel = 'Loading municipal risk-index data...',
+}: RiskIntegrationClientProps) {
   const [data, setData] = useState<RiskGeoJson | null>(null);
   const [metadata, setMetadata] = useState<RiskMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetch('/data/risk_index_municipalities.geojson').then((r) => {
+      fetch(dataUrl).then((r) => {
         if (!r.ok) throw new Error(`Failed to load risk-index GeoJSON: ${r.status}`);
         return r.json() as Promise<RiskGeoJson>;
       }),
-      fetch('/data/risk_index_metadata.json').then((r) => {
+      fetch(metadataUrl).then((r) => {
         if (!r.ok) throw new Error(`Failed to load risk-index metadata: ${r.status}`);
         return r.json() as Promise<RiskMetadata>;
       }),
@@ -33,7 +43,7 @@ export default function RiskIntegrationClient() {
         setMetadata(riskMetadata);
       })
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [dataUrl, metadataUrl]);
 
   if (error) {
     return (
@@ -55,7 +65,7 @@ export default function RiskIntegrationClient() {
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">Loading municipal risk-index data...</p>
+          <p className="text-sm text-gray-500">{loadingLabel}</p>
         </div>
       </div>
     );

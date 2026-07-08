@@ -39,14 +39,14 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 ## Generated Figures
 
 - `fig01_hazard_vulnerability_risk_multiplot`
-  - Panel A: `Hazard_Index`
+  - Panel A: current `Hazard_Index = norm(compound_c)`
   - Panel B: `SVI_Coast_2022`
-  - Panel C: `Risk_Hazard` when available, otherwise `Risk_Comp`
+  - Panel C: current `Risk_Hazard`
 - `fig02_final_integrated_risk`
-  - Standalone final integrated risk map using `Risk_Hazard` when available.
+  - Standalone final integrated risk map using current `Risk_Hazard`.
   - Includes a top-municipality ranking inset.
 - `fig03_original_ocean_hazard_points`
-  - Original oceanic hazard points before municipal transfer/spatial association.
+  - Original oceanic compound-event count points before municipal transfer/spatial association.
 
 ## Alias Detection
 
@@ -62,13 +62,14 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 - `mean_overl`: `mean_overl`, `mean_ove`, `mean_overlap_duration`
 - `mean_compo`: `mean_compo`, `mean_com`, `mean_compound_intensity_norm`
 
-For Figure 3, if an oceanic `Hazard_Index` field is absent, the script computes it as:
+For Figure 3, the current scope visualizes compound-event count. If an oceanic `Hazard_Index`
+field is absent, the script uses `compound_c` directly:
 
 ```text
-[norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3
+compound_c
 ```
 
-using Min-Max normalization over the ocean-point dataset.
+The plotting color scale remains relative to the available ocean-point values.
 
 ## Interpretation Caveat
 

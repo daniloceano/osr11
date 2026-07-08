@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-type RiskLayerKey = 'SVI_Coast_2022' | 'Hazard_Index' | 'Risk_Comp' | 'Risk_Hazard';
+type RiskLayerKey = string;
 type Position = [number, number];
 
 interface PolygonGeometry {
@@ -59,14 +59,19 @@ export interface RiskMetadata {
   source_path: string;
   source_crs: string;
   output_crs: string;
+  scope?: string;
   feature_count: number;
   source_feature_count: number;
   bbox: number[];
   available_layers: RiskLayerMeta[];
   missing_expected_layers: string[];
   field_aliases: {
-    layers: Partial<Record<RiskLayerKey, string>>;
+    layers: Record<string, string | null | undefined>;
     support: Record<string, string>;
+  };
+  legacy_outputs?: {
+    geojson: string;
+    metadata: string;
   };
   simplification?: {
     enabled: boolean;
@@ -83,21 +88,19 @@ interface Props {
   metadata: RiskMetadata;
 }
 
-const EXPECTED_LAYER_ORDER: RiskLayerKey[] = [
-  'SVI_Coast_2022',
-  'Hazard_Index',
-  'Risk_Comp',
-  'Risk_Hazard',
-];
+const EXPECTED_LAYER_ORDER: RiskLayerKey[] = ['Risk_Hazard', 'Hazard_Index', 'SVI_Coast_2022', 'Risk_Comp'];
 
 const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: 'SVI_Coast_2022', label: 'SVI_Coast_2022' },
-  { key: 'Hazard_Index', label: 'Hazard_Index' },
-  { key: 'Risk_Comp', label: 'Risk_Comp' },
-  { key: 'Risk_Hazard', label: 'Risk_Hazard' },
+  { key: 'Hazard_Index', label: 'Current Hazard_Index' },
+  { key: 'Risk_Hazard', label: 'Current Risk_Hazard' },
+  { key: 'Risk_Comp', label: 'Frequency risk' },
   { key: 'compound_c', label: 'compound_c' },
-  { key: 'mean_overl', label: 'mean_overl' },
-  { key: 'mean_compo', label: 'mean_compo' },
+  { key: 'mean_overl', label: 'mean_overl (diagnostic)' },
+  { key: 'mean_compo', label: 'mean_compo (diagnostic)' },
+  { key: 'Legacy_Hazard_Index', label: 'Legacy Hazard_Index' },
+  { key: 'Legacy_Risk_Hazard', label: 'Legacy Risk_Hazard' },
+  { key: 'Legacy_Risk_Comp', label: 'Legacy Risk_Comp' },
 ];
 
 const RAMP_SEQUENTIAL = [
@@ -178,6 +181,16 @@ function formatValue(value: number | null | undefined, key: string): string {
   return value.toFixed(3);
 }
 
+function detailLabel(field: { key: string; label: string }, isLegacyScope: boolean): string {
+  if (!isLegacyScope) return field.label;
+  if (field.key === 'Hazard_Index') return 'Legacy Hazard_Index';
+  if (field.key === 'Risk_Hazard') return 'Legacy Risk_Hazard';
+  if (field.key === 'Risk_Comp') return 'Legacy Risk_Comp';
+  if (field.key === 'mean_overl') return 'mean_overl';
+  if (field.key === 'mean_compo') return 'mean_compo';
+  return field.label;
+}
+
 function median(values: number[]): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -188,18 +201,23 @@ function median(values: number[]): number | null {
 export default function RiskIntegrationMap({ data, metadata }: Props) {
   const layers = useMemo(() => {
     const byKey = new Map(metadata.available_layers.map((layer) => [layer.key, layer]));
-    return EXPECTED_LAYER_ORDER.map((key) => byKey.get(key)).filter((layer): layer is RiskLayerMeta => Boolean(layer));
+    const ordered = EXPECTED_LAYER_ORDER.map((key) => byKey.get(key)).filter((layer): layer is RiskLayerMeta => Boolean(layer));
+    const remaining = metadata.available_layers.filter((layer) => !EXPECTED_LAYER_ORDER.includes(layer.key));
+    return [...ordered, ...remaining];
   }, [metadata.available_layers]);
 
-  const [selectedLayerKey, setSelectedLayerKey] = useState<RiskLayerKey>(layers[0]?.key ?? 'SVI_Coast_2022');
+  const defaultLayerKey = layers.find((layer) => layer.key === 'Risk_Hazard')?.key ?? layers[0]?.key ?? 'SVI_Coast_2022';
+  const [selectedLayerKey, setSelectedLayerKey] = useState<RiskLayerKey | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [svgClientWidth, setSvgClientWidth] = useState(640);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const selectedLayer = layers.find((layer) => layer.key === selectedLayerKey) ?? layers[0];
-  const selectedKey = selectedLayer.key;
+  const selectedLayer = layers.find((layer) => layer.key === (selectedLayerKey ?? defaultLayerKey)) ?? layers[0];
+  const isLegacyScope = metadata.scope === 'legacy_multimetric';
+  const scopeLabel = isLegacyScope ? 'Legacy multi-metric product' : 'Current compound-count-only product';
+  const selectedKey = selectedLayer?.key ?? '';
   const svgWidth = 640;
   const svgHeight = svgWidth / ASPECT;
 
@@ -215,6 +233,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
   }, [data.features, svgHeight]);
 
   const layerEntries = useMemo(() => {
+    if (!selectedKey) return [];
     return data.features
       .map((feature, index) => ({
         feature,
@@ -234,6 +253,14 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
   const activeIdx = hoveredIdx ?? selectedIdx;
   const activeFeature = activeIdx !== null ? data.features[activeIdx] : null;
 
+  if (!selectedLayer) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-800">
+        No risk layers were found in the metadata.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
@@ -249,7 +276,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
             }`}
             style={selectedKey === layer.key ? { borderBottom: '2px solid #2563eb' } : undefined}
           >
-            {layer.key}
+            {layer.label}
           </button>
         ))}
       </div>
@@ -272,8 +299,8 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
           </select>
         </div>
         <div className="text-xs text-gray-500">
-          <span className="font-semibold text-gray-700">{selectedLayer.actual_field}</span> in the source DBF maps to{' '}
-          <span className="font-semibold text-gray-700">{selectedLayer.key}</span>.
+          <span className="font-semibold text-gray-700">{selectedLayer.key}</span>:{' '}
+          <span className="font-semibold text-gray-700">{selectedLayer.actual_field}</span>.
         </div>
       </div>
 
@@ -327,7 +354,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
                 fillRule="evenodd"
                 role="button"
                 tabIndex={0}
-                aria-label={`${feature.properties.municipality_name ?? 'Municipality'} ${feature.properties.state ?? ''} ${selectedLayer.key} ${formatValue(value, selectedKey)}`}
+                aria-label={`${feature.properties.municipality_name ?? 'Municipality'} ${feature.properties.state ?? ''} ${selectedLayer.label} ${formatValue(value, selectedKey)}`}
                 stroke={isActive ? '#1e293b' : '#ffffff'}
                 strokeWidth={isActive ? 1.1 : 0.35}
                 opacity={value === null ? 0.65 : 0.92}
@@ -376,7 +403,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
                 if (!hasField) return null;
                 return (
                   <div key={field.key} className={field.key === selectedKey ? 'font-semibold' : ''}>
-                    {field.label}: <span className="font-mono">{formatValue(value, field.key)}</span>
+                    {detailLabel(field, isLegacyScope)}: <span className="font-mono">{formatValue(value, field.key)}</span>
                   </div>
                 );
               })}
@@ -474,6 +501,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
         <section className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Data Product</p>
           <h2 className="mt-1 text-base font-bold text-gray-900">Detected Fields</h2>
+          <p className="mt-1 text-xs text-gray-500">{scopeLabel}</p>
           <dl className="mt-3 space-y-2 text-xs text-gray-600">
             {layers.map((layer) => (
               <div key={layer.key} className="flex items-center justify-between gap-3 border-b border-gray-100 pb-2 last:border-0">
@@ -491,7 +519,13 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
             {metadata.simplification?.enabled && (
               <p className="mt-2">
                 Geometry simplified with tolerance {metadata.simplification.tolerance_degrees} degrees,
-                preserving topology.
+            preserving topology.
+              </p>
+            )}
+            {!isLegacyScope && metadata.legacy_outputs && (
+              <p className="mt-2">
+                The former multi-metric product is retained as legacy data at{' '}
+                <span className="font-mono">{metadata.legacy_outputs.geojson}</span>.
               </p>
             )}
           </div>
@@ -507,17 +541,33 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
             submitted to PCA. PC1 was sign-adjusted so higher values mean higher social vulnerability, then
             normalized from 0 to 100.
           </p>
-          <p>
-            <strong className="text-gray-800">Exposure and hazard.</strong> Oceanic compound-event hazard metrics
-            were spatialized and associated with coastal municipalities by spatial join. Hazard_Index is the mean
-            of normalized compound-event frequency, mean overlap duration, and mean compound-event intensity.
-          </p>
-          <p>
-            <strong className="text-gray-800">Risk integration.</strong> Risk_Comp = (SVI_Coast_2022 / 100) x
-            norm(compound_c). Risk_Hazard = (SVI_Coast_2022 / 100) x Hazard_Index. Reported disaster records
-            support threshold calibration in the hazard methodology and are not presented here as a separate
-            validation module.
-          </p>
+          {isLegacyScope ? (
+            <>
+              <p>
+                <strong className="text-gray-800">Exposure and hazard.</strong> This legacy product uses the former
+                Hazard_Index: the mean of normalized compound-event frequency, mean overlap duration, and mean
+                compound-event intensity.
+              </p>
+              <p>
+                <strong className="text-gray-800">Risk integration.</strong> Risk_Comp = (SVI_Coast_2022 / 100) x
+                norm(compound_c). Risk_Hazard = (SVI_Coast_2022 / 100) x the legacy Hazard_Index. It is kept for
+                audit and comparison with earlier outputs.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                <strong className="text-gray-800">Exposure and hazard.</strong> The current Hazard_Index uses only
+                compound-event frequency: Hazard_Index = norm(compound_c). Duration and intensity remain visible as
+                diagnostic fields and in the legacy product, but are excluded from the current hazard layer.
+              </p>
+              <p>
+                <strong className="text-gray-800">Risk integration.</strong> Risk_Hazard = (SVI_Coast_2022 / 100) x
+                Hazard_Index, with Hazard_Index = norm(compound_c). This avoids treating uncertain duration/intensity
+                signals near river mouths as direct hazard intensity.
+              </p>
+            </>
+          )}
         </div>
       </section>
     </div>

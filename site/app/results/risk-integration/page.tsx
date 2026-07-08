@@ -5,9 +5,9 @@ import StatusBadge from '@/components/StatusBadge';
 import RiskIntegrationClient from './RiskIntegrationClient';
 
 export const metadata = {
-  title: 'Exposure, Vulnerability & Risk Integration | OSR11',
+  title: 'Compound-Count Coastal Risk Integration | OSR11',
   description:
-    'Municipal-scale coastal risk indices combining compound-event hazard metrics and social vulnerability for Brazilian coastal municipalities.',
+    'Municipal-scale coastal risk indices using compound-event counts as the hazard layer and social vulnerability for Brazilian coastal municipalities.',
 };
 
 export default function RiskIntegrationPage() {
@@ -28,22 +28,27 @@ export default function RiskIntegrationPage() {
             <div className="mb-4 flex flex-wrap items-start gap-2">
               <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Exposure, Vulnerability & Risk Integration
+                Compound-count hazard scope
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Municipal scale · Karine risk-index outputs
+                Municipal scale · legacy product retained
               </span>
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
               Exposure, Vulnerability & Risk Integration
               <br />
-              <span className="text-blue-600">Municipal Coastal Risk Indices</span>
+              <span className="text-blue-600">Compound-Count Coastal Risk</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              Municipal-scale coastal risk indices combining compound-event hazard metrics and social vulnerability.
-              The panel maps SVI_Coast_2022, Hazard_Index, Risk_Comp, and Risk_Hazard where those fields are
-              populated in Karine&apos;s shapefile outputs.
+              Municipal-scale coastal risk indices combining social vulnerability with a revised hazard layer:
+              only the total compound-event count (<code className="rounded bg-gray-100 px-1 text-xs">compound_c</code>)
+              is used in the current Hazard_Index. Duration and intensity metrics remain available as diagnostics
+              and in the{' '}
+              <Link href="/results/risk-integration/legacy" className="font-semibold text-blue-600 hover:underline">
+                legacy multi-metric product
+              </Link>
+              .
             </p>
           </div>
         </div>
@@ -60,17 +65,17 @@ export default function RiskIntegrationPage() {
               <ModuleCard
                 color="#2171b5"
                 title="Hazard_Index"
-                body="Compound-event hazard index from normalized frequency, overlap duration, and intensity metrics."
+                body="Current hazard layer: Min-Max normalized compound-event count, norm(compound_c)."
               />
               <ModuleCard
                 color="#d94801"
-                title="Risk_Comp"
-                body="Risk based on social vulnerability and normalized compound-event frequency."
+                title="Risk_Hazard"
+                body="Current final risk: social vulnerability multiplied by the compound-count hazard layer."
               />
               <ModuleCard
-                color="#cb181d"
-                title="Risk_Hazard"
-                body="Integrated coastal risk from social vulnerability and the compound-event hazard index."
+                color="#737373"
+                title="Legacy product"
+                body="Previous frequency-duration-intensity hazard retained for audit, comparison, and reproducibility."
               />
             </div>
           </div>
@@ -88,22 +93,19 @@ export default function RiskIntegrationPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
-                  <strong className="text-gray-800">Index definitions.</strong>{' '}
-                  Hazard_Index = ⅓·[norm(compound_c) + norm(mean_overl) + norm(mean_compo)];
-                  Risk_Comp = (SVI_Coast_2022 / 100)·norm(compound_c);
-                  Risk_Hazard = (SVI_Coast_2022 / 100)·Hazard_Index, where norm(·) is Min–Max
-                  scaling across municipalities. <strong>compound_c is the absolute compound-event
-                  count over 1993–2025 (not an annual rate).</strong> These indices are produced in an
-                  external workflow (Karine Bastos Leal, INPE) and read from a shapefile; this site
-                  only displays the delivered fields.
+                  <strong className="text-gray-800">Current index definitions.</strong>{' '}
+                  Hazard_Index = norm(compound_c); Risk_Hazard = (SVI_Coast_2022 / 100)·Hazard_Index,
+                  where norm(·) is Min–Max scaling across municipalities. <strong>compound_c is the
+                  absolute compound-event count over 1993–2025, not an annual rate.</strong> Risk_Comp is
+                  retained as a compatibility alias for the same frequency-only risk calculation.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Aggregation.</strong>{' '}
-                  The three hazard components are combined with equal 1/3 weights. In the delivered
-                  data they are not mutually positively correlated — compound-event frequency is
-                  <em> negatively</em> correlated with mean overlap duration and mean intensity
-                  (r ≈ −0.4) — so the simple mean partly averages opposing signals. mean_compo is a
-                  per-event normalized intensity that is Min–Max normalized a second time here.
+                  <strong className="text-gray-800">Scope change.</strong>{' '}
+                  The earlier Hazard_Index averaged normalized frequency, mean overlap duration, and mean
+                  compound intensity. That product is now legacy because duration/intensity can express
+                  uncertain or river-mouth-driven signals, especially near large estuaries such as the
+                  Amazon, and should not be interpreted as direct coastal hazard intensity without further
+                  treatment.
                 </p>
               </div>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
@@ -114,8 +116,12 @@ export default function RiskIntegrationPage() {
                   shown only for SVI and excluded from the hazard/risk layers.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Underlying hazard caveats.</strong>{' '}
-                  Inherited from Step 3: daily resolution (sub-daily co-occurrence unresolved);
+                  <strong className="text-gray-800">Legacy access and caveats.</strong>{' '}
+                  The previous multi-metric output remains accessible at{' '}
+                  <Link href="/results/risk-integration/legacy" className="font-semibold text-blue-600 hover:underline">
+                    /results/risk-integration/legacy
+                  </Link>
+                  . Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
                   SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
                   level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
                   coast-wide. Results are preliminary — do not cite without consulting the authors.

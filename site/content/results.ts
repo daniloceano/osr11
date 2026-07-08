@@ -67,31 +67,31 @@ export const resultCards: ResultCard[] = [
   {
     id: 'risk-integration',
     title: 'Exposure, Vulnerability & Risk Integration',
-    subtitle: 'Municipal choropleth · SVI_Coast_2022 · Hazard_Index · Risk_Comp · Risk_Hazard',
+    subtitle: 'Municipal choropleth · SVI_Coast_2022 · compound-count Hazard_Index · Risk_Hazard · legacy view',
     status: 'done',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '
       + 'Exposure is operationalized by associating oceanic hazard metrics with Brazilian coastal municipalities through spatial join: '
-      + 'municipalities adjacent to greater compound-event frequency, duration, and intensity are considered more exposed. '
+      + 'the current hazard layer uses only the absolute compound-event count (compound_c), normalized across municipalities. '
       + 'Social vulnerability (SVI_Coast_2022) was constructed via PCA on 10 socioeconomic and infrastructure variables '
       + 'from the 2022 IBGE Census for 281 coastal municipalities, normalized 0–100. '
-      + 'The Hazard_Index combines normalized frequency, mean overlap duration, and mean compound intensity. '
-      + 'Risk_Comp and Risk_Hazard integrate SVI with hazard metrics to identify priority coastal risk hotspots.',
+      + 'The former frequency-duration-intensity Hazard_Index is retained as a legacy product for audit and comparison. '
+      + 'Risk_Hazard integrates SVI with the compound-count hazard layer to identify priority coastal risk hotspots.',
     rationale:
       'The hazard alone is insufficient for risk assessment. Reported coastal disaster records supported threshold calibration '
       + '(Step 2, q90/q90 selection) but are not a separate downstream validation product. '
       + 'Combining compound-event hazard with municipal-scale exposure spatialization and social vulnerability transforms '
       + 'hazard maps into actionable risk indices for adaptation planning and policy communication. '
-      + 'Methodology follows Lima et al. (2024, Nat. Hazards).',
+      + 'The current scope avoids treating uncertain duration/intensity signals near river mouths as direct hazard intensity.',
     outputs: [
       'SVI_Coast_2022: Social Vulnerability Index (PCA on 10 IBGE Census variables, 281 municipalities, 0–100)',
-      'Exposure: spatial join of oceanic hazard metrics to coastal municipalities (frequency, duration, intensity)',
-      'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3',
-      'Risk_Comp = (SVI_Coast_2022 / 100) × norm(compound_c)',
-      'Risk_Hazard = (SVI_Coast_2022 / 100) × Hazard_Index',
-      'Interactive municipal choropleth with layer switching, popups, legend, statistics, and ranking table',
+      'Exposure: spatial join of oceanic compound-event metrics to coastal municipalities',
+      'Current Hazard_Index = norm(compound_c)',
+      'Current Risk_Hazard = (SVI_Coast_2022 / 100) × Hazard_Index',
+      'Legacy view: previous Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3',
+      'Interactive municipal choropleth with current and legacy access, popups, legend, statistics, and ranking table',
     ],
     href: '/results/risk-integration',
-    parts: ['SVI', 'Hazard Index', 'Risk Comp', 'Risk Hazard'],
+    parts: ['SVI', 'Compound Count', 'Risk Hazard', 'Legacy'],
   },
 ];

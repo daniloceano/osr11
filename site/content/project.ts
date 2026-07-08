@@ -71,7 +71,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Exposure spatialization',
     description:
-      'Operationalize exposure through spatial association between oceanic compound-event hazard metrics and Brazilian coastal municipalities. Oceanic grid-point hazard metrics (frequency, duration, intensity) are assigned to municipalities through spatial join, so that municipalities adjacent to greater compound-event hazard are considered more exposed.',
+      'Operationalize exposure through spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. The current risk scope uses the assigned grid point compound-event count as the hazard signal; duration and intensity remain diagnostic and legacy fields.',
   },
   {
     label: 'Social vulnerability index',
@@ -81,7 +81,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Coastal risk mapping',
     description:
-      'Generate compound coastal risk indices (Risk_Comp and Risk_Hazard) by combining SVI_Coast_2022 with compound-event frequency and Hazard_Index, identifying priority hotspots for targeted adaptation measures.',
+      'Generate compound coastal risk indices by combining SVI_Coast_2022 with the normalized compound-event count Hazard_Index, identifying priority hotspots while preserving the former multi-metric product as legacy.',
   },
   {
     label: 'Physical interpretation',
@@ -108,7 +108,7 @@ export const conceptualFramework = {
     },
     {
       term: 'Exposure',
-      definition: 'The spatial association between oceanic compound-event hazard metrics and Brazilian coastal municipalities. Oceanic grid points containing hazard metrics (frequency, duration, intensity) are assigned to adjacent coastal municipalities through spatial join. Municipalities adjacent to greater frequency, duration, and intensity of compound events are considered more exposed to the hazard.'
+      definition: 'The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, the assigned compound-event count is normalized as the hazard layer. Duration and intensity remain available for diagnosis and the legacy product, but are not treated as direct hazard intensity.'
     },
     {
       term: 'Vulnerability',
@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: Karine Bastos Leal produced SVI_Coast_2022 and integrated it with hazard metrics to generate Hazard_Index, Risk_Comp, and Risk_Hazard indices, now displayed in the interactive results panel.
+The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: SVI_Coast_2022 is integrated with a revised Hazard_Index based only on normalized compound-event count (compound_c), and Risk_Hazard is now SVI × this count-only hazard. The previous frequency-duration-intensity product remains accessible as legacy.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -284,14 +284,15 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-4',
     label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
-    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces SVI_Coast_2022, Hazard_Index, Risk_Comp, and Risk_Hazard for 281 coastal municipalities.',
+    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces SVI_Coast_2022, a compound-count Hazard_Index, and Risk_Hazard for coastal municipalities, while retaining the former multi-metric output as legacy.',
     status: 'done',
     stepNumber: 4,
     tasks: [
       'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (281 municipalities) ✓',
       'Exposure operationalized through spatial join of oceanic hazard metrics to municipalities ✓',
-      'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3 ✓',
-      'Risk_Comp = (SVI/100) × norm(compound_c); Risk_Hazard = (SVI/100) × Hazard_Index ✓',
+      'Current Hazard_Index = norm(compound_c) ✓',
+      'Current Risk_Hazard = (SVI/100) × Hazard_Index ✓',
+      'Legacy Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3 retained ✓',
     ],
   },
   {

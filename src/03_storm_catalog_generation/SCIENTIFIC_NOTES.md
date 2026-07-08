@@ -194,7 +194,7 @@ Detailed interactive maps are available on the results website (`/results/hazard
 
 ## Next Steps
 
-1. **Step 4 — Exposure, vulnerability & risk integration**: A first municipal-scale integration is **complete** (external workflow; see the "Step 4" section below) — SVI_Coast_2022, Hazard_Index, Risk_Comp, Risk_Hazard for the coastal municipalities. Open follow-ups: revisit the equal-weight aggregation in light of the negative frequency↔intensity correlation, and bring the index computation into a versioned script in this repo.
+1. **Step 4 — Exposure, vulnerability & risk integration**: Municipal-scale integration is **complete** (see the "Step 4" section below). The current product uses SVI_Coast_2022 with `Hazard_Index = norm(compound_c)` and `Risk_Hazard = SVI × Hazard_Index`; the former frequency-duration-intensity index is retained as a legacy output. Open follow-ups: bring the full spatial association/index computation into a versioned script in this repo and further evaluate river-mouth/estuary intensity behavior.
 2. **Validation against reported events**: Cross-reference compound catalog with the Leal et al. (2024) SC disaster database and the expanded S2ID registry.
 3. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
 4. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. The dependence analysis (Step 3.7) provides empirical input for copula selection.
@@ -358,20 +358,45 @@ Reference: Coles et al. (1999); Ledford & Tawn (1996, 1997); Camus et al. (2021)
 ## Step 4 — Exposure, Vulnerability & Risk Integration (municipal scale)
 
 This section documents methodological decisions in the municipal risk integration so they
-are explicit in the scientific record. **The Hazard_Index / Risk_Comp / Risk_Hazard formulas
-are NOT computed by any script in this repository** — they are produced externally (QGIS /
-Python workflow by Karine Bastos Leal, INPE) and delivered as a shapefile,
-`outputs/risk_index/risk_index.shp`. The repository only *reads* the precomputed fields
-(`Haz_index`, `Risk_comp`, `Risk_harza`, `SVI_Coast_`) via `src/site/export_risk_index_data.py`
-and re-exports them as GeoJSON for the website. The formulas below were reproduced numerically
-from the exported data (agreement to ≤ 5×10⁻⁴, i.e. rounding only):
+are explicit in the scientific record. The external workflow (QGIS / Python workflow by
+Karine Bastos Leal, INPE) delivered `outputs/risk_index/risk_index.shp` with SVI, compound
+metrics, and the former multi-metric risk fields (`Haz_index`, `Risk_comp`, `Risk_harza`,
+`SVI_Coast_`). The repository export now creates two products:
+
+1. **Current product** (`site/public/data/risk_index_municipalities.geojson`): hazard is based
+   only on compound-event count (`compound_c`).
+2. **Legacy product** (`site/public/data/risk_index_legacy_municipalities.geojson`): the former
+   frequency-duration-intensity hazard is preserved for audit and comparison.
+
+**[DECISION — current hazard scope uses compound-event count only]** The current final
+Hazard_Index excludes mean overlap duration (`mean_overl`) and mean compound intensity
+(`mean_compo`). This change reflects uncertainty in interpreting duration/intensity signals
+near river mouths and estuaries, where high values can be driven by river-mouth dynamics (for
+example, the Amazon plume/estuary context) rather than a directly comparable coastal storm
+hazard.
+
+Current product:
 
 $$
-\text{Hazard\_Index} = \tfrac{1}{3}\bigl[\,\text{norm}(\text{compound\_c}) + \text{norm}(\text{mean\_overl}) + \text{norm}(\text{mean\_compo})\,\bigr]
+\text{Hazard\_Index} = \text{norm}(\text{compound\_c})
 $$
 $$
-\text{Risk\_Comp} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{norm}(\text{compound\_c}), \qquad
 \text{Risk\_Hazard} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{Hazard\_Index}
+$$
+
+`Risk_Comp` is retained in the current GeoJSON as a compatibility alias:
+
+$$
+\text{Risk\_Comp} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{norm}(\text{compound\_c})
+$$
+
+Legacy product:
+
+$$
+\text{Legacy\_Hazard\_Index} = \tfrac{1}{3}\bigl[\,\text{norm}(\text{compound\_c}) + \text{norm}(\text{mean\_overl}) + \text{norm}(\text{mean\_compo})\,\bigr]
+$$
+$$
+\text{Legacy\_Risk\_Hazard} = \tfrac{\text{SVI\_Coast\_2022}}{100}\,\text{Legacy\_Hazard\_Index}
 $$
 
 where `norm(·)` is Min–Max scaling to [0, 1] across the coastal municipalities.
@@ -388,17 +413,17 @@ performed in the external workflow). The three inputs are therefore the *coincid
 that one grid point; the per-municipality `grid_lat`/`grid_lon` in the shapefile confirm a
 single point per municipality. The selection/join code is external and not auditable in this repo.
 
-**[DECISION — double / asymmetric normalization of `mean_compo`]** `mean_compo` is already a
+**[LEGACY DECISION — double / asymmetric normalization of `mean_compo`]** `mean_compo` is already a
 domain-wide normalized quantity (each event's intensity is clipped to [0,1] via
 $(\text{peak}-Q_{05})/(Q_{95}-Q_{05})$ in sub-module 3.2, then averaged per point). In
-Hazard_Index it is Min–Max normalized **again** across municipalities. The other two inputs
+the legacy Hazard_Index it is Min–Max normalized **again** across municipalities. The other two inputs
 (`compound_c`, `mean_overl`) are raw counts/durations normalized **once**. This makes the
 intensity term's normalization asymmetric relative to the other two (it is re-stretched to the
 full [0,1] municipal range). The effect is a rescaling, not an error, but it is **not an
-intentional weighting choice** and should be noted when interpreting the index.
+intentional weighting choice** and should be noted when interpreting the legacy index.
 
-**[DECISION — equal 1/3 weights and the correlation structure]** The three components are
-combined with equal weights. Empirically, in the delivered set (280 municipalities) they are
+**[LEGACY DECISION — equal 1/3 weights and the correlation structure]** The three components are
+combined with equal weights in the legacy product. Empirically, in the delivered set (280 municipalities) they are
 **not** mutually positively correlated:
 
 | Pair | Pearson r |
@@ -410,9 +435,10 @@ combined with equal weights. Empirically, in the delivered set (280 municipaliti
 Compound-event **frequency is negatively correlated with mean per-event duration and
 intensity** — municipalities with many compound events tend to have individually shorter/weaker
 ones. The simple 1/3 mean therefore partially averages opposing signals (hence the compressed
-observed range, Hazard_Index ∈ [0.19, 0.67] rather than [0, 1]). The equal-mean choice is
+observed range, Legacy_Hazard_Index ∈ [0.19, 0.67] rather than [0, 1]). The equal-mean choice is
 defensible as a transparent, assumption-light aggregator, but the common justification "the
-components co-vary" does **not** hold here. A PCA (as used for the SVI) would capture a
+components co-vary" does **not** hold here. This supports the current scope change to
+compound-count-only hazard. A PCA (as used for the SVI) would capture a
 frequency↔intensity *trade-off* axis rather than a single "all high" gradient and is a
 reasonable alternative to consider in future work.
 

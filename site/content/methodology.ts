@@ -145,8 +145,8 @@ export const methodologySteps: MethodStep[] = [
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal / INPE). '
       + 'Exposure is operationalized through spatial association of oceanic hazard metrics with coastal municipalities. '
       + 'SVI_Coast_2022 was constructed from 10 IBGE Census variables via PCA for 281 municipalities (0–100). '
-      + 'Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3. '
-      + 'Risk_Comp = (SVI/100) × norm(compound_c); Risk_Hazard = (SVI/100) × Hazard_Index.',
+      + 'Current scope: Hazard_Index = norm(compound_c), where compound_c is the absolute count of compound events over 1993–2025. '
+      + 'Risk_Hazard = (SVI/100) × Hazard_Index. The previous frequency-duration-intensity Hazard_Index remains available as a legacy output.',
     status: 'done',
     stepNumber: 4,
     subSteps: [
@@ -155,7 +155,7 @@ export const methodologySteps: MethodStep[] = [
         label: '4.1 — Exposure Spatialization',
         description:
           'Oceanic grid-point hazard metrics converted to shapefile and associated with coastal municipalities via spatial join. '
-          + 'The nearest grid point with the highest compound_c value is spatially overlaid per municipality.',
+          + 'The associated grid point with the highest compound_c value is spatially overlaid per municipality.',
         status: 'done',
       },
       {
@@ -169,10 +169,10 @@ export const methodologySteps: MethodStep[] = [
       },
       {
         id: 'step-4-3',
-        label: '4.3 — Hazard Index & Risk Indices',
+        label: '4.3 — Compound-Count Hazard & Risk Indices',
         description:
-          'Hazard_Index = mean of norm(compound_c), norm(mean_overl), norm(mean_compo). '
-          + 'Risk_Comp = (SVI/100) × norm(compound_c). Risk_Hazard = (SVI/100) × Hazard_Index.',
+          'Current Hazard_Index = norm(compound_c). Risk_Hazard = (SVI/100) × Hazard_Index. '
+          + 'mean_overl and mean_compo are retained as diagnostic/legacy fields because duration and intensity remain uncertain near river mouths and estuaries.',
         status: 'done',
       },
     ],
@@ -216,8 +216,9 @@ are not suitable under database incompleteness (FAR=0.984). This approach follow
 et al. (2020) and Bekker and Davis (2020), consistent with the physical understanding that wave
 generation and surge propagation are driven by the same atmospheric systems at the regional scale.
 
-Exposure is operationalized through spatial association of oceanic hazard metrics with coastal
-municipalities. The Social Vulnerability Index (SVI_Coast_2022, Lima et al. 2024) integrates
-10 IBGE Census 2022 variables via PCA for 281 municipalities. Risk indices (Risk_Comp and
-Risk_Hazard) combine SVI with compound-event frequency and Hazard_Index.
+Exposure is operationalized through spatial association of oceanic compound-event metrics with
+coastal municipalities. The Social Vulnerability Index (SVI_Coast_2022, Lima et al. 2024)
+integrates 10 IBGE Census 2022 variables via PCA for 281 municipalities. The current risk index
+combines SVI with Hazard_Index = norm(compound_c), while the former frequency-duration-intensity
+index is retained as a legacy product.
 `;

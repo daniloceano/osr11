@@ -167,7 +167,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max compound_intensity_norm',
-    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events — feeds the Hazard_Index.',
+    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. It remains a diagnostic and legacy field, but no longer feeds the current Hazard_Index.',
     formula: 'mean, 95th pct, max of compound_intensity_norm',
   },
 ];
@@ -309,7 +309,7 @@ export default function CompoundDetectionPage() {
           </p>
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             Hₛ and SSH_total are then catalogued <strong>independently</strong> at every coastal grid point. A
-            "storm" is a peaks-over-threshold (POT) episode — POT means we keep only the days that exceed a
+            &quot;storm&quot; is a peaks-over-threshold (POT) episode — POT means we keep only the days that exceed a
             high threshold and group them into events — built in three deterministic steps.
           </p>
 
@@ -426,8 +426,8 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
                 A value near <strong>1.0</strong> means both drivers peaked near the upper end of their
                 coast-wide observed range during the event; near <strong>0.0</strong> means both were only
                 marginally above threshold. Because scaling is domain-wide, a high value at one
-                municipality is directly comparable to a high value at another — which is what makes the
-                metric usable inside the cross-municipal Hazard_Index.
+                municipality is directly comparable to a high value at another. In the current risk scope,
+                this metric is interpreted as diagnostic context rather than direct input to Hazard_Index.
               </p>
             </div>
           </div>
@@ -533,22 +533,22 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
         <Section eyebrow="Hand-off" title="From hazard characterization to the municipal risk index" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             Step 3 stops at the <strong>hazard</strong>: an objective, per-grid-point portrait of compound
-            coastal events. Step 4 (a separate, externally produced workflow) joins three of these hazard
-            metrics to each coastal municipality and combines them with a Social Vulnerability Index to form
-            the risk indices. The only quantities that cross the bridge are:
+            coastal events. Step 4 joins these outputs to each coastal municipality and combines them with a
+            Social Vulnerability Index. In the current scope, the hazard layer uses only compound-event count;
+            the duration and intensity summaries are retained as diagnostics and in the legacy product.
           </p>
           <ul className="mb-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
-            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — the absolute compound-event count (compound_count_total)</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — the mean overlap duration</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — the mean normalized compound intensity (defined above)</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — the current Hazard_Index input, absolute compound-event count (compound_count_total)</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — diagnostic and legacy mean overlap duration</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — diagnostic and legacy mean normalized compound intensity</li>
           </ul>
           <p className="text-sm leading-relaxed text-gray-700">
-            How these are normalized and weighted into Hazard_Index, Risk_Comp and Risk_Hazard is documented
+            The current and legacy formulas for Hazard_Index and Risk_Hazard are documented
             on the{' '}
             <Link href="/results/risk-integration" className="font-semibold text-blue-600 hover:underline">
               Risk Integration
             </Link>{' '}
-            page — not repeated here.
+            page.
           </p>
         </Section>
 
@@ -557,7 +557,7 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
           <div className="grid gap-4 md:grid-cols-2">
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li><strong>Daily temporal resolution.</strong> Co-occurrence is resolved to the calendar day; sub-daily phasing of wave and surge peaks within a day is not resolvable, and peak_lag_days is therefore an integer-day quantity.</li>
-              <li><strong>Local q90 thresholds.</strong> "Extreme" is relative to each grid point’s own climatology, not an absolute hazard level; comparisons across points are about <em>relative</em> exceedance.</li>
+              <li><strong>Local q90 thresholds.</strong> &quot;Extreme&quot; is relative to each grid point’s own climatology, not an absolute hazard level; comparisons across points are about <em>relative</em> exceedance.</li>
               <li><strong>SSH_total timing.</strong> Total sea level is GLORYS12 zos at 00:00 UTC plus the FES2022 daily-maximum tide. Because the two are not sampled at the same instant, SSH_total <strong>overestimates</strong> the true instantaneous total level by up to the within-day surge variation; it also omits wave setup and river/runoff.</li>
               <li><strong>χ/χ̄ are screening diagnostics.</strong> Only ~12–16 pairs lie above the u = 0.95 tail per grid point, too few to firmly classify tail dependence; treat the χ/χ̄ maps as indicative, not definitive.</li>
             </ul>
