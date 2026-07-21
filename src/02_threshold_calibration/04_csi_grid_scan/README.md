@@ -92,8 +92,8 @@ See `RUN.md` for the complete output list. The key outputs are:
 - `tab_TC4_optimal_pair.csv` — diagnostic optimal threshold pair (used by Step 2e for comparison only; NOT used by Step 3)
 - `fig_TC4_H1_csi_heatmap.png` — CSI across all threshold pairs (primary diagnostic figure)
 - `fig_TC4_S5_peak_scatter.png` — absolute causal-window maxima; fixed lines are medians of local thresholds and are visual references only
-- `fig_TC4_S6_window_peak_ratios.png` — independent Hₛ and SSH_total window maxima normalised by each event grid point's own threshold (maxima may be asynchronous)
-- `fig_TC4_S7_same_day_joint_ratios.png` — same-day ratios on the date maximising `min(Hₛ/T_Hₛ, SSH_total/T_SSH)`; this directly diagnoses the capture rule
+- `fig_TC4_S6_window_peak_quantiles.png` — local empirical quantiles of the independent Hₛ and SSH_total window maxima (maxima may be asynchronous)
+- `fig_TC4_S7_same_day_joint_quantiles.png` — same-day local quantiles on the date maximising `min(q_Hₛ, q_SSH_total)`; dashed q90 lines directly diagnose the capture rule
 
 Audit tables:
 

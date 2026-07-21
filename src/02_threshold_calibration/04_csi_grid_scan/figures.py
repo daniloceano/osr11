@@ -13,8 +13,8 @@ TC4-S3  Capture lag distribution (D-2 / D-1 / D / D+1 00Z)
 TC4-S4  CSI, FAR, POD by coastal sector at optimal pair
 TC4-S5  Peak Hₛ vs peak SSH_total scatter — absolute maxima within causal window,
         coloured by sector, filled = captured at optimal pair (open = missed)
-TC4-S6  Normalised, independently selected window-peak ratios
-TC4-S7  Normalised same-day values maximising min(Hₛ/T_Hₛ, SSH_total/T_SSH)
+TC4-S6  Local empirical quantiles of independently selected window peaks
+TC4-S7  Same-day local quantiles maximising min(q_Hₛ, q_SSH_total)
 TC4-M1  Municipality hit-rate heatmap (city × threshold pair)
 TC4-M2  Municipality miss-rate heatmap (city × threshold pair)
 TC4-M3  Municipality false-alarm heatmap (city × threshold pair)
@@ -1042,34 +1042,34 @@ def plot_peak_scatter(
     return fig
 
 
-def plot_normalized_threshold_audit(
+def plot_quantile_threshold_audit(
     audit: pd.DataFrame,
     same_day: bool,
     optimal: dict,
 ) -> plt.Figure:
-    """Plot event values relative to their own grid-point thresholds."""
+    """Plot event values as percentiles of their local climatologies."""
     from matplotlib.lines import Line2D
     from config.plot_config import apply_publication_style
 
     apply_publication_style()
     if same_day:
-        x_col, y_col = "max_min_hs_ratio", "max_min_ssh_total_ratio"
+        x_col, y_col = "max_min_hs_quantile", "max_min_ssh_total_quantile"
         code = "TC4-S7"
-        title = "Same-day joint-exceedance diagnostic"
-        note = "One date/event: date maximising min(Hₛ/T_Hₛ, SSH_total/T_SSH)"
+        title = "Same-day joint-quantile diagnostic"
+        note = "One date/event: date maximising min(q_Hₛ, q_SSH_total)"
     else:
-        x_col, y_col = "window_peak_hs_ratio", "window_peak_ssh_total_ratio"
+        x_col, y_col = "window_peak_hs_quantile", "window_peak_ssh_total_quantile"
         code = "TC4-S6"
-        title = "Independent window-peak ratios"
+        title = "Independent window-peak quantiles"
         note = "Variable maxima may occur on different dates"
 
     data = audit.dropna(subset=[x_col, y_col]).copy()
     fig, ax = plt.subplots(figsize=(9, 7))
-    x_hi = max(1.01, data[x_col].max() * 1.06)
-    y_hi = max(1.01, data[y_col].max() * 1.06)
-    ax.fill_betweenx([1, y_hi], 1, x_hi, color="#d0f0c0", alpha=0.18, zorder=0)
-    ax.axvline(1, color="dimgray", ls="--", lw=1.1)
-    ax.axhline(1, color="dimgray", ls=":", lw=1.1)
+    hs_cut = float(optimal["thr_hs_pct"]) * 100
+    ssh_cut = float(optimal["thr_ssh_pct"]) * 100
+    ax.fill_betweenx([ssh_cut, 100], hs_cut, 100, color="#d0f0c0", alpha=0.18, zorder=0)
+    ax.axvline(hs_cut, color="dimgray", ls="--", lw=1.1)
+    ax.axhline(ssh_cut, color="dimgray", ls=":", lw=1.1)
 
     for sector, color in SECTOR_COLORS.items():
         sector_data = data[data["sector"] == sector]
@@ -1094,8 +1094,10 @@ def plot_normalized_threshold_audit(
     ]
     ax.legend(handles=marker_handles + sector_handles, fontsize=7.5,
               loc="upper left", framealpha=0.9)
-    ax.set_xlabel("Hₛ / local Hₛ threshold")
-    ax.set_ylabel("SSH_total / local SSH_total threshold")
+    ax.set_xlabel("Local empirical quantile of Hₛ")
+    ax.set_ylabel("Local empirical quantile of SSH_total")
+    ax.set_xlim(40, 100.5)
+    ax.set_ylim(40, 100.5)
     ax.set_title(
         f"{code} — {title}\n{note} · q{round(optimal['thr_hs_pct']*100)}/"
         f"q{round(optimal['thr_ssh_pct']*100)}",
@@ -1178,10 +1180,10 @@ def run_figures(
         log.info("  Skipping TC4-S5 (records or ssh_total_cache not provided).")
 
     if df_threshold_audit is not None and not df_threshold_audit.empty:
-        fig_s6 = plot_normalized_threshold_audit(df_threshold_audit, False, optimal)
-        save_fig(fig_s6, "fig_TC4_S6_window_peak_ratios", subdir="summary")
-        fig_s7 = plot_normalized_threshold_audit(df_threshold_audit, True, optimal)
-        save_fig(fig_s7, "fig_TC4_S7_same_day_joint_ratios", subdir="summary")
+        fig_s6 = plot_quantile_threshold_audit(df_threshold_audit, False, optimal)
+        save_fig(fig_s6, "fig_TC4_S6_window_peak_quantiles", subdir="summary")
+        fig_s7 = plot_quantile_threshold_audit(df_threshold_audit, True, optimal)
+        save_fig(fig_s7, "fig_TC4_S7_same_day_joint_quantiles", subdir="summary")
 
     # ── TC4-M1/M2/M3: Municipality spatial heatmaps ────────────────────────
     muni_order = _build_municipality_order(df_event_hits, df_muni_ref)

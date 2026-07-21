@@ -49,6 +49,19 @@ from src.threshold_calibration.windows import build_causal_window
 log = logging.getLogger(__name__)
 
 
+def _empirical_percentile(climatology: pd.Series, values: pd.Series) -> pd.Series:
+    """Return each value's local empirical percentile on a 0–100 scale."""
+    finite = np.sort(climatology.dropna().to_numpy(dtype=float))
+    result = pd.Series(np.nan, index=values.index, dtype=float)
+    valid = values.notna()
+    if finite.size and valid.any():
+        result.loc[valid] = (
+            np.searchsorted(finite, values.loc[valid].to_numpy(dtype=float), side="right")
+            / finite.size * 100.0
+        )
+    return result
+
+
 def build_local_threshold_audits(
     records: list,
     ssh_total_cache: dict,
@@ -87,7 +100,9 @@ def build_local_threshold_audits(
 
         hs_ratio = hs_win / thr_hs if np.isfinite(thr_hs) and thr_hs != 0 else hs_win * np.nan
         ssh_ratio = ssh_win / thr_ssh if np.isfinite(thr_ssh) and thr_ssh != 0 else ssh_win * np.nan
-        joint_score = pd.concat([hs_ratio, ssh_ratio], axis=1).min(axis=1, skipna=False)
+        hs_quantile = _empirical_percentile(rec.hs_clim, hs_win)
+        ssh_quantile = _empirical_percentile(ssh, ssh_win)
+        joint_score = pd.concat([hs_quantile, ssh_quantile], axis=1).min(axis=1, skipna=False)
         joint_score = joint_score[valid_both]
         simultaneous_date = joint_score.idxmax() if joint_score.notna().any() else pd.NaT
         hit = hit_by_idx.get(rec.event_idx, {})
@@ -118,11 +133,15 @@ def build_local_threshold_audits(
             "window_peak_ssh_total_date": peak_ssh_date,
             "window_peak_hs_ratio": peak_hs / thr_hs if np.isfinite(thr_hs) else np.nan,
             "window_peak_ssh_total_ratio": peak_ssh / thr_ssh if np.isfinite(thr_ssh) else np.nan,
-            "max_min_ratio_date": simultaneous_date,
+            "window_peak_hs_quantile": float(hs_quantile.get(peak_hs_date, np.nan)),
+            "window_peak_ssh_total_quantile": float(ssh_quantile.get(peak_ssh_date, np.nan)),
+            "max_min_quantile_date": simultaneous_date,
             "max_min_hs_m": float(hs_win.get(simultaneous_date, np.nan)),
             "max_min_ssh_total_m": float(ssh_win.get(simultaneous_date, np.nan)),
             "max_min_hs_ratio": float(hs_ratio.get(simultaneous_date, np.nan)),
             "max_min_ssh_total_ratio": float(ssh_ratio.get(simultaneous_date, np.nan)),
+            "max_min_hs_quantile": float(hs_quantile.get(simultaneous_date, np.nan)),
+            "max_min_ssh_total_quantile": float(ssh_quantile.get(simultaneous_date, np.nan)),
             "capture_day": hit.get("capture_time", pd.NaT),
             "hs_at_capture_m": hit.get("hs_at_capture", np.nan),
             "ssh_total_at_capture_m": hit.get("ssh_total_at_capture", np.nan),

@@ -732,28 +732,28 @@ export default function CsiScanPage() {
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
                 <div className="px-5 pt-4">
-                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S6 — Window peak ratios</span>
+                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S6 — Window peak quantiles</span>
                 </div>
-                <Image src="/figures/tc4_summary/fig_TC4_S6_window_peak_ratios.png"
-                  alt="Independent window peak values divided by local thresholds"
+                <Image src="/figures/tc4_summary/fig_TC4_S6_window_peak_quantiles.png"
+                  alt="Local empirical quantiles of independent window peak values"
                   width={900} height={700} className="w-full h-auto" unoptimized />
                 <p className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500 italic">
-                  Each maximum is divided by that event grid point&apos;s local threshold. The two
-                  maxima can occur on different dates, so this panel is descriptive, not the
-                  operational capture test.
+                  Each maximum is expressed as its percentile in the event grid point&apos;s full
+                  1993–2025 climatology. The two maxima can occur on different dates, so this
+                  panel is descriptive, not the operational capture test.
                 </p>
               </div>
               <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
                 <div className="px-5 pt-4">
-                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S7 — Same-day joint ratios</span>
+                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S7 — Same-day joint quantiles</span>
                 </div>
-                <Image src="/figures/tc4_summary/fig_TC4_S7_same_day_joint_ratios.png"
-                  alt="Same-day joint exceedance values divided by local thresholds"
+                <Image src="/figures/tc4_summary/fig_TC4_S7_same_day_joint_quantiles.png"
+                  alt="Same-day local empirical quantiles with q90 capture lines"
                   width={900} height={700} className="w-full h-auto" unoptimized />
                 <p className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500 italic">
-                  For each event, the selected date maximises min(Hₛ/T_Hₛ,
-                  SSH_total/T_SSH) within [D-2, D+1]. Captures must reach or exceed 1.0 on
-                  both axes; every miss fails at least one local threshold.
+                  For each event, the selected date maximises min(q_Hₛ, q_SSH_total) within
+                  [D-2, D+1]. The dashed lines mark q90: captures occupy the upper-right
+                  quadrant; every miss fails q90 in at least one variable.
                 </p>
               </div>
             </div>
