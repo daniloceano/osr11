@@ -695,8 +695,8 @@ export default function CsiScanPage() {
               maximum SSH_total in the same window. Points are coloured by coastal sector.
               <strong> Filled circles</strong> indicate events captured at the optimal threshold pair;{' '}
               <strong>open circles</strong> are missed events. Dashed reference lines show the
-              median local threshold across all grid points. The green-shaded quadrant marks the
-              region above both median thresholds.
+              median of the grid-point-specific physical thresholds. These fixed lines and the
+              green-shaded quadrant are visual references only; they never enter classification.
             </p>
             <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 leading-relaxed">
               <strong>Note:</strong> An event above both threshold lines is not automatically
@@ -721,9 +721,39 @@ export default function CsiScanPage() {
                   reported event. Filled = captured at the optimal pair (Hₛ q{'{'}opt{'}'} /
                   SSH_total q{'{'}opt{'}'}); open = missed. Coloured by coastal sector.
                   Dashed lines: median of local percentile thresholds across all grid points.
-                  Green zone: above both median thresholds simultaneously. Detection requires the
-                  compound condition to hold on the same day — peak values in different variables
-                  on different days do not trigger detection even if both exceed their thresholds.
+                  Each event is actually tested against the two physical q90 values calculated
+                  from the full 1993–2025 series at its associated grid point. Green zone: above
+                  both median references. Detection requires the compound condition to hold on the
+                  same day — peak values on different days do not trigger detection.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-6 md:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="px-5 pt-4">
+                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S6 — Window peak ratios</span>
+                </div>
+                <Image src="/figures/tc4_summary/fig_TC4_S6_window_peak_ratios.png"
+                  alt="Independent window peak values divided by local thresholds"
+                  width={900} height={700} className="w-full h-auto" unoptimized />
+                <p className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500 italic">
+                  Each maximum is divided by that event grid point&apos;s local threshold. The two
+                  maxima can occur on different dates, so this panel is descriptive, not the
+                  operational capture test.
+                </p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="px-5 pt-4">
+                  <span className="text-xs font-semibold text-gray-700">fig_TC4_S7 — Same-day joint ratios</span>
+                </div>
+                <Image src="/figures/tc4_summary/fig_TC4_S7_same_day_joint_ratios.png"
+                  alt="Same-day joint exceedance values divided by local thresholds"
+                  width={900} height={700} className="w-full h-auto" unoptimized />
+                <p className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500 italic">
+                  For each event, the selected date maximises min(Hₛ/T_Hₛ,
+                  SSH_total/T_SSH) within [D-2, D+1]. Captures must reach or exceed 1.0 on
+                  both axes; every miss fails at least one local threshold.
                 </p>
               </div>
             </div>

@@ -91,3 +91,16 @@ See `RUN.md` for the complete output list. The key outputs are:
 - `tab_TC4_event_hits_optimal.csv` — per-event hit/miss at the optimal pair
 - `tab_TC4_optimal_pair.csv` — diagnostic optimal threshold pair (used by Step 2e for comparison only; NOT used by Step 3)
 - `fig_TC4_H1_csi_heatmap.png` — CSI across all threshold pairs (primary diagnostic figure)
+- `fig_TC4_S5_peak_scatter.png` — absolute causal-window maxima; fixed lines are medians of local thresholds and are visual references only
+- `fig_TC4_S6_window_peak_ratios.png` — independent Hₛ and SSH_total window maxima normalised by each event grid point's own threshold (maxima may be asynchronous)
+- `fig_TC4_S7_same_day_joint_ratios.png` — same-day ratios on the date maximising `min(Hₛ/T_Hₛ, SSH_total/T_SSH)`; this directly diagnoses the capture rule
+
+Audit tables:
+
+- `tab_TC4_event_threshold_audit.csv` — event/grid association, local physical thresholds, full reference-period coverage, window maxima and dates, same-day diagnostic values, capture day and status
+- `tab_TC4_grid_threshold_audit.csv` — one row per unique grid point, proving the spatial variability of the q90 physical thresholds
+
+The percentile pair (currently q90/q90) is selected globally, but its physical
+thresholds in metres are computed independently from the full finite climatology
+at every associated grid point. Capture requires both local thresholds to be met
+on the same admissible day. No cross-grid median is used in event classification.

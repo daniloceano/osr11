@@ -36,14 +36,116 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from src.threshold_calibration.config.analysis_config import CFG
 from src.threshold_calibration.figures import run_figures
 from src.threshold_calibration.event_figures import run_event_figures
 from src.threshold_calibration.metrics import build_event_hit_table, capture_lag_summary
+from src.threshold_calibration.calibration import _local_threshold
+from src.threshold_calibration.windows import build_causal_window
 
 log = logging.getLogger(__name__)
+
+
+def build_local_threshold_audits(
+    records: list,
+    ssh_total_cache: dict,
+    df_event_hits_opt: pd.DataFrame,
+    optimal: dict,
+    time_index: pd.DatetimeIndex,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build event- and grid-level proof of the local-threshold calculation.
+
+    The values are recomputed from the same full climatological series and with
+    the same helper used by the operational hit/miss and false-alarm paths.
+    ``time_index`` is used only to construct the causal window; it is never used
+    to truncate the climatology from which thresholds are estimated.
+    """
+    hs_pct = float(optimal["thr_hs_pct"])
+    ssh_pct = float(optimal["thr_ssh_pct"])
+    hit_by_idx = df_event_hits_opt.set_index("event_idx").to_dict("index")
+    rows: list[dict] = []
+
+    for rec in records:
+        key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
+        ssh = ssh_total_cache.get(key, pd.Series(dtype=float))
+        hs_finite = rec.hs_clim.dropna()
+        ssh_finite = ssh.dropna()
+        thr_hs = _local_threshold(rec.hs_clim, hs_pct)
+        thr_ssh = _local_threshold(ssh, ssh_pct)
+        window = pd.DatetimeIndex(build_causal_window(rec.date, time_index))
+        hs_win = rec.hs_clim.reindex(window)
+        ssh_win = ssh.reindex(window)
+        valid_both = hs_win.notna() & ssh_win.notna()
+
+        peak_hs_date = hs_win.idxmax() if hs_win.notna().any() else pd.NaT
+        peak_ssh_date = ssh_win.idxmax() if ssh_win.notna().any() else pd.NaT
+        peak_hs = float(hs_win.max()) if hs_win.notna().any() else np.nan
+        peak_ssh = float(ssh_win.max()) if ssh_win.notna().any() else np.nan
+
+        hs_ratio = hs_win / thr_hs if np.isfinite(thr_hs) and thr_hs != 0 else hs_win * np.nan
+        ssh_ratio = ssh_win / thr_ssh if np.isfinite(thr_ssh) and thr_ssh != 0 else ssh_win * np.nan
+        joint_score = pd.concat([hs_ratio, ssh_ratio], axis=1).min(axis=1, skipna=False)
+        joint_score = joint_score[valid_both]
+        simultaneous_date = joint_score.idxmax() if joint_score.notna().any() else pd.NaT
+        hit = hit_by_idx.get(rec.event_idx, {})
+
+        rows.append({
+            "event_idx": rec.event_idx,
+            "event_identifier": f"TC4-E{int(rec.disaster_id):03d}-{int(rec.event_idx):03d}",
+            "disaster_id": rec.disaster_id,
+            "event_date": rec.date,
+            "municipality": rec.municipality,
+            "sector": hit.get("coastal_sector", ""),
+            "grid_lat": float(rec.grid_lat),
+            "grid_lon": float(rec.grid_lon),
+            "hs_percentile_level": hs_pct,
+            "local_hs_threshold_m": thr_hs,
+            "ssh_total_percentile_level": ssh_pct,
+            "local_ssh_total_threshold_m": thr_ssh,
+            "hs_reference_start": hs_finite.index.min() if not hs_finite.empty else pd.NaT,
+            "hs_reference_end": hs_finite.index.max() if not hs_finite.empty else pd.NaT,
+            "ssh_total_reference_start": ssh_finite.index.min() if not ssh_finite.empty else pd.NaT,
+            "ssh_total_reference_end": ssh_finite.index.max() if not ssh_finite.empty else pd.NaT,
+            "n_valid_hs_observations": int(len(hs_finite)),
+            "n_valid_ssh_total_observations": int(len(ssh_finite)),
+            "n_valid_joint_window_observations": int(valid_both.sum()),
+            "window_peak_hs_m": peak_hs,
+            "window_peak_hs_date": peak_hs_date,
+            "window_peak_ssh_total_m": peak_ssh,
+            "window_peak_ssh_total_date": peak_ssh_date,
+            "window_peak_hs_ratio": peak_hs / thr_hs if np.isfinite(thr_hs) else np.nan,
+            "window_peak_ssh_total_ratio": peak_ssh / thr_ssh if np.isfinite(thr_ssh) else np.nan,
+            "max_min_ratio_date": simultaneous_date,
+            "max_min_hs_m": float(hs_win.get(simultaneous_date, np.nan)),
+            "max_min_ssh_total_m": float(ssh_win.get(simultaneous_date, np.nan)),
+            "max_min_hs_ratio": float(hs_ratio.get(simultaneous_date, np.nan)),
+            "max_min_ssh_total_ratio": float(ssh_ratio.get(simultaneous_date, np.nan)),
+            "capture_day": hit.get("capture_time", pd.NaT),
+            "hs_at_capture_m": hit.get("hs_at_capture", np.nan),
+            "ssh_total_at_capture_m": hit.get("ssh_total_at_capture", np.nan),
+            "captured": bool(hit.get("captured", False)),
+        })
+
+    events = pd.DataFrame(rows)
+    grid_cols = [
+        "grid_lat", "grid_lon", "hs_percentile_level", "local_hs_threshold_m",
+        "ssh_total_percentile_level", "local_ssh_total_threshold_m",
+        "hs_reference_start", "hs_reference_end", "ssh_total_reference_start",
+        "ssh_total_reference_end", "n_valid_hs_observations",
+        "n_valid_ssh_total_observations",
+    ]
+    grids = events[grid_cols].drop_duplicates(subset=["grid_lat", "grid_lon"]).copy()
+    muni_by_grid = (
+        events.groupby(["grid_lat", "grid_lon"])["municipality"]
+        .agg(lambda values: " | ".join(sorted(set(values))))
+        .rename("municipalities")
+        .reset_index()
+    )
+    grids = muni_by_grid.merge(grids, on=["grid_lat", "grid_lon"], how="left")
+    return events, grids
 
 
 def _save_csv(df: pd.DataFrame, name: str) -> None:
@@ -100,6 +202,17 @@ def run_summary(
     ].copy()
     _save_csv(df_event_hits_opt, "tab_TC4_event_hits_optimal")
 
+    # Explicit audit of the physical local thresholds and same-day capture rule.
+    df_threshold_audit = None
+    if records is not None and ssh_total_cache is not None and time_index is not None:
+        df_event_audit, df_grid_audit = build_local_threshold_audits(
+            records, ssh_total_cache, df_event_hits_opt, optimal,
+            pd.DatetimeIndex(time_index),
+        )
+        _save_csv(df_event_audit, "tab_TC4_event_threshold_audit")
+        _save_csv(df_grid_audit, "tab_TC4_grid_threshold_audit")
+        df_threshold_audit = df_event_audit
+
     # Optimal pair summary row
     opt_df = pd.DataFrame([optimal])
     _save_csv(opt_df, "tab_TC4_optimal_pair")
@@ -130,7 +243,8 @@ def run_summary(
                 df_muni_ref=df_muni_ref, df_events_meta=df_events_meta,
                 df_fa_per_muni=fa_per_muni_df,
                 records=records,
-                ssh_total_cache=ssh_total_cache)
+                ssh_total_cache=ssh_total_cache,
+                df_threshold_audit=df_threshold_audit)
 
     # ── Per-event time-series figures ─────────────────────────────────────────
     if records is not None and ssh_total_cache is not None:
