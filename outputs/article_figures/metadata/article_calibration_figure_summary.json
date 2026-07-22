@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-07-22T12:51:31.040489+00:00",
+  "outputs": {
+    "pu_composite_calibration_heatmaps": [
+      "outputs/article_figures/pu_composite_calibration_heatmaps.png"
+    ],
+    "santa_catarina_study_area_and_grid_points": [
+      "outputs/article_figures/santa_catarina_study_area_and_grid_points.png"
+    ]
+  },
+  "inputs": {
+    "score_decomposition": "site/public/data/tc5_score_decomposition.json",
+    "municipality_polygons": "outputs/risk_index/risk_index.shp",
+    "municipality_grid_reference": "outputs/preprocessing/municipality_grid_ref.csv",
+    "expanded_events": "data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv",
+    "legacy_events": "data/reported events/reported_events_Karine_sc.csv"
+  },
+  "heatmap_color_logic": {
+    "requested_order": "worse_to_better",
+    "colors": [
+      "#FDF5D0",
+      "#FCEAA1",
+      "#F8E070",
+      "#F4B354",
+      "#EC8439",
+      "#E05020",
+      "#C84232",
+      "#AF3540",
+      "#96274B",
+      "#7C1B55",
+      "#600F5F",
+      "#3E0668"
+    ],
+    "maximize_metrics": [
+      "R_pos",
+      "Score"
+    ],
+    "minimize_metrics_reversed": [
+      "B",
+      "F_soft/P"
+    ],
+    "score_palette_requested": [
+      "#008000",
+      "#33B200",
+      "#80D900",
+      "#CCE600",
+      "#FFE600",
+      "#FFB200",
+      "#FF8000",
+      "#FF4000",
+      "#FF0000",
+      "#CC0033",
+      "#99004C",
+      "#660066"
+    ],
+    "score_palette_application": "reversed"
+  },
+  "map_counts": {
+    "study_municipalities": 27,
+    "associated_municipalities": 27,
+    "unique_grid_points": 12
+  }
+}

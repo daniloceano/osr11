@@ -1,10 +1,12 @@
 """Generate publication figures for the municipal coastal risk analysis.
 
-Outputs are written to ``outputs/article_figures/``:
+PNG outputs are written to ``outputs/article_figures/``:
 
-- fig01_hazard_vulnerability_risk_multiplot.{png,pdf,svg}
-- fig02_final_integrated_risk.{png,pdf,svg}
-- fig03_original_ocean_hazard_points.{png,pdf,svg}
+- hazard_vulnerability_risk_multiplot.png
+- final_integrated_risk.png
+- original_ocean_hazard_points.png
+
+Machine-readable summaries are written below ``outputs/article_figures/metadata/``.
 
 Run from the repository root:
 
@@ -15,6 +17,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -51,11 +54,17 @@ OCEAN_HAZARD_CANDIDATES = (
 )
 COASTLINE_SHP = ROOT / "data" / "ne_10m_coastline" / "ne_10m_coastline.shp"
 OUT_DIR = ROOT / "outputs" / "article_figures"
+METADATA_DIR = OUT_DIR / "metadata"
 
 OUTPUT_CRS = "EPSG:4326"
 SIMPLIFY_TOLERANCE_DEGREES = 0.001
 MAP_EXTENT = (-56.0, -27.0, -36.5, 7.0)
-SAVE_EXTENSIONS = ("png", "pdf", "svg")
+ARTICLE_FIGURE_FORMAT = "png"
+ARTICLE_FIGURE_DPI = 300
+ORDINAL_FILENAME_PATTERN = re.compile(
+    r"^(?:(?:fig(?:ure)?|main_figure|primary)_?\d+|[a-z]?\d+)_",
+    re.IGNORECASE,
+)
 
 NO_DATA_COLOR = "#e5e7eb"
 BOUNDARY_COLOR = "#ffffff"
@@ -519,20 +528,77 @@ def _plot_municipal_layer(
 
 
 def _save_figure(fig: plt.Figure, stem: str) -> list[str]:
+    """Save one article figure using the repository-wide PNG-only policy."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    outputs = []
-    for ext in SAVE_EXTENSIONS:
-        path = OUT_DIR / f"{stem}.{ext}"
-        if ext == "png":
-            fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
-        else:
-            fig.savefig(path, bbox_inches="tight", facecolor="white")
-        outputs.append(_relative(path))
+    if ORDINAL_FILENAME_PATTERN.match(stem):
+        raise ValueError(f"Article figure stem must be semantic, not ordinal: {stem!r}")
+    path = OUT_DIR / f"{stem}.{ARTICLE_FIGURE_FORMAT}"
+    fig.savefig(path, dpi=ARTICLE_FIGURE_DPI, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    return outputs
+    return [_relative(path)]
 
 
-def make_figure_1(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str) -> list[str]:
+def _iter_json_strings(value: Any):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _iter_json_strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_json_strings(item)
+
+
+def _clean_obsolete_article_images() -> None:
+    """Remove formats and ordinal filenames forbidden by the current policy."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for path in OUT_DIR.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() in {".pdf", ".svg"}:
+            path.unlink()
+        elif path.suffix.lower() == ".png" and ORDINAL_FILENAME_PATTERN.match(path.stem):
+            path.unlink()
+
+
+def validate_article_figure_outputs() -> None:
+    """Fail clearly when images or manifest paths violate article-figure rules."""
+    errors: list[str] = []
+    image_extensions = {".png", ".pdf", ".svg", ".jpg", ".jpeg", ".tif", ".tiff", ".webp"}
+    for path in OUT_DIR.rglob("*"):
+        if not path.is_file() or path.name == "README.md":
+            continue
+        suffix = path.suffix.lower()
+        if suffix in image_extensions and suffix != ".png":
+            errors.append(f"non-PNG article figure: {_relative(path)}")
+        if suffix == ".png" and ORDINAL_FILENAME_PATTERN.match(path.stem):
+            errors.append(f"ordinal article-figure filename: {_relative(path)}")
+
+    for manifest in METADATA_DIR.glob("*.json"):
+        with manifest.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+        for value in _iter_json_strings(payload):
+            suffix = Path(value).suffix.lower()
+            if suffix not in image_extensions:
+                continue
+            if suffix != ".png":
+                errors.append(f"non-PNG path in {_relative(manifest)}: {value}")
+                continue
+            figure_path = Path(value)
+            if not figure_path.is_absolute():
+                figure_path = ROOT / figure_path
+            if ORDINAL_FILENAME_PATTERN.match(figure_path.stem):
+                errors.append(f"ordinal path in {_relative(manifest)}: {value}")
+            if not figure_path.is_file():
+                errors.append(f"missing figure recorded in {_relative(manifest)}: {value}")
+
+    if errors:
+        raise RuntimeError("Article-figure validation failed:\n- " + "\n- ".join(errors))
+
+
+def make_hazard_vulnerability_risk_multiplot(
+    gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str
+) -> list[str]:
     layers = [
         ("Hazard_Index", "A", "Compound-event count hazard"),
         ("SVI_Coast_2022", "B", "Social vulnerability"),
@@ -568,7 +634,7 @@ def make_figure_1(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, ris
         fontsize=7.5,
         color="#475569",
     )
-    return _save_figure(fig, "fig01_hazard_vulnerability_risk_multiplot")
+    return _save_figure(fig, "hazard_vulnerability_risk_multiplot")
 
 
 def _format_municipality(value: Any) -> str:
@@ -578,7 +644,9 @@ def _format_municipality(value: Any) -> str:
     return text.title() if text.isupper() else text
 
 
-def make_figure_2(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str) -> list[str]:
+def make_final_integrated_risk(
+    gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str
+) -> list[str]:
     if risk_key != "Risk_Hazard":
         title = "Relative coastal risk based on Risk_Comp fallback"
     else:
@@ -687,10 +755,10 @@ def make_figure_2(gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, ris
         va="top",
         linespacing=1.35,
     )
-    return _save_figure(fig, "fig02_final_integrated_risk")
+    return _save_figure(fig, "final_integrated_risk")
 
 
-def make_figure_3(
+def make_original_ocean_hazard_points(
     ocean_df: pd.DataFrame,
     coastline: gpd.GeoDataFrame | None,
     ocean_meta: dict[str, Any],
@@ -735,20 +803,25 @@ def make_figure_3(
         fontsize=7.5,
         color="#334155",
     )
-    return _save_figure(fig, "fig03_original_ocean_hazard_points")
+    return _save_figure(fig, "original_ocean_hazard_points")
 
 
 def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    _clean_obsolete_article_images()
+    METADATA_DIR.mkdir(parents=True, exist_ok=True)
     gdf, risk_meta = read_risk_data()
     coastline = read_coastline()
     ocean_df, ocean_meta = read_ocean_hazard_data()
 
     risk_key = risk_meta["risk_panel_key"]
     generated: dict[str, list[str]] = {}
-    generated["figure_1"] = make_figure_1(gdf, coastline, risk_key)
-    generated["figure_2"] = make_figure_2(gdf, coastline, risk_key)
-    generated["figure_3"] = make_figure_3(ocean_df, coastline, ocean_meta)
+    generated["hazard_vulnerability_risk_multiplot"] = make_hazard_vulnerability_risk_multiplot(
+        gdf, coastline, risk_key
+    )
+    generated["final_integrated_risk"] = make_final_integrated_risk(gdf, coastline, risk_key)
+    generated["original_ocean_hazard_points"] = make_original_ocean_hazard_points(
+        ocean_df, coastline, ocean_meta
+    )
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -760,10 +833,12 @@ def main() -> None:
             "They should not be read as absolute expected damage or absence/presence of coastal hazard."
         ),
     }
-    summary_path = OUT_DIR / "article_risk_figure_summary.json"
+    summary_path = METADATA_DIR / "article_risk_figure_summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2, default=_to_jsonable)
         f.write("\n")
+
+    validate_article_figure_outputs()
 
     print("\nOSR11 article risk figures generated")
     print("------------------------------------")

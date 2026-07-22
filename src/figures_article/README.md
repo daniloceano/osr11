@@ -8,6 +8,7 @@ From the repository root:
 
 ```bash
 python -m src.figures_article.make_article_risk_figures
+python -m src.figures_article.make_article_calibration_figures
 ```
 
 Outputs are written to:
@@ -16,7 +17,7 @@ Outputs are written to:
 outputs/article_figures/
 ```
 
-The script saves PNG at 300 dpi plus PDF and SVG versions.
+The script saves publication-quality PNG files at 300 dpi. PDF and SVG article-figure exports are intentionally not generated.
 
 Municipal geometries are reprojected to EPSG:4326 when needed and simplified for plotting with a topology-preserving tolerance of `0.001` degrees. Raw shapefiles in `outputs/risk_index/` are not modified.
 
@@ -38,14 +39,14 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 
 ## Generated Figures
 
-- `fig01_hazard_vulnerability_risk_multiplot`
+- `hazard_vulnerability_risk_multiplot.png`
   - Panel A: current `Hazard_Index = norm(compound_c)`
   - Panel B: `SVI_Coast_2022`
   - Panel C: current `Risk_Hazard`
-- `fig02_final_integrated_risk`
+- `final_integrated_risk.png`
   - Standalone final integrated risk map using current `Risk_Hazard`.
   - Includes a top-municipality ranking inset.
-- `fig03_original_ocean_hazard_points`
+- `original_ocean_hazard_points.png`
   - Original oceanic compound-event count points before municipal transfer/spatial association.
 
 ## Alias Detection
@@ -78,5 +79,7 @@ The risk indices are comparative/relative across Brazilian coastal municipalitie
 The generated summary file records the actual input files, aliases, ranges, and whether Figure 3 read or computed `Hazard_Index`:
 
 ```text
-outputs/article_figures/article_risk_figure_summary.json
+outputs/article_figures/metadata/article_risk_figure_summary.json
 ```
+
+Figure filenames are descriptive `snake_case` names and never encode manuscript order. Apply figure numbers in LaTeX, captions, or the journal production workflow, not in generated filenames. The generator validates the PNG-only, semantic-name policy and all figure paths stored in metadata after every run.

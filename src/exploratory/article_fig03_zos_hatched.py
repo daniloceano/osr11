@@ -1,6 +1,6 @@
 """Exploratory Figure 3 variant with long-term mean zos point hatching.
 
-Replicates ``outputs/article_figures/fig03_original_ocean_hazard_points`` and
+Replicates ``outputs/article_figures/original_ocean_hazard_points.png`` and
 adds hatching over valid points where long-term mean GLORYS zos is >= 0.20 m.
 """
 from __future__ import annotations
@@ -29,10 +29,10 @@ from src.figures_article.make_article_risk_figures import (
 
 
 DEFAULT_ZOS = ROOT / "outputs/monthly_quicklook_brazil_all/data/longterm_mean_zos.nc"
-OUT_DIR = ROOT / "outputs" / "exploratory_fig03_zos_hatched_points"
+OUT_DIR = ROOT / "outputs" / "exploratory_original_ocean_hazard_zos_hatched_points"
 FIG_DIR = OUT_DIR / "figures"
 TABLE_DIR = OUT_DIR / "tables"
-DEFAULT_STEM = "fig03_original_ocean_hazard_points_zos_mean_ge_0p20_point_hatching"
+DEFAULT_STEM = "original_ocean_hazard_points_zos_mean_ge_0p20_point_hatching"
 SAVE_EXTENSIONS = ("png", "pdf", "svg")
 
 

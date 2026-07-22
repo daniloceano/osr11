@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T23:49:51.095499+00:00",
+  "generated_at": "2026-07-22T12:02:06.756693+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -110,20 +110,14 @@
     ]
   },
   "outputs": {
-    "figure_1": [
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.png",
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.pdf",
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.svg"
+    "hazard_vulnerability_risk_multiplot": [
+      "outputs/article_figures/hazard_vulnerability_risk_multiplot.png"
     ],
-    "figure_2": [
-      "outputs/article_figures/fig02_final_integrated_risk.png",
-      "outputs/article_figures/fig02_final_integrated_risk.pdf",
-      "outputs/article_figures/fig02_final_integrated_risk.svg"
+    "final_integrated_risk": [
+      "outputs/article_figures/final_integrated_risk.png"
     ],
-    "figure_3": [
-      "outputs/article_figures/fig03_original_ocean_hazard_points.png",
-      "outputs/article_figures/fig03_original_ocean_hazard_points.pdf",
-      "outputs/article_figures/fig03_original_ocean_hazard_points.svg"
+    "original_ocean_hazard_points": [
+      "outputs/article_figures/original_ocean_hazard_points.png"
     ]
   },
   "interpretation_caveat": "Risk indices are comparative across Brazilian coastal municipalities. They should not be read as absolute expected damage or absence/presence of coastal hazard."

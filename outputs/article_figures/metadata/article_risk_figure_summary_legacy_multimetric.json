@@ -184,20 +184,14 @@
     ]
   },
   "outputs": {
-    "figure_1": [
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.png",
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.pdf",
-      "outputs/article_figures/fig01_hazard_vulnerability_risk_multiplot.svg"
+    "hazard_vulnerability_risk_multiplot": [
+      "outputs/article_figures/hazard_vulnerability_risk_multiplot_legacy_multimetric.png"
     ],
-    "figure_2": [
-      "outputs/article_figures/fig02_final_integrated_risk.png",
-      "outputs/article_figures/fig02_final_integrated_risk.pdf",
-      "outputs/article_figures/fig02_final_integrated_risk.svg"
+    "final_integrated_risk": [
+      "outputs/article_figures/final_integrated_risk_legacy_multimetric.png"
     ],
-    "figure_3": [
-      "outputs/article_figures/fig03_original_ocean_hazard_points.png",
-      "outputs/article_figures/fig03_original_ocean_hazard_points.pdf",
-      "outputs/article_figures/fig03_original_ocean_hazard_points.svg"
+    "original_ocean_hazard_points": [
+      "outputs/article_figures/original_ocean_hazard_points_legacy_multimetric.png"
     ]
   },
   "interpretation_caveat": "Risk indices are comparative across Brazilian coastal municipalities. They should not be read as absolute expected damage or absence/presence of coastal hazard."
