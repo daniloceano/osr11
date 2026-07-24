@@ -1,12 +1,14 @@
-"""Generate publication figures for the municipal coastal risk analysis.
+"""Shared generators for the article coastal-risk figures and ranking tables.
 
-PNG outputs are written to ``outputs/article_figures/``:
+The three dedicated entry points are:
 
-- hazard_vulnerability_risk_multiplot.png
-- final_integrated_risk.png
-- original_ocean_hazard_points.png
+- ``make_article_coastal_compound_event_rate_map.py``
+- ``make_article_hazard_vulnerability_risk_multiplot.py``
+- ``make_article_top10_municipality_tables.py``
 
-Machine-readable summaries are written below ``outputs/article_figures/metadata/``.
+This module keeps the data readers, plotting utilities, output validation, and
+an all-in-one compatibility command. Run each dedicated script from the
+repository root when regenerating a single artifact.
 
 Run from the repository root:
 
@@ -20,19 +22,26 @@ import math
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+import cartopy.crs as ccrs
+from cartopy.io import shapereader
 import geopandas as gpd
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
+from matplotlib.colors import BoundaryNorm, ListedColormap, Normalize
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
 import pyogrio
+from scipy.spatial import cKDTree
+from shapely.geometry import GeometryCollection, LineString, MultiLineString
+from shapely.ops import linemerge, unary_union
 
 try:
     from config.plot_config import STYLE, apply_publication_style
@@ -53,12 +62,23 @@ OCEAN_HAZARD_CANDIDATES = (
     ROOT / "site" / "public" / "data" / "storm_maps_grid_metrics.json",
 )
 COASTLINE_SHP = ROOT / "data" / "ne_10m_coastline" / "ne_10m_coastline.shp"
+COMPOUND_SUMMARY_PATH = (
+    ROOT / "outputs" / "storm_catalog" / "compound" / "compound_summary.json"
+)
 OUT_DIR = ROOT / "outputs" / "article_figures"
 METADATA_DIR = OUT_DIR / "metadata"
+TABLE_DIR = OUT_DIR / "tables"
 
 OUTPUT_CRS = "EPSG:4326"
 SIMPLIFY_TOLERANCE_DEGREES = 0.001
 MAP_EXTENT = (-56.0, -27.0, -36.5, 7.0)
+BRAZIL_MAP_EXTENT = (-74.5, -32.0, -35.5, 6.5)
+COASTAL_MAP_EXTENT = (
+    MAP_EXTENT[0],
+    BRAZIL_MAP_EXTENT[1],
+    BRAZIL_MAP_EXTENT[2],
+    BRAZIL_MAP_EXTENT[3],
+)
 ARTICLE_FIGURE_FORMAT = "png"
 ARTICLE_FIGURE_DPI = 300
 ORDINAL_FILENAME_PATTERN = re.compile(
@@ -71,6 +91,31 @@ BOUNDARY_COLOR = "#ffffff"
 COAST_COLOR = "#334155"
 GRID_COLOR = "#cbd5e1"
 RISK_CMAP = "YlOrRd"
+
+LAND_COLOR = "#ddddda"
+OCEAN_COLOR = "#e9f3f7"
+STATE_BORDER_COLOR = "#9a9a96"
+COUNTRY_BORDER_COLOR = "#555553"
+ARTICLE_COAST_COLOR = "#252525"
+COASTAL_PROJECTION_CRS = "EPSG:5880"
+COASTLINE_MUNICIPAL_BUFFER_M = 30_000.0
+COASTLINE_SEGMENT_MAX_LENGTH_M = 5_000.0
+COASTAL_COLOR_CLASSES = 9
+
+# Same green-yellow-orange-red sequence used by the Composite Score heatmap,
+# inverted relative to that panel's displayed direction and intentionally
+# stopped at red so that the upper municipal classes do not return to purple.
+MUNICIPAL_INDEX_COLORS_LOW_TO_HIGH = (
+    "#008000",
+    "#33B200",
+    "#80D900",
+    "#CCE600",
+    "#FFE600",
+    "#FFB200",
+    "#FF8000",
+    "#FF4000",
+    "#FF0000",
+)
 
 
 @dataclass(frozen=True)
@@ -90,6 +135,7 @@ RISK_LAYER_SPECS = (
 RISK_SUPPORT_SPECS = (
     FieldSpec("municipality_name", "Municipality", ("NM_MUN", "municipio", "municipali")),
     FieldSpec("state", "UF", ("SIGLA_UF", "uf")),
+    FieldSpec("state_name", "State", ("NM_UF", "state_name", "estado")),
     FieldSpec("municipality_code", "Municipality code", ("CD_MUN",)),
     FieldSpec("compound_c", "compound_c", ("compound_c", "compound", "comp_c")),
     FieldSpec("mean_overl", "mean_overl", ("mean_overl", "mean_ove", "mean_overlap_duration")),
@@ -209,7 +255,15 @@ def read_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         }
         support_aliases = {
             key: key
-            for key in ("municipality_name", "state", "municipality_code", "compound_c", "mean_overl", "mean_compo")
+            for key in (
+                "municipality_name",
+                "state",
+                "state_name",
+                "municipality_code",
+                "compound_c",
+                "mean_overl",
+                "mean_compo",
+            )
             if key in gdf.columns
         }
         stats = {key: _numeric_stats(gdf[key]) for key in layer_keys}
@@ -467,8 +521,8 @@ def _colorbar_label(key: str, compact: bool = False) -> str:
     if compact:
         compact_labels = {
             "SVI_Coast_2022": "SVI (0-100)",
-            "Hazard_Index": "Count Hazard",
-            "Risk_Hazard": "Count Risk",
+            "Hazard_Index": "Hazard index",
+            "Risk_Hazard": "Integrated risk index",
             "Risk_Comp": "Risk_Comp",
         }
         if key in compact_labels:
@@ -575,6 +629,8 @@ def validate_article_figure_outputs() -> None:
             errors.append(f"ordinal article-figure filename: {_relative(path)}")
 
     for manifest in METADATA_DIR.glob("*.json"):
+        if "legacy" in manifest.stem.lower():
+            continue
         with manifest.open(encoding="utf-8") as handle:
             payload = json.load(handle)
         for value in _iter_json_strings(payload):
@@ -596,45 +652,557 @@ def validate_article_figure_outputs() -> None:
         raise RuntimeError("Article-figure validation failed:\n- " + "\n- ".join(errors))
 
 
+def _geometry_intersects_extent(
+    geometry: object,
+    extent: tuple[float, float, float, float],
+) -> bool:
+    minx, miny, maxx, maxy = geometry.bounds
+    west, east, south, north = extent
+    return not (maxx < west or minx > east or maxy < south or miny > north)
+
+
+@lru_cache(maxsize=1)
+def _natural_earth_context() -> tuple[tuple[object, ...], tuple[object, ...], tuple[object, ...]]:
+    land_path = shapereader.natural_earth(
+        resolution="10m",
+        category="physical",
+        name="land",
+    )
+    country_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_0_boundary_lines_land",
+    )
+    state_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_1_states_provinces_lines",
+    )
+    land = tuple(
+        geometry
+        for geometry in shapereader.Reader(land_path).geometries()
+        if _geometry_intersects_extent(geometry, BRAZIL_MAP_EXTENT)
+    )
+    countries = tuple(
+        geometry
+        for geometry in shapereader.Reader(country_path).geometries()
+        if _geometry_intersects_extent(geometry, BRAZIL_MAP_EXTENT)
+    )
+    brazil_states = tuple(
+        record.geometry
+        for record in shapereader.Reader(state_path).records()
+        if record.attributes.get("ADM0_NAME") == "Brazil"
+        and _geometry_intersects_extent(record.geometry, BRAZIL_MAP_EXTENT)
+    )
+    return land, countries, brazil_states
+
+
+def _setup_article_geo_axis(
+    axis: plt.Axes,
+    title: str | None,
+    *,
+    extent: tuple[float, float, float, float] = BRAZIL_MAP_EXTENT,
+    draw_left_labels: bool = True,
+    draw_bottom_labels: bool = True,
+) -> None:
+    crs = ccrs.PlateCarree()
+    land, _, _ = _natural_earth_context()
+    axis.set_facecolor(OCEAN_COLOR)
+    axis.add_geometries(
+        land,
+        crs=crs,
+        facecolor=LAND_COLOR,
+        edgecolor="none",
+        zorder=0.5,
+    )
+    axis.set_extent(extent, crs=crs)
+    grid = axis.gridlines(
+        crs=crs,
+        draw_labels=True,
+        linewidth=0.35,
+        color="#9aa9b0",
+        alpha=0.55,
+        linestyle="--",
+        zorder=1.2,
+    )
+    grid.top_labels = False
+    grid.right_labels = False
+    grid.left_labels = draw_left_labels
+    grid.bottom_labels = draw_bottom_labels
+    grid.xlabel_style = {"size": 8, "color": "#374151"}
+    grid.ylabel_style = {"size": 8, "color": "#374151"}
+    if title:
+        axis.set_title(title, loc="left", fontsize=10.5, fontweight="bold", pad=7)
+
+
+def _draw_administrative_boundaries(axis: plt.Axes) -> None:
+    crs = ccrs.PlateCarree()
+    _, countries, brazil_states = _natural_earth_context()
+    axis.add_geometries(
+        brazil_states,
+        crs=crs,
+        facecolor="none",
+        edgecolor=STATE_BORDER_COLOR,
+        linewidth=0.42,
+        alpha=0.95,
+        zorder=5,
+    )
+    axis.add_geometries(
+        countries,
+        crs=crs,
+        facecolor="none",
+        edgecolor=COUNTRY_BORDER_COLOR,
+        linewidth=0.72,
+        alpha=0.98,
+        zorder=5.2,
+    )
+
+
+def _municipal_palette(number_of_classes: int) -> ListedColormap:
+    indices = np.rint(
+        np.linspace(0, len(MUNICIPAL_INDEX_COLORS_LOW_TO_HIGH) - 1, number_of_classes)
+    ).astype(int)
+    colors = tuple(MUNICIPAL_INDEX_COLORS_LOW_TO_HIGH[index] for index in indices)
+    return ListedColormap(colors, name="composite_score_inverted_green_to_red")
+
+
+def _municipal_boundaries(series: pd.Series, key: str) -> np.ndarray:
+    values = pd.to_numeric(series, errors="coerce").dropna()
+    if values.empty:
+        raise ValueError(f"No finite values available for {key}")
+    if key == "Hazard_Index":
+        return np.linspace(0.0, 1.0, 9)
+    if key == "SVI_Coast_2022":
+        return np.linspace(0.0, 100.0, 9)
+    upper = float(values.max())
+    boundaries = MaxNLocator(
+        nbins=7,
+        steps=[1, 2, 2.5, 5, 10],
+    ).tick_values(0.0, upper)
+    boundaries = boundaries[boundaries >= 0.0]
+    if boundaries[-1] < upper:
+        boundaries = np.append(boundaries, upper)
+    return boundaries
+
+
+def _plot_municipal_layer_discrete(
+    axis: plt.Axes,
+    gdf: gpd.GeoDataFrame,
+    coastline: gpd.GeoDataFrame | None,
+    key: str,
+    title: str,
+    panel: str,
+    *,
+    draw_left_labels: bool,
+) -> dict[str, Any]:
+    boundaries = _municipal_boundaries(gdf[key], key)
+    cmap = _municipal_palette(len(boundaries) - 1)
+    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+    _setup_article_geo_axis(
+        axis,
+        title,
+        extent=MAP_EXTENT,
+        draw_left_labels=draw_left_labels,
+    )
+    gdf.plot(
+        ax=axis,
+        facecolor="#c7c7c4",
+        edgecolor="#f8fafc",
+        linewidth=0.16,
+        zorder=2,
+    )
+    valid = gdf[gdf[key].notna()].copy()
+    valid.plot(
+        ax=axis,
+        column=key,
+        cmap=cmap,
+        norm=norm,
+        edgecolor="#f8fafc",
+        linewidth=0.16,
+        zorder=3,
+    )
+    _draw_administrative_boundaries(axis)
+    _plot_coastline(axis, coastline)
+    axis.set_extent(MAP_EXTENT, crs=ccrs.PlateCarree())
+    _panel_label(axis, panel)
+
+    mappable = ScalarMappable(norm=norm, cmap=cmap)
+    mappable.set_array([])
+    colorbar = axis.figure.colorbar(
+        mappable,
+        ax=axis,
+        orientation="vertical",
+        boundaries=boundaries,
+        ticks=boundaries,
+        spacing="uniform",
+        fraction=0.040,
+        pad=0.025,
+        drawedges=True,
+    )
+    colorbar.ax.tick_params(labelsize=8, length=2.8)
+    colorbar.outline.set_linewidth(0.7)
+    return {
+        "key": key,
+        "boundaries": boundaries.tolist(),
+        "colors": list(cmap.colors),
+        "statistics": _numeric_stats(gdf[key]),
+    }
+
+
 def make_hazard_vulnerability_risk_multiplot(
-    gdf: gpd.GeoDataFrame, coastline: gpd.GeoDataFrame | None, risk_key: str
+    gdf: gpd.GeoDataFrame,
+    coastline: gpd.GeoDataFrame | None,
+    risk_key: str,
+    *,
+    write_metadata: bool = True,
 ) -> list[str]:
     layers = [
         ("Hazard_Index", "A", "Compound-event count hazard"),
         ("SVI_Coast_2022", "B", "Social vulnerability"),
-        (risk_key, "C", "Integrated risk" if risk_key == "Risk_Hazard" else "Risk_Comp fallback"),
+        (
+            risk_key,
+            "C",
+            "Integrated risk" if risk_key == "Risk_Hazard" else "Risk_Comp fallback",
+        ),
     ]
-    fig, axes = plt.subplots(1, 3, figsize=(13.8, 6.2), constrained_layout=False)
-    fig.subplots_adjust(left=0.045, right=0.985, top=0.865, bottom=0.105, wspace=0.18)
-    for ax, (key, panel, title) in zip(axes, layers):
-        _plot_municipal_layer(
-            ax,
+    fig, axes = plt.subplots(
+        1,
+        3,
+        figsize=(14.4, 6.2),
+        constrained_layout=False,
+        subplot_kw={"projection": ccrs.PlateCarree()},
+    )
+    fig.subplots_adjust(
+        left=0.045,
+        right=0.985,
+        top=0.955,
+        bottom=0.055,
+        wspace=0.14,
+    )
+    panels: list[dict[str, Any]] = []
+    for index, (axis, (key, panel, title)) in enumerate(zip(axes, layers)):
+        panels.append(_plot_municipal_layer_discrete(
+            axis,
             gdf,
             coastline,
             key,
             title,
-            panel=panel,
-            cbar_orientation="vertical",
-            cbar_fraction=0.034,
-            cbar_pad=0.012,
-            compact_cbar_label=True,
+            panel,
+            draw_left_labels=index == 0,
+        ))
+    outputs = _save_figure(fig, "hazard_vulnerability_risk_multiplot")
+    if write_metadata:
+        METADATA_DIR.mkdir(parents=True, exist_ok=True)
+        metadata_path = METADATA_DIR / "article_hazard_vulnerability_risk_metadata.json"
+        metadata = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "output": outputs[0],
+            "risk_key": risk_key,
+            "panels": panels,
+            "palette": {
+                "source": "Composite Score heatmap color sequence",
+                "orientation": "inverted relative to displayed heatmap; low green to high red",
+                "purple_tail_omitted": True,
+                "reason": "upper municipal classes must be red rather than purple",
+            },
+            "annotations": {
+                "figure_title_drawn": False,
+                "panel_titles_drawn": True,
+                "colorbar_labels_drawn": False,
+                "bottom_interpretation_note_drawn": False,
+            },
+            "map_context": {
+                "extent": list(MAP_EXTENT),
+                "land_color": LAND_COLOR,
+                "ocean_color": OCEAN_COLOR,
+                "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
+                "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines",
+            },
+        }
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2, default=_to_jsonable) + "\n",
+            encoding="utf-8",
         )
-    fig.suptitle(
-        "Municipal-scale compound-count coastal risk along the Brazilian coast",
-        fontsize=12.5,
-        fontweight="bold",
-        y=0.955,
+    return outputs
+
+
+def _line_parts(geometry: object) -> list[LineString]:
+    if geometry is None or geometry.is_empty:
+        return []
+    if isinstance(geometry, LineString):
+        return [geometry]
+    if isinstance(geometry, (MultiLineString, GeometryCollection)):
+        parts: list[LineString] = []
+        for part in geometry.geoms:
+            parts.extend(_line_parts(part))
+        return parts
+    return []
+
+
+def build_coastal_compound_event_segments(
+    municipalities: gpd.GeoDataFrame,
+    ocean_df: pd.DataFrame,
+    coastline: gpd.GeoDataFrame,
+) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    """Assign every short Brazilian coastal segment to its nearest grid point."""
+    if coastline.empty:
+        raise ValueError("The coastline layer is empty")
+    ocean = ocean_df.reset_index(drop=True).copy()
+    if "compound_c" not in ocean:
+        raise ValueError("The ocean-grid source lacks compound-event counts")
+
+    municipalities_projected = municipalities.to_crs(COASTAL_PROJECTION_CRS)
+    coastline_projected = coastline.to_crs(COASTAL_PROJECTION_CRS)
+    municipal_coastal_buffer = municipalities_projected.geometry.union_all().buffer(
+        COASTLINE_MUNICIPAL_BUFFER_M
     )
-    fig.text(
-        0.5,
-        0.03,
-        "Indices are comparative across coastal municipalities; lower values indicate lower relative social-vulnerability-weighted risk, not absence of coastal hazard.",
-        ha="center",
-        va="bottom",
-        fontsize=7.5,
-        color="#475569",
+
+    clipped_lines: list[LineString] = []
+    for geometry in coastline_projected.geometry:
+        clipped_lines.extend(
+            _line_parts(geometry.intersection(municipal_coastal_buffer))
+        )
+    if not clipped_lines:
+        raise RuntimeError("No Natural Earth coastline intersects the coastal municipalities")
+
+    segment_geometries: list[LineString] = []
+    segment_midpoints: list[np.ndarray] = []
+    for line in clipped_lines:
+        coordinates = np.asarray(line.coords, dtype=float)
+        for start, end in zip(coordinates[:-1], coordinates[1:]):
+            length = float(np.linalg.norm(end - start))
+            number_of_segments = max(
+                1,
+                int(np.ceil(length / COASTLINE_SEGMENT_MAX_LENGTH_M)),
+            )
+            points = start + (end - start) * np.linspace(
+                0.0,
+                1.0,
+                number_of_segments + 1,
+            )[:, None]
+            for segment_start, segment_end in zip(points[:-1], points[1:]):
+                segment_geometries.append(
+                    LineString([segment_start, segment_end])
+                )
+                segment_midpoints.append((segment_start + segment_end) / 2.0)
+
+    ocean_points = gpd.GeoDataFrame(
+        ocean,
+        geometry=gpd.points_from_xy(ocean["longitude"], ocean["latitude"]),
+        crs=OUTPUT_CRS,
+    ).to_crs(COASTAL_PROJECTION_CRS)
+    point_coordinates = np.asarray(
+        [(point.x, point.y) for point in ocean_points.geometry],
+        dtype=float,
     )
-    return _save_figure(fig, "hazard_vulnerability_risk_multiplot")
+    nearest_distance_m, nearest_position = cKDTree(point_coordinates).query(
+        np.asarray(segment_midpoints),
+        k=1,
+    )
+    source_rows = ocean.iloc[nearest_position].reset_index(drop=True)
+    segments = gpd.GeoDataFrame(
+        {
+            "source_grid_index": nearest_position.astype(int),
+            "source_longitude": source_rows["longitude"].to_numpy(dtype=float),
+            "source_latitude": source_rows["latitude"].to_numpy(dtype=float),
+            "compound_event_count": source_rows["compound_c"].to_numpy(dtype=float),
+            "nearest_grid_distance_km": nearest_distance_m / 1_000.0,
+        },
+        geometry=segment_geometries,
+        crs=COASTAL_PROJECTION_CRS,
+    ).to_crs(OUTPUT_CRS)
+    used_positions = np.unique(nearest_position)
+    metadata = {
+        "method": (
+            "Natural Earth 10m coastline clipped to a 30-km buffer around "
+            "the coastal-municipality union; linework split into segments no "
+            "longer than 5 km in EPSG:5880; each segment assigned the nearest "
+            "native ocean grid point by projected midpoint distance"
+        ),
+        "projected_crs": COASTAL_PROJECTION_CRS,
+        "municipal_buffer_m": COASTLINE_MUNICIPAL_BUFFER_M,
+        "maximum_segment_length_m": COASTLINE_SEGMENT_MAX_LENGTH_M,
+        "clipped_line_count": len(clipped_lines),
+        "segment_count": len(segments),
+        "native_grid_point_count": len(ocean),
+        "native_grid_points_used": int(len(used_positions)),
+        "nearest_distance_km": {
+            "minimum": float(np.min(nearest_distance_m) / 1_000.0),
+            "median": float(np.median(nearest_distance_m) / 1_000.0),
+            "p90": float(np.quantile(nearest_distance_m, 0.90) / 1_000.0),
+            "p99": float(np.quantile(nearest_distance_m, 0.99) / 1_000.0),
+            "maximum": float(np.max(nearest_distance_m) / 1_000.0),
+        },
+        "assigned_value_statistics": _numeric_stats(
+            segments["compound_event_count"]
+        ),
+    }
+    return segments, metadata
+
+
+def _compound_event_rate_boundaries(values: pd.Series) -> np.ndarray:
+    finite = pd.to_numeric(values, errors="coerce").dropna()
+    if finite.empty:
+        raise ValueError("No compound-event rates available for coastal segments")
+    step = math.ceil(
+        float(finite.max()) / COASTAL_COLOR_CLASSES * 10.0
+    ) / 10.0
+    return np.arange(COASTAL_COLOR_CLASSES + 1, dtype=float) * step
+
+
+def make_coastal_compound_event_rate_map(
+    municipalities: gpd.GeoDataFrame,
+    ocean_df: pd.DataFrame,
+    coastline: gpd.GeoDataFrame | None,
+    ocean_metadata: dict[str, Any],
+    *,
+    write_metadata: bool = True,
+) -> list[str]:
+    if coastline is None or coastline.empty:
+        raise FileNotFoundError(COASTLINE_SHP)
+    if not COMPOUND_SUMMARY_PATH.exists():
+        raise FileNotFoundError(COMPOUND_SUMMARY_PATH)
+    summary_document = json.loads(
+        COMPOUND_SUMMARY_PATH.read_text(encoding="utf-8")
+    )
+    catalog_summary = summary_document["summary"]
+    number_of_years = float(catalog_summary["n_years"])
+    if number_of_years <= 0:
+        raise ValueError("The catalog record length must be positive")
+
+    annual_ocean_df = ocean_df.copy()
+    annual_ocean_df["compound_event_count_total"] = annual_ocean_df[
+        "compound_c"
+    ]
+    annual_ocean_df["compound_c"] = (
+        annual_ocean_df["compound_event_count_total"] / number_of_years
+    )
+    segments, assignment_metadata = build_coastal_compound_event_segments(
+        municipalities,
+        annual_ocean_df,
+        coastline,
+    )
+    segments = segments.rename(
+        columns={
+            "compound_event_count": "compound_event_rate_per_year",
+        }
+    )
+    boundaries = _compound_event_rate_boundaries(
+        segments["compound_event_rate_per_year"]
+    )
+    magma = plt.get_cmap("magma")
+    cmap = ListedColormap(
+        magma(np.linspace(0.95, 0.12, len(boundaries) - 1)),
+        name="magma_discrete_reversed_without_black_endpoint",
+    )
+    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+
+    fig = plt.figure(figsize=(8.4, 8.0), constrained_layout=False)
+    axis = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+    fig.subplots_adjust(left=0.07, right=0.965, top=0.98, bottom=0.12)
+    _setup_article_geo_axis(
+        axis,
+        None,
+        extent=COASTAL_MAP_EXTENT,
+    )
+    _draw_administrative_boundaries(axis)
+    _plot_coastline(axis, coastline)
+    class_indices = np.digitize(
+        segments["compound_event_rate_per_year"].to_numpy(dtype=float),
+        boundaries[1:-1],
+    )
+    for class_index in range(len(boundaries) - 1):
+        class_geometries = segments.geometry[class_indices == class_index].tolist()
+        if not class_geometries:
+            continue
+        dissolved = unary_union(class_geometries)
+        merged = dissolved if isinstance(dissolved, LineString) else linemerge(dissolved)
+        axis.add_geometries(
+            _line_parts(merged),
+            crs=ccrs.PlateCarree(),
+            facecolor="none",
+            edgecolor=cmap(class_index),
+            linewidth=4.0,
+            zorder=8,
+        )
+    axis.set_extent(COASTAL_MAP_EXTENT, crs=ccrs.PlateCarree())
+
+    mappable = ScalarMappable(norm=norm, cmap=cmap)
+    mappable.set_array([])
+    fig.canvas.draw()
+    map_position = axis.get_position()
+    colorbar_axis = fig.add_axes(
+        [
+            map_position.x0,
+            max(0.025, map_position.y0 - 0.085),
+            map_position.width,
+            0.026,
+        ]
+    )
+    colorbar = fig.colorbar(
+        mappable,
+        cax=colorbar_axis,
+        orientation="horizontal",
+        boundaries=boundaries,
+        ticks=boundaries,
+        spacing="uniform",
+        drawedges=True,
+        fraction=0.055,
+        pad=0.065,
+        aspect=34,
+    )
+    colorbar.set_label(
+        r"Compound events year$^{-1}$",
+        fontsize=10,
+    )
+    colorbar.ax.tick_params(labelsize=9, length=3)
+    colorbar.outline.set_linewidth(0.75)
+
+    outputs = _save_figure(fig, "coastal_compound_event_rate_per_year")
+    if write_metadata:
+        METADATA_DIR.mkdir(parents=True, exist_ok=True)
+        metadata_path = (
+            METADATA_DIR
+            / "article_coastal_compound_event_rate_per_year_metadata.json"
+        )
+        metadata = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "output": outputs[0],
+            "ocean_grid_source": ocean_metadata,
+            "catalog_summary": _relative(COMPOUND_SUMMARY_PATH),
+            "period": catalog_summary["period"],
+            "number_of_years": number_of_years,
+            "formula": (
+                "compound_event_rate_per_year = "
+                "compound_count_total / number_of_years"
+            ),
+            "coastline_source": _relative(COASTLINE_SHP),
+            "coastal_assignment": assignment_metadata,
+            "colorbar": {
+                "type": "discrete",
+                "units": "events per year",
+                "number_of_colors": len(boundaries) - 1,
+                "boundaries": boundaries.tolist(),
+                "colormap": "matplotlib magma sampled from 0.95 to 0.12",
+                "orientation": "low counts light; high counts dark",
+                "label_drawn": True,
+                "label": "Compound events year^-1",
+                "width_matches_map_axis": True,
+            },
+            "figure_title_drawn": False,
+            "map_context": {
+                "extent": list(COASTAL_MAP_EXTENT),
+                "land_color": LAND_COLOR,
+                "ocean_color": OCEAN_COLOR,
+                "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
+                "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines",
+            },
+        }
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2, default=_to_jsonable) + "\n",
+            encoding="utf-8",
+        )
+    return outputs
 
 
 def _format_municipality(value: Any) -> str:
@@ -642,6 +1210,150 @@ def _format_municipality(value: Any) -> str:
         return "Unknown"
     text = str(value)
     return text.title() if text.isupper() else text
+
+
+BRAZILIAN_STATE_NAMES = {
+    "AC": "Acre",
+    "AL": "Alagoas",
+    "AP": "Amapá",
+    "AM": "Amazonas",
+    "BA": "Bahia",
+    "CE": "Ceará",
+    "DF": "Distrito Federal",
+    "ES": "Espírito Santo",
+    "GO": "Goiás",
+    "MA": "Maranhão",
+    "MT": "Mato Grosso",
+    "MS": "Mato Grosso do Sul",
+    "MG": "Minas Gerais",
+    "PA": "Pará",
+    "PB": "Paraíba",
+    "PR": "Paraná",
+    "PE": "Pernambuco",
+    "PI": "Piauí",
+    "RJ": "Rio de Janeiro",
+    "RN": "Rio Grande do Norte",
+    "RS": "Rio Grande do Sul",
+    "RO": "Rondônia",
+    "RR": "Roraima",
+    "SC": "Santa Catarina",
+    "SP": "São Paulo",
+    "SE": "Sergipe",
+    "TO": "Tocantins",
+}
+
+
+def _top10_table_frame(
+    gdf: gpd.GeoDataFrame,
+    key: str,
+    value_label: str,
+) -> pd.DataFrame:
+    columns = ["municipality_name", "state", key]
+    if "state_name" in gdf.columns:
+        columns.insert(2, "state_name")
+    ranked = gdf.loc[gdf[key].notna(), columns].copy()
+    ranked["municipality_name"] = ranked["municipality_name"].map(_format_municipality)
+    ranked["state"] = ranked["state"].fillna("").astype(str)
+    if "state_name" not in ranked:
+        ranked["state_name"] = ranked["state"].map(BRAZILIAN_STATE_NAMES)
+    else:
+        fallback = ranked["state"].map(BRAZILIAN_STATE_NAMES)
+        ranked["state_name"] = ranked["state_name"].fillna(fallback)
+    ranked[key] = pd.to_numeric(ranked[key], errors="coerce")
+    ranked = ranked.dropna(subset=[key]).sort_values(
+        [key, "municipality_name"],
+        ascending=[False, True],
+        kind="stable",
+    ).head(10)
+    ranked.insert(0, "Rank", np.arange(1, len(ranked) + 1))
+    ranked = ranked.rename(
+        columns={
+            "municipality_name": "Municipality",
+            "state_name": "State",
+            "state": "UF",
+            key: value_label,
+        }
+    )
+    return ranked[["Rank", "Municipality", "State", "UF", value_label]]
+
+
+def make_top10_municipality_tables(
+    gdf: gpd.GeoDataFrame,
+    risk_key: str,
+    *,
+    write_metadata: bool = True,
+) -> list[str]:
+    TABLE_DIR.mkdir(parents=True, exist_ok=True)
+    specifications = (
+        (
+            "Hazard_Index",
+            "Hazard index",
+            "hazard",
+            "Top 10 Brazilian coastal municipalities by compound-event-count hazard index.",
+            "tab:top10-municipal-hazard",
+            3,
+        ),
+        (
+            "SVI_Coast_2022",
+            "SVI",
+            "svi",
+            "Top 10 Brazilian coastal municipalities by Social Vulnerability Index (SVI).",
+            "tab:top10-municipal-svi",
+            1,
+        ),
+        (
+            risk_key,
+            "Risk index",
+            "integrated_risk",
+            "Top 10 Brazilian coastal municipalities by integrated compound-risk index.",
+            "tab:top10-municipal-integrated-risk",
+            3,
+        ),
+    )
+    outputs: list[str] = []
+    metadata_tables: dict[str, Any] = {}
+    for key, value_label, stem, caption, label, decimals in specifications:
+        table = _top10_table_frame(gdf, key, value_label)
+        csv_path = TABLE_DIR / f"top10_municipalities_by_{stem}.csv"
+        tex_path = TABLE_DIR / f"top10_municipalities_by_{stem}.tex"
+        table.to_csv(csv_path, index=False, float_format=f"%.{decimals}f")
+        formatted = table.copy()
+        formatted[value_label] = formatted[value_label].map(
+            lambda value: f"{value:.{decimals}f}"
+        )
+        latex = formatted.to_latex(
+            index=False,
+            escape=True,
+            caption=caption,
+            label=label,
+            column_format="rlllr",
+            position="htbp",
+        )
+        tex_path.write_text(latex, encoding="utf-8")
+        outputs.extend((_relative(csv_path), _relative(tex_path)))
+        metadata_tables[stem] = {
+            "field": key,
+            "value_label": value_label,
+            "rows": table.to_dict(orient="records"),
+            "csv": _relative(csv_path),
+            "latex": _relative(tex_path),
+        }
+
+    if write_metadata:
+        METADATA_DIR.mkdir(parents=True, exist_ok=True)
+        metadata_path = METADATA_DIR / "article_top10_municipality_tables_metadata.json"
+        metadata = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "risk_key": risk_key,
+            "ranking": "descending; municipality name ascending as deterministic tie-breaker",
+            "tables": metadata_tables,
+        }
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2, default=_to_jsonable) + "\n",
+            encoding="utf-8",
+        )
+        outputs.append(_relative(metadata_path))
+    return outputs
 
 
 def make_final_integrated_risk(
@@ -815,12 +1527,18 @@ def main() -> None:
 
     risk_key = risk_meta["risk_panel_key"]
     generated: dict[str, list[str]] = {}
+    generated["coastal_compound_event_rate_per_year"] = make_coastal_compound_event_rate_map(
+        gdf,
+        ocean_df,
+        coastline,
+        ocean_meta,
+    )
     generated["hazard_vulnerability_risk_multiplot"] = make_hazard_vulnerability_risk_multiplot(
         gdf, coastline, risk_key
     )
-    generated["final_integrated_risk"] = make_final_integrated_risk(gdf, coastline, risk_key)
-    generated["original_ocean_hazard_points"] = make_original_ocean_hazard_points(
-        ocean_df, coastline, ocean_meta
+    generated["top10_municipality_tables"] = make_top10_municipality_tables(
+        gdf,
+        risk_key,
     )
 
     summary = {
@@ -840,8 +1558,8 @@ def main() -> None:
 
     validate_article_figure_outputs()
 
-    print("\nOSR11 article risk figures generated")
-    print("------------------------------------")
+    print("\nOSR11 article risk figures and tables generated")
+    print("-----------------------------------------------")
     print(f"Risk data: {risk_meta['source_path']}")
     print(f"Risk features used: {risk_meta['filtered_feature_count']} / {risk_meta['source_feature_count']}")
     print(f"Risk panel: {risk_key}")

@@ -7,9 +7,40 @@ This folder contains a reproducible workflow for generating manuscript-style fig
 From the repository root:
 
 ```bash
-python -m src.figures_article.make_article_risk_figures
-python -m src.figures_article.make_article_calibration_figures
+python src/figures_article/make_article_coastal_compound_event_rate_map.py
+python src/figures_article/make_article_hazard_vulnerability_risk_multiplot.py
+python src/figures_article/make_article_top10_municipality_tables.py
+python src/figures_article/make_article_calibration_map.py
+python src/figures_article/make_article_calibration_heatmaps.py
+python src/figures_article/make_article_supplementary_zos_mean_coastal_band_map.py
 ```
+
+The map command writes `santa_catarina_study_area_and_grid_points.png`; the
+heatmap command writes `pu_composite_calibration_heatmaps.png`. Regenerate both
+with the two commands above. The equivalent module commands also remain supported:
+
+```bash
+python -m src.figures_article.make_article_coastal_compound_event_rate_map
+python -m src.figures_article.make_article_hazard_vulnerability_risk_multiplot
+python -m src.figures_article.make_article_top10_municipality_tables
+python -m src.figures_article.make_article_calibration_map
+python -m src.figures_article.make_article_calibration_heatmaps
+python -m src.figures_article.make_article_supplementary_zos_mean_coastal_band_map
+```
+
+The supplementary-map command writes
+`supplementary_temporal_mean_zos_within_200km_coast.png`. It shows the
+1993--2025 temporal mean of raw GLORYS `zos` over valid ocean cells within
+200 km of the Natural Earth coastline. It intentionally has no title, river
+labels, or in-map legend; those explanations belong in the supplementary
+caption embedded in the script header. Natural Earth 10-m lines delineate
+countries and first-order administrative divisions (states or provinces).
+
+For the calibration map, the visible coastline is extracted from the same
+municipal polygons used for the shaded areas, ensuring exact geometric
+alignment. The local Natural Earth 10 m coastline is used only to classify
+which municipal-boundary segments are maritime. The visible SC–PR and SC–RS
+borders likewise use shared edges from the municipal geometry.
 
 Outputs are written to:
 
@@ -39,15 +70,31 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 
 ## Generated Figures
 
+- `coastal_compound_event_rate_per_year.png`
+  - Mean annual compound-event frequency from the native ocean grid,
+    calculated as the total count divided by the 33-year period (1993--2025)
+    and projected onto Natural Earth coastline segments of at most 5 km.
+  - Each coastal segment receives the value at its nearest grid point in
+    SIRGAS 2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
   - Panel A: current `Hazard_Index = norm(compound_c)`
   - Panel B: `SVI_Coast_2022`
   - Panel C: current `Risk_Hazard`
-- `final_integrated_risk.png`
-  - Standalone final integrated risk map using current `Risk_Hazard`.
-  - Includes a top-municipality ranking inset.
-- `original_ocean_hazard_points.png`
-  - Original oceanic compound-event count points before municipal transfer/spatial association.
+  - Uses discrete green-to-red classes derived from the inverted Composite
+    Score heatmap palette.
+  - Includes Natural Earth country and Brazilian-state boundaries over gray
+    land and a light-blue ocean.
+
+## Generated Tables
+
+The table script writes CSV and publication-ready LaTeX versions below
+`outputs/article_figures/tables/` for the top 10 municipalities by:
+
+- `Hazard_Index`;
+- `SVI_Coast_2022`;
+- `Risk_Hazard` (or the detected risk-field fallback).
+
+Every table includes municipality, state name, and state abbreviation.
 
 ## Alias Detection
 
@@ -63,11 +110,13 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 - `mean_overl`: `mean_overl`, `mean_ove`, `mean_overlap_duration`
 - `mean_compo`: `mean_compo`, `mean_com`, `mean_compound_intensity_norm`
 
-For Figure 3, the current scope visualizes compound-event count. If an oceanic `Hazard_Index`
-field is absent, the script uses `compound_c` directly:
+For the coastal-line map, the current scope visualizes annual compound-event
+frequency. If an oceanic `Hazard_Index` field is absent, the script uses
+`compound_c` (`compound_count_total` in the current CSV) divided by the
+documented record length:
 
 ```text
-compound_c
+compound_count_total / 33 years
 ```
 
 The plotting color scale remains relative to the available ocean-point values.
@@ -76,10 +125,14 @@ The plotting color scale remains relative to the available ocean-point values.
 
 The risk indices are comparative/relative across Brazilian coastal municipalities. They should not be interpreted as absolute expected damage or as the absence/presence of coastal hazards. For example, a state with relevant physical coastal hazards may rank lower in the integrated map if its relative social vulnerability is lower than municipalities elsewhere.
 
-The generated summary file records the actual input files, aliases, ranges, and whether Figure 3 read or computed `Hazard_Index`:
+Machine-readable files record the actual input files, aliases, ranges,
+coastal-assignment diagnostics, discrete color boundaries, and table rows:
 
 ```text
 outputs/article_figures/metadata/article_risk_figure_summary.json
+outputs/article_figures/metadata/article_coastal_compound_event_rate_per_year_metadata.json
+outputs/article_figures/metadata/article_hazard_vulnerability_risk_metadata.json
+outputs/article_figures/metadata/article_top10_municipality_tables_metadata.json
 ```
 
 Figure filenames are descriptive `snake_case` names and never encode manuscript order. Apply figure numbers in LaTeX, captions, or the journal production workflow, not in generated filenames. The generator validates the PNG-only, semantic-name policy and all figure paths stored in metadata after every run.

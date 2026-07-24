@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-22T12:02:06.756693+00:00",
+  "generated_at": "2026-07-23T22:13:40.437655+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -23,6 +23,7 @@
       "support": {
         "municipality_name": "municipality_name",
         "state": "state",
+        "state_name": "state_name",
         "municipality_code": "municipality_code",
         "compound_c": "compound_c",
         "mean_overl": "mean_overl",
@@ -110,14 +111,20 @@
     ]
   },
   "outputs": {
+    "coastal_compound_event_rate_per_year": [
+      "outputs/article_figures/coastal_compound_event_rate_per_year.png"
+    ],
     "hazard_vulnerability_risk_multiplot": [
       "outputs/article_figures/hazard_vulnerability_risk_multiplot.png"
     ],
-    "final_integrated_risk": [
-      "outputs/article_figures/final_integrated_risk.png"
-    ],
-    "original_ocean_hazard_points": [
-      "outputs/article_figures/original_ocean_hazard_points.png"
+    "top10_municipality_tables": [
+      "outputs/article_figures/tables/top10_municipalities_by_hazard.csv",
+      "outputs/article_figures/tables/top10_municipalities_by_hazard.tex",
+      "outputs/article_figures/tables/top10_municipalities_by_svi.csv",
+      "outputs/article_figures/tables/top10_municipalities_by_svi.tex",
+      "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.csv",
+      "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.tex",
+      "outputs/article_figures/metadata/article_top10_municipality_tables_metadata.json"
     ]
   },
   "interpretation_caveat": "Risk indices are comparative across Brazilian coastal municipalities. They should not be read as absolute expected damage or absence/presence of coastal hazard."

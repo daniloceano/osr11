@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-22T12:51:31.040489+00:00",
+  "generated_at": "2026-07-22T17:20:53.947230+00:00",
   "outputs": {
     "pu_composite_calibration_heatmaps": [
       "outputs/article_figures/pu_composite_calibration_heatmaps.png"
@@ -10,10 +10,12 @@
   },
   "inputs": {
     "score_decomposition": "site/public/data/tc5_score_decomposition.json",
-    "municipality_polygons": "outputs/risk_index/risk_index.shp",
+    "municipality_polygons": "site/public/data/risk_index_municipalities.geojson",
     "municipality_grid_reference": "outputs/preprocessing/municipality_grid_ref.csv",
     "expanded_events": "data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv",
-    "legacy_events": "data/reported events/reported_events_Karine_sc.csv"
+    "legacy_events": "data/reported events/reported_events_Karine_sc.csv",
+    "coastline_reference": "data/ne_10m_coastline/ne_10m_coastline.shp",
+    "coastline_geometry": "site/public/data/risk_index_municipalities.geojson"
   },
   "heatmap_color_logic": {
     "requested_order": "worse_to_better",
@@ -56,8 +58,16 @@
     "score_palette_application": "reversed"
   },
   "map_counts": {
-    "study_municipalities": 27,
+    "study_municipalities": 26,
     "associated_municipalities": 27,
     "unique_grid_points": 12
+  },
+  "map_geometry": {
+    "coastline_method": "Municipal-polygon boundary classified by a 2 km buffer around the Natural Earth 10 m coastline reference",
+    "coastline_alignment": "Exact subset of municipal-polygon boundary",
+    "state_boundary_method": "Shared SC/PR and SC/RS municipal-polygon edges",
+    "land_mask_method": "Regional Natural Earth 10 m land polygon with its near-coast edge replaced by the SC municipal geometry",
+    "land_color": "#D8D8D4",
+    "ocean_color": "#EAF3F8"
   }
 }

@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-07-23T22:07:26.058899+00:00",
+  "figure_role": "exploratory",
+  "source": "outputs/storm_catalog/compound/compound_metrics.csv",
+  "catalog_summary": "outputs/storm_catalog/compound/compound_summary.json",
+  "period": "1993-01-01 to 2025-12-31",
+  "number_of_years": 33.0,
+  "formula": "compound_event_rate_per_year = compound_count_total / number_of_years",
+  "annual_mean_source_check": {
+    "source_field": "compound_count_annual_mean",
+    "maximum_absolute_difference_events_per_year": 0.00575757575757585
+  },
+  "coastal_assignment": {
+    "method": "Natural Earth 10m coastline clipped to a 30-km buffer around the coastal-municipality union; linework split into segments no longer than 5 km in EPSG:5880; each segment assigned the nearest native ocean grid point by projected midpoint distance",
+    "projected_crs": "EPSG:5880",
+    "municipal_buffer_m": 30000.0,
+    "maximum_segment_length_m": 5000.0,
+    "clipped_line_count": 49,
+    "segment_count": 6743,
+    "native_grid_point_count": 808,
+    "native_grid_points_used": 297,
+    "nearest_distance_km": {
+      "minimum": 0.2482324722793027,
+      "median": 18.70452610532338,
+      "p90": 36.59047474713849,
+      "p99": 83.1087347187056,
+      "maximum": 119.94466773185528
+    },
+    "assigned_count_statistics": {
+      "count": 6743,
+      "min": 1.454545,
+      "mean": 3.723556,
+      "median": 2.878788,
+      "max": 9.090909
+    }
+  },
+  "colorbar": {
+    "units": "events per year",
+    "number_of_colors": 9,
+    "boundaries": [
+      0.0,
+      1.1,
+      2.2,
+      3.3000000000000003,
+      4.4,
+      5.5,
+      6.6000000000000005,
+      7.700000000000001,
+      8.8,
+      9.9
+    ],
+    "orientation": "low rates light; high rates dark",
+    "width_matches_map_axis": true
+  },
+  "map_extent": [
+    -56.0,
+    -32.0,
+    -35.5,
+    6.5
+  ],
+  "outputs": {
+    "figure": "outputs/exploratory_coastal_compound_event_rate_map/figures/explore_coastal_compound_event_rate_per_year_20260723.png",
+    "annualized_native_grid": "outputs/exploratory_coastal_compound_event_rate_map/data/native_grid_compound_event_rate_per_year.csv"
+  }
+}

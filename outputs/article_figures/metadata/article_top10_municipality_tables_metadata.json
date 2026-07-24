@@ -1,0 +1,241 @@
+{
+  "generated_at": "2026-07-23T22:13:40.436741+00:00",
+  "risk_key": "Risk_Hazard",
+  "ranking": "descending; municipality name ascending as deterministic tie-breaker",
+  "tables": {
+    "hazard": {
+      "field": "Hazard_Index",
+      "value_label": "Hazard index",
+      "rows": [
+        {
+          "Rank": 1,
+          "Municipality": "São Sebastião",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 1.0
+        },
+        {
+          "Rank": 2,
+          "Municipality": "Bertioga",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.991968
+        },
+        {
+          "Rank": 3,
+          "Municipality": "Ilhabela",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.955823
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Praia Grande",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.939759
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Santos",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.939759
+        },
+        {
+          "Rank": 6,
+          "Municipality": "São Vicente",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.939759
+        },
+        {
+          "Rank": 7,
+          "Municipality": "Laguna",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Hazard index": 0.907631
+        },
+        {
+          "Rank": 8,
+          "Municipality": "Guarujá",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.891566
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Jaguaruna",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Hazard index": 0.871486
+        },
+        {
+          "Rank": 10,
+          "Municipality": "Santa Vitória do Palmar",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Hazard index": 0.863454
+        }
+      ],
+      "csv": "outputs/article_figures/tables/top10_municipalities_by_hazard.csv",
+      "latex": "outputs/article_figures/tables/top10_municipalities_by_hazard.tex"
+    },
+    "svi": {
+      "field": "SVI_Coast_2022",
+      "value_label": "SVI",
+      "rows": [
+        {
+          "Rank": 1,
+          "Municipality": "Chaves",
+          "State": "Pará",
+          "UF": "PA",
+          "SVI": 100.0
+        },
+        {
+          "Rank": 2,
+          "Municipality": "Santo Amaro do Maranhão",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 93.236682
+        },
+        {
+          "Rank": 3,
+          "Municipality": "Icatu",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 91.701862
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Primeira Cruz",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 91.28812
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Paulino Neves",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 91.099805
+        },
+        {
+          "Rank": 6,
+          "Municipality": "Humberto de Campos",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 88.976296
+        },
+        {
+          "Rank": 7,
+          "Municipality": "Viseu",
+          "State": "Pará",
+          "UF": "PA",
+          "SVI": 85.714332
+        },
+        {
+          "Rank": 8,
+          "Municipality": "Serrano do Maranhão",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 85.44964
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Barreirinhas",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 85.330285
+        },
+        {
+          "Rank": 10,
+          "Municipality": "Turiaçu",
+          "State": "Maranhão",
+          "UF": "MA",
+          "SVI": 84.936311
+        }
+      ],
+      "csv": "outputs/article_figures/tables/top10_municipalities_by_svi.csv",
+      "latex": "outputs/article_figures/tables/top10_municipalities_by_svi.tex"
+    },
+    "integrated_risk": {
+      "field": "Risk_Hazard",
+      "value_label": "Risk index",
+      "rows": [
+        {
+          "Rank": 1,
+          "Municipality": "Guaraqueçaba",
+          "State": "Paraná",
+          "UF": "PR",
+          "Risk index": 0.33163
+        },
+        {
+          "Rank": 2,
+          "Municipality": "Chaves",
+          "State": "Pará",
+          "UF": "PA",
+          "Risk index": 0.305221
+        },
+        {
+          "Rank": 3,
+          "Municipality": "São José do Norte",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Risk index": 0.289648
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Magé",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.286892
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Itaboraí",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.283163
+        },
+        {
+          "Rank": 6,
+          "Municipality": "São Sebastião",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Risk index": 0.273038
+        },
+        {
+          "Rank": 7,
+          "Municipality": "Paulo Lopes",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Risk index": 0.254995
+        },
+        {
+          "Rank": 8,
+          "Municipality": "Bertioga",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Risk index": 0.254417
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Paraty",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.252297
+        },
+        {
+          "Rank": 10,
+          "Municipality": "Guapimirim",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.248791
+        }
+      ],
+      "csv": "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.csv",
+      "latex": "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.tex"
+    }
+  }
+}
