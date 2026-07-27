@@ -31,13 +31,16 @@ export const resultCards: ResultCard[] = [
   {
     id: 'hazard-characterization',
     title: 'Step 3 — Hazard Characterization',
-    subtitle: '808 grid points · storm catalogs + 7 analysis submodules · 1993–2025',
+    subtitle: '808 grid points · coastal Hazard Index + 7 analysis submodules · 1993–2025',
     status: 'done',
     description:
       'Central analysis block: independent storm catalogs for Hₛ and SSH_total (q90/q90), '
       + 'followed by compound detection, duration/persistence, monthly seasonality, '
       + 'Mann–Kendall trends, POT–GPD EVA, and Hs–SSH dependence (τ, ρ, χ, χ̄). '
-      + '404k Hₛ storms, 325k SSH_total storms, ~96k compound events across 808 coastal grid points.',
+      + '404k Hₛ storms, 325k SSH_total storms, ~96k compound events across 808 coastal grid points. '
+      + 'The composite Hazard Index and its three components — compound-event frequency (events yr⁻¹), '
+      + 'mean overlap duration (days), and mean compound intensity (dimensionless) — are shown directly '
+      + 'on the coastline.',
     rationale:
       'The storm catalogs are the foundation for all downstream hazard characterization. '
       + 'The submodule suite quantifies frequency, intensity, seasonality, trends, return levels, '
@@ -51,6 +54,7 @@ export const resultCards: ResultCard[] = [
       '3.6: POT–GPD return levels (2, 5, 10, 20, 50 yr) with delta-method CIs',
       '3.7: Kendall τ, Spearman ρ, extremal χ and χ̄ for Hs–SSH compound pairs',
       '3.8: Unified JSON for interactive maps on the results website',
+      'Coastal Hazard Index layers projected onto the Natural Earth 10-m coastline (GeoJSON + metadata)',
     ],
     href: '/results/hazard-characterization',
     parts: [
@@ -62,6 +66,7 @@ export const resultCards: ResultCard[] = [
       '3.6 — EVA',
       '3.7 — Dependence',
       '3.8 — Site Export',
+      'Coastal Hazard Index',
     ],
   },
   {

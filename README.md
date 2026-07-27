@@ -281,7 +281,7 @@ CountOnly_Risk_Hazard = norm[(SVI_Coast_2022 / 100) × CountOnly_Hazard_Index]
 - `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, `Legacy_Risk_Hazard` — delivered external fields retained for audit
 
 **Status:** ✅ Complete  
-**Website panel:** `/results/risk-integration` displays the current normalized multimetric product. `/results/risk-integration/legacy` preserves the originally delivered product.
+**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the per-grid-point metric explorer as a supporting diagnostic. `/results/risk-integration` displays the current normalized multimetric municipal product, and `/methodology/hazard-index` is the single reference for the index construction. `/results/risk-integration/legacy` preserves the originally delivered product as an audit artifact only.
 
 **Risk-index shapefile export:**
 Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
@@ -303,10 +303,45 @@ Detected shapefile aliases are recorded in the metadata. In the legacy source:
 - `Risk_Hazard` maps to `Risk_harza`
 
 In the current export, `Hazard_Index` is calculated on the native grid from
-frequency, duration, and intensity and transferred by `grid_lat`/`grid_lon`.
-`Risk_Hazard_raw` and the normalized `Risk_Hazard` are then derived from this
-hazard and SVI. The delivered DBF fields remain under `Legacy_*`; the former
-repository count-only fields remain under `CountOnly_*`.
+frequency, duration, and intensity and transferred by `grid_lat`/`grid_lon`
+**without renormalization**. `Risk_Hazard_raw` and the normalized `Risk_Hazard`
+are then derived from this hazard and SVI. The delivered DBF fields remain under
+`Legacy_*`; the former repository count-only fields remain under `CountOnly_*`.
+
+#### Sub-step 4.4 — Coastal representation of the Hazard Index
+
+The Hazard Index lives on ocean grid points but is communicated along the
+shoreline. `src/04_risk_integration/coastal_projection.py` is the single
+implementation of that cartographic step:
+
+1. the Natural Earth 10-m coastline is clipped to a 30-km buffer around the
+   union of the coastal municipalities;
+2. the linework is reprojected to SIRGAS 2000 / Brazil Polyconic (EPSG:5880)
+   and split into segments of at most 5 km;
+3. each segment is assigned the values of its nearest native ocean grid point,
+   measured between the segment midpoint and the point in the metric projection.
+
+The operation **never recalculates or renormalizes the index**. The same module
+backs the article figure `coastal_hazard_index_components.png`, the exploratory
+comparison, and the website layer, so all three are geometrically identical.
+Discrete class colors are shared through `src/04_risk_integration/palettes.py`.
+
+Generate the website layers with:
+
+```bash
+python -m src.site.export_coastal_hazard_data
+```
+
+which writes `site/public/data/coastal_hazard_segments.geojson`,
+`coastal_hazard_metadata.json` (source file, native point count, segment count,
+projection, maximum segment length, association method, nearest-distance
+statistics, and per-layer fields, units, class limits and palettes), and
+`coastal_basemap.geojson`. The map exposes four layers:
+`compound_count_annual_mean` (events yr⁻¹), `mean_overlap_duration` (days),
+`mean_compound_intensity_norm` (dimensionless), and `Hazard_Index` (0–1). The
+first three show the catalog values themselves — the Min–Max scaling of the
+components is a methodological step internal to the index and is not applied
+for display.
 
 ---
 
@@ -437,6 +472,24 @@ osr11/
 │       ├── 07_dependence/                    #   Submodule 3.7 — Hs–SSH dependence
 │       ├── 08_site_export/                   #   Submodule 3.8 — Site JSON export
 │       └── SCIENTIFIC_NOTES.md               #   Science documentation
+│
+│   ├── 04_risk_integration/                  # STEP 4 — Exposure, Vulnerability & Risk
+│   │   ├── hazard_index.py                   #   Canonical native-grid Hazard Index
+│   │   ├── coastal_projection.py             #   Canonical grid → coastline projection
+│   │   └── palettes.py                       #   Shared discrete class palettes
+│   │
+│   ├── figures_article/                      # Manuscript-quality figures and tables
+│   │   ├── make_article_coastal_hazard_components_map.py
+│   │   ├── make_article_hazard_vulnerability_risk_multiplot.py
+│   │   ├── make_article_supplementary_integrated_risk_zooms.py
+│   │   └── make_article_top10_municipality_tables.py
+│   │
+│   ├── site/                                 # Website data exporters
+│   │   ├── export_risk_index_data.py         #   Municipal risk layers (current + legacy)
+│   │   ├── export_coastal_hazard_data.py     #   Coastal Hazard Index layers + basemap
+│   │   └── export_storm_maps_data.py         #   Storm map layers
+│   │
+│   └── exploratory/                          # Exploratory audits and diagnostics
 │
 ├── outputs/                                  # Analysis outputs (not committed, .gitignore)
 │   ├── south_sc_test_data_exploratory/       #   Step 2a outputs

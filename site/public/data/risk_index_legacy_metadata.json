@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-27T13:04:30.387434+00:00",
+  "generated_at": "2026-07-27T17:23:35.424686+00:00",
   "source_path": "site/public/data/risk_index_legacy_municipalities.geojson",
   "source_mode": "canonical_legacy_geojson_fallback",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 47686,
-    "coordinates_after": 47686
+    "coordinates_after": 46941
   },
   "field_aliases": {
     "layers": {

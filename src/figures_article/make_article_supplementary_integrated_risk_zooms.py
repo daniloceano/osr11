@@ -55,6 +55,8 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import box
 
+from src.risk_integration.palettes import RISK_COLORS
+
 try:
     from config.plot_config import apply_publication_style
 
@@ -84,16 +86,6 @@ NORTH_NORTHEAST_EXTENT = (-52.8, -40.0, -4.3, 1.8)
 CONTEXT_EXTENT = (-56.0, -38.0, -35.5, 3.0)
 
 RISK_BOUNDARIES = np.linspace(0.0, 1.0, 9)
-RISK_COLORS = (
-    "#008000",
-    "#33B200",
-    "#80D900",
-    "#CCE600",
-    "#FFB200",
-    "#FF8000",
-    "#FF4000",
-    "#FF0000",
-)
 
 LAND_COLOR = "#ddddda"
 OCEAN_COLOR = "#e9f3f7"

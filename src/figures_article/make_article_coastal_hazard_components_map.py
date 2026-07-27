@@ -56,8 +56,7 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
 import numpy as np
 import pandas as pd
-from scipy.spatial import cKDTree
-from shapely.geometry import GeometryCollection, LineString, MultiLineString
+from shapely.geometry import MultiLineString
 from shapely.ops import linemerge, unary_union
 
 from src.figures_article.make_article_supplementary_integrated_risk_zooms import (
@@ -69,13 +68,19 @@ from src.figures_article.make_article_supplementary_integrated_risk_zooms import
     RISK_COLORS,
     STATE_BORDER_COLOR,
     _numeric_stats,
-    _read_inputs,
     _relative,
+)
+from src.risk_integration.coastal_projection import (
+    COASTAL_MAP_EXTENT,
+    line_parts as _line_parts,
+    project_values_to_coastline,
+    read_coastal_inputs,
 )
 from src.risk_integration.hazard_index import (
     NATIVE_GRID_SOURCE,
     derive_native_hazard_index,
 )
+from src.risk_integration.palettes import component_colors
 
 
 OUT_DIR = ROOT / "outputs" / "article_figures"
@@ -89,12 +94,7 @@ METADATA_PATH = (
 )
 
 OUTPUT_CRS = "EPSG:4326"
-COASTAL_PROJECTION_CRS = "EPSG:5880"
-MAP_EXTENT = (-56.0, -27.0, -36.5, 7.0)
-COASTAL_MAP_EXTENT = (-56.0, -32.0, -35.5, 6.5)
 CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
-COASTLINE_MUNICIPAL_BUFFER_M = 30_000.0
-COASTLINE_SEGMENT_MAX_LENGTH_M = 5_000.0
 FREQUENCY_BOUNDARIES = np.arange(1.0, 11.0, 1.0)
 DURATION_BOUNDARIES = np.arange(1.2, 2.61, 0.2)
 INTENSITY_BOUNDARIES = np.arange(0.0, 0.71, 0.1)
@@ -213,150 +213,23 @@ def _natural_earth_context() -> tuple[
     return land, countries, states
 
 
-def _line_parts(geometry: object) -> list[LineString]:
-    if geometry is None or geometry.is_empty:
-        return []
-    if isinstance(geometry, LineString):
-        return [geometry]
-    if isinstance(geometry, (MultiLineString, GeometryCollection)):
-        parts: list[LineString] = []
-        for part in geometry.geoms:
-            parts.extend(_line_parts(part))
-        return parts
-    return []
-
-
 def _build_coastal_segments(
     municipalities: gpd.GeoDataFrame,
     coastline: gpd.GeoDataFrame,
     native_grid: pd.DataFrame,
 ) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
-    source_fields = [
-        "grid_lon",
-        "grid_lat",
-        *DISPLAY_COMPONENT_FIELDS,
-        *NORMALIZED_COMPONENT_FIELDS,
-        "Hazard_Index_raw",
-        "Hazard_Index",
-    ]
-    source_points = native_grid[source_fields].dropna().reset_index(drop=True)
-    municipalities_projected = municipalities.to_crs(
-        COASTAL_PROJECTION_CRS
-    )
-    coastline_subset = coastline.cx[
-        MAP_EXTENT[0]:MAP_EXTENT[1],
-        MAP_EXTENT[2]:MAP_EXTENT[3],
-    ]
-    coastline_projected = coastline_subset.to_crs(
-        COASTAL_PROJECTION_CRS
-    )
-    municipal_buffer = municipalities_projected.geometry.union_all().buffer(
-        COASTLINE_MUNICIPAL_BUFFER_M
-    )
-
-    clipped_lines: list[LineString] = []
-    for geometry in coastline_projected.geometry:
-        clipped_lines.extend(
-            _line_parts(geometry.intersection(municipal_buffer))
-        )
-    if not clipped_lines:
-        raise RuntimeError(
-            "No Natural Earth coastline intersects the coastal municipalities"
-        )
-
-    segment_geometries: list[LineString] = []
-    segment_midpoints: list[np.ndarray] = []
-    for line in clipped_lines:
-        coordinates = np.asarray(line.coords, dtype=float)
-        for start, end in zip(coordinates[:-1], coordinates[1:]):
-            length = float(np.linalg.norm(end - start))
-            number_of_segments = max(
-                1,
-                int(np.ceil(length / COASTLINE_SEGMENT_MAX_LENGTH_M)),
-            )
-            points = start + (end - start) * np.linspace(
-                0.0,
-                1.0,
-                number_of_segments + 1,
-            )[:, None]
-            for segment_start, segment_end in zip(points[:-1], points[1:]):
-                segment_geometries.append(
-                    LineString([segment_start, segment_end])
-                )
-                segment_midpoints.append(
-                    (segment_start + segment_end) / 2.0
-                )
-
-    ocean_points = gpd.GeoDataFrame(
-        source_points,
-        geometry=gpd.points_from_xy(
-            source_points["grid_lon"],
-            source_points["grid_lat"],
+    """Project the native-grid hazard fields onto the coastline for display."""
+    return project_values_to_coastline(
+        native_grid,
+        (
+            *DISPLAY_COMPONENT_FIELDS,
+            *NORMALIZED_COMPONENT_FIELDS,
+            "Hazard_Index_raw",
+            "Hazard_Index",
         ),
-        crs=OUTPUT_CRS,
-    ).to_crs(COASTAL_PROJECTION_CRS)
-    point_coordinates = np.asarray(
-        [(point.x, point.y) for point in ocean_points.geometry],
-        dtype=float,
+        municipalities=municipalities,
+        coastline=coastline,
     )
-    nearest_distance_m, nearest_position = cKDTree(
-        point_coordinates
-    ).query(np.asarray(segment_midpoints), k=1)
-    source_rows = source_points.iloc[nearest_position].reset_index(drop=True)
-
-    segment_fields: dict[str, Any] = {
-        "source_grid_index": nearest_position.astype(int),
-        "source_longitude": source_rows["grid_lon"].to_numpy(dtype=float),
-        "source_latitude": source_rows["grid_lat"].to_numpy(dtype=float),
-        "nearest_grid_distance_km": nearest_distance_m / 1_000.0,
-    }
-    for field in (
-        *DISPLAY_COMPONENT_FIELDS,
-        *NORMALIZED_COMPONENT_FIELDS,
-        "Hazard_Index_raw",
-        "Hazard_Index",
-    ):
-        segment_fields[field] = source_rows[field].to_numpy(dtype=float)
-    segments = gpd.GeoDataFrame(
-        segment_fields,
-        geometry=segment_geometries,
-        crs=COASTAL_PROJECTION_CRS,
-    ).to_crs(OUTPUT_CRS)
-
-    metadata = {
-        "method": (
-            "Natural Earth 10m coastline clipped to a 30-km buffer around "
-            "the coastal-municipality union; linework split into segments no "
-            "longer than 5 km in EPSG:5880; each segment assigned the values "
-            "at its nearest native ocean grid point by projected midpoint "
-            "distance"
-        ),
-        "projected_crs": COASTAL_PROJECTION_CRS,
-        "municipal_buffer_m": COASTLINE_MUNICIPAL_BUFFER_M,
-        "maximum_segment_length_m": COASTLINE_SEGMENT_MAX_LENGTH_M,
-        "clipped_line_count": len(clipped_lines),
-        "segment_count": int(len(segments)),
-        "native_grid_point_count": int(len(source_points)),
-        "native_grid_points_used": int(len(np.unique(nearest_position))),
-        "nearest_distance_km": {
-            "minimum": round(float(np.min(nearest_distance_m) / 1_000.0), 6),
-            "median": round(float(np.median(nearest_distance_m) / 1_000.0), 6),
-            "p90": round(
-                float(np.quantile(nearest_distance_m, 0.90) / 1_000.0),
-                6,
-            ),
-            "p99": round(
-                float(np.quantile(nearest_distance_m, 0.99) / 1_000.0),
-                6,
-            ),
-            "maximum": round(float(np.max(nearest_distance_m) / 1_000.0), 6),
-        },
-        "assigned_value_statistics": {
-            field: _numeric_stats(segments[field])
-            for field in (*DISPLAY_COMPONENT_FIELDS, "Hazard_Index")
-        },
-    }
-    return segments, metadata
 
 
 def _setup_axis(
@@ -619,7 +492,7 @@ def _write_metadata(
 
 
 def main() -> None:
-    municipalities, coastline = _read_inputs()
+    municipalities, coastline = read_coastal_inputs()
     native_grid, native_metadata = derive_native_hazard_index()
     segments, assignment_metadata = _build_coastal_segments(
         municipalities,
@@ -627,20 +500,12 @@ def main() -> None:
         native_grid,
     )
 
-    magma = plt.get_cmap("magma")
     panel_cmaps: dict[str, ListedColormap] = {}
     for spec in PANEL_SPECS:
         field = spec["field"]
         if spec["palette"] == "component":
-            color_values = magma(
-                np.linspace(
-                    0.95,
-                    0.12,
-                    len(spec["boundaries"]) - 1,
-                )
-            )
             panel_cmaps[field] = ListedColormap(
-                color_values,
+                component_colors(len(spec["boundaries"]) - 1),
                 name=f"magma_discrete_reversed_{field}",
             )
         else:

@@ -88,7 +88,16 @@ export default function RiskIntegrationPage() {
 
         <div className="border-t border-gray-200 bg-gray-50 py-10">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Methodology &amp; Caveats</h2>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-lg font-bold text-gray-900">Methodology &amp; Caveats</h2>
+              <Link
+                href="/methodology/hazard-index"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:underline"
+              >
+                Full Hazard Index methodology
+                <ChevronSvg />
+              </Link>
+            </div>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
@@ -111,8 +120,14 @@ export default function RiskIntegrationPage() {
                 <p>
                   <strong className="text-gray-800">Hazard provenance.</strong>{' '}
                   Each municipality takes the values of the single oceanic grid point with the highest
-                  compound_c in its association. Municipalities without populated hazard fields are
-                  shown only for SVI and excluded from the hazard/risk layers.
+                  compound_c in its association, and receives the Hazard Index <em>already normalized
+                  on the 808-point native grid</em> — it is not renormalized after the transfer, so the
+                  municipal values are directly comparable with the{' '}
+                  <Link href="/results/hazard-characterization" className="font-semibold text-blue-600 hover:underline">
+                    coastal hazard map
+                  </Link>
+                  . Municipalities without populated hazard fields are shown only for SVI and excluded
+                  from the hazard/risk layers.
                 </p>
                 <p>
                   <strong className="text-gray-800">Legacy access and caveats.</strong>{' '}

@@ -43,9 +43,17 @@ export default function LegacyRiskIntegrationPage() {
               <span className="text-amber-700">Originally Delivered Fields</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              This page preserves the originally delivered municipal risk fields. The current workflow
-              also uses frequency, duration, and intensity, but calculates and normalizes the index first
-              over the complete 808-point native grid before transferring it to municipalities.
+              This page preserves the originally delivered municipal risk fields. It is an{' '}
+              <strong>audit product and does not represent the current method</strong>. The current
+              workflow also uses frequency, duration, and intensity, but calculates and normalizes the
+              index first over the complete 808-point native grid before transferring it to
+              municipalities — see the{' '}
+              <Link href="/methodology/hazard-index" className="font-semibold text-blue-600 hover:underline">
+                Hazard Index methodology
+              </Link>
+              . The former count-only calculation is retained separately in the{' '}
+              <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">CountOnly_*</code> fields
+              of the current product.
             </p>
             <Link
               href="/results/risk-integration"

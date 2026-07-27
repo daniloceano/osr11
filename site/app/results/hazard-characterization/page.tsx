@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import StatusBadge from '@/components/StatusBadge';
+import CoastalHazardClient from './CoastalHazardClient';
 import HazardCharacterizationClient from './HazardCharacterizationClient';
 
 export const metadata = {
@@ -43,7 +44,10 @@ export default function HazardCharacterizationPage() {
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
               Complete statistical characterization of extreme ocean events along the Brazilian coast.
-              Each grid point carries 87 metrics derived from the storm catalogs produced in Step 3.1:
+              The headline product is the composite <strong>Hazard Index</strong>, built from
+              compound-event frequency, mean overlap duration, and mean compound intensity on the
+              808-point native ocean grid and displayed directly on the coastline. Behind it, each
+              grid point carries 87 metrics derived from the storm catalogs produced in Step 3.1:
               compound event detection, storm duration and persistence, monthly seasonality,
               decadal trends (Mann–Kendall + Sen slope), univariate extreme value analysis (GPD return levels),
               and wave–surge dependence structure (Kendall τ, Spearman ρ, extremal χ/χ̄).
@@ -66,9 +70,57 @@ export default function HazardCharacterizationPage() {
           </div>
         </div>
 
-        {/* ── Interactive map (client component) ──────────────────────── */}
+        {/* ── Coastal Hazard Index map (primary result) ───────────────── */}
         <div className="py-10">
           <div className="mx-auto max-w-6xl px-6">
+            <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+                  Main result
+                </p>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Compound-event characteristics and Hazard Index along the coast
+                </h2>
+              </div>
+              <Link
+                href="/methodology/hazard-index"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:underline"
+              >
+                How the Hazard Index is built
+                <ChevronSvg />
+              </Link>
+            </div>
+            <p className="mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
+              The three physical components are shown in their own catalog units — events yr⁻¹,
+              days, and the dimensionless compound intensity — and the Hazard Index is the
+              composite 0–1 layer built from them. The values are calculated on the 808 native
+              ocean grid points and drawn on the Natural Earth coastline; the coastal rendering
+              does not recalculate the index. This is the same construction as figure{' '}
+              <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">
+                coastal_hazard_index_components.png
+              </code>{' '}
+              in the article.
+            </p>
+            <CoastalHazardClient />
+          </div>
+        </div>
+
+        {/* ── Per-grid-point diagnostics (supporting) ─────────────────── */}
+        <div className="border-t border-gray-200 py-10">
+          <div className="mx-auto max-w-6xl px-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Supporting diagnostics
+            </p>
+            <h2 className="text-xl font-bold text-gray-900">
+              Per-grid-point explorer — 87 characterization metrics
+            </h2>
+            <p className="mt-2 mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
+              This secondary panel exposes the full Step 3 metric catalog at the native ocean
+              grid points: compound statistics, storm duration and persistence, seasonality,
+              Mann–Kendall trends, GPD return levels, and wave–surge dependence. It is a
+              diagnostic view of the underlying characterization, not the Hazard Index product
+              shown above.
+            </p>
             <HazardCharacterizationClient />
           </div>
         </div>

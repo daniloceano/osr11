@@ -54,12 +54,7 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
-from scipy.spatial import cKDTree
-from shapely.geometry import (
-    GeometryCollection,
-    LineString,
-    MultiLineString,
-)
+from shapely.geometry import MultiLineString
 from shapely.ops import linemerge, unary_union
 
 from src.figures_article.make_article_supplementary_integrated_risk_zooms import (
@@ -78,6 +73,10 @@ from src.figures_article.make_article_supplementary_integrated_risk_zooms import
     _read_inputs,
     _relative,
     _setup_axis,
+)
+from src.risk_integration.coastal_projection import (
+    line_parts as _line_parts,
+    project_values_to_coastline,
 )
 from src.risk_integration.hazard_index import derive_native_hazard_index
 
@@ -112,9 +111,6 @@ MAP_EXTENT = (-56.0, -27.0, -36.5, 7.0)
 COASTAL_MAP_EXTENT = (-56.0, -32.0, -35.5, 6.5)
 EXPLORATORY_DPI = 150
 INDEX_BOUNDARIES = np.linspace(0.0, 1.0, 9)
-COASTAL_PROJECTION_CRS = "EPSG:5880"
-COASTLINE_MUNICIPAL_BUFFER_M = 30_000.0
-COASTLINE_SEGMENT_MAX_LENGTH_M = 5_000.0
 REQUIRED_FIELDS = {
     "municipality_name",
     "state",
@@ -235,171 +231,23 @@ def _derive_native_grid_index() -> tuple[pd.DataFrame, dict[str, Any]]:
     return result, metadata
 
 
-def _line_parts(geometry: object) -> list[LineString]:
-    if geometry is None or geometry.is_empty:
-        return []
-    if isinstance(geometry, LineString):
-        return [geometry]
-    if isinstance(geometry, (MultiLineString, GeometryCollection)):
-        parts: list[LineString] = []
-        for part in geometry.geoms:
-            parts.extend(_line_parts(part))
-        return parts
-    return []
-
-
 def _build_coastal_segments(
     municipalities: gpd.GeoDataFrame,
     coastline: gpd.GeoDataFrame,
     native_grid: pd.DataFrame,
 ) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
-    """Assign short coastal segments to the nearest native ocean point."""
-    if coastline.empty:
-        raise ValueError("The coastline layer is empty")
-    source_points = native_grid[
-        [
-            "grid_lon",
-            "grid_lat",
-            CURRENT_KEY,
-            ALTERNATIVE_KEY,
-            DIFFERENCE_KEY,
-        ]
-    ].copy()
-    source_points = source_points.dropna(
-        subset=[
-            "grid_lon",
-            "grid_lat",
-            CURRENT_KEY,
-            ALTERNATIVE_KEY,
-            DIFFERENCE_KEY,
-        ]
-    )
-    if source_points.empty:
-        raise RuntimeError("No native ocean grid points are available")
+    """Assign short coastal segments to the nearest native ocean point.
 
-    municipalities_projected = municipalities.to_crs(
-        COASTAL_PROJECTION_CRS
+    Delegates to the canonical Step 4 implementation so this exploratory audit
+    uses exactly the same coastline clipping, segmentation, and nearest-point
+    association as the article figure and the website layer.
+    """
+    return project_values_to_coastline(
+        native_grid,
+        (CURRENT_KEY, ALTERNATIVE_KEY, DIFFERENCE_KEY),
+        municipalities=municipalities,
+        coastline=coastline,
     )
-    coastline_subset = coastline.cx[
-        MAP_EXTENT[0]:MAP_EXTENT[1],
-        MAP_EXTENT[2]:MAP_EXTENT[3],
-    ]
-    coastline_projected = coastline_subset.to_crs(
-        COASTAL_PROJECTION_CRS
-    )
-    municipal_coastal_buffer = (
-        municipalities_projected.geometry.union_all().buffer(
-            COASTLINE_MUNICIPAL_BUFFER_M
-        )
-    )
-
-    clipped_lines: list[LineString] = []
-    for geometry in coastline_projected.geometry:
-        clipped_lines.extend(
-            _line_parts(geometry.intersection(municipal_coastal_buffer))
-        )
-    if not clipped_lines:
-        raise RuntimeError(
-            "No Natural Earth coastline intersects the coastal municipalities"
-        )
-
-    segment_geometries: list[LineString] = []
-    segment_midpoints: list[np.ndarray] = []
-    for line in clipped_lines:
-        coordinates = np.asarray(line.coords, dtype=float)
-        for start, end in zip(coordinates[:-1], coordinates[1:]):
-            length = float(np.linalg.norm(end - start))
-            number_of_segments = max(
-                1,
-                int(np.ceil(length / COASTLINE_SEGMENT_MAX_LENGTH_M)),
-            )
-            points = start + (end - start) * np.linspace(
-                0.0,
-                1.0,
-                number_of_segments + 1,
-            )[:, None]
-            for segment_start, segment_end in zip(points[:-1], points[1:]):
-                segment_geometries.append(
-                    LineString([segment_start, segment_end])
-                )
-                segment_midpoints.append(
-                    (segment_start + segment_end) / 2.0
-                )
-
-    ocean_points = gpd.GeoDataFrame(
-        source_points,
-        geometry=gpd.points_from_xy(
-            source_points["grid_lon"],
-            source_points["grid_lat"],
-        ),
-        crs="EPSG:4326",
-    ).to_crs(COASTAL_PROJECTION_CRS)
-    point_coordinates = np.asarray(
-        [(point.x, point.y) for point in ocean_points.geometry],
-        dtype=float,
-    )
-    nearest_distance_m, nearest_position = cKDTree(
-        point_coordinates
-    ).query(
-        np.asarray(segment_midpoints),
-        k=1,
-    )
-    source_rows = source_points.iloc[nearest_position].reset_index(drop=True)
-    segments = gpd.GeoDataFrame(
-        {
-            "source_point_index": nearest_position.astype(int),
-            "source_longitude": source_rows["grid_lon"].to_numpy(dtype=float),
-            "source_latitude": source_rows["grid_lat"].to_numpy(dtype=float),
-            CURRENT_KEY: source_rows[CURRENT_KEY].to_numpy(dtype=float),
-            ALTERNATIVE_KEY: source_rows[ALTERNATIVE_KEY].to_numpy(dtype=float),
-            DIFFERENCE_KEY: source_rows[DIFFERENCE_KEY].to_numpy(dtype=float),
-            "nearest_grid_distance_km": nearest_distance_m / 1_000.0,
-        },
-        geometry=segment_geometries,
-        crs=COASTAL_PROJECTION_CRS,
-    ).to_crs("EPSG:4326")
-
-    used_positions = np.unique(nearest_position)
-    metadata = {
-        "method": (
-            "Natural Earth 10m coastline clipped to a 30-km buffer around "
-            "the coastal-municipality union; linework split into segments no "
-            "longer than 5 km in EPSG:5880; each segment assigned the final "
-            "normalized multimetric hazard index at its nearest native ocean "
-            "grid point"
-        ),
-        "normalization_domain": (
-            "all native ocean grid points; the formula is identical to the "
-            "municipal comparison, but normalization is repeated over the "
-            "native-grid domain for this spatial product"
-        ),
-        "projected_crs": COASTAL_PROJECTION_CRS,
-        "municipal_buffer_m": COASTLINE_MUNICIPAL_BUFFER_M,
-        "maximum_segment_length_m": COASTLINE_SEGMENT_MAX_LENGTH_M,
-        "clipped_line_count": len(clipped_lines),
-        "segment_count": len(segments),
-        "native_grid_point_count": int(len(source_points)),
-        "native_grid_points_used": int(len(used_positions)),
-        "nearest_distance_km": {
-            "minimum": round(float(np.min(nearest_distance_m) / 1_000.0), 6),
-            "median": round(float(np.median(nearest_distance_m) / 1_000.0), 6),
-            "p90": round(
-                float(np.quantile(nearest_distance_m, 0.90) / 1_000.0),
-                6,
-            ),
-            "p99": round(
-                float(np.quantile(nearest_distance_m, 0.99) / 1_000.0),
-                6,
-            ),
-            "maximum": round(float(np.max(nearest_distance_m) / 1_000.0), 6),
-        },
-        "assigned_value_statistics": {
-            CURRENT_KEY: _numeric_stats(segments[CURRENT_KEY]),
-            ALTERNATIVE_KEY: _numeric_stats(segments[ALTERNATIVE_KEY]),
-            DIFFERENCE_KEY: _numeric_stats(segments[DIFFERENCE_KEY]),
-        },
-    }
-    return segments, metadata
 
 
 def _difference_boundaries(values: pd.Series) -> np.ndarray:

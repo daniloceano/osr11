@@ -2,6 +2,22 @@
 
 Replicates ``outputs/article_figures/original_ocean_hazard_points.png`` and
 adds hatching over valid points where long-term mean GLORYS zos is >= 0.20 m.
+
+.. warning::
+
+    **Superseded and currently non-runnable.** This script targets an earlier
+    hazard workflow: it plots the Hazard Index as ocean grid points and still
+    carries a ``compound_count_only`` fallback mode from the count-only era. It
+    also imports ``src.figures_article.make_article_risk_figures``, a module
+    that no longer exists, so it fails at import time.
+
+    The current products are the coastal Hazard Index figure
+    (``src/figures_article/make_article_coastal_hazard_components_map.py``) and
+    the website layer (``src/site/export_coastal_hazard_data.py``), both built
+    on ``src/04_risk_integration/hazard_index.py`` and
+    ``src/04_risk_integration/coastal_projection.py``. Its outputs under
+    ``outputs/exploratory_fig03_zos_hatched_points/`` predate the current
+    Hazard Index and must not be read as the current method.
 """
 from __future__ import annotations
 

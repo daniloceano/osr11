@@ -42,7 +42,7 @@ site/
 │   ├── page.tsx             # Home page
 │   ├── globals.css          # Global styles and theme
 │   └── results/             
-│       ├── hazard-characterization/ # Step 3 interactive hazard panel
+│       ├── hazard-characterization/ # Coastal Hazard Index map + per-grid-point explorer
 │       ├── risk-integration/        # Exposure, vulnerability & risk panel
 │       └── south-sc/                # South SC analysis results page
 ├── components/              # React components
@@ -51,6 +51,7 @@ site/
 │   ├── Footer.tsx          # Site footer
 │   ├── FigureGallery.tsx   # Scientific figure viewer
 │   ├── CoastalStormMap.tsx  # Interactive SVG storm map (808 grid points)
+│   ├── CoastalHazardMap.tsx # Hazard Index and components drawn on the coastline
 │   └── ...
 ├── content/                 # Content data (figures, project metadata)
 │   ├── project.ts          # Project text and metadata
@@ -113,9 +114,12 @@ conda run -n osr11 python -m src.site.export_storm_maps_data
 # 3. Regenerate municipal risk-index data (after updating outputs/risk_index/)
 python -m src.site.export_risk_index_data
 
-# 4. Update figure metadata in content/figures.ts if needed
+# 4. Regenerate the coastal Hazard Index layers (after step 3)
+python -m src.site.export_coastal_hazard_data
 
-# 5. Commit and push
+# 5. Update figure metadata in content/figures.ts if needed
+
+# 6. Commit and push
 git add site/
 git commit -m "Update analysis figures"
 git push
@@ -215,6 +219,36 @@ records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`,
 The native-grid formula itself is centralized in
 `../src/04_risk_integration/hazard_index.py` and reused by the exporter and
 article figures.
+
+### Coastal Hazard Data
+
+The coastal Hazard Index map consumes:
+
+- `coastal_hazard_segments.geojson` — Natural Earth 10-m coastline split into
+  segments of at most 5 km, each carrying the values of its nearest native
+  ocean grid point
+- `coastal_hazard_metadata.json` — source file, native point count, segment
+  count, projection, maximum segment length, association method, distance
+  statistics, and per-layer fields, units, class limits, and palettes
+- `coastal_basemap.geojson` — Natural Earth land polygons, country boundaries,
+  and Brazilian state boundaries used as map context
+
+Regenerate them from the repository root:
+
+```bash
+python -m src.site.export_coastal_hazard_data
+```
+
+The geospatial projection of grid values onto the coastline is centralized in
+`../src/04_risk_integration/coastal_projection.py` and shared with
+`make_article_coastal_hazard_components_map.py`, so the website map and the
+article figure are geometrically identical. The coastal rendering never
+recalculates or renormalizes the index. The map exposes four layers:
+`compound_count_annual_mean` (events yr⁻¹), `mean_overlap_duration` (days),
+`mean_compound_intensity_norm` (dimensionless), and `Hazard_Index` (0–1). The
+first three use the discrete magma palette of the article figure; the Hazard
+Index uses the green-to-red Risk Index palette, defined once in
+`../src/04_risk_integration/palettes.py`.
 
 ## 🧪 Development Tips
 

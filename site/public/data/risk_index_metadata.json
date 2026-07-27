@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-27T13:04:30.387434+00:00",
+  "generated_at": "2026-07-27T17:23:35.424686+00:00",
   "source_path": "site/public/data/risk_index_legacy_municipalities.geojson",
   "source_mode": "canonical_legacy_geojson_fallback",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 47686,
-    "coordinates_after": 47686
+    "coordinates_after": 46941
   },
   "field_aliases": {
     "layers": {
@@ -352,6 +352,13 @@
         "mean": 118.850248,
         "median": 90.0
       },
+      "compound_count_annual_mean": {
+        "count": 808,
+        "min": 1.3,
+        "max": 9.76,
+        "mean": 3.602364,
+        "median": 2.73
+      },
       "mean_overlap_duration": {
         "count": 808,
         "min": 1.26,
@@ -412,14 +419,14 @@
       {
         "municipality_name": "Fernando de Noronha",
         "state": "PE",
-        "grid_lat": NaN,
-        "grid_lon": NaN
+        "grid_lat": null,
+        "grid_lon": null
       },
       {
         "municipality_name": "Içara",
         "state": "SC",
-        "grid_lat": NaN,
-        "grid_lon": NaN
+        "grid_lat": null,
+        "grid_lon": null
       }
     ]
   },

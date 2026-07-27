@@ -44,7 +44,8 @@ def _minmax(series: pd.Series) -> pd.Series:
     return (values - lower) / (upper - lower)
 
 
-def _numeric_stats(series: pd.Series) -> dict[str, float | int | None]:
+def numeric_stats(series: pd.Series) -> dict[str, float | int | None]:
+    """Summary statistics of the finite values of ``series``."""
     values = pd.to_numeric(series, errors="coerce")
     finite = values[np.isfinite(values)]
     if finite.empty:
@@ -146,7 +147,7 @@ def derive_native_hazard_index(
             "Hazard_Index = norm(Hazard_Index_raw)"
         ),
         "numeric_stats": {
-            key: _numeric_stats(result[key])
+            key: numeric_stats(result[key])
             for key in (
                 "compound_count_total",
                 *passthrough_fields,

@@ -157,7 +157,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max overlap_duration',
-    definition: 'Distribution of joint persistence (overlap days) across the grid point’s compound events.',
+    definition: 'Distribution of joint persistence (overlap days) across the grid point’s compound events. The mean is the duration component of the Hazard_Index (Step 4).',
     formula: 'mean, 95th pct, max of overlap_duration_days',
   },
   {
@@ -167,7 +167,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max compound_intensity_norm',
-    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. It remains a diagnostic and legacy field, but no longer feeds the current Hazard_Index.',
+    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. The mean is the intensity component of the Hazard_Index (Step 4); the p95 and max remain diagnostic.',
     formula: 'mean, 95th pct, max of compound_intensity_norm',
   },
 ];
@@ -426,8 +426,9 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
                 A value near <strong>1.0</strong> means both drivers peaked near the upper end of their
                 coast-wide observed range during the event; near <strong>0.0</strong> means both were only
                 marginally above threshold. Because scaling is domain-wide, a high value at one
-                municipality is directly comparable to a high value at another. In the current risk scope,
-                this metric is interpreted as diagnostic context rather than direct input to Hazard_Index.
+                municipality is directly comparable to a high value at another. The per-grid-point mean of
+                this metric is one of the three equally weighted inputs to the current Hazard_Index; the
+                maps show it in its dimensionless catalog form, without further rescaling.
               </p>
             </div>
           </div>
@@ -544,8 +545,12 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
             <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — mean normalized compound intensity, rescaled as the intensity component</li>
           </ul>
           <p className="text-sm leading-relaxed text-gray-700">
-            The current and audit formulas for Hazard_Index and Risk_Hazard are documented
-            on the{' '}
+            The full construction — normalization domain, equal weights, coastal rendering, and
+            integration with social vulnerability — is documented on the{' '}
+            <Link href="/methodology/hazard-index" className="font-semibold text-blue-600 hover:underline">
+              Hazard Index methodology
+            </Link>{' '}
+            page; the resulting municipal maps and audit products are on the{' '}
             <Link href="/results/risk-integration" className="font-semibold text-blue-600 hover:underline">
               Risk Integration
             </Link>{' '}

@@ -149,6 +149,8 @@ export const methodologySteps: MethodStep[] = [
       + 'The native-grid hazard is transferred to municipalities and Risk_Hazard = norm[(SVI/100) × Hazard_Index], yielding a final municipal 0–1 index.',
     status: 'done',
     stepNumber: 4,
+    href: '/methodology/hazard-index',
+    hrefLabel: 'Read the full Hazard Index methodology',
     subSteps: [
       {
         id: 'step-4-1',
@@ -171,8 +173,10 @@ export const methodologySteps: MethodStep[] = [
         id: 'step-4-3',
         label: '4.3 — Multimetric Hazard & Risk Indices',
         description:
-          'Hazard_Index = norm_grid{[norm_grid(frequency) + norm_grid(duration) + norm_grid(intensity)] / 3}. '
-          + 'Risk_Hazard_raw = (SVI/100) × Hazard_Index and Risk_Hazard = norm_municipal(Risk_Hazard_raw), on a 0–1 scale.',
+          'Hazard_Index = norm_grid{[norm_grid(frequency) + norm_grid(duration) + norm_grid(intensity)] / 3}, '
+          + 'with the two Min–Max steps taken over the 808 native ocean grid points and no renormalization after the transfer to municipalities. '
+          + 'Risk_Hazard_raw = (SVI/100) × Hazard_Index and Risk_Hazard = norm_municipal(Risk_Hazard_raw), on a 0–1 scale. '
+          + 'The composite hazard is displayed on the Natural Earth coastline by nearest-grid-point association, a purely cartographic step.',
         status: 'done',
       },
     ],

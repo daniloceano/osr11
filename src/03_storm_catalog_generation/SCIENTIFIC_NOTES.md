@@ -491,6 +491,69 @@ hazard/risk municipal layers (280 of 282 features populated). Missing values
 are not coerced to zero and are excluded from the municipal risk
 normalization.
 
+### 2026-07-27 — Repository-wide audit of the official Hazard Index
+
+**[VERIFICATION — the canonical formula is consistent across the repository]**
+A full audit was carried out on the code, exported products, methodological
+documentation, and website, checking for duplicated calculations of the index,
+residual references to the superseded count-only method, normalizations
+performed in the municipal domain, and text describing duration or intensity as
+diagnostic-only fields. Verified numerically on the current dataset:
+
+- 808 native ocean grid points enter the calculation;
+- $H_F$, $H_D$, and $H_I$ each span exactly $[0,1]$ on that grid;
+- $H_{raw}$ equals the arithmetic mean of the three components at every point
+  (agreement to machine precision);
+- $\text{Hazard\_Index}\in[0,1]$ on the native grid;
+- the municipal transfer reproduces the native-grid value at all 280
+  municipalities with a valid association (zero mismatches), confirming that no
+  renormalization occurs after the transfer;
+- $\text{Risk\_Hazard}\in[0,1]$ across municipalities, and
+  $\text{Risk\_Hazard}_{raw}$ equals $(\text{SVI}/100)\times\text{Hazard\_Index}$.
+
+Because the most hazardous native grid point is not the point associated with
+any municipality, the municipal `Hazard_Index` maximum is 0.782 rather than 1.
+This is the expected consequence of transferring without renormalizing and is
+not an error.
+
+**[CORRECTION — duration and intensity were still described as diagnostics]**
+The compound-detection methodology page and the municipal map tooltip still
+labelled `mean_overlap_duration` and `mean_compound_intensity_norm` as
+diagnostic or legacy fields that no longer feed the index. Both are equally
+weighted physical inputs to the current Hazard Index; the descriptions were
+corrected and the fields now carry their units (days; dimensionless).
+
+**[CORRECTION — invalid JSON in the municipal metadata]** The municipalities
+without a grid association were serialized with `NaN` coordinates, which Python
+accepts but `JSON.parse` rejects. `risk_index_metadata.json` was therefore
+unparseable and the current municipal risk page failed to load in the browser
+while the legacy page still worked — i.e. the audit product was reachable and
+the current product was not. Non-finite values are now mapped to `null` and the
+metadata is written with `allow_nan=False` so the failure cannot recur silently.
+
+**[DECISION — the coastal projection is a shared cartographic step]** The
+grid-to-coastline transposition existed in two near-identical copies (the
+article figure script and the exploratory comparison). It was extracted to
+`src/04_risk_integration/coastal_projection.py`, which now serves the article
+figure, the exploratory audit, and the website exporter. The step clips the
+Natural Earth 10-m coastline to a 30-km buffer around the coastal
+municipalities, splits it into segments of at most 5 km in EPSG:5880, and
+assigns to each segment the values of its nearest native grid point. It is a
+**visualization** of the native-grid field: no value is recalculated, rescaled,
+or renormalized. On the current dataset this produces 6,743 segments drawing on
+297 distinct grid points, with a median segment-to-point distance of 18.7 km
+(99th percentile 83.1 km, maximum 119.9 km). This distance is a caveat of the
+coastal display, not of the index.
+
+**[DECISION — component maps show catalog values]** The website coastal map and
+panels A–C of the article figure present the components in their own units
+(events yr⁻¹, days, dimensionless) with no additional Min–Max scaling for
+display. The cross-grid normalization is documented as a methodological step
+internal to the index construction, so a reader can compare a map value
+directly against the catalog.
+
+---
+
 **Social Vulnerability Index (SVI_Coast_2022)**: built from 10 IBGE/SIDRA 2022 socioeconomic
 and infrastructure variables, standardized (StandardScaler), reduced by PCA; PC1 is
 sign-adjusted so higher = more vulnerable and Min–Max normalized to 0–100. Method after Lima

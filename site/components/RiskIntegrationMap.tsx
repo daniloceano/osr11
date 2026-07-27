@@ -111,9 +111,9 @@ const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: 'Risk_Comp_raw', label: 'Raw integrated-risk alias' },
   { key: 'CountOnly_Hazard_Index', label: 'Former count-only Hazard_Index' },
   { key: 'CountOnly_Risk_Hazard', label: 'Former count-only risk' },
-  { key: 'compound_c', label: 'compound_c' },
-  { key: 'mean_overl', label: 'mean_overl (diagnostic)' },
-  { key: 'mean_compo', label: 'mean_compo (diagnostic)' },
+  { key: 'compound_c', label: 'compound_c (frequency input)' },
+  { key: 'mean_overl', label: 'mean_overl (duration input, days)' },
+  { key: 'mean_compo', label: 'mean_compo (intensity input, dimensionless)' },
   { key: 'Legacy_Hazard_Index', label: 'Legacy Hazard_Index' },
   { key: 'Legacy_Risk_Hazard', label: 'Legacy Risk_Hazard' },
   { key: 'Legacy_Risk_Comp', label: 'Legacy Risk_Comp' },
@@ -202,8 +202,9 @@ function detailLabel(field: { key: string; label: string }, isLegacyScope: boole
   if (field.key === 'Hazard_Index') return 'Legacy Hazard_Index';
   if (field.key === 'Risk_Hazard') return 'Legacy Risk_Hazard';
   if (field.key === 'Risk_Comp') return 'Legacy Risk_Comp';
-  if (field.key === 'mean_overl') return 'mean_overl';
-  if (field.key === 'mean_compo') return 'mean_compo';
+  if (field.key === 'compound_c') return 'compound_c';
+  if (field.key === 'mean_overl') return 'mean_overl (days)';
+  if (field.key === 'mean_compo') return 'mean_compo (dimensionless)';
   return field.label;
 }
 

@@ -361,10 +361,16 @@ def _derive_current_scope(
         "municipality_feature_count": int(len(export)),
         "matched_hazard_count": int(hazard.notna().sum()),
         "missing_hazard_count": int(hazard.isna().sum()),
-        "missing_municipalities": export.loc[
-            hazard.isna(),
-            ["municipality_name", "state", "grid_lat", "grid_lon"],
-        ].to_dict(orient="records"),
+        # ``_to_jsonable`` maps non-finite values to None; without it the
+        # records carry NaN, which json.dump would emit as the literal ``NaN``
+        # and JSON.parse in the browser rejects.
+        "missing_municipalities": [
+            {key: _to_jsonable(value) for key, value in record.items()}
+            for record in export.loc[
+                hazard.isna(),
+                ["municipality_name", "state", "grid_lat", "grid_lon"],
+            ].to_dict(orient="records")
+        ],
     }
     return export, transfer_metadata
 
@@ -704,12 +710,26 @@ def save_site_risk_data(
 ) -> None:
     SITE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     current_gdf.to_file(OUTPUT_GEOJSON, driver="GeoJSON")
+    # allow_nan=False keeps NaN/Infinity out of the payload: they are valid
+    # Python but invalid JSON, and would break JSON.parse on the website.
     with open(OUTPUT_METADATA, "w", encoding="utf-8") as f:
-        json.dump(current_metadata, f, ensure_ascii=False, indent=2)
+        json.dump(
+            current_metadata,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
+        )
         f.write("\n")
     legacy_gdf.to_file(OUTPUT_LEGACY_GEOJSON, driver="GeoJSON")
     with open(OUTPUT_LEGACY_METADATA, "w", encoding="utf-8") as f:
-        json.dump(legacy_metadata, f, ensure_ascii=False, indent=2)
+        json.dump(
+            legacy_metadata,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
+        )
         f.write("\n")
     print(f"Saved: {OUTPUT_GEOJSON} ({OUTPUT_GEOJSON.stat().st_size / 1024 / 1024:.2f} MB)")
     print(f"Saved: {OUTPUT_METADATA} ({OUTPUT_METADATA.stat().st_size / 1024:.1f} KB)")

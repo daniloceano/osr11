@@ -128,15 +128,28 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 - `mean_overl`: `mean_overl`, `mean_ove`, `mean_overlap_duration`
 - `mean_compo`: `mean_compo`, `mean_com`, `mean_compound_intensity_norm`
 
-For the coastal-line map, the current scope visualizes the three normalized
-native-grid components and their composite:
+## Coastal-Line Map — Values and Shared Implementation
+
+The coastal-line map displays panels A--C in the catalog's own units
+(events yr⁻¹, days, dimensionless) and panel D as the final composite index.
+The cross-grid Min--Max normalization below is internal to the index
+construction and is **not** applied to the displayed component values:
 
 ```text
 Hazard_Frequency = norm_native(compound_count_total)
 Hazard_Duration = norm_native(mean_overlap_duration)
 Hazard_Intensity = norm_native(mean_compound_intensity_norm)
-Hazard_Index = norm_native[(Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3]
+Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3
+Hazard_Index = norm_native(Hazard_Index_raw)
 ```
+
+The formula itself lives in `src/04_risk_integration/hazard_index.py`; the
+projection of grid values onto coastline segments lives in
+`src/04_risk_integration/coastal_projection.py`; the discrete class colors live
+in `src/04_risk_integration/palettes.py`. These figure scripts import all three
+rather than reimplementing them, and the website exporter
+(`src/site/export_coastal_hazard_data.py`) imports the same modules, so the
+article figure and the site map are geometrically and chromatically identical.
 
 The component panels use the discrete reversed-magma palette formerly used for
 the annual-rate coastline map, but each panel has its own colorbar in the
