@@ -2,8 +2,9 @@
 
 Reads ``outputs/risk_index/risk_index.shp``, filters the municipalities with
 available risk/vulnerability fields, reprojects to EPSG:4326, simplifies the
-geometry for browser use, and writes the current compound-count-only scope plus
-the original multi-metric product as a legacy export:
+geometry for browser use, transfers the normalized native-grid multimetric
+Hazard Index to the municipalities, and writes the current product plus the
+original delivered fields as a legacy export:
 
     site/public/data/risk_index_municipalities.geojson
     site/public/data/risk_index_metadata.json
@@ -25,8 +26,14 @@ from typing import Any
 
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 import pyogrio
 from shapely import get_num_coordinates
+
+from src.risk_integration.hazard_index import (
+    NATIVE_GRID_SOURCE,
+    derive_native_hazard_index as _derive_native_hazard_index,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +44,7 @@ OUTPUT_GEOJSON = SITE_DATA_DIR / "risk_index_municipalities.geojson"
 OUTPUT_METADATA = SITE_DATA_DIR / "risk_index_metadata.json"
 OUTPUT_LEGACY_GEOJSON = SITE_DATA_DIR / "risk_index_legacy_municipalities.geojson"
 OUTPUT_LEGACY_METADATA = SITE_DATA_DIR / "risk_index_legacy_metadata.json"
+FALLBACK_LEGACY_SOURCE = OUTPUT_LEGACY_GEOJSON
 
 SIMPLIFY_TOLERANCE_DEGREES = 0.001
 OUTPUT_CRS = "EPSG:4326"
@@ -122,6 +130,13 @@ def _require_source_files() -> None:
         )
 
 
+def _shapefile_source_available() -> bool:
+    return all(
+        (SOURCE_DIR / f"risk_index{suffix}").exists()
+        for suffix in (".shp", ".shx", ".dbf", ".prj")
+    )
+
+
 def _normalize_name(name: str) -> str:
     return name.lower().replace("_", "")
 
@@ -197,18 +212,64 @@ def _current_available_layers(export: gpd.GeoDataFrame) -> list[dict[str, Any]]:
         {
             "key": "Risk_Hazard",
             "label": "Current final coastal risk",
-            "unit": "index",
-            "description": "(SVI_Coast_2022 / 100) x Hazard_Index, where Hazard_Index is norm(compound_c).",
-            "actual_field": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
+            "unit": "0-1 index",
+            "description": (
+                "Min-Max normalized product of SVI_Coast_2022 / 100 and "
+                "the normalized frequency-duration-intensity Hazard_Index."
+            ),
+            "actual_field": (
+                "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
+            ),
             "stats": _numeric_stats(export["Risk_Hazard"]),
         },
         {
             "key": "Hazard_Index",
-            "label": "Compound-event frequency hazard",
-            "unit": "index",
-            "description": "Min-Max normalized compound-event count (compound_c) over 1993-2025.",
-            "actual_field": "derived:norm(compound_c)",
+            "label": "Multimetric compound-event hazard",
+            "unit": "0-1 index",
+            "description": (
+                "Native-grid Min-Max normalization of the equal-weight mean "
+                "of normalized compound-event frequency, mean overlap "
+                "duration, and mean normalized compound-event intensity."
+            ),
+            "actual_field": "derived:transferred_native_grid_Hazard_Index",
             "stats": _numeric_stats(export["Hazard_Index"]),
+        },
+        {
+            "key": "Hazard_Frequency",
+            "label": "Normalized compound-event frequency",
+            "unit": "0-1 index",
+            "description": (
+                "Native-grid Min-Max normalized absolute compound-event count "
+                "over 1993-2025."
+            ),
+            "actual_field": (
+                "transferred:norm_native(compound_count_total)"
+            ),
+            "stats": _numeric_stats(export["Hazard_Frequency"]),
+        },
+        {
+            "key": "Hazard_Duration",
+            "label": "Normalized compound-event duration",
+            "unit": "0-1 index",
+            "description": (
+                "Native-grid Min-Max normalized mean overlap duration."
+            ),
+            "actual_field": (
+                "transferred:norm_native(mean_overlap_duration)"
+            ),
+            "stats": _numeric_stats(export["Hazard_Duration"]),
+        },
+        {
+            "key": "Hazard_Intensity",
+            "label": "Normalized compound-event intensity",
+            "unit": "0-1 index",
+            "description": (
+                "Native-grid Min-Max normalized mean compound-event intensity."
+            ),
+            "actual_field": (
+                "transferred:norm_native(mean_compound_intensity_norm)"
+            ),
+            "stats": _numeric_stats(export["Hazard_Intensity"]),
         },
         {
             "key": "SVI_Coast_2022",
@@ -221,11 +282,23 @@ def _current_available_layers(export: gpd.GeoDataFrame) -> list[dict[str, Any]]:
     ]
 
 
-def _derive_current_scope(legacy_export: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    missing_required = [key for key in ("compound_c", "SVI_Coast_2022") if key not in legacy_export]
+def _derive_current_scope(
+    legacy_export: gpd.GeoDataFrame,
+    native_hazard: pd.DataFrame,
+) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    missing_required = [
+        key
+        for key in (
+            "compound_c",
+            "SVI_Coast_2022",
+            "grid_lat",
+            "grid_lon",
+        )
+        if key not in legacy_export
+    ]
     if missing_required:
         raise ValueError(
-            "Cannot derive the current compound-count risk scope. Missing required field(s): "
+            "Cannot derive the current multimetric risk scope. Missing required field(s): "
             + ", ".join(missing_required)
         )
 
@@ -234,23 +307,86 @@ def _derive_current_scope(legacy_export: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         if key in export:
             export[f"Legacy_{key}"] = export[key]
 
-    hazard = _minmax(export["compound_c"])
+    # Preserve the former count-only product for audit after promoting the
+    # normalized multimetric Hazard Index to the current scope.
+    count_only_hazard = _minmax(export["compound_c"])
     svi_fraction = export["SVI_Coast_2022"].astype(float) / 100.0
-    risk = svi_fraction * hazard
+    count_only_risk_raw = svi_fraction * count_only_hazard
+    count_only_risk = _minmax(count_only_risk_raw)
+    export["CountOnly_Hazard_Index"] = count_only_hazard.map(_to_jsonable)
+    export["CountOnly_Risk_Hazard_raw"] = count_only_risk_raw.map(_to_jsonable)
+    export["CountOnly_Risk_Hazard"] = count_only_risk.map(_to_jsonable)
 
-    export["Hazard_Index"] = hazard.map(_to_jsonable)
+    native_lookup = native_hazard.copy()
+    native_lookup["_lat_key"] = native_lookup["grid_lat"].round(6)
+    native_lookup["_lon_key"] = native_lookup["grid_lon"].round(6)
+    native_lookup = native_lookup.set_index(["_lat_key", "_lon_key"])
+    municipality_keys = pd.MultiIndex.from_arrays(
+        [
+            pd.to_numeric(export["grid_lat"], errors="coerce").round(6),
+            pd.to_numeric(export["grid_lon"], errors="coerce").round(6),
+        ],
+        names=["_lat_key", "_lon_key"],
+    )
+    transfer_fields = (
+        "Hazard_Frequency",
+        "Hazard_Duration",
+        "Hazard_Intensity",
+        "Hazard_Index_raw",
+        "Hazard_Index",
+    )
+    transferred = native_lookup.loc[:, list(transfer_fields)].reindex(
+        municipality_keys
+    )
+    transferred.index = export.index
+    for field in transfer_fields:
+        export[field] = transferred[field].map(_to_jsonable)
+
+    hazard = pd.to_numeric(export["Hazard_Index"], errors="coerce")
+    risk_raw = svi_fraction * hazard
+    risk = _minmax(risk_raw)
+
+    export["Risk_Hazard_raw"] = risk_raw.map(_to_jsonable)
+    export["Risk_Comp_raw"] = risk_raw.map(_to_jsonable)
     export["Risk_Hazard"] = risk.map(_to_jsonable)
-    # Kept for downstream compatibility. Under the current scope, the compound
-    # frequency-only risk is the final integrated risk.
+    # Retained as downstream compatibility aliases for the current integrated
+    # multimetric risk.
     export["Risk_Comp"] = risk.map(_to_jsonable)
-    return export
+    transfer_metadata = {
+        "method": (
+            "Exact lookup by grid_lat/grid_lon rounded to 6 decimals from the "
+            "native-grid Hazard Index to each municipality's pre-associated "
+            "ocean point"
+        ),
+        "municipality_feature_count": int(len(export)),
+        "matched_hazard_count": int(hazard.notna().sum()),
+        "missing_hazard_count": int(hazard.isna().sum()),
+        "missing_municipalities": export.loc[
+            hazard.isna(),
+            ["municipality_name", "state", "grid_lat", "grid_lon"],
+        ].to_dict(orient="records"),
+    }
+    return export, transfer_metadata
 
 
 def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDataFrame, dict[str, Any]]:
-    _require_source_files()
-
-    source_info = pyogrio.read_info(SOURCE_FILE)
-    source_fields = list(source_info["fields"])
+    shapefile_source = _shapefile_source_available()
+    fallback_gdf: gpd.GeoDataFrame | None = None
+    if shapefile_source:
+        source_path = SOURCE_FILE
+        source_mode = "original_shapefile"
+        source_info = pyogrio.read_info(SOURCE_FILE)
+        source_fields = list(source_info["fields"])
+    else:
+        if not FALLBACK_LEGACY_SOURCE.exists():
+            _require_source_files()
+        source_path = FALLBACK_LEGACY_SOURCE
+        source_mode = "canonical_legacy_geojson_fallback"
+        fallback_gdf = gpd.read_file(FALLBACK_LEGACY_SOURCE)
+        source_info = {"features": len(fallback_gdf)}
+        source_fields = [
+            column for column in fallback_gdf.columns if column != "geometry"
+        ]
 
     layer_field_map: dict[str, str] = {}
     missing_layers: list[str] = []
@@ -270,15 +406,20 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
     support_field_map = {
         key: field
         for key, candidates in SUPPORT_FIELD_CANDIDATES.items()
-        if (field := _resolve_field(source_fields, candidates)) is not None
+        if (field := _resolve_field(source_fields, (key, *candidates))) is not None
     }
 
     read_fields = sorted(set(layer_field_map.values()) | set(support_field_map.values()))
-    gdf = pyogrio.read_dataframe(
-        SOURCE_FILE,
-        columns=read_fields,
-        where=_where_clause(list(layer_field_map.values())),
-    )
+    if shapefile_source:
+        gdf = pyogrio.read_dataframe(
+            SOURCE_FILE,
+            columns=read_fields,
+            where=_where_clause(list(layer_field_map.values())),
+        )
+    else:
+        if fallback_gdf is None:
+            raise RuntimeError("Internal error: fallback GeoJSON was not loaded")
+        gdf = fallback_gdf[[*read_fields, "geometry"]].copy()
 
     if gdf.empty:
         raise ValueError("Risk-index shapefile contains no features with populated expected layer fields.")
@@ -335,7 +476,9 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
     common_metadata: dict[str, Any] = {
         "generated_by": "src.site.export_risk_index_data",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "source_path": str(SOURCE_FILE.relative_to(ROOT)),
+        "source_path": str(source_path.relative_to(ROOT)),
+        "source_mode": source_mode,
+        "upstream_source_path": str(SOURCE_FILE.relative_to(ROOT)),
         "source_components": _source_components(),
         "source_crs": source_crs,
         "output_crs": OUTPUT_CRS,
@@ -372,14 +515,27 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
         },
     }
 
-    current_export = _derive_current_scope(legacy_export)
+    native_hazard, native_hazard_metadata = _derive_native_hazard_index()
+    current_export, hazard_transfer_metadata = _derive_current_scope(
+        legacy_export,
+        native_hazard,
+    )
     current_numeric_stats = {
         key: _numeric_stats(current_export[key])
         for key in (
             "SVI_Coast_2022",
+            "Hazard_Frequency",
+            "Hazard_Duration",
+            "Hazard_Intensity",
+            "Hazard_Index_raw",
             "Hazard_Index",
             "Risk_Comp",
             "Risk_Hazard",
+            "Risk_Comp_raw",
+            "Risk_Hazard_raw",
+            "CountOnly_Hazard_Index",
+            "CountOnly_Risk_Hazard_raw",
+            "CountOnly_Risk_Hazard",
             "Legacy_Hazard_Index",
             "Legacy_Risk_Comp",
             "Legacy_Risk_Hazard",
@@ -391,17 +547,58 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
     }
     current_metadata: dict[str, Any] = {
         **common_metadata,
-        "scope": "compound_count_only",
+        "scope": "normalized_multimetric_native_grid",
         "available_layers": _current_available_layers(current_export),
         "missing_expected_layers": [
-            key for key in ("SVI_Coast_2022", "compound_c") if key not in current_export
+            key
+            for key in (
+                "SVI_Coast_2022",
+                "compound_c",
+                "mean_overl",
+                "mean_compo",
+                "grid_lat",
+                "grid_lon",
+            )
+            if key not in current_export
         ],
         "field_aliases": {
             "layers": {
                 "SVI_Coast_2022": layer_field_map.get("SVI_Coast_2022"),
-                "Hazard_Index": "derived:norm(compound_c)",
-                "Risk_Comp": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
-                "Risk_Hazard": "derived:(SVI_Coast_2022/100)*norm(compound_c)",
+                "Hazard_Frequency": (
+                    "transferred:norm_native(compound_count_total)"
+                ),
+                "Hazard_Duration": (
+                    "transferred:norm_native(mean_overlap_duration)"
+                ),
+                "Hazard_Intensity": (
+                    "transferred:norm_native(mean_compound_intensity_norm)"
+                ),
+                "Hazard_Index_raw": (
+                    "transferred:mean(Hazard_Frequency,Hazard_Duration,"
+                    "Hazard_Intensity)"
+                ),
+                "Hazard_Index": (
+                    "transferred:norm_native(Hazard_Index_raw)"
+                ),
+                "Risk_Comp_raw": (
+                    "derived:(SVI_Coast_2022/100)*Hazard_Index"
+                ),
+                "Risk_Hazard_raw": (
+                    "derived:(SVI_Coast_2022/100)*Hazard_Index"
+                ),
+                "Risk_Comp": (
+                    "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
+                ),
+                "Risk_Hazard": (
+                    "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
+                ),
+                "CountOnly_Hazard_Index": "derived:norm_municipal(compound_c)",
+                "CountOnly_Risk_Hazard_raw": (
+                    "derived:(SVI_Coast_2022/100)*CountOnly_Hazard_Index"
+                ),
+                "CountOnly_Risk_Hazard": (
+                    "derived:norm(CountOnly_Risk_Hazard_raw)"
+                ),
                 "Legacy_Hazard_Index": layer_field_map.get("Hazard_Index"),
                 "Legacy_Risk_Comp": layer_field_map.get("Risk_Comp"),
                 "Legacy_Risk_Hazard": layer_field_map.get("Risk_Hazard"),
@@ -413,12 +610,86 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
             "metadata": str(OUTPUT_LEGACY_METADATA.relative_to(ROOT)),
         },
         "numeric_stats": current_numeric_stats,
+        "native_hazard_index": native_hazard_metadata,
+        "hazard_transfer": hazard_transfer_metadata,
+        "hazard_index_normalization": {
+            "method": "Min-Max after equal-weight component aggregation",
+            "population": "all finite native ocean grid points",
+            "input_field": "Hazard_Index_raw",
+            "input_stats": native_hazard_metadata["numeric_stats"][
+                "Hazard_Index_raw"
+            ],
+            "output_field": "Hazard_Index",
+            "output_range": [0.0, 1.0],
+            "formula": (
+                "(Hazard_Index_raw - min(Hazard_Index_raw)) / "
+                "(max(Hazard_Index_raw) - min(Hazard_Index_raw))"
+            ),
+        },
+        "integrated_risk_normalization": {
+            "method": "Min-Max",
+            "population": (
+                "Brazilian coastal municipalities with finite "
+                "SVI_Coast_2022 and Hazard_Index"
+            ),
+            "input_field": "Risk_Hazard_raw",
+            "input_stats": _numeric_stats(current_export["Risk_Hazard_raw"]),
+            "output_field": "Risk_Hazard",
+            "output_range": [0.0, 1.0],
+            "formula": (
+                "(Risk_Hazard_raw - min(Risk_Hazard_raw)) / "
+                "(max(Risk_Hazard_raw) - min(Risk_Hazard_raw))"
+            ),
+        },
         "methodology": {
             "SVI_Coast_2022": "IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized with StandardScaler, submitted to PCA, PC1 sign-adjusted so higher values mean higher vulnerability, then normalized 0-100.",
-            "exposure": "Oceanic compound-event metrics remain associated with coastal municipalities by the existing spatial join, selecting the associated grid point with the highest compound_c.",
-            "Hazard_Index": "Current scope: norm(compound_c). Overlap duration and compound-event intensity are retained as diagnostics/legacy fields, but are not included in the current hazard layer because of interpretation uncertainty near river mouths.",
-            "Risk_Comp": "(SVI_Coast_2022 / 100) x norm(compound_c). Kept as a compatibility alias for the current final risk.",
-            "Risk_Hazard": "(SVI_Coast_2022 / 100) x Hazard_Index, with Hazard_Index = norm(compound_c).",
+            "exposure": (
+                "The Hazard Index is calculated first on all 808 native ocean "
+                "grid points. Each municipality receives the value at its "
+                "pre-associated grid point, selected by the existing spatial "
+                "association workflow."
+            ),
+            "Hazard_Frequency": (
+                "Min-Max normalization across the native grid of "
+                "compound_count_total."
+            ),
+            "Hazard_Duration": (
+                "Min-Max normalization across the native grid of "
+                "mean_overlap_duration."
+            ),
+            "Hazard_Intensity": (
+                "Min-Max normalization across the native grid of "
+                "mean_compound_intensity_norm."
+            ),
+            "Hazard_Index_raw": (
+                "Equal-weight mean of Hazard_Frequency, Hazard_Duration, "
+                "and Hazard_Intensity."
+            ),
+            "Hazard_Index": (
+                "Min-Max normalization to [0,1] of Hazard_Index_raw across "
+                "the 808 native ocean grid points, transferred without "
+                "renormalization to municipalities."
+            ),
+            "Risk_Hazard_raw": (
+                "(SVI_Coast_2022 / 100) x the transferred normalized "
+                "multimetric Hazard_Index."
+            ),
+            "Risk_Hazard": (
+                "Min-Max normalization to [0,1] of Risk_Hazard_raw across "
+                "municipalities with finite SVI and hazard values."
+            ),
+            "Risk_Comp_raw": (
+                "Compatibility alias for Risk_Hazard_raw under the current "
+                "multimetric scope."
+            ),
+            "Risk_Comp": (
+                "Compatibility alias for the normalized Risk_Hazard under "
+                "the current multimetric scope."
+            ),
+            "CountOnly_Hazard_Index": (
+                "Former current product retained for audit: Min-Max "
+                "normalization of compound_c across municipalities."
+            ),
         },
         "legacy_methodology": legacy_metadata["methodology"],
     }

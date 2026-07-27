@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-07-27T12:53:07.754616+00:00",
+  "output": "outputs/article_figures/supplementary_integrated_risk_zooms.png",
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "source_metadata": "site/public/data/risk_index_metadata.json",
+  "source_scope": "normalized_multimetric_native_grid",
+  "risk_key": "Risk_Hazard",
+  "risk_definition": "Min-Max normalization to [0,1] of (SVI_Coast_2022 / 100) * Hazard_Index, where Hazard_Index is the native-grid normalized equal-weight combination of compound-event frequency, mean overlap duration, and mean normalized intensity",
+  "panels": [
+    {
+      "panel": "A",
+      "title": "Rio Grande do Sul–Rio de Janeiro",
+      "focus_states": [
+        "RS",
+        "SC",
+        "PR",
+        "SP",
+        "RJ"
+      ],
+      "states_with_visible_municipalities": [
+        "ES",
+        "PR",
+        "RJ",
+        "RS",
+        "SC",
+        "SP"
+      ],
+      "extent": [
+        -54.8,
+        -39.8,
+        -34.5,
+        -20.2
+      ],
+      "municipality_count": 100,
+      "valid_risk_count": 99,
+      "missing_risk_municipalities": [
+        {
+          "municipality_name": "Içara",
+          "state": "SC"
+        }
+      ],
+      "statistics": {
+        "count": 99,
+        "min": 0.0,
+        "mean": 0.161372,
+        "median": 0.140659,
+        "max": 0.469125
+      }
+    },
+    {
+      "panel": "B",
+      "title": "Pará–Piauí",
+      "focus_states": [
+        "PA",
+        "MA",
+        "PI"
+      ],
+      "states_with_visible_municipalities": [
+        "AP",
+        "CE",
+        "MA",
+        "PA",
+        "PI"
+      ],
+      "extent": [
+        -52.8,
+        -40.0,
+        -4.3,
+        1.8
+      ],
+      "municipality_count": 63,
+      "valid_risk_count": 63,
+      "missing_risk_municipalities": [],
+      "statistics": {
+        "count": 63,
+        "min": 0.121311,
+        "mean": 0.472527,
+        "median": 0.477065,
+        "max": 1.0
+      }
+    }
+  ],
+  "colorbar": {
+    "type": "discrete",
+    "boundaries": [
+      0.0,
+      0.125,
+      0.25,
+      0.375,
+      0.5,
+      0.625,
+      0.75,
+      0.875,
+      1.0
+    ],
+    "colors": [
+      "#008000",
+      "#33B200",
+      "#80D900",
+      "#CCE600",
+      "#FFB200",
+      "#FF8000",
+      "#FF4000",
+      "#FF0000"
+    ],
+    "label": "Integrated risk index (0-1)",
+    "shared_between_panels": true,
+    "scale_matches_main_figure": true
+  },
+  "map_context": {
+    "crs": "EPSG:4326",
+    "land_color": "#ddddda",
+    "ocean_color": "#e9f3f7",
+    "no_data_municipality_color": "#c7c7c4",
+    "coastline": "data/ne_10m_coastline/ne_10m_coastline.shp",
+    "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
+    "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines"
+  },
+  "output_format": "PNG",
+  "dpi": 300
+}

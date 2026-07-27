@@ -41,7 +41,7 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 - **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
 
-- **Exposure:** The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, the assigned compound-event count is normalized as the hazard layer; duration and intensity remain diagnostic and legacy fields.
+- **Exposure:** The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, frequency, mean overlap duration, and mean normalized intensity are combined with equal weights into a native-grid Hazard Index normalized to 0–1 and then transferred to municipalities.
 
 - **Vulnerability:** The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.
 
@@ -199,7 +199,13 @@ Integration of compound hazard characterization with municipal-scale exposure an
 
 #### Sub-step 4.1 — Exposure Spatialization
 
-Compound-event metrics (`compound_c`, `mean_overl`, `mean_compo`) from oceanic grid points are converted to a spatial point layer and associated with coastal municipalities via spatial join. The associated grid point with the highest `compound_c` value is overlaid per municipality. In the current risk scope, only `compound_c` is used as the hazard layer; `mean_overl` and `mean_compo` are retained as diagnostic and legacy fields because duration/intensity signals have interpretation uncertainty near river mouths and estuaries.
+Compound-event frequency (`compound_count_total`), mean overlap duration
+(`mean_overlap_duration`), and mean normalized compound intensity
+(`mean_compound_intensity_norm`) are combined first on the 808-point native
+ocean grid. The resulting normalized Hazard Index is then transferred to each
+municipality at the grid point selected by the existing spatial-association
+workflow (the point with the highest compound-event count within the
+association).
 
 #### Sub-step 4.2 — Social Vulnerability Index (SVI_Coast_2022)
 
@@ -225,41 +231,57 @@ Variables were standardized with `StandardScaler` and submitted to PCA. PC1 was 
 Current product:
 
 ```
-Hazard_Index = norm(compound_c)
+Hazard_Frequency = norm_native(compound_count_total)
 
-Risk_Hazard  = (SVI_Coast_2022 / 100) × Hazard_Index
+Hazard_Duration = norm_native(mean_overlap_duration)
 
-Risk_Comp    = (SVI_Coast_2022 / 100) × norm(compound_c)
+Hazard_Intensity = norm_native(mean_compound_intensity_norm)
+
+Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3
+
+Hazard_Index = norm_native(Hazard_Index_raw)
+
+Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
+
+Risk_Hazard = norm(Risk_Hazard_raw)
+
+Risk_Comp_raw = Risk_Hazard_raw
+
+Risk_Comp = Risk_Hazard
 ```
 
 Where:
-- `compound_c` — **absolute count** of compound events at the grid point over 1993–2025 (`compound_count_total`, range ~51–300), not an annual rate
-- `norm()` — Min–Max normalization to [0, 1] across municipalities
-- `Risk_Comp` is kept as a compatibility alias for the same frequency-only risk calculation under the current scope
+- `compound_count_total` — absolute compound-event count over 1993–2025, not an annual rate
+- `mean_overlap_duration` — mean temporal overlap of the compound events, in days
+- `mean_compound_intensity_norm` — mean event intensity after the domain-wide event-level normalization in Step 3.2
+- `norm_native()` — Min–Max normalization to [0, 1] across the 808 native ocean grid points
+- `Hazard_Index` — final physical hazard index, normalized to [0, 1] on the native grid and transferred without renormalization to municipalities
+- `Risk_Hazard_raw` — unnormalized vulnerability–hazard product retained for audit
+- `Risk_Hazard` — final integrated index, normalized to [0, 1] across municipalities with finite SVI and hazard values
+- `Risk_Comp_raw` and `Risk_Comp` are compatibility aliases for the raw and normalized integrated-risk products, respectively
 
-Legacy product retained for audit/comparison:
+Former count-only product retained for audit/comparison:
 
 ```
-Legacy_Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3
-
-Legacy_Risk_Hazard  = (SVI_Coast_2022 / 100) × Legacy_Hazard_Index
+CountOnly_Hazard_Index = norm_municipal(compound_c)
+CountOnly_Risk_Hazard = norm[(SVI_Coast_2022 / 100) × CountOnly_Hazard_Index]
 ```
 
-Legacy fields:
-- `mean_overl` — mean overlap duration of compound events (`mean_overlap_duration`)
-- `mean_compo` — mean **normalized** compound-event intensity (`mean_compound_intensity_norm`, already scaled to [0,1] domain-wide in Step 3.2)
-
-> **Notes.** (1) The external workflow (Karine Bastos Leal, INPE) delivered `risk_index.shp` with SVI, compound metrics, and the former multi-metric indices. The current repository export now recalculates the published `Hazard_Index` as `norm(compound_c)` and `Risk_Hazard` as `SVI × Hazard_Index`; the former fields are preserved as `Legacy_*` and in `risk_index_legacy_*` web files. (2) The legacy `mean_compo` term is normalized twice (once domain-wide in Step 3.2, again by `norm()` in the legacy index), asymmetric relative to count/duration. (3) The three legacy components are **negatively** correlated in the delivered data (frequency vs. duration/intensity, r ≈ −0.4); this is one reason the current scope uses only event count as the hazard layer. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
+> **Notes.** (1) The authoritative calculation is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned native-grid file `outputs/storm_catalog/compound/compound_metrics.csv`; the external municipal file supplies SVI, municipality geometry, and the pre-associated grid coordinates. (2) The delivered multimetric DBF fields remain preserved as `Legacy_*`, while the former repository count-only product is preserved as `CountOnly_*`. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index
-- `Hazard_Index` — current hazard index, `norm(compound_c)`
-- `Risk_Hazard` — current integrated coastal risk from SVI × compound-count hazard
-- `Risk_Comp` — compatibility alias for SVI × compound-event frequency
-- `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, `Legacy_Risk_Hazard` — former multi-metric product fields
+- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid normalized hazard components transferred to municipalities
+- `Hazard_Index_raw` — equal-weight mean of the three normalized components
+- `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`
+- `Risk_Hazard_raw` — unnormalized product of SVI fraction and multimetric hazard
+- `Risk_Hazard` — current integrated coastal risk, Min–Max normalized to [0, 1]
+- `Risk_Comp_raw`, `Risk_Comp` — compatibility aliases for the raw and normalized products
+- `CountOnly_Hazard_Index`, `CountOnly_Risk_Hazard*` — former repository count-only product
+- `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, `Legacy_Risk_Hazard` — delivered external fields retained for audit
 
 **Status:** ✅ Complete  
-**Website panel:** `/results/risk-integration` displays the current compound-count product. `/results/risk-integration/legacy` displays the former multi-metric product.
+**Website panel:** `/results/risk-integration` displays the current normalized multimetric product. `/results/risk-integration/legacy` preserves the originally delivered product.
 
 **Risk-index shapefile export:**
 Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
@@ -280,7 +302,11 @@ Detected shapefile aliases are recorded in the metadata. In the legacy source:
 - `Risk_Comp` maps to `Risk_comp`
 - `Risk_Hazard` maps to `Risk_harza`
 
-In the current export, `Hazard_Index` and `Risk_Hazard` are derived fields based on `compound_c`; the legacy DBF fields are retained as `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, and `Legacy_Risk_Hazard`.
+In the current export, `Hazard_Index` is calculated on the native grid from
+frequency, duration, and intensity and transferred by `grid_lat`/`grid_lon`.
+`Risk_Hazard_raw` and the normalized `Risk_Hazard` are then derived from this
+hazard and SVI. The delivered DBF fields remain under `Legacy_*`; the former
+repository count-only fields remain under `CountOnly_*`.
 
 ---
 
@@ -323,7 +349,7 @@ The repository currently contains:
 ✅ **STEP 4 — Exposure, Vulnerability & Risk Integration** (complete at municipal scale)
 - SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (281 coastal municipalities)
 - Exposure spatialized via spatial join of oceanic hazard metrics to municipalities
-- Current Hazard_Index = norm(compound_c), Risk_Hazard = SVI × Hazard_Index; former multi-metric index retained as legacy
+- Current Hazard_Index = norm_native{[norm_native(frequency) + norm_native(duration) + norm_native(intensity)]/3}; Risk_Hazard = norm_municipal[(SVI/100) × Hazard_Index]
 
 🔄 **STEP 5 — Physical Interpretation** — Planned, not yet implemented
 

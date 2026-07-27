@@ -1,0 +1,452 @@
+{
+  "generated_at": "2026-07-27T12:58:49.068207+00:00",
+  "figure_role": "exploratory audit of the former count-only product against the current official multimetric Hazard Index",
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "source_metadata": "site/public/data/risk_index_metadata.json",
+  "formulas": {
+    "hazard_former_count_only": "CountOnly_Hazard_Index = minmax_municipal(compound_c)",
+    "hazard_current_multimetric_raw": "[Hazard_Frequency + Hazard_Duration + Hazard_Intensity] / 3; components normalized across the 808-point native grid",
+    "hazard_current_multimetric": "official Hazard_Index = norm_native(Hazard_Index_raw)",
+    "hazard_count_only_minus_multimetric": "hazard_former_count_only - hazard_current_multimetric"
+  },
+  "component_interpretation": {
+    "compound_c": "absolute compound-event count over the 1993-2025 record",
+    "mean_overl": "mean compound-event overlap duration in days",
+    "mean_compo": "mean normalized compound-event intensity; already normalized domain-wide at event level and re-scaled across the 808-point native grid for equal-weight aggregation"
+  },
+  "equal_weights": {
+    "frequency": 0.3333333333333333,
+    "duration": 0.3333333333333333,
+    "intensity": 0.3333333333333333
+  },
+  "panels": [
+    {
+      "panel": "A",
+      "title": "Former: count-only hazard",
+      "field": "hazard_former_count_only",
+      "statistics": {
+        "count": 280,
+        "min": 0.0,
+        "mean": 0.267671,
+        "median": 0.170683,
+        "max": 1.0
+      }
+    },
+    {
+      "panel": "B",
+      "title": "Current: frequency + duration + intensity",
+      "field": "hazard_current_multimetric",
+      "statistics": {
+        "count": 280,
+        "min": 0.0,
+        "mean": 0.365024,
+        "median": 0.360819,
+        "max": 0.782047
+      }
+    },
+    {
+      "panel": "C",
+      "title": "Difference: count-only − multimetric",
+      "field": "hazard_count_only_minus_multimetric",
+      "statistics": {
+        "count": 280,
+        "min": -0.633135,
+        "mean": -0.097353,
+        "median": -0.143579,
+        "max": 0.430075
+      }
+    }
+  ],
+  "component_statistics": {
+    "frequency": {
+      "count": 280,
+      "min": 0.028674,
+      "mean": 0.267563,
+      "median": 0.181003,
+      "max": 0.921147
+    },
+    "duration": {
+      "count": 280,
+      "min": 0.0,
+      "mean": 0.3588,
+      "median": 0.356,
+      "max": 0.744
+    },
+    "intensity": {
+      "count": 280,
+      "min": 0.04215,
+      "mean": 0.445013,
+      "median": 0.439478,
+      "max": 0.805631
+    }
+  },
+  "component_pearson_correlations": {
+    "frequency": {
+      "frequency": 1.0,
+      "duration": -0.408731,
+      "intensity": -0.384629
+    },
+    "duration": {
+      "frequency": -0.408731,
+      "duration": 1.0,
+      "intensity": 0.283387
+    },
+    "intensity": {
+      "frequency": -0.384629,
+      "duration": 0.283387,
+      "intensity": 1.0
+    }
+  },
+  "count_only_vs_multimetric_pearson_correlation": 0.402316,
+  "colorbars": {
+    "indices": {
+      "type": "discrete",
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "shared_by_panels": [
+        "A",
+        "B"
+      ]
+    },
+    "difference": {
+      "type": "discrete_diverging",
+      "boundaries": [
+        -1.0,
+        -0.75,
+        -0.5,
+        -0.25,
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "center": 0.0,
+      "meaning": "positive: former count-only index is larger; negative: current multimetric index is larger"
+    }
+  },
+  "map_context": {
+    "extent": [
+      -56.0,
+      -27.0,
+      -36.5,
+      7.0
+    ],
+    "land_color": "#ddddda",
+    "ocean_color": "#e9f3f7",
+    "no_data_color": "#c7c7c4",
+    "country_border_color": "#555553",
+    "state_border_color": "#92928e",
+    "coastline": "data/ne_10m_coastline/ne_10m_coastline.shp"
+  },
+  "coastal_line_map": {
+    "fields": [
+      "hazard_former_count_only",
+      "hazard_current_multimetric",
+      "hazard_count_only_minus_multimetric"
+    ],
+    "panels": [
+      {
+        "panel": "A",
+        "title": "Former: count-only hazard",
+        "field": "hazard_former_count_only",
+        "statistics": {
+          "count": 6743,
+          "min": 0.017921,
+          "mean": 0.286299,
+          "median": 0.18638,
+          "max": 0.921147
+        }
+      },
+      {
+        "panel": "B",
+        "title": "Current: frequency + duration + intensity",
+        "field": "hazard_current_multimetric",
+        "statistics": {
+          "count": 6743,
+          "min": 0.0,
+          "mean": 0.411385,
+          "median": 0.401092,
+          "max": 0.942765
+        }
+      },
+      {
+        "panel": "C",
+        "title": "Difference: count-only − multimetric",
+        "field": "hazard_count_only_minus_multimetric",
+        "statistics": {
+          "count": 6743,
+          "min": -0.885418,
+          "mean": -0.125087,
+          "median": -0.170487,
+          "max": 0.399277
+        }
+      }
+    ],
+    "map_extent": [
+      -56.0,
+      -32.0,
+      -35.5,
+      6.5
+    ],
+    "native_grid_index": {
+      "source": "outputs/storm_catalog/compound/compound_metrics.csv",
+      "normalization_domain": "all native ocean grid points",
+      "grid_point_count": 808,
+      "official_hazard_metadata": {
+        "source": "outputs/storm_catalog/compound/compound_metrics.csv",
+        "grid_point_count": 808,
+        "normalization_population": "all finite native ocean grid points",
+        "component_source_fields": {
+          "Hazard_Frequency": "compound_count_total",
+          "Hazard_Duration": "mean_overlap_duration",
+          "Hazard_Intensity": "mean_compound_intensity_norm"
+        },
+        "component_weights": {
+          "Hazard_Frequency": 0.3333333333333333,
+          "Hazard_Duration": 0.3333333333333333,
+          "Hazard_Intensity": 0.3333333333333333
+        },
+        "formula": "Hazard_Index_raw = [norm(compound_count_total) + norm(mean_overlap_duration) + norm(mean_compound_intensity_norm)] / 3; Hazard_Index = norm(Hazard_Index_raw)",
+        "numeric_stats": {
+          "compound_count_total": {
+            "count": 808,
+            "min": 43.0,
+            "max": 322.0,
+            "mean": 118.850248,
+            "median": 90.0
+          },
+          "mean_overlap_duration": {
+            "count": 808,
+            "min": 1.26,
+            "max": 2.51,
+            "mean": 1.738255,
+            "median": 1.71
+          },
+          "mean_compound_intensity_norm": {
+            "count": 808,
+            "min": 0.0659,
+            "max": 0.6946,
+            "mean": 0.406997,
+            "median": 0.40685
+          },
+          "Hazard_Frequency": {
+            "count": 808,
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.271865,
+            "median": 0.168459
+          },
+          "Hazard_Duration": {
+            "count": 808,
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.382604,
+            "median": 0.36
+          },
+          "Hazard_Intensity": {
+            "count": 808,
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.542543,
+            "median": 0.54231
+          },
+          "Hazard_Index_raw": {
+            "count": 808,
+            "min": 0.181936,
+            "max": 0.661876,
+            "mean": 0.399004,
+            "median": 0.3847
+          },
+          "Hazard_Index": {
+            "count": 808,
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.452282,
+            "median": 0.422479
+          }
+        }
+      },
+      "formulas": {
+        "hazard_current_multimetric_raw": "[minmax(compound_count_total) + minmax(mean_overlap_duration) + minmax(mean_compound_intensity_norm)] / 3",
+        "hazard_current_multimetric": "Hazard_Index = norm_native(Hazard_Index_raw)"
+      },
+      "component_statistics": {
+        "frequency": {
+          "count": 808,
+          "min": 0.0,
+          "mean": 0.271865,
+          "median": 0.168459,
+          "max": 1.0
+        },
+        "duration": {
+          "count": 808,
+          "min": 0.0,
+          "mean": 0.382604,
+          "median": 0.36,
+          "max": 1.0
+        },
+        "intensity": {
+          "count": 808,
+          "min": 0.0,
+          "mean": 0.542543,
+          "median": 0.54231,
+          "max": 1.0
+        }
+      },
+      "raw_index_statistics": {
+        "count": 808,
+        "min": 0.181936,
+        "mean": 0.399004,
+        "median": 0.3847,
+        "max": 0.661876
+      },
+      "final_index_statistics": {
+        "count": 808,
+        "min": 0.0,
+        "mean": 0.452282,
+        "median": 0.422479,
+        "max": 1.0
+      },
+      "comparison_statistics": {
+        "hazard_former_count_only": {
+          "count": 808,
+          "min": 0.0,
+          "mean": 0.271865,
+          "median": 0.168459,
+          "max": 1.0
+        },
+        "hazard_current_multimetric": {
+          "count": 808,
+          "min": 0.0,
+          "mean": 0.452282,
+          "median": 0.422479,
+          "max": 1.0
+        },
+        "hazard_count_only_minus_multimetric": {
+          "count": 808,
+          "min": -0.946237,
+          "mean": -0.180417,
+          "median": -0.195366,
+          "max": 0.399277
+        }
+      }
+    },
+    "assignment": {
+      "method": "Natural Earth 10m coastline clipped to a 30-km buffer around the coastal-municipality union; linework split into segments no longer than 5 km in EPSG:5880; each segment assigned the final normalized multimetric hazard index at its nearest native ocean grid point",
+      "normalization_domain": "all native ocean grid points; the formula is identical to the municipal comparison, but normalization is repeated over the native-grid domain for this spatial product",
+      "projected_crs": "EPSG:5880",
+      "municipal_buffer_m": 30000.0,
+      "maximum_segment_length_m": 5000.0,
+      "clipped_line_count": 49,
+      "segment_count": 6743,
+      "native_grid_point_count": 808,
+      "native_grid_points_used": 297,
+      "nearest_distance_km": {
+        "minimum": 0.248232,
+        "median": 18.704526,
+        "p90": 36.590475,
+        "p99": 83.108735,
+        "maximum": 119.944668
+      },
+      "assigned_value_statistics": {
+        "hazard_former_count_only": {
+          "count": 6743,
+          "min": 0.017921,
+          "mean": 0.286299,
+          "median": 0.18638,
+          "max": 0.921147
+        },
+        "hazard_current_multimetric": {
+          "count": 6743,
+          "min": 0.0,
+          "mean": 0.411385,
+          "median": 0.401092,
+          "max": 0.942765
+        },
+        "hazard_count_only_minus_multimetric": {
+          "count": 6743,
+          "min": -0.885418,
+          "mean": -0.125087,
+          "median": -0.170487,
+          "max": 0.399277
+        }
+      }
+    },
+    "colorbars": {
+      "indices": {
+        "type": "discrete",
+        "boundaries": [
+          0.0,
+          0.125,
+          0.25,
+          0.375,
+          0.5,
+          0.625,
+          0.75,
+          0.875,
+          1.0
+        ],
+        "colors": [
+          "#008000",
+          "#33B200",
+          "#80D900",
+          "#CCE600",
+          "#FFB200",
+          "#FF8000",
+          "#FF4000",
+          "#FF0000"
+        ],
+        "shared_by_panels": [
+          "A",
+          "B"
+        ]
+      },
+      "difference": {
+        "type": "discrete_diverging",
+        "boundaries": [
+          -1.0,
+          -0.75,
+          -0.5,
+          -0.25,
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0
+        ],
+        "center": 0.0
+      }
+    }
+  },
+  "source_scope": "normalized_multimetric_native_grid",
+  "outputs": {
+    "municipal_comparison_figure": "outputs/exploratory_hazard_index_comparison/figures/explore_hazard_index_count_only_vs_multimetric_20260727.png",
+    "coastal_line_figure": "outputs/exploratory_hazard_index_comparison/figures/explore_multimetric_hazard_index_coastline_20260727.png",
+    "municipal_table": "outputs/exploratory_hazard_index_comparison/data/municipal_hazard_index_count_only_vs_multimetric.csv",
+    "native_grid_table": "outputs/exploratory_hazard_index_comparison/data/native_grid_multimetric_hazard_index.csv",
+    "coastal_segments": "outputs/exploratory_hazard_index_comparison/data/multimetric_hazard_index_coastline_segments.geojson",
+    "metadata": "outputs/exploratory_hazard_index_comparison/metadata/explore_hazard_index_count_only_vs_multimetric_metadata.json"
+  },
+  "output_format": "PNG",
+  "dpi": 150
+}

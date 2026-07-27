@@ -71,7 +71,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Exposure spatialization',
     description:
-      'Operationalize exposure through spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. The current risk scope uses the assigned grid point compound-event count as the hazard signal; duration and intensity remain diagnostic and legacy fields.',
+      'Operationalize exposure through spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. Frequency, mean overlap duration, and mean normalized intensity are combined on the native grid into the current normalized multimetric Hazard Index and then transferred to municipalities.',
   },
   {
     label: 'Social vulnerability index',
@@ -81,7 +81,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Coastal risk mapping',
     description:
-      'Generate compound coastal risk indices by combining SVI_Coast_2022 with the normalized compound-event count Hazard_Index, identifying priority hotspots while preserving the former multi-metric product as legacy.',
+      'Generate compound coastal risk indices by combining SVI_Coast_2022 with the normalized frequency-duration-intensity Hazard_Index, identifying priority hotspots while preserving the former count-only and originally delivered products for audit.',
   },
   {
     label: 'Physical interpretation',
@@ -108,7 +108,7 @@ export const conceptualFramework = {
     },
     {
       term: 'Exposure',
-      definition: 'The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, the assigned compound-event count is normalized as the hazard layer. Duration and intensity remain available for diagnosis and the legacy product, but are not treated as direct hazard intensity.'
+      definition: 'The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, normalized frequency, mean overlap duration, and mean normalized intensity receive equal weights in a native-grid Hazard Index normalized to 0–1 before transfer to municipalities.'
     },
     {
       term: 'Vulnerability',
@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: SVI_Coast_2022 is integrated with a revised Hazard_Index based only on normalized compound-event count (compound_c), and Risk_Hazard is now SVI × this count-only hazard. The previous frequency-duration-intensity product remains accessible as legacy.
+The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The q90/q90 threshold pair was empirically calibrated using reported SC coastal disaster records as supporting evidence (CSI scan: CSI=0.0151; PU Composite Calibration: R_pos=0.268, B_target_effective=324 ep/yr). Step 3 (Hazard Characterization) is complete: storm catalogs (404k Hₛ + 325k SSH_total episodes), compound detection (~96k events), and all characterization submodules (duration, seasonality, trends, EVA, dependence) are done for all 808 grid points. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: normalized compound-event frequency, mean overlap duration, and mean normalized intensity receive equal weights in a native-grid Hazard_Index normalized to 0–1 and transferred to municipalities. The raw SVI–hazard product is retained as Risk_Hazard_raw and the published Risk_Hazard is Min–Max normalized to 0–1 across municipalities. The former count-only repository product and the originally delivered fields remain accessible for audit.
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -284,15 +284,16 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-4',
     label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
-    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces SVI_Coast_2022, a compound-count Hazard_Index, and Risk_Hazard for coastal municipalities, while retaining the former multi-metric output as legacy.',
+    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces a normalized frequency-duration-intensity Hazard_Index on the native grid, transfers it to municipalities, and combines it with SVI_Coast_2022 to produce Risk_Hazard.',
     status: 'done',
     stepNumber: 4,
     tasks: [
       'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (281 municipalities) ✓',
       'Exposure operationalized through spatial join of oceanic hazard metrics to municipalities ✓',
-      'Current Hazard_Index = norm(compound_c) ✓',
-      'Current Risk_Hazard = (SVI/100) × Hazard_Index ✓',
-      'Legacy Hazard_Index = [norm(compound_c) + norm(mean_overl) + norm(mean_compo)] / 3 retained ✓',
+      'Current Hazard_Index = normalized equal-weight mean of native-grid frequency, duration, and intensity components ✓',
+      'Current Risk_Hazard_raw = (SVI/100) × Hazard_Index ✓',
+      'Current Risk_Hazard = norm(Risk_Hazard_raw), scaled 0–1 ✓',
+      'Former count-only and originally delivered legacy fields retained for audit ✓',
     ],
   },
   {

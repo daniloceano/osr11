@@ -88,13 +88,29 @@ interface Props {
   metadata: RiskMetadata;
 }
 
-const EXPECTED_LAYER_ORDER: RiskLayerKey[] = ['Risk_Hazard', 'Hazard_Index', 'SVI_Coast_2022', 'Risk_Comp'];
+const EXPECTED_LAYER_ORDER: RiskLayerKey[] = [
+  'Risk_Hazard',
+  'Hazard_Index',
+  'Hazard_Frequency',
+  'Hazard_Duration',
+  'Hazard_Intensity',
+  'SVI_Coast_2022',
+  'Risk_Comp',
+];
 
 const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: 'SVI_Coast_2022', label: 'SVI_Coast_2022' },
   { key: 'Hazard_Index', label: 'Current Hazard_Index' },
+  { key: 'Hazard_Frequency', label: 'Normalized frequency component' },
+  { key: 'Hazard_Duration', label: 'Normalized duration component' },
+  { key: 'Hazard_Intensity', label: 'Normalized intensity component' },
+  { key: 'Hazard_Index_raw', label: 'Raw three-component mean' },
   { key: 'Risk_Hazard', label: 'Current Risk_Hazard' },
-  { key: 'Risk_Comp', label: 'Frequency risk' },
+  { key: 'Risk_Comp', label: 'Integrated-risk alias' },
+  { key: 'Risk_Hazard_raw', label: 'Raw SVI–hazard product' },
+  { key: 'Risk_Comp_raw', label: 'Raw integrated-risk alias' },
+  { key: 'CountOnly_Hazard_Index', label: 'Former count-only Hazard_Index' },
+  { key: 'CountOnly_Risk_Hazard', label: 'Former count-only risk' },
   { key: 'compound_c', label: 'compound_c' },
   { key: 'mean_overl', label: 'mean_overl (diagnostic)' },
   { key: 'mean_compo', label: 'mean_compo (diagnostic)' },
@@ -216,7 +232,7 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
 
   const selectedLayer = layers.find((layer) => layer.key === (selectedLayerKey ?? defaultLayerKey)) ?? layers[0];
   const isLegacyScope = metadata.scope === 'legacy_multimetric';
-  const scopeLabel = isLegacyScope ? 'Legacy multi-metric product' : 'Current compound-count-only product';
+  const scopeLabel = isLegacyScope ? 'Originally delivered legacy product' : 'Current normalized multimetric product';
   const selectedKey = selectedLayer?.key ?? '';
   const svgWidth = 640;
   const svgHeight = svgWidth / ASPECT;
@@ -557,14 +573,16 @@ export default function RiskIntegrationMap({ data, metadata }: Props) {
           ) : (
             <>
               <p>
-                <strong className="text-gray-800">Exposure and hazard.</strong> The current Hazard_Index uses only
-                compound-event frequency: Hazard_Index = norm(compound_c). Duration and intensity remain visible as
-                diagnostic fields and in the legacy product, but are excluded from the current hazard layer.
+                <strong className="text-gray-800">Exposure and hazard.</strong> The current Hazard_Index is calculated
+                first on the 808-point native grid. Frequency, mean overlap duration, and mean normalized intensity
+                are individually Min-Max scaled, averaged with equal weights, and the composite is normalized to 0–1
+                before transfer to municipalities.
               </p>
               <p>
-                <strong className="text-gray-800">Risk integration.</strong> Risk_Hazard = (SVI_Coast_2022 / 100) x
-                Hazard_Index, with Hazard_Index = norm(compound_c). This avoids treating uncertain duration/intensity
-                signals near river mouths as direct hazard intensity.
+                <strong className="text-gray-800">Risk integration.</strong> Risk_Hazard_raw =
+                (SVI_Coast_2022 / 100) x Hazard_Index. The published Risk_Hazard is the Min-Max normalization
+                of this raw product across municipalities, yielding a 0–1 index. The former count-only calculation
+                remains available in the CountOnly_* audit fields.
               </p>
             </>
           )}

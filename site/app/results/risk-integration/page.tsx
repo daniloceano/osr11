@@ -5,9 +5,9 @@ import StatusBadge from '@/components/StatusBadge';
 import RiskIntegrationClient from './RiskIntegrationClient';
 
 export const metadata = {
-  title: 'Compound-Count Coastal Risk Integration | OSR11',
+  title: 'Multimetric Coastal Risk Integration | OSR11',
   description:
-    'Municipal-scale coastal risk indices using compound-event counts as the hazard layer and social vulnerability for Brazilian coastal municipalities.',
+    'Municipal-scale coastal risk indices using a normalized frequency-duration-intensity hazard layer and social vulnerability for Brazilian coastal municipalities.',
 };
 
 export default function RiskIntegrationPage() {
@@ -28,7 +28,7 @@ export default function RiskIntegrationPage() {
             <div className="mb-4 flex flex-wrap items-start gap-2">
               <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Compound-count hazard scope
+                Multimetric hazard scope
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
                 Municipal scale · legacy product retained
@@ -38,17 +38,16 @@ export default function RiskIntegrationPage() {
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
               Exposure, Vulnerability & Risk Integration
               <br />
-              <span className="text-blue-600">Compound-Count Coastal Risk</span>
+              <span className="text-blue-600">Multimetric Coastal Risk</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              Municipal-scale coastal risk indices combining social vulnerability with a revised hazard layer:
-              only the total compound-event count (<code className="rounded bg-gray-100 px-1 text-xs">compound_c</code>)
-              is used in the current Hazard_Index. Duration and intensity metrics remain available as diagnostics
-              and in the{' '}
+              Municipal-scale coastal risk indices combining social vulnerability with a native-grid Hazard_Index:
+              normalized compound-event frequency, mean overlap duration, and mean normalized intensity receive
+              equal weights before the composite is normalized to 0–1. The former count-only calculation and the{' '}
               <Link href="/results/risk-integration/legacy" className="font-semibold text-blue-600 hover:underline">
-                legacy multi-metric product
+                originally delivered product
               </Link>
-              .
+              {' '}remain available for audit.
             </p>
           </div>
         </div>
@@ -65,17 +64,17 @@ export default function RiskIntegrationPage() {
               <ModuleCard
                 color="#2171b5"
                 title="Hazard_Index"
-                body="Current hazard layer: Min-Max normalized compound-event count, norm(compound_c)."
+                body="Normalized equal-weight combination of native-grid compound-event frequency, mean overlap duration, and mean intensity."
               />
               <ModuleCard
                 color="#d94801"
                 title="Risk_Hazard"
-                body="Current final risk: social vulnerability multiplied by the compound-count hazard layer."
+                body="Current final risk: social vulnerability multiplied by the normalized multimetric hazard layer and normalized to 0–1."
               />
               <ModuleCard
                 color="#737373"
-                title="Legacy product"
-                body="Previous frequency-duration-intensity hazard retained for audit, comparison, and reproducibility."
+                title="Audit products"
+                body="Former count-only repository product and originally delivered fields retained for comparison and reproducibility."
               />
             </div>
           </div>
@@ -94,18 +93,18 @@ export default function RiskIntegrationPage() {
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
                   <strong className="text-gray-800">Current index definitions.</strong>{' '}
-                  Hazard_Index = norm(compound_c); Risk_Hazard = (SVI_Coast_2022 / 100)·Hazard_Index,
-                  where norm(·) is Min–Max scaling across municipalities. <strong>compound_c is the
-                  absolute compound-event count over 1993–2025, not an annual rate.</strong> Risk_Comp is
-                  retained as a compatibility alias for the same frequency-only risk calculation.
+                  Hazard_Index = norm_grid{'{'}[norm_grid(frequency) + norm_grid(duration) +
+                  norm_grid(intensity)] / 3{'}'}; Risk_Hazard_raw =
+                  (SVI_Coast_2022 / 100)·Hazard_Index; and Risk_Hazard =
+                  norm_municipal(Risk_Hazard_raw). The physical Hazard Index spans 0–1 on the native grid,
+                  and the final integrated index spans 0–1 across municipalities. Risk_Comp is retained as
+                  a compatibility alias for the normalized integrated-risk calculation.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Scope change.</strong>{' '}
-                  The earlier Hazard_Index averaged normalized frequency, mean overlap duration, and mean
-                  compound intensity. That product is now legacy because duration/intensity can express
-                  uncertain or river-mouth-driven signals, especially near large estuaries such as the
-                  Amazon, and should not be interpreted as direct coastal hazard intensity without further
-                  treatment.
+                  <strong className="text-gray-800">Component aggregation.</strong>{' '}
+                  Frequency, duration, and intensity receive equal weights. Because frequency is negatively
+                  correlated with the two mean-event characteristics, this is a compensatory index rather
+                  than a combination of three mutually reinforcing signals.
                 </p>
               </div>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">

@@ -62,6 +62,9 @@ _MODULE_ALIASES: dict[str, str] = {
     "dependence":                 "03_storm_catalog_generation/07_dependence",
     "site_export":                "03_storm_catalog_generation/08_site_export",
     "shared":                     "03_storm_catalog_generation/shared",
+
+    # STEP 4 — Exposure, Vulnerability & Risk Integration
+    "risk_integration":           "04_risk_integration",
 }
 
 

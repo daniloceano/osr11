@@ -7,12 +7,13 @@ This folder contains a reproducible workflow for generating manuscript-style fig
 From the repository root:
 
 ```bash
-python src/figures_article/make_article_coastal_compound_event_rate_map.py
+python src/figures_article/make_article_coastal_hazard_components_map.py
 python src/figures_article/make_article_hazard_vulnerability_risk_multiplot.py
 python src/figures_article/make_article_top10_municipality_tables.py
 python src/figures_article/make_article_calibration_map.py
 python src/figures_article/make_article_calibration_heatmaps.py
 python src/figures_article/make_article_supplementary_zos_mean_coastal_band_map.py
+python src/figures_article/make_article_supplementary_integrated_risk_zooms.py
 ```
 
 The map command writes `santa_catarina_study_area_and_grid_points.png`; the
@@ -20,12 +21,13 @@ heatmap command writes `pu_composite_calibration_heatmaps.png`. Regenerate both
 with the two commands above. The equivalent module commands also remain supported:
 
 ```bash
-python -m src.figures_article.make_article_coastal_compound_event_rate_map
+python -m src.figures_article.make_article_coastal_hazard_components_map
 python -m src.figures_article.make_article_hazard_vulnerability_risk_multiplot
 python -m src.figures_article.make_article_top10_municipality_tables
 python -m src.figures_article.make_article_calibration_map
 python -m src.figures_article.make_article_calibration_heatmaps
 python -m src.figures_article.make_article_supplementary_zos_mean_coastal_band_map
+python -m src.figures_article.make_article_supplementary_integrated_risk_zooms
 ```
 
 The supplementary-map command writes
@@ -70,20 +72,36 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 
 ## Generated Figures
 
-- `coastal_compound_event_rate_per_year.png`
-  - Mean annual compound-event frequency from the native ocean grid,
-    calculated as the total count divided by the 33-year period (1993--2025)
-    and projected onto Natural Earth coastline segments of at most 5 km.
-  - Each coastal segment receives the value at its nearest grid point in
-    SIRGAS 2000 / Brazil Polyconic (EPSG:5880).
+- `coastal_hazard_index_components.png`
+  - A 2 × 2 panel showing mean annual compound-event frequency
+    (events yr⁻¹), mean overlap duration (days), mean compound intensity
+    (dimensionless), and the resulting 0--1 Hazard Index.
+  - Panels A--C display the native-grid catalog values without the additional
+    cross-grid Min--Max scaling. The intensity is the dimensionless
+    event-level compound metric stored in the catalog.
+  - For the Hazard calculation, the three components are still Min--Max
+    normalized independently across all 808 native ocean-grid points. Their
+    equal-weight mean is normalized again to 0--1.
+  - Every panel is projected onto Natural Earth coastline segments of at most
+    5 km. Each segment receives the value at its nearest grid point in SIRGAS
+    2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
-  - Panel A: current `Hazard_Index = norm(compound_c)`
+  - Panel A: current
+    `Hazard_Index = norm_native[(norm_native(frequency) + norm_native(duration) + norm_native(intensity))/3]`
   - Panel B: `SVI_Coast_2022`
-  - Panel C: current `Risk_Hazard`
+  - Panel C: current
+    `Risk_Hazard = norm[(SVI_Coast_2022/100) * Hazard_Index]`, on a 0–1 scale
   - Uses discrete green-to-red classes derived from the inverted Composite
     Score heatmap palette.
   - Includes Natural Earth country and Brazilian-state boundaries over gray
     land and a light-blue ocean.
+- `supplementary_integrated_risk_zooms.png`
+  - Panel A: integrated-risk detail for RS, SC, PR, SP, and RJ.
+  - Panel B: integrated-risk detail for PA, MA, and PI.
+  - Coastal municipalities from neighboring states are also colored wherever
+    they intersect the fixed map extents.
+  - Uses the same global 0–1 discrete limits as the integrated-risk panel in
+    the main figure, so colors remain directly comparable.
 
 ## Generated Tables
 
@@ -110,16 +128,20 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 - `mean_overl`: `mean_overl`, `mean_ove`, `mean_overlap_duration`
 - `mean_compo`: `mean_compo`, `mean_com`, `mean_compound_intensity_norm`
 
-For the coastal-line map, the current scope visualizes annual compound-event
-frequency. If an oceanic `Hazard_Index` field is absent, the script uses
-`compound_c` (`compound_count_total` in the current CSV) divided by the
-documented record length:
+For the coastal-line map, the current scope visualizes the three normalized
+native-grid components and their composite:
 
 ```text
-compound_count_total / 33 years
+Hazard_Frequency = norm_native(compound_count_total)
+Hazard_Duration = norm_native(mean_overlap_duration)
+Hazard_Intensity = norm_native(mean_compound_intensity_norm)
+Hazard_Index = norm_native[(Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3]
 ```
 
-The plotting color scale remains relative to the available ocean-point values.
+The component panels use the discrete reversed-magma palette formerly used for
+the annual-rate coastline map, but each panel has its own colorbar in the
+catalog's displayed units. The Hazard Index uses the same discrete
+green-to-red palette as the municipal integrated-risk figure.
 
 ## Interpretation Caveat
 
@@ -130,7 +152,7 @@ coastal-assignment diagnostics, discrete color boundaries, and table rows:
 
 ```text
 outputs/article_figures/metadata/article_risk_figure_summary.json
-outputs/article_figures/metadata/article_coastal_compound_event_rate_per_year_metadata.json
+outputs/article_figures/metadata/article_coastal_hazard_index_components_metadata.json
 outputs/article_figures/metadata/article_hazard_vulnerability_risk_metadata.json
 outputs/article_figures/metadata/article_top10_municipality_tables_metadata.json
 ```

@@ -1,0 +1,732 @@
+r"""Generate the article coastal Hazard Index and component maps.
+
+Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
+-----------------------------------------------------------------
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{outputs/article_figures/coastal_hazard_index_components.png}
+    \caption{Compound coastal-event characteristics and composite Hazard
+    Index along the Brazilian coast during 1993--2025: (a) mean annual
+    compound-event frequency (events~yr$^{-1}$), (b) mean temporal overlap
+    duration (days), (c) mean compound intensity (dimensionless), and (d) the
+    composite Hazard Index. Panels (a)--(c) show the native-grid values
+    without the additional cross-grid Min--Max scaling used to construct the
+    Hazard Index. The intensity in panel (c) is the dimensionless compound
+    event-level metric stored in the catalog. To calculate panel (d), the
+    three components are Min--Max normalized over the 808-point native ocean
+    grid, averaged with equal weights, and the mean is Min--Max normalized
+    again to obtain the final Hazard Index on a 0--1 scale. For visualization,
+    the Natural Earth 10-m coastline is divided
+    into segments no longer than 5~km and each segment receives the value at
+    its nearest native grid point using distances in SIRGAS 2000 / Brazil
+    Polyconic (EPSG:5880). Panels (a)--(c) use the discrete reversed-magma
+    palette of the former annual compound-event-rate figure; panel (d) uses
+    the green-to-red integrated-risk palette. Gray shading denotes land,
+    light blue denotes the ocean, dark-gray lines delimit countries, and
+    lighter gray lines delimit Brazilian states.}
+    \label{fig:coastal-hazard-components}
+\end{figure*}
+
+Run from the repository root:
+
+    python src/figures_article/make_article_coastal_hazard_components_map.py
+"""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from functools import lru_cache
+import json
+from pathlib import Path
+import sys
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import cartopy.crs as ccrs
+from cartopy.io import shapereader
+import geopandas as gpd
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.ticker import FixedLocator, FormatStrFormatter
+import numpy as np
+import pandas as pd
+from scipy.spatial import cKDTree
+from shapely.geometry import GeometryCollection, LineString, MultiLineString
+from shapely.ops import linemerge, unary_union
+
+from src.figures_article.make_article_supplementary_integrated_risk_zooms import (
+    ARTICLE_DPI,
+    COASTLINE_PATH,
+    COUNTRY_BORDER_COLOR,
+    LAND_COLOR,
+    OCEAN_COLOR,
+    RISK_COLORS,
+    STATE_BORDER_COLOR,
+    _numeric_stats,
+    _read_inputs,
+    _relative,
+)
+from src.risk_integration.hazard_index import (
+    NATIVE_GRID_SOURCE,
+    derive_native_hazard_index,
+)
+
+
+OUT_DIR = ROOT / "outputs" / "article_figures"
+DATA_DIR = OUT_DIR / "data"
+METADATA_DIR = OUT_DIR / "metadata"
+OUTPUT_PATH = OUT_DIR / "coastal_hazard_index_components.png"
+GRID_DATA_PATH = DATA_DIR / "coastal_hazard_components_native_grid.csv"
+SEGMENT_DATA_PATH = DATA_DIR / "coastal_hazard_components_segments.geojson"
+METADATA_PATH = (
+    METADATA_DIR / "article_coastal_hazard_index_components_metadata.json"
+)
+
+OUTPUT_CRS = "EPSG:4326"
+COASTAL_PROJECTION_CRS = "EPSG:5880"
+MAP_EXTENT = (-56.0, -27.0, -36.5, 7.0)
+COASTAL_MAP_EXTENT = (-56.0, -32.0, -35.5, 6.5)
+CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
+COASTLINE_MUNICIPAL_BUFFER_M = 30_000.0
+COASTLINE_SEGMENT_MAX_LENGTH_M = 5_000.0
+FREQUENCY_BOUNDARIES = np.arange(1.0, 11.0, 1.0)
+DURATION_BOUNDARIES = np.arange(1.2, 2.61, 0.2)
+INTENSITY_BOUNDARIES = np.arange(0.0, 0.71, 0.1)
+HAZARD_BOUNDARIES = np.linspace(0.0, 1.0, 9)
+FREQUENCY_TICKS = FREQUENCY_BOUNDARIES[[0, 2, 4, 6, 8, 9]]
+DURATION_TICKS = DURATION_BOUNDARIES
+INTENSITY_TICKS = INTENSITY_BOUNDARIES
+HAZARD_TICKS = HAZARD_BOUNDARIES[[0, 2, 4, 6, 8]]
+DISPLAY_COMPONENT_FIELDS = (
+    "compound_count_annual_mean",
+    "mean_overlap_duration",
+    "mean_compound_intensity_norm",
+)
+NORMALIZED_COMPONENT_FIELDS = (
+    "Hazard_Frequency",
+    "Hazard_Duration",
+    "Hazard_Intensity",
+)
+PANEL_SPECS = (
+    {
+        "field": "compound_count_annual_mean",
+        "panel": "A",
+        "title": "Compound-event frequency",
+        "boundaries": FREQUENCY_BOUNDARIES,
+        "ticks": FREQUENCY_TICKS,
+        "colorbar_label": r"Events yr$^{-1}$",
+        "tick_format": "%.0f",
+        "unit": "events per year",
+        "palette": "component",
+    },
+    {
+        "field": "mean_overlap_duration",
+        "panel": "B",
+        "title": "Mean overlap duration",
+        "boundaries": DURATION_BOUNDARIES,
+        "ticks": DURATION_TICKS,
+        "colorbar_label": "Mean overlap duration (days)",
+        "tick_format": "%.1f",
+        "unit": "days",
+        "palette": "component",
+    },
+    {
+        "field": "mean_compound_intensity_norm",
+        "panel": "C",
+        "title": "Mean compound intensity",
+        "boundaries": INTENSITY_BOUNDARIES,
+        "ticks": INTENSITY_TICKS,
+        "colorbar_label": "Mean compound intensity (dimensionless)",
+        "tick_format": "%.1f",
+        "unit": "dimensionless",
+        "palette": "component",
+    },
+    {
+        "field": "Hazard_Index",
+        "panel": "D",
+        "title": "Composite Hazard Index",
+        "boundaries": HAZARD_BOUNDARIES,
+        "ticks": HAZARD_TICKS,
+        "colorbar_label": "Hazard Index (0–1)",
+        "tick_format": "%.2f",
+        "unit": "0-1 index",
+        "palette": "hazard",
+    },
+)
+
+GRID_COLOR = "#9aa9b0"
+COAST_COLOR = "#334155"
+
+
+def _geometry_intersects_extent(
+    geometry: object,
+    extent: tuple[float, float, float, float],
+) -> bool:
+    minx, miny, maxx, maxy = geometry.bounds
+    west, east, south, north = extent
+    return not (maxx < west or minx > east or maxy < south or miny > north)
+
+
+@lru_cache(maxsize=1)
+def _natural_earth_context() -> tuple[
+    tuple[object, ...],
+    tuple[object, ...],
+    tuple[object, ...],
+]:
+    land_path = shapereader.natural_earth(
+        resolution="10m",
+        category="physical",
+        name="land",
+    )
+    country_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_0_boundary_lines_land",
+    )
+    state_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_1_states_provinces_lines",
+    )
+    land = tuple(
+        geometry
+        for geometry in shapereader.Reader(land_path).geometries()
+        if _geometry_intersects_extent(geometry, CONTEXT_EXTENT)
+    )
+    countries = tuple(
+        geometry
+        for geometry in shapereader.Reader(country_path).geometries()
+        if _geometry_intersects_extent(geometry, CONTEXT_EXTENT)
+    )
+    states = tuple(
+        record.geometry
+        for record in shapereader.Reader(state_path).records()
+        if record.attributes.get("ADM0_NAME") == "Brazil"
+        and _geometry_intersects_extent(record.geometry, CONTEXT_EXTENT)
+    )
+    return land, countries, states
+
+
+def _line_parts(geometry: object) -> list[LineString]:
+    if geometry is None or geometry.is_empty:
+        return []
+    if isinstance(geometry, LineString):
+        return [geometry]
+    if isinstance(geometry, (MultiLineString, GeometryCollection)):
+        parts: list[LineString] = []
+        for part in geometry.geoms:
+            parts.extend(_line_parts(part))
+        return parts
+    return []
+
+
+def _build_coastal_segments(
+    municipalities: gpd.GeoDataFrame,
+    coastline: gpd.GeoDataFrame,
+    native_grid: pd.DataFrame,
+) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    source_fields = [
+        "grid_lon",
+        "grid_lat",
+        *DISPLAY_COMPONENT_FIELDS,
+        *NORMALIZED_COMPONENT_FIELDS,
+        "Hazard_Index_raw",
+        "Hazard_Index",
+    ]
+    source_points = native_grid[source_fields].dropna().reset_index(drop=True)
+    municipalities_projected = municipalities.to_crs(
+        COASTAL_PROJECTION_CRS
+    )
+    coastline_subset = coastline.cx[
+        MAP_EXTENT[0]:MAP_EXTENT[1],
+        MAP_EXTENT[2]:MAP_EXTENT[3],
+    ]
+    coastline_projected = coastline_subset.to_crs(
+        COASTAL_PROJECTION_CRS
+    )
+    municipal_buffer = municipalities_projected.geometry.union_all().buffer(
+        COASTLINE_MUNICIPAL_BUFFER_M
+    )
+
+    clipped_lines: list[LineString] = []
+    for geometry in coastline_projected.geometry:
+        clipped_lines.extend(
+            _line_parts(geometry.intersection(municipal_buffer))
+        )
+    if not clipped_lines:
+        raise RuntimeError(
+            "No Natural Earth coastline intersects the coastal municipalities"
+        )
+
+    segment_geometries: list[LineString] = []
+    segment_midpoints: list[np.ndarray] = []
+    for line in clipped_lines:
+        coordinates = np.asarray(line.coords, dtype=float)
+        for start, end in zip(coordinates[:-1], coordinates[1:]):
+            length = float(np.linalg.norm(end - start))
+            number_of_segments = max(
+                1,
+                int(np.ceil(length / COASTLINE_SEGMENT_MAX_LENGTH_M)),
+            )
+            points = start + (end - start) * np.linspace(
+                0.0,
+                1.0,
+                number_of_segments + 1,
+            )[:, None]
+            for segment_start, segment_end in zip(points[:-1], points[1:]):
+                segment_geometries.append(
+                    LineString([segment_start, segment_end])
+                )
+                segment_midpoints.append(
+                    (segment_start + segment_end) / 2.0
+                )
+
+    ocean_points = gpd.GeoDataFrame(
+        source_points,
+        geometry=gpd.points_from_xy(
+            source_points["grid_lon"],
+            source_points["grid_lat"],
+        ),
+        crs=OUTPUT_CRS,
+    ).to_crs(COASTAL_PROJECTION_CRS)
+    point_coordinates = np.asarray(
+        [(point.x, point.y) for point in ocean_points.geometry],
+        dtype=float,
+    )
+    nearest_distance_m, nearest_position = cKDTree(
+        point_coordinates
+    ).query(np.asarray(segment_midpoints), k=1)
+    source_rows = source_points.iloc[nearest_position].reset_index(drop=True)
+
+    segment_fields: dict[str, Any] = {
+        "source_grid_index": nearest_position.astype(int),
+        "source_longitude": source_rows["grid_lon"].to_numpy(dtype=float),
+        "source_latitude": source_rows["grid_lat"].to_numpy(dtype=float),
+        "nearest_grid_distance_km": nearest_distance_m / 1_000.0,
+    }
+    for field in (
+        *DISPLAY_COMPONENT_FIELDS,
+        *NORMALIZED_COMPONENT_FIELDS,
+        "Hazard_Index_raw",
+        "Hazard_Index",
+    ):
+        segment_fields[field] = source_rows[field].to_numpy(dtype=float)
+    segments = gpd.GeoDataFrame(
+        segment_fields,
+        geometry=segment_geometries,
+        crs=COASTAL_PROJECTION_CRS,
+    ).to_crs(OUTPUT_CRS)
+
+    metadata = {
+        "method": (
+            "Natural Earth 10m coastline clipped to a 30-km buffer around "
+            "the coastal-municipality union; linework split into segments no "
+            "longer than 5 km in EPSG:5880; each segment assigned the values "
+            "at its nearest native ocean grid point by projected midpoint "
+            "distance"
+        ),
+        "projected_crs": COASTAL_PROJECTION_CRS,
+        "municipal_buffer_m": COASTLINE_MUNICIPAL_BUFFER_M,
+        "maximum_segment_length_m": COASTLINE_SEGMENT_MAX_LENGTH_M,
+        "clipped_line_count": len(clipped_lines),
+        "segment_count": int(len(segments)),
+        "native_grid_point_count": int(len(source_points)),
+        "native_grid_points_used": int(len(np.unique(nearest_position))),
+        "nearest_distance_km": {
+            "minimum": round(float(np.min(nearest_distance_m) / 1_000.0), 6),
+            "median": round(float(np.median(nearest_distance_m) / 1_000.0), 6),
+            "p90": round(
+                float(np.quantile(nearest_distance_m, 0.90) / 1_000.0),
+                6,
+            ),
+            "p99": round(
+                float(np.quantile(nearest_distance_m, 0.99) / 1_000.0),
+                6,
+            ),
+            "maximum": round(float(np.max(nearest_distance_m) / 1_000.0), 6),
+        },
+        "assigned_value_statistics": {
+            field: _numeric_stats(segments[field])
+            for field in (*DISPLAY_COMPONENT_FIELDS, "Hazard_Index")
+        },
+    }
+    return segments, metadata
+
+
+def _setup_axis(
+    axis: plt.Axes,
+    *,
+    title: str,
+    panel_label: str,
+    draw_left_labels: bool,
+    draw_bottom_labels: bool,
+) -> None:
+    crs = ccrs.PlateCarree()
+    land, _, _ = _natural_earth_context()
+    axis.set_facecolor(OCEAN_COLOR)
+    axis.add_geometries(
+        land,
+        crs=crs,
+        facecolor=LAND_COLOR,
+        edgecolor="none",
+        zorder=0.5,
+    )
+    axis.set_extent(COASTAL_MAP_EXTENT, crs=crs)
+    grid = axis.gridlines(
+        crs=crs,
+        draw_labels=True,
+        linewidth=0.35,
+        color=GRID_COLOR,
+        alpha=0.55,
+        linestyle="--",
+        zorder=1.2,
+    )
+    grid.xlocator = FixedLocator(np.arange(-55.0, -29.9, 5.0))
+    grid.ylocator = FixedLocator(np.arange(-35.0, 10.0, 5.0))
+    grid.top_labels = False
+    grid.right_labels = False
+    grid.left_labels = draw_left_labels
+    grid.bottom_labels = draw_bottom_labels
+    grid.xlabel_style = {"size": 8.5, "color": "#374151"}
+    grid.ylabel_style = {"size": 8.5, "color": "#374151"}
+    axis.set_title(title, fontsize=10.5, fontweight="bold", pad=6)
+    axis.text(
+        0.018,
+        0.975,
+        panel_label,
+        transform=axis.transAxes,
+        ha="left",
+        va="top",
+        fontsize=11,
+        fontweight="bold",
+        bbox={
+            "boxstyle": "round,pad=0.25",
+            "facecolor": "white",
+            "edgecolor": "#cbd5e1",
+            "alpha": 0.94,
+        },
+        zorder=10,
+    )
+
+
+def _draw_context(
+    axis: plt.Axes,
+    coastline: gpd.GeoDataFrame,
+) -> None:
+    crs = ccrs.PlateCarree()
+    _, countries, states = _natural_earth_context()
+    axis.add_geometries(
+        states,
+        crs=crs,
+        facecolor="none",
+        edgecolor=STATE_BORDER_COLOR,
+        linewidth=0.45,
+        alpha=0.96,
+        zorder=5,
+    )
+    axis.add_geometries(
+        countries,
+        crs=crs,
+        facecolor="none",
+        edgecolor=COUNTRY_BORDER_COLOR,
+        linewidth=0.75,
+        alpha=0.98,
+        zorder=5.2,
+    )
+    axis.add_geometries(
+        coastline.geometry,
+        crs=crs,
+        facecolor="none",
+        edgecolor=COAST_COLOR,
+        linewidth=0.5,
+        zorder=5.4,
+    )
+
+
+def _plot_segment_field(
+    axis: plt.Axes,
+    segments: gpd.GeoDataFrame,
+    coastline: gpd.GeoDataFrame,
+    *,
+    field: str,
+    title: str,
+    panel_label: str,
+    cmap: ListedColormap,
+    boundaries: np.ndarray,
+    unit: str,
+    draw_left_labels: bool,
+    draw_bottom_labels: bool,
+) -> dict[str, Any]:
+    _setup_axis(
+        axis,
+        title=title,
+        panel_label=panel_label,
+        draw_left_labels=draw_left_labels,
+        draw_bottom_labels=draw_bottom_labels,
+    )
+    _draw_context(axis, coastline)
+    values = segments[field].to_numpy(dtype=float)
+    class_indices = np.digitize(values, boundaries[1:-1])
+    for class_index in range(len(boundaries) - 1):
+        geometries = segments.geometry[
+            class_indices == class_index
+        ].tolist()
+        if not geometries:
+            continue
+        dissolved = unary_union(geometries)
+        merged = (
+            linemerge(dissolved)
+            if isinstance(dissolved, MultiLineString)
+            else dissolved
+        )
+        axis.add_geometries(
+            _line_parts(merged),
+            crs=ccrs.PlateCarree(),
+            facecolor="none",
+            edgecolor=cmap(class_index),
+            linewidth=4.0,
+            zorder=8,
+        )
+    axis.set_extent(COASTAL_MAP_EXTENT, crs=ccrs.PlateCarree())
+    return {
+        "panel": panel_label,
+        "title": title,
+        "field": field,
+        "unit": unit,
+        "statistics": _numeric_stats(segments[field]),
+    }
+
+
+def _add_colorbar(
+    figure: plt.Figure,
+    axis: plt.Axes,
+    *,
+    cmap: ListedColormap,
+    boundaries: np.ndarray,
+    ticks: np.ndarray,
+    label: str,
+    tick_format: str,
+    vertical_offset: float,
+) -> None:
+    position = axis.get_position()
+    colorbar_axis = figure.add_axes(
+        [position.x0, position.y0 - vertical_offset, position.width, 0.012]
+    )
+    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+    mappable = ScalarMappable(norm=norm, cmap=cmap)
+    mappable.set_array([])
+    colorbar = figure.colorbar(
+        mappable,
+        cax=colorbar_axis,
+        orientation="horizontal",
+        boundaries=boundaries,
+        ticks=ticks,
+        spacing="uniform",
+        drawedges=True,
+    )
+    colorbar.set_label(label, fontsize=9.0, labelpad=2.0)
+    colorbar.ax.xaxis.set_major_formatter(FormatStrFormatter(tick_format))
+    colorbar.ax.tick_params(labelsize=8, length=2.8)
+    tick_labels = colorbar.ax.get_xticklabels()
+    if tick_labels:
+        tick_labels[0].set_horizontalalignment("left")
+        tick_labels[-1].set_horizontalalignment("right")
+    colorbar.outline.set_linewidth(0.7)
+
+
+def _write_metadata(
+    native_metadata: dict[str, Any],
+    assignment_metadata: dict[str, Any],
+    panels: list[dict[str, Any]],
+    panel_cmaps: dict[str, ListedColormap],
+) -> None:
+    metadata = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "output": _relative(OUTPUT_PATH),
+        "native_grid_source": _relative(NATIVE_GRID_SOURCE),
+        "native_hazard_index": native_metadata,
+        "coastline_source": _relative(COASTLINE_PATH),
+        "coastal_assignment": assignment_metadata,
+        "panels": panels,
+        "colorbars": {
+            spec["panel"]: {
+                "field": spec["field"],
+                "unit": spec["unit"],
+                "type": "discrete",
+                "boundaries": spec["boundaries"].tolist(),
+                "ticks": spec["ticks"].tolist(),
+                "colors": [
+                    matplotlib.colors.to_hex(color)
+                    for color in panel_cmaps[spec["field"]].colors
+                ],
+                "colormap": (
+                    "matplotlib magma sampled from 0.95 to 0.12"
+                    if spec["palette"] == "component"
+                    else "integrated-risk green-to-red palette"
+                ),
+                "display_values": (
+                    "native-grid values without cross-grid Min-Max scaling"
+                    if spec["palette"] == "component"
+                    else "normalized composite Hazard Index"
+                ),
+                "label": spec["colorbar_label"],
+            }
+            for spec in PANEL_SPECS
+        },
+        "map_context": {
+            "extent": list(COASTAL_MAP_EXTENT),
+            "land_color": LAND_COLOR,
+            "ocean_color": OCEAN_COLOR,
+            "country_boundaries": (
+                "Natural Earth 10m admin_0_boundary_lines_land"
+            ),
+            "brazilian_state_boundaries": (
+                "Natural Earth 10m admin_1_states_provinces_lines"
+            ),
+        },
+        "layout": {
+            "panel_grid": "2x2",
+            "left_column_anchor": "east",
+            "right_column_anchor": "west",
+            "horizontal_subplot_spacing": 0.015,
+            "vertical_subplot_spacing": 0.30,
+            "individual_panel_colorbars": True,
+            "purpose": (
+                "remove unused horizontal canvas while preserving the "
+                "geographic aspect ratio"
+            ),
+        },
+        "outputs": {
+            "figure": _relative(OUTPUT_PATH),
+            "native_grid_table": _relative(GRID_DATA_PATH),
+            "coastal_segments": _relative(SEGMENT_DATA_PATH),
+            "metadata": _relative(METADATA_PATH),
+        },
+        "output_format": "PNG",
+        "dpi": ARTICLE_DPI,
+    }
+    METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    METADATA_PATH.write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def main() -> None:
+    municipalities, coastline = _read_inputs()
+    native_grid, native_metadata = derive_native_hazard_index()
+    segments, assignment_metadata = _build_coastal_segments(
+        municipalities,
+        coastline,
+        native_grid,
+    )
+
+    magma = plt.get_cmap("magma")
+    panel_cmaps: dict[str, ListedColormap] = {}
+    for spec in PANEL_SPECS:
+        field = spec["field"]
+        if spec["palette"] == "component":
+            color_values = magma(
+                np.linspace(
+                    0.95,
+                    0.12,
+                    len(spec["boundaries"]) - 1,
+                )
+            )
+            panel_cmaps[field] = ListedColormap(
+                color_values,
+                name=f"magma_discrete_reversed_{field}",
+            )
+        else:
+            panel_cmaps[field] = ListedColormap(
+                RISK_COLORS,
+                name="integrated_risk_green_to_red_hazard_index",
+            )
+
+    figure, axes = plt.subplots(
+        2,
+        2,
+        figsize=(10.8, 11.8),
+        constrained_layout=False,
+        subplot_kw={"projection": ccrs.PlateCarree()},
+    )
+    figure.subplots_adjust(
+        left=0.055,
+        right=0.975,
+        top=0.975,
+        bottom=0.090,
+        wspace=0.015,
+        hspace=0.30,
+    )
+    panels: list[dict[str, Any]] = []
+    for index, (axis, panel_spec) in enumerate(
+        zip(axes.flat, PANEL_SPECS)
+    ):
+        field = panel_spec["field"]
+        axis.set_anchor("E" if index % 2 == 0 else "W")
+        panels.append(
+            _plot_segment_field(
+                axis,
+                segments,
+                coastline,
+                field=field,
+                title=panel_spec["title"],
+                panel_label=panel_spec["panel"],
+                cmap=panel_cmaps[field],
+                boundaries=panel_spec["boundaries"],
+                unit=panel_spec["unit"],
+                draw_left_labels=index % 2 == 0,
+                draw_bottom_labels=index >= 2,
+            )
+        )
+
+    figure.canvas.draw()
+    for index, (axis, panel_spec) in enumerate(
+        zip(axes.flat, PANEL_SPECS)
+    ):
+        _add_colorbar(
+            figure,
+            axis,
+            cmap=panel_cmaps[panel_spec["field"]],
+            boundaries=panel_spec["boundaries"],
+            ticks=panel_spec["ticks"],
+            label=panel_spec["colorbar_label"],
+            tick_format=panel_spec["tick_format"],
+            vertical_offset=0.050 if index < 2 else 0.075,
+        )
+
+    for directory in (OUT_DIR, DATA_DIR, METADATA_DIR):
+        directory.mkdir(parents=True, exist_ok=True)
+    figure.savefig(
+        OUTPUT_PATH,
+        dpi=ARTICLE_DPI,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+    plt.close(figure)
+    native_grid.to_csv(
+        GRID_DATA_PATH,
+        index=False,
+        float_format="%.6f",
+    )
+    segments.to_file(SEGMENT_DATA_PATH, driver="GeoJSON")
+    _write_metadata(
+        native_metadata,
+        assignment_metadata,
+        panels,
+        panel_cmaps,
+    )
+    print(_relative(OUTPUT_PATH))
+    print(_relative(GRID_DATA_PATH))
+    print(_relative(SEGMENT_DATA_PATH))
+    print(_relative(METADATA_PATH))
+
+
+if __name__ == "__main__":
+    main()

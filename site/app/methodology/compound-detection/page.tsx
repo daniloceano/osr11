@@ -534,16 +534,17 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             Step 3 stops at the <strong>hazard</strong>: an objective, per-grid-point portrait of compound
             coastal events. Step 4 joins these outputs to each coastal municipality and combines them with a
-            Social Vulnerability Index. In the current scope, the hazard layer uses only compound-event count;
-            the duration and intensity summaries are retained as diagnostics and in the legacy product.
+            Social Vulnerability Index. In the current scope, normalized compound-event frequency, mean overlap
+            duration, and mean normalized intensity receive equal weights in the native-grid Hazard Index.
+            The composite is normalized to 0–1 before it is transferred to municipalities.
           </p>
           <ul className="mb-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
-            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — the current Hazard_Index input, absolute compound-event count (compound_count_total)</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — diagnostic and legacy mean overlap duration</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — diagnostic and legacy mean normalized compound intensity</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — absolute compound-event count (compound_count_total), normalized as the frequency component</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — mean overlap duration, normalized as the duration component</li>
+            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — mean normalized compound intensity, rescaled as the intensity component</li>
           </ul>
           <p className="text-sm leading-relaxed text-gray-700">
-            The current and legacy formulas for Hazard_Index and Risk_Hazard are documented
+            The current and audit formulas for Hazard_Index and Risk_Hazard are documented
             on the{' '}
             <Link href="/results/risk-integration" className="font-semibold text-blue-600 hover:underline">
               Risk Integration

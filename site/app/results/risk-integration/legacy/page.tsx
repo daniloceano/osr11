@@ -40,19 +40,18 @@ export default function LegacyRiskIntegrationPage() {
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
               Legacy Risk Integration
               <br />
-              <span className="text-amber-700">Frequency, Duration &amp; Intensity Hazard</span>
+              <span className="text-amber-700">Originally Delivered Fields</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              This page preserves the former municipal risk product. Its Hazard_Index averages
-              norm(compound_c), norm(mean_overl), and norm(mean_compo). The current recommended product
-              now uses only compound-event count in the hazard layer because duration and intensity carry
-              additional interpretation uncertainty near river mouths and estuaries.
+              This page preserves the originally delivered municipal risk fields. The current workflow
+              also uses frequency, duration, and intensity, but calculates and normalizes the index first
+              over the complete 808-point native grid before transferring it to municipalities.
             </p>
             <Link
               href="/results/risk-integration"
               className="mt-5 inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
             >
-              Return to current compound-count product
+              Return to current normalized multimetric product
             </Link>
           </div>
         </div>

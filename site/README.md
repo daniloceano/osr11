@@ -191,7 +191,7 @@ Edit `content/figures.ts` to:
 
 ### Risk-Index Data
 
-Karine's risk-index shapefile outputs live in `../outputs/risk_index/`. The website consumes a current compound-count-only product plus a preserved legacy product in `public/data/`:
+Karine's risk-index shapefile outputs live in `../outputs/risk_index/`. The website consumes a current normalized multimetric product plus preserved audit fields in `public/data/`:
 
 - `risk_index_municipalities.geojson`
 - `risk_index_metadata.json`
@@ -204,7 +204,17 @@ Regenerate them from the repository root:
 python -m src.site.export_risk_index_data
 ```
 
-The current metadata records derived fields: `Hazard_Index = norm(compound_c)` and `Risk_Hazard = (SVI_Coast_2022 / 100) × Hazard_Index`. The legacy metadata records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`, `Haz_index` -> `Hazard_Index`, `Risk_comp` -> `Risk_Comp`, and `Risk_harza` -> `Risk_Hazard`.
+The current metadata records the native-grid calculation
+`Hazard_Index = norm{[norm(frequency) + norm(duration) + norm(intensity)]/3}`,
+its transfer to municipalities,
+`Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index`, and
+`Risk_Hazard = norm(Risk_Hazard_raw)` on a 0–1 scale. The legacy metadata
+records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`,
+`Haz_index` -> `Hazard_Index`, `Risk_comp` -> `Risk_Comp`, and
+`Risk_harza` -> `Risk_Hazard`.
+The native-grid formula itself is centralized in
+`../src/04_risk_integration/hazard_index.py` and reused by the exporter and
+article figures.
 
 ## 🧪 Development Tips
 
