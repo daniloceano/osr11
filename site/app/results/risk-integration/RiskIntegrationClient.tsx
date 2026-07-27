@@ -5,34 +5,31 @@ import RiskIntegrationMap, {
   type RiskGeoJson,
   type RiskMetadata,
 } from '@/components/RiskIntegrationMap';
+import type { CoastalBasemap } from '@/components/coastalMap';
 
-interface RiskIntegrationClientProps {
-  dataUrl?: string;
-  metadataUrl?: string;
-  loadingLabel?: string;
+const DATA_URL = '/data/risk_index_municipalities.geojson';
+const METADATA_URL = '/data/risk_index_metadata.json';
+const BASEMAP_URL = '/data/coastal_basemap.geojson';
+
+async function loadJson<T>(url: string, label: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load ${label}: ${response.status}`);
+  return (await response.json()) as T;
 }
 
-export default function RiskIntegrationClient({
-  dataUrl = '/data/risk_index_municipalities.geojson',
-  metadataUrl = '/data/risk_index_metadata.json',
-  loadingLabel = 'Loading municipal risk-index data...',
-}: RiskIntegrationClientProps) {
+export default function RiskIntegrationClient() {
   const [data, setData] = useState<RiskGeoJson | null>(null);
   const [metadata, setMetadata] = useState<RiskMetadata | null>(null);
+  const [basemap, setBasemap] = useState<CoastalBasemap | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetch(dataUrl).then((r) => {
-        if (!r.ok) throw new Error(`Failed to load risk-index GeoJSON: ${r.status}`);
-        return r.json() as Promise<RiskGeoJson>;
-      }),
-      fetch(metadataUrl).then((r) => {
-        if (!r.ok) throw new Error(`Failed to load risk-index metadata: ${r.status}`);
-        return r.json() as Promise<RiskMetadata>;
-      }),
+      loadJson<RiskGeoJson>(DATA_URL, 'risk-index GeoJSON'),
+      loadJson<RiskMetadata>(METADATA_URL, 'risk-index metadata'),
+      loadJson<CoastalBasemap>(BASEMAP_URL, 'map basemap'),
     ])
-      .then(([riskData, riskMetadata]) => {
+      .then(([riskData, riskMetadata, mapBasemap]) => {
         if (!riskData.features?.length) {
           throw new Error('Risk-index GeoJSON loaded, but it contains no municipality features.');
         }
@@ -41,9 +38,10 @@ export default function RiskIntegrationClient({
         }
         setData(riskData);
         setMetadata(riskMetadata);
+        setBasemap(mapBasemap);
       })
       .catch((err: Error) => setError(err.message));
-  }, [dataUrl, metadataUrl]);
+  }, []);
 
   if (error) {
     return (
@@ -54,22 +52,26 @@ export default function RiskIntegrationClient({
           <code className="rounded bg-red-100 px-1 font-mono">
             python -m src.site.export_risk_index_data
           </code>{' '}
+          and{' '}
+          <code className="rounded bg-red-100 px-1 font-mono">
+            python -m src.site.export_coastal_hazard_data
+          </code>{' '}
           from the repository root to regenerate the web data files.
         </p>
       </div>
     );
   }
 
-  if (!data || !metadata) {
+  if (!data || !metadata || !basemap) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">{loadingLabel}</p>
+          <p className="text-sm text-gray-500">Loading municipal risk-index data…</p>
         </div>
       </div>
     );
   }
 
-  return <RiskIntegrationMap data={data} metadata={metadata} />;
+  return <RiskIntegrationMap data={data} metadata={metadata} basemap={basemap} />;
 }

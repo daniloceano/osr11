@@ -32,6 +32,7 @@ from shapely.geometry import box, mapping
 
 from src.risk_integration.coastal_projection import (
     COASTAL_MAP_EXTENT,
+    attach_nearest_municipality,
     dissolve_by_source,
     project_values_to_coastline,
     read_coastal_inputs,
@@ -41,11 +42,16 @@ from src.risk_integration.hazard_index import (
     derive_native_hazard_index,
     numeric_stats,
 )
-from src.risk_integration.palettes import component_colors, risk_colors
+from src.risk_integration.palettes import (
+    component_colors,
+    palette_catalog,
+    risk_colors,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SITE_DATA_DIR = ROOT / "site" / "public" / "data"
+METRICS_SOURCE = SITE_DATA_DIR / "hazard_characterization_grid_metrics.json"
 OUTPUT_GEOJSON = SITE_DATA_DIR / "coastal_hazard_segments.geojson"
 OUTPUT_METADATA = SITE_DATA_DIR / "coastal_hazard_metadata.json"
 OUTPUT_BASEMAP = SITE_DATA_DIR / "coastal_basemap.geojson"
@@ -160,6 +166,66 @@ def _round_geometry(geojson: dict[str, Any]) -> dict[str, Any]:
     return geojson
 
 
+def _attach_metric_index(
+    segments: gpd.GeoDataFrame,
+) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    """Link each segment to its grid point in the Step 3 metric catalog.
+
+    The 87 characterization metrics stay in their own file; the coastal layer
+    only carries the array position of the source grid point, so the per-metric
+    explorer can be drawn on the same coastline without duplicating the
+    catalog.
+    """
+    if not METRICS_SOURCE.exists():
+        raise FileNotFoundError(
+            "The coastal metric explorer requires the Step 3.8 export: "
+            f"{METRICS_SOURCE}"
+        )
+    catalog = json.loads(METRICS_SOURCE.read_text(encoding="utf-8"))
+    lookup = {
+        (round(float(point["lat"]), 4), round(float(point["lon"]), 4)): index
+        for index, point in enumerate(catalog["grid_points"])
+    }
+    positions = [
+        lookup.get(
+            (
+                round(float(latitude), 4),
+                round(float(longitude), 4),
+            )
+        )
+        for latitude, longitude in zip(
+            segments["source_latitude"],
+            segments["source_longitude"],
+        )
+    ]
+    unmatched = sum(1 for position in positions if position is None)
+    if unmatched:
+        raise ValueError(
+            f"{unmatched} coastal segments could not be matched to a grid "
+            f"point in {METRICS_SOURCE.name}"
+        )
+
+    linked = segments.copy()
+    linked["metrics_index"] = [int(position) for position in positions]
+    metadata = {
+        "metrics_file": str(METRICS_SOURCE.relative_to(ROOT)),
+        "field": "metrics_index",
+        "method": (
+            "Array position of the source native grid point inside "
+            "grid_points of the Step 3.8 metric catalog, matched on "
+            "latitude/longitude rounded to 4 decimals"
+        ),
+        "purpose": (
+            "lets the per-grid-point explorer draw any of the Step 3 metrics "
+            "on the same coastline without duplicating the catalog"
+        ),
+        "catalog_grid_points": int(len(catalog["grid_points"])),
+        "linked_features": int(len(linked)),
+        "distinct_grid_points": int(linked["metrics_index"].nunique()),
+    }
+    return linked, metadata
+
+
 def build_coastal_basemap() -> dict[str, Any]:
     """Clip Natural Earth land, country, and state context to the map window."""
     from cartopy.io import shapereader
@@ -250,8 +316,13 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         municipalities=municipalities,
         coastline=coastline,
     )
-    dissolved = dissolve_by_source(segments)
+    segments, municipality_metadata = attach_nearest_municipality(
+        segments,
+        municipalities,
+    )
+    dissolved = dissolve_by_source(segments, ("municipality_name",))
     dissolved = dissolved.drop(columns=["coastline_id"], errors="ignore")
+    dissolved, metrics_link_metadata = _attach_metric_index(dissolved)
 
     metadata: dict[str, Any] = {
         "generated_by": "src.site.export_coastal_hazard_data",
@@ -271,6 +342,9 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "is reduced."
             ),
         },
+        "nearest_municipality": municipality_metadata,
+        "metric_catalog_link": metrics_link_metadata,
+        "palettes": palette_catalog(),
         "map_extent": list(COASTAL_MAP_EXTENT),
         "coordinate_decimals": COORDINATE_DECIMALS,
         "value_decimals": VALUE_DECIMALS,

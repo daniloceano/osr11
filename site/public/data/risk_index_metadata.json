@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-27T17:23:35.424686+00:00",
+  "generated_at": "2026-07-27T18:11:28.127053+00:00",
   "source_path": "site/public/data/risk_index_legacy_municipalities.geojson",
   "source_mode": "canonical_legacy_geojson_fallback",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -30,8 +30,8 @@
     "enabled": true,
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
-    "coordinates_before": 47686,
-    "coordinates_after": 46941
+    "coordinates_before": 46894,
+    "coordinates_after": 46894
   },
   "field_aliases": {
     "layers": {
@@ -102,13 +102,60 @@
     "Risk_Hazard"
   ],
   "scope": "normalized_multimetric_native_grid",
+  "map_extent": [
+    -56.0,
+    -32.0,
+    -35.5,
+    6.5
+  ],
+  "basemap": "site/public/data/coastal_basemap.geojson",
+  "audit_fields": {
+    "note": "Retained in the GeoJSON properties for reproducibility but not offered as map layers on the website.",
+    "fields": [
+      "Risk_Comp",
+      "Risk_Comp_raw",
+      "CountOnly_Hazard_Index",
+      "CountOnly_Risk_Hazard_raw",
+      "CountOnly_Risk_Hazard",
+      "Legacy_Hazard_Index",
+      "Legacy_Risk_Comp",
+      "Legacy_Risk_Hazard"
+    ]
+  },
   "available_layers": [
     {
       "key": "Risk_Hazard",
-      "label": "Current final coastal risk",
-      "unit": "0-1 index",
-      "description": "Min-Max normalized product of SVI_Coast_2022 / 100 and the normalized frequency-duration-intensity Hazard_Index.",
-      "actual_field": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)",
+      "label": "Integrated coastal risk (normalized)",
+      "short_label": "Risk (0–1)",
+      "unit": "0–1",
+      "stage": "normalized",
+      "group": "Integrated risk",
+      "actual_field": "derived:norm_municipal((SVI_Coast_2022/100)*Hazard_Index)",
+      "description": "Final integrated risk: the SVI-hazard product Min-Max normalized across the coastal municipalities.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 280,
         "min": 0.0,
@@ -118,11 +165,77 @@
       }
     },
     {
+      "key": "Risk_Hazard_raw",
+      "label": "Integrated coastal risk (before normalization)",
+      "short_label": "Risk (raw)",
+      "unit": "dimensionless product",
+      "stage": "raw",
+      "group": "Integrated risk",
+      "actual_field": "derived:(SVI_Coast_2022/100)*Hazard_Index",
+      "description": "The raw product of the social-vulnerability fraction and the transferred Hazard Index, before the municipal Min-Max step. Its absolute level is bounded by the SVI and hazard values, so it never reaches 1.",
+      "decimals": 3,
+      "boundaries": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 280,
+        "min": 0.0,
+        "max": 0.61321,
+        "mean": 0.172981,
+        "median": 0.16387
+      }
+    },
+    {
       "key": "Hazard_Index",
       "label": "Multimetric compound-event hazard",
-      "unit": "0-1 index",
-      "description": "Native-grid Min-Max normalization of the equal-weight mean of normalized compound-event frequency, mean overlap duration, and mean normalized compound-event intensity.",
-      "actual_field": "derived:transferred_native_grid_Hazard_Index",
+      "short_label": "Hazard Index",
+      "unit": "0–1",
+      "stage": "normalized",
+      "group": "Physical hazard",
+      "actual_field": "transferred:norm_native(Hazard_Index_raw)",
+      "description": "The Hazard Index normalized on the 808-point native ocean grid and transferred to the municipality without renormalization. Because the most hazardous grid point is not associated with any municipality, the municipal maximum is below 1.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 280,
         "min": 0.0,
@@ -132,11 +245,80 @@
       }
     },
     {
+      "key": "Hazard_Index_raw",
+      "label": "Hazard components mean (before normalization)",
+      "short_label": "Hazard (raw)",
+      "unit": "dimensionless mean",
+      "stage": "raw",
+      "group": "Physical hazard",
+      "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
+      "description": "The equal-weight mean of the three normalized components, before the final Min-Max step. It spans a narrow interval, which is exactly why the second normalization is applied.",
+      "decimals": 3,
+      "boundaries": [
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 280,
+        "min": 0.181936,
+        "max": 0.557272,
+        "mean": 0.357125,
+        "median": 0.355107
+      }
+    },
+    {
       "key": "Hazard_Frequency",
       "label": "Normalized compound-event frequency",
-      "unit": "0-1 index",
-      "description": "Native-grid Min-Max normalized absolute compound-event count over 1993-2025.",
+      "short_label": "Frequency",
+      "unit": "0–1",
+      "stage": "component",
+      "group": "Hazard components",
       "actual_field": "transferred:norm_native(compound_count_total)",
+      "description": "Compound-event count over 1993-2025, Min-Max normalized across the native ocean grid.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 280,
         "min": 0.028674,
@@ -148,9 +330,36 @@
     {
       "key": "Hazard_Duration",
       "label": "Normalized compound-event duration",
-      "unit": "0-1 index",
-      "description": "Native-grid Min-Max normalized mean overlap duration.",
+      "short_label": "Duration",
+      "unit": "0–1",
+      "stage": "component",
+      "group": "Hazard components",
       "actual_field": "transferred:norm_native(mean_overlap_duration)",
+      "description": "Mean overlap duration, Min-Max normalized across the native ocean grid.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 280,
         "min": 0.0,
@@ -162,9 +371,36 @@
     {
       "key": "Hazard_Intensity",
       "label": "Normalized compound-event intensity",
-      "unit": "0-1 index",
-      "description": "Native-grid Min-Max normalized mean compound-event intensity.",
+      "short_label": "Intensity",
+      "unit": "0–1",
+      "stage": "component",
+      "group": "Hazard components",
       "actual_field": "transferred:norm_native(mean_compound_intensity_norm)",
+      "description": "Mean compound intensity, Min-Max normalized across the native ocean grid.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 280,
         "min": 0.04215,
@@ -176,9 +412,36 @@
     {
       "key": "SVI_Coast_2022",
       "label": "Social Vulnerability Index",
-      "unit": "0-100",
-      "description": "Social Vulnerability Index from IBGE/SIDRA 2022 variables, PCA/PC1 normalized to 0-100.",
+      "short_label": "SVI",
+      "unit": "0–100",
+      "stage": "input",
+      "group": "Social vulnerability",
       "actual_field": "SVI_Coast_2022",
+      "description": "Ten IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized, reduced by PCA, sign-adjusted so higher means more vulnerable, and normalized to 0-100.",
+      "decimals": 0,
+      "boundaries": [
+        0.0,
+        12.5,
+        25.0,
+        37.5,
+        50.0,
+        62.5,
+        75.0,
+        87.5,
+        100.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
         "count": 282,
         "min": 0.0,

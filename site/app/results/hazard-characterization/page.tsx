@@ -2,8 +2,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import StatusBadge from '@/components/StatusBadge';
-import CoastalHazardClient from './CoastalHazardClient';
-import HazardCharacterizationClient from './HazardCharacterizationClient';
+import CoastalHazardClient, { CoastalMetricExplorerClient } from './CoastalHazardClient';
 
 export const metadata = {
   title: 'Hazard Characterization — Step 3 | OSR11',
@@ -115,13 +114,14 @@ export default function HazardCharacterizationPage() {
               Per-grid-point explorer — 87 characterization metrics
             </h2>
             <p className="mt-2 mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
-              This secondary panel exposes the full Step 3 metric catalog at the native ocean
-              grid points: compound statistics, storm duration and persistence, seasonality,
-              Mann–Kendall trends, GPD return levels, and wave–surge dependence. It is a
-              diagnostic view of the underlying characterization, not the Hazard Index product
-              shown above.
+              This secondary panel exposes the full Step 3 metric catalog: compound statistics,
+              storm duration and persistence, seasonality, Mann–Kendall trends, GPD return levels,
+              and wave–surge dependence. The metrics are calculated at the native ocean grid points
+              and drawn on the coastline with exactly the same transposition and graphic style as
+              the Hazard Index above. It is a diagnostic view of the underlying characterization,
+              not the Hazard Index product itself.
             </p>
-            <HazardCharacterizationClient />
+            <CoastalMetricExplorerClient />
           </div>
         </div>
 
@@ -140,9 +140,44 @@ export default function HazardCharacterizationPage() {
             </div>
             <p className="mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
               A condensed summary follows; the linked page gives the full pipeline in order — storm catalogs,
-              compound detection, the characterization suite, and the hand-off to the municipal risk index —
-              with formulas and assumptions.
+              compound detection, the characterization suite, the composite Hazard Index, and the hand-off
+              to the municipal risk index — with formulas and assumptions.
             </p>
+
+            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+                How the maps on this page are drawn
+              </p>
+              <h3 className="mt-1 text-sm font-bold text-gray-900">
+                From ocean grid points to the coastline
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-gray-700">
+                Every metric on this page — the Hazard Index and all 87 characterization metrics —
+                is calculated <strong>at the 808 ocean grid points</strong>, never along the shore.
+                Because results are easier to read on the coast than as a cloud of offshore dots,
+                both maps apply the same three-step transposition:
+              </p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-relaxed text-gray-700">
+                <li>
+                  take the Natural Earth 10-m coastline and keep only the stretch next to the
+                  coastal municipalities;
+                </li>
+                <li>
+                  cut that line into short pieces (at most 5 km) using a metric projection
+                  (EPSG:5880);
+                </li>
+                <li>
+                  paint each piece with the value of the <strong>nearest</strong> ocean grid point.
+                </li>
+              </ol>
+              <p className="mt-2 text-xs leading-relaxed text-gray-700">
+                Nothing is interpolated, smoothed, or recalculated in the process — the coastline is
+                simply a more legible place to show the grid values. Hovering a stretch of coast
+                reports the grid point behind it, its distance, and the nearest coastal
+                municipality, which is the unit used later in the risk integration.
+              </p>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>

@@ -293,7 +293,7 @@ export const timelinePhases: TimelinePhase[] = [
       'Current Hazard_Index = normalized equal-weight mean of native-grid frequency, duration, and intensity components ✓',
       'Current Risk_Hazard_raw = (SVI/100) × Hazard_Index ✓',
       'Current Risk_Hazard = norm(Risk_Hazard_raw), scaled 0–1 ✓',
-      'Former count-only and originally delivered legacy fields retained for audit ✓',
+      'Raw and normalized stages published side by side; superseded CountOnly_* and Legacy_* fields kept in the data file for reproducibility only ✓',
     ],
   },
   {

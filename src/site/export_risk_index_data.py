@@ -30,10 +30,12 @@ import pandas as pd
 import pyogrio
 from shapely import get_num_coordinates
 
+from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT
 from src.risk_integration.hazard_index import (
     NATIVE_GRID_SOURCE,
     derive_native_hazard_index as _derive_native_hazard_index,
 )
+from src.risk_integration.palettes import risk_colors
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -207,79 +209,194 @@ def _where_clause(fields: list[str]) -> str:
     return " OR ".join(f"{field} IS NOT NULL" for field in fields)
 
 
+def _nice_boundaries(
+    series: pd.Series,
+    class_count: int = 8,
+) -> list[float]:
+    """Rounded class limits covering the observed range of ``series``."""
+    values = pd.to_numeric(series, errors="coerce").dropna()
+    if values.empty:
+        return [0.0, 1.0]
+    lower = float(values.min())
+    upper = float(values.max())
+    if math.isclose(lower, upper):
+        return [round(lower, 6), round(lower + 1.0, 6)]
+    raw_step = (upper - lower) / class_count
+    magnitude = 10.0 ** math.floor(math.log10(raw_step))
+    normalized = raw_step / magnitude
+    nice = next(
+        candidate
+        for candidate in (1.0, 2.0, 2.5, 5.0, 10.0)
+        if normalized <= candidate
+    )
+    step = nice * magnitude
+    decimals = max(0, min(6, -math.floor(math.log10(step)) + 1))
+    start = math.floor(lower / step) * step
+    boundaries: list[float] = []
+    value = start
+    while value < upper + step * 0.5:
+        boundaries.append(round(value, decimals))
+        value += step
+    if len(boundaries) < 2:
+        boundaries.append(round(start + step, decimals))
+    # Guarantee that the top class limit is above the largest observed value,
+    # so no value falls outside the published legend.
+    while boundaries[-1] < upper:
+        boundaries.append(round(boundaries[-1] + step, decimals))
+    return boundaries
+
+
+#: Layer catalogue of the current municipal product. Raw (pre-normalization)
+#: stages are published next to the normalized ones so the effect of each
+#: Min--Max step is visible. Audit fields (``Legacy_*``, ``CountOnly_*``,
+#: ``Risk_Comp``) stay in the GeoJSON properties but are not offered as map
+#: layers.
+CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
+    {
+        "key": "Risk_Hazard",
+        "label": "Integrated coastal risk (normalized)",
+        "short_label": "Risk (0–1)",
+        "unit": "0–1",
+        "stage": "normalized",
+        "group": "Integrated risk",
+        "actual_field": "derived:norm_municipal((SVI_Coast_2022/100)*Hazard_Index)",
+        "description": (
+            "Final integrated risk: the SVI-hazard product Min-Max normalized "
+            "across the coastal municipalities."
+        ),
+    },
+    {
+        "key": "Risk_Hazard_raw",
+        "label": "Integrated coastal risk (before normalization)",
+        "short_label": "Risk (raw)",
+        "unit": "dimensionless product",
+        "stage": "raw",
+        "group": "Integrated risk",
+        "actual_field": "derived:(SVI_Coast_2022/100)*Hazard_Index",
+        "description": (
+            "The raw product of the social-vulnerability fraction and the "
+            "transferred Hazard Index, before the municipal Min-Max step. "
+            "Its absolute level is bounded by the SVI and hazard values, so "
+            "it never reaches 1."
+        ),
+    },
+    {
+        "key": "Hazard_Index",
+        "label": "Multimetric compound-event hazard",
+        "short_label": "Hazard Index",
+        "unit": "0–1",
+        "stage": "normalized",
+        "group": "Physical hazard",
+        "actual_field": "transferred:norm_native(Hazard_Index_raw)",
+        "description": (
+            "The Hazard Index normalized on the 808-point native ocean grid "
+            "and transferred to the municipality without renormalization. "
+            "Because the most hazardous grid point is not associated with any "
+            "municipality, the municipal maximum is below 1."
+        ),
+    },
+    {
+        "key": "Hazard_Index_raw",
+        "label": "Hazard components mean (before normalization)",
+        "short_label": "Hazard (raw)",
+        "unit": "dimensionless mean",
+        "stage": "raw",
+        "group": "Physical hazard",
+        "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
+        "description": (
+            "The equal-weight mean of the three normalized components, before "
+            "the final Min-Max step. It spans a narrow interval, which is "
+            "exactly why the second normalization is applied."
+        ),
+    },
+    {
+        "key": "Hazard_Frequency",
+        "label": "Normalized compound-event frequency",
+        "short_label": "Frequency",
+        "unit": "0–1",
+        "stage": "component",
+        "group": "Hazard components",
+        "actual_field": "transferred:norm_native(compound_count_total)",
+        "description": (
+            "Compound-event count over 1993-2025, Min-Max normalized across "
+            "the native ocean grid."
+        ),
+    },
+    {
+        "key": "Hazard_Duration",
+        "label": "Normalized compound-event duration",
+        "short_label": "Duration",
+        "unit": "0–1",
+        "stage": "component",
+        "group": "Hazard components",
+        "actual_field": "transferred:norm_native(mean_overlap_duration)",
+        "description": (
+            "Mean overlap duration, Min-Max normalized across the native "
+            "ocean grid."
+        ),
+    },
+    {
+        "key": "Hazard_Intensity",
+        "label": "Normalized compound-event intensity",
+        "short_label": "Intensity",
+        "unit": "0–1",
+        "stage": "component",
+        "group": "Hazard components",
+        "actual_field": "transferred:norm_native(mean_compound_intensity_norm)",
+        "description": (
+            "Mean compound intensity, Min-Max normalized across the native "
+            "ocean grid."
+        ),
+    },
+    {
+        "key": "SVI_Coast_2022",
+        "label": "Social Vulnerability Index",
+        "short_label": "SVI",
+        "unit": "0–100",
+        "stage": "input",
+        "group": "Social vulnerability",
+        "actual_field": "SVI_Coast_2022",
+        "description": (
+            "Ten IBGE/SIDRA 2022 socioeconomic and infrastructure variables "
+            "standardized, reduced by PCA, sign-adjusted so higher means more "
+            "vulnerable, and normalized to 0-100."
+        ),
+    },
+)
+
+FIXED_BOUNDARIES: dict[str, list[float]] = {
+    "Risk_Hazard": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Hazard_Index": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Hazard_Frequency": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Hazard_Duration": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Hazard_Intensity": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "SVI_Coast_2022": [0.0, 12.5, 25.0, 37.5, 50.0, 62.5, 75.0, 87.5, 100.0],
+}
+
+
 def _current_available_layers(export: gpd.GeoDataFrame) -> list[dict[str, Any]]:
-    return [
-        {
-            "key": "Risk_Hazard",
-            "label": "Current final coastal risk",
-            "unit": "0-1 index",
-            "description": (
-                "Min-Max normalized product of SVI_Coast_2022 / 100 and "
-                "the normalized frequency-duration-intensity Hazard_Index."
-            ),
-            "actual_field": (
-                "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
-            ),
-            "stats": _numeric_stats(export["Risk_Hazard"]),
-        },
-        {
-            "key": "Hazard_Index",
-            "label": "Multimetric compound-event hazard",
-            "unit": "0-1 index",
-            "description": (
-                "Native-grid Min-Max normalization of the equal-weight mean "
-                "of normalized compound-event frequency, mean overlap "
-                "duration, and mean normalized compound-event intensity."
-            ),
-            "actual_field": "derived:transferred_native_grid_Hazard_Index",
-            "stats": _numeric_stats(export["Hazard_Index"]),
-        },
-        {
-            "key": "Hazard_Frequency",
-            "label": "Normalized compound-event frequency",
-            "unit": "0-1 index",
-            "description": (
-                "Native-grid Min-Max normalized absolute compound-event count "
-                "over 1993-2025."
-            ),
-            "actual_field": (
-                "transferred:norm_native(compound_count_total)"
-            ),
-            "stats": _numeric_stats(export["Hazard_Frequency"]),
-        },
-        {
-            "key": "Hazard_Duration",
-            "label": "Normalized compound-event duration",
-            "unit": "0-1 index",
-            "description": (
-                "Native-grid Min-Max normalized mean overlap duration."
-            ),
-            "actual_field": (
-                "transferred:norm_native(mean_overlap_duration)"
-            ),
-            "stats": _numeric_stats(export["Hazard_Duration"]),
-        },
-        {
-            "key": "Hazard_Intensity",
-            "label": "Normalized compound-event intensity",
-            "unit": "0-1 index",
-            "description": (
-                "Native-grid Min-Max normalized mean compound-event intensity."
-            ),
-            "actual_field": (
-                "transferred:norm_native(mean_compound_intensity_norm)"
-            ),
-            "stats": _numeric_stats(export["Hazard_Intensity"]),
-        },
-        {
-            "key": "SVI_Coast_2022",
-            "label": "Social Vulnerability Index",
-            "unit": "0-100",
-            "description": "Social Vulnerability Index from IBGE/SIDRA 2022 variables, PCA/PC1 normalized to 0-100.",
-            "actual_field": "SVI_Coast_2022",
-            "stats": _numeric_stats(export["SVI_Coast_2022"]),
-        },
-    ]
+    layers: list[dict[str, Any]] = []
+    for definition in CURRENT_LAYER_DEFINITIONS:
+        key = definition["key"]
+        if key not in export:
+            continue
+        boundaries = FIXED_BOUNDARIES.get(key) or _nice_boundaries(export[key])
+        span = abs(boundaries[-1] - boundaries[0])
+        layers.append(
+            {
+                **definition,
+                "decimals": 0 if span >= 10 else 2 if span >= 1 else 3,
+                "boundaries": boundaries,
+                "colors": risk_colors(min(len(boundaries) - 1, 8)),
+                "palette": "risk",
+                "palette_source": (
+                    "green-to-red palette of the article "
+                    "hazard/vulnerability/risk figure"
+                ),
+                "stats": _numeric_stats(export[key]),
+            }
+        )
+    return layers
 
 
 def _derive_current_scope(
@@ -554,6 +671,24 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any], gpd.GeoDat
     current_metadata: dict[str, Any] = {
         **common_metadata,
         "scope": "normalized_multimetric_native_grid",
+        "map_extent": list(COASTAL_MAP_EXTENT),
+        "basemap": "site/public/data/coastal_basemap.geojson",
+        "audit_fields": {
+            "note": (
+                "Retained in the GeoJSON properties for reproducibility but "
+                "not offered as map layers on the website."
+            ),
+            "fields": [
+                "Risk_Comp",
+                "Risk_Comp_raw",
+                "CountOnly_Hazard_Index",
+                "CountOnly_Risk_Hazard_raw",
+                "CountOnly_Risk_Hazard",
+                "Legacy_Hazard_Index",
+                "Legacy_Risk_Comp",
+                "Legacy_Risk_Hazard",
+            ],
+        },
         "available_layers": _current_available_layers(current_export),
         "missing_expected_layers": [
             key

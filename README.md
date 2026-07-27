@@ -281,7 +281,7 @@ CountOnly_Risk_Hazard = norm[(SVI_Coast_2022 / 100) × CountOnly_Hazard_Index]
 - `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, `Legacy_Risk_Hazard` — delivered external fields retained for audit
 
 **Status:** ✅ Complete  
-**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the per-grid-point metric explorer as a supporting diagnostic. `/results/risk-integration` displays the current normalized multimetric municipal product, and `/methodology/hazard-index` is the single reference for the index construction. `/results/risk-integration/legacy` preserves the originally delivered product as an audit artifact only.
+**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the 87-metric explorer below it, transposed to the same coastline with the same graphic style. `/results/risk-integration` displays the current municipal product with every quantity available **before and after** its Min–Max normalization (`Hazard_Index_raw`, `Risk_Hazard_raw`). `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index. The superseded `CountOnly_*` and delivered `Legacy_*` fields remain in the exported GeoJSON for reproducibility, but are no longer published as map layers or as a separate legacy page.
 
 **Risk-index shapefile export:**
 Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
@@ -335,13 +335,27 @@ python -m src.site.export_coastal_hazard_data
 which writes `site/public/data/coastal_hazard_segments.geojson`,
 `coastal_hazard_metadata.json` (source file, native point count, segment count,
 projection, maximum segment length, association method, nearest-distance
-statistics, and per-layer fields, units, class limits and palettes), and
-`coastal_basemap.geojson`. The map exposes four layers:
-`compound_count_annual_mean` (events yr⁻¹), `mean_overlap_duration` (days),
-`mean_compound_intensity_norm` (dimensionless), and `Hazard_Index` (0–1). The
-first three show the catalog values themselves — the Min–Max scaling of the
-components is a methodological step internal to the index and is not applied
-for display.
+statistics, per-layer fields, units, class limits and palettes), and
+`coastal_basemap.geojson` (Natural Earth land, country, and Brazilian state
+context). The map exposes four layers: `compound_count_annual_mean`
+(events yr⁻¹), `mean_overlap_duration` (days), `mean_compound_intensity_norm`
+(dimensionless), and `Hazard_Index` (0–1). The first three show the catalog
+values themselves — the Min–Max scaling of the components is a methodological
+step internal to the index and is not applied for display.
+
+Each coastal segment also carries:
+
+- `municipality_name` / `municipality_state` / `municipality_distance_km` — the
+  nearest coastal municipality, computed with `sjoin_nearest` in EPSG:5880.
+  This is the unit that receives the hazard in Step 4; it is attached for
+  interpretation and takes no part in the index calculation.
+- `metrics_index` — the array position of the source grid point inside
+  `hazard_characterization_grid_metrics.json`, so the website can draw any of
+  the 87 Step 3 characterization metrics on the same coastline without
+  duplicating the metric catalog.
+
+The website therefore renders both the Hazard Index and the full metric
+explorer with one geometry, one basemap, and one palette catalog.
 
 ---
 

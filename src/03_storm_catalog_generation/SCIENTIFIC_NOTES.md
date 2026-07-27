@@ -554,6 +554,52 @@ directly against the catalog.
 
 ---
 
+### 2026-07-27 — Coastal presentation unified across all result maps
+
+**[DECISION — the characterization metrics are shown on the coast]** The
+per-grid-point explorer that accompanies the Hazard Index previously drew the
+808 ocean points as a dot cloud, while the Hazard Index itself was drawn on the
+coastline. The two panels now share one presentation: the same clipped Natural
+Earth coastline, the same ≤5 km segmentation in EPSG:5880, the same
+nearest-grid-point assignment, and the same discrete class colors. Each coastal
+feature stores `metrics_index`, the array position of its source grid point in
+the Step 3.8 metric catalog, so all 87 metrics are rendered from the existing
+catalog without duplicating it. No metric is interpolated or recalculated along
+the coast; the transposition remains purely cartographic.
+
+Class limits for the 87 metrics are computed from the observed range with
+rounded breaks: sequential (magma) for positive quantities, diverging (RdBu)
+for signed quantities such as Sen slopes and peak lags, and a cyclic palette
+for peak months. The palettes are defined once in
+`src/04_risk_integration/palettes.py` and exported into the website metadata,
+so figures and site legends cannot drift apart.
+
+**[DECISION — nearest municipality attached to every coastal segment]** Each
+segment now carries the nearest coastal municipality
+(`sjoin_nearest` on the municipal polygons in EPSG:5880; 281 distinct
+municipalities, maximum centroid distance 29.9 km, median 0 km because the
+coastline is clipped to a 30-km municipal buffer). This makes the hand-off to
+the risk integration explicit when reading any hazard map, and is attached for
+interpretation only — it takes no part in the Hazard Index calculation.
+
+**[DECISION — raw stages published next to the normalized ones]** The municipal
+risk panel now publishes `Hazard_Index_raw` and `Risk_Hazard_raw` alongside
+`Hazard_Index` and `Risk_Hazard`. Verified on the current dataset: the Spearman
+rank correlation between each raw quantity and its normalized counterpart is
+exactly 1, confirming that Min–Max rescaling changes the numeric range and not
+the ranking of municipalities. Class limits are chosen so that every observed
+value falls inside the published legend.
+
+**[DECISION — the delivered legacy product is no longer a website page]** The
+`/results/risk-integration/legacy` page was removed. The `Legacy_*` and
+`CountOnly_*` fields remain inside `risk_index_municipalities.geojson` for
+reproducibility, and `risk_index_legacy_municipalities.geojson` is retained
+because it is also the upstream data source whenever
+`outputs/risk_index/risk_index.shp` is absent from a checkout. Neither is
+presented as a current product.
+
+---
+
 **Social Vulnerability Index (SVI_Coast_2022)**: built from 10 IBGE/SIDRA 2022 socioeconomic
 and infrastructure variables, standardized (StandardScaler), reduced by PCA; PC1 is
 sign-adjusted so higher = more vulnerable and Min–Max normalized to 0–100. Method after Lima

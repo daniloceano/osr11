@@ -265,13 +265,92 @@ def project_values_to_coastline(
     return segments, metadata
 
 
-def dissolve_by_source(segments: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def attach_nearest_municipality(
+    segments: gpd.GeoDataFrame,
+    municipalities: gpd.GeoDataFrame | None = None,
+    *,
+    name_field: str = "municipality_name",
+    state_field: str = "state",
+) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
+    """Label each coastal segment with its nearest coastal municipality.
+
+    The label identifies the municipality that the segment would feed in the
+    risk integration. It is attached for interpretation only and takes no part
+    in the Hazard Index calculation.
+    """
+    if municipalities is None:
+        municipalities, _ = read_coastal_inputs()
+    missing = [
+        field
+        for field in (name_field, state_field)
+        if field not in municipalities.columns
+    ]
+    if missing:
+        raise ValueError(
+            "The municipality layer lacks required field(s): "
+            + ", ".join(missing)
+        )
+
+    segments_projected = segments.to_crs(COASTAL_PROJECTION_CRS)
+    municipalities_projected = municipalities.to_crs(COASTAL_PROJECTION_CRS)
+    joined = gpd.sjoin_nearest(
+        gpd.GeoDataFrame(
+            geometry=segments_projected.geometry.centroid,
+            crs=COASTAL_PROJECTION_CRS,
+        ),
+        municipalities_projected[[name_field, state_field, "geometry"]],
+        how="left",
+        distance_col="_municipality_distance_m",
+    )
+    # sjoin_nearest can return ties; keep the first match per segment.
+    joined = joined[~joined.index.duplicated(keep="first")].reindex(
+        segments_projected.index
+    )
+
+    labelled = segments.copy()
+    labelled["municipality_name"] = joined[name_field].to_numpy()
+    labelled["municipality_state"] = joined[state_field].to_numpy()
+    distances_km = (
+        joined["_municipality_distance_m"].to_numpy(dtype=float) / 1_000.0
+    )
+    labelled["municipality_distance_km"] = distances_km
+
+    finite = distances_km[np.isfinite(distances_km)]
+    metadata = {
+        "method": (
+            "Nearest coastal municipality polygon to the segment centroid, "
+            "measured in EPSG:5880"
+        ),
+        "purpose": (
+            "interpretation and hand-off to the municipal risk integration; "
+            "it does not take part in the Hazard Index calculation"
+        ),
+        "municipality_source": _relative(MUNICIPALITY_SOURCE),
+        "labelled_segment_count": int(np.isfinite(distances_km).sum()),
+        "distinct_municipalities": int(
+            labelled["municipality_name"].nunique(dropna=True)
+        ),
+        "distance_km": {
+            "minimum": round(float(finite.min()), 6) if finite.size else None,
+            "median": round(float(np.median(finite)), 6) if finite.size else None,
+            "maximum": round(float(finite.max()), 6) if finite.size else None,
+        },
+    }
+    return labelled, metadata
+
+
+def dissolve_by_source(
+    segments: gpd.GeoDataFrame,
+    extra_group_fields: Sequence[str] = (),
+) -> gpd.GeoDataFrame:
     """Merge consecutive coastal segments that share one source grid point.
 
     Values and geometry are preserved exactly; only the number of features is
     reduced, which keeps the browser payload small without changing what is
     drawn. Requires the ``coastline_id``/``segment_order`` bookkeeping produced
-    by :func:`project_values_to_coastline`.
+    by :func:`project_values_to_coastline`. ``extra_group_fields`` adds further
+    columns to the run key, so a run never spans two different values of them
+    (used to keep municipality labels exact).
     """
     required = {"coastline_id", "segment_order", "source_grid_index"}
     missing = sorted(required.difference(segments.columns))
@@ -281,10 +360,11 @@ def dissolve_by_source(segments: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             + ", ".join(missing)
         )
 
+    group_fields = ["coastline_id", "source_grid_index", *extra_group_fields]
     ordered = segments.sort_values(
         ["coastline_id", "segment_order"]
     ).reset_index(drop=True)
-    keys = ordered[["coastline_id", "source_grid_index"]].to_numpy()
+    keys = ordered[group_fields].astype(str).to_numpy()
     breaks = np.ones(len(ordered), dtype=bool)
     if len(ordered) > 1:
         breaks[1:] = np.any(keys[1:] != keys[:-1], axis=1)

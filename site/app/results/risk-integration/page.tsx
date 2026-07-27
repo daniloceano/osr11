@@ -31,7 +31,7 @@ export default function RiskIntegrationPage() {
                 Multimetric hazard scope
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Municipal scale · legacy product retained
+                Municipal scale · raw and normalized stages
               </span>
             </div>
 
@@ -41,13 +41,11 @@ export default function RiskIntegrationPage() {
               <span className="text-blue-600">Multimetric Coastal Risk</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              Municipal-scale coastal risk indices combining social vulnerability with a native-grid Hazard_Index:
-              normalized compound-event frequency, mean overlap duration, and mean normalized intensity receive
-              equal weights before the composite is normalized to 0–1. The former count-only calculation and the{' '}
-              <Link href="/results/risk-integration/legacy" className="font-semibold text-blue-600 hover:underline">
-                originally delivered product
-              </Link>
-              {' '}remain available for audit.
+              Municipal-scale coastal risk indices combining social vulnerability with the native-grid
+              Hazard_Index: normalized compound-event frequency, mean overlap duration, and mean
+              normalized intensity receive equal weights before the composite is normalized to 0–1.
+              Each quantity is available <strong>before and after</strong> its Min–Max normalization,
+              so the effect of every rescaling step can be inspected directly on the map.
             </p>
           </div>
         </div>
@@ -73,8 +71,8 @@ export default function RiskIntegrationPage() {
               />
               <ModuleCard
                 color="#737373"
-                title="Audit products"
-                body="Former count-only repository product and originally delivered fields retained for comparison and reproducibility."
+                title="Raw stages"
+                body="Hazard_Index_raw and Risk_Hazard_raw expose the values before each Min–Max normalization."
               />
             </div>
           </div>
@@ -106,8 +104,9 @@ export default function RiskIntegrationPage() {
                   norm_grid(intensity)] / 3{'}'}; Risk_Hazard_raw =
                   (SVI_Coast_2022 / 100)·Hazard_Index; and Risk_Hazard =
                   norm_municipal(Risk_Hazard_raw). The physical Hazard Index spans 0–1 on the native grid,
-                  and the final integrated index spans 0–1 across municipalities. Risk_Comp is retained as
-                  a compatibility alias for the normalized integrated-risk calculation.
+                  and the final integrated index spans 0–1 across municipalities. The map publishes both
+                  the raw and the normalized stage of each quantity: Min–Max rescaling changes the
+                  numeric range, never the ranking of municipalities.
                 </p>
                 <p>
                   <strong className="text-gray-800">Component aggregation.</strong>{' '}
@@ -130,15 +129,15 @@ export default function RiskIntegrationPage() {
                   from the hazard/risk layers.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Legacy access and caveats.</strong>{' '}
-                  The previous multi-metric output remains accessible at{' '}
-                  <Link href="/results/risk-integration/legacy" className="font-semibold text-blue-600 hover:underline">
-                    /results/risk-integration/legacy
-                  </Link>
-                  . Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
+                  <strong className="text-gray-800">Caveats.</strong>{' '}
+                  Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
                   SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
                   level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
-                  coast-wide. Results are preliminary — do not cite without consulting the authors.
+                  coast-wide. The superseded count-only calculation and the originally delivered
+                  fields remain inside the exported GeoJSON as <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">CountOnly_*</code>{' '}
+                  and <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Legacy_*</code> properties for
+                  reproducibility, but they are not published as map layers and do not describe the
+                  current method. Results are preliminary — do not cite without consulting the authors.
                 </p>
               </div>
             </div>

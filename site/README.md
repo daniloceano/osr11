@@ -197,10 +197,12 @@ Edit `content/figures.ts` to:
 
 Karine's risk-index shapefile outputs live in `../outputs/risk_index/`. The website consumes a current normalized multimetric product plus preserved audit fields in `public/data/`:
 
-- `risk_index_municipalities.geojson`
-- `risk_index_metadata.json`
-- `risk_index_legacy_municipalities.geojson`
-- `risk_index_legacy_metadata.json`
+- `risk_index_municipalities.geojson` — current product consumed by the site
+- `risk_index_metadata.json` — layer catalogue, class limits, palettes, statistics
+- `risk_index_legacy_municipalities.geojson` — originally delivered fields; **also the
+  upstream data source** when `../outputs/risk_index/risk_index.shp` is absent, so it
+  must not be deleted
+- `risk_index_legacy_metadata.json` — detected DBF aliases of that source
 
 Regenerate them from the repository root:
 
@@ -212,7 +214,11 @@ The current metadata records the native-grid calculation
 `Hazard_Index = norm{[norm(frequency) + norm(duration) + norm(intensity)]/3}`,
 its transfer to municipalities,
 `Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index`, and
-`Risk_Hazard = norm(Risk_Hazard_raw)` on a 0–1 scale. The legacy metadata
+`Risk_Hazard = norm_municipal(Risk_Hazard_raw)` on a 0–1 scale. Each quantity is
+published both before and after its Min–Max normalization (`Hazard_Index_raw`,
+`Risk_Hazard_raw`), and the superseded `CountOnly_*` and delivered `Legacy_*`
+fields stay in the GeoJSON properties for reproducibility but are no longer
+offered as map layers or as a separate legacy page. The legacy metadata
 records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`,
 `Haz_index` -> `Hazard_Index`, `Risk_comp` -> `Risk_Comp`, and
 `Risk_harza` -> `Risk_Hazard`.
@@ -226,12 +232,16 @@ The coastal Hazard Index map consumes:
 
 - `coastal_hazard_segments.geojson` — Natural Earth 10-m coastline split into
   segments of at most 5 km, each carrying the values of its nearest native
-  ocean grid point
+  ocean grid point, the nearest coastal municipality
+  (`municipality_name`, `municipality_state`, `municipality_distance_km`), and
+  `metrics_index`, the position of its grid point inside
+  `hazard_characterization_grid_metrics.json`
 - `coastal_hazard_metadata.json` — source file, native point count, segment
   count, projection, maximum segment length, association method, distance
-  statistics, and per-layer fields, units, class limits, and palettes
+  statistics, per-layer fields, units, class limits, and the shared palette
+  catalog (`sequential`, `diverging`, `risk`, `month`)
 - `coastal_basemap.geojson` — Natural Earth land polygons, country boundaries,
-  and Brazilian state boundaries used as map context
+  and Brazilian state boundaries used as map context by every map on the site
 
 Regenerate them from the repository root:
 
@@ -249,6 +259,13 @@ recalculates or renormalizes the index. The map exposes four layers:
 first three use the discrete magma palette of the article figure; the Hazard
 Index uses the green-to-red Risk Index palette, defined once in
 `../src/04_risk_integration/palettes.py`.
+
+The per-grid-point explorer below the Hazard Index map reuses the same
+geometry, basemap, and palettes: it looks up each of the 87 Step 3 metrics
+through `metrics_index` and colors the same coastal polylines, so both panels
+are visually and geometrically identical. Shared map primitives (projection,
+land/ocean/borders, discrete legend, class breaks) live in
+`components/coastalMap.tsx`; the municipal risk choropleth uses them too.
 
 ## 🧪 Development Tips
 

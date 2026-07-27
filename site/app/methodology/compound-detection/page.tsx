@@ -58,6 +58,34 @@ function Section({
   );
 }
 
+/** One numbered link of the Hazard Index chain: a question, then the answer. */
+function Stage({
+  step,
+  title,
+  question,
+  children,
+}: {
+  step: number;
+  title: string;
+  question: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative mb-5 rounded-xl border border-gray-200 bg-white p-5 last:mb-0">
+      <div className="mb-2 flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+          {step}
+        </span>
+        <div>
+          <h3 className="text-base font-bold text-gray-900">{title}</h3>
+          <p className="text-xs italic text-blue-700">{question}</p>
+        </div>
+      </div>
+      <div className="space-y-2 pl-10 text-sm leading-relaxed text-gray-700">{children}</div>
+    </div>
+  );
+}
+
 /* ───────────────────────── metric tables ───────────────────────── */
 
 const stormAttributes: { field: string; definition: string; formula: string; units: string }[] = [
@@ -206,15 +234,16 @@ export default function CompoundDetectionPage() {
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
               Step 3 Methodology
               <br />
-              <span className="text-blue-600">From storm catalogs to compound hazard characterization</span>
+              <span className="text-blue-600">From storm catalogs to the composite Hazard Index</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
-              This page is the article-standard specification of Step 3: how individual wave and sea-level
-              storms are catalogued, how their temporal co-occurrence defines a <em>compound</em> event, and
-              how each grid point is then characterized (duration, seasonality, trends, return levels, and
-              wave–surge dependence) before the results feed the municipal risk index. Every definition is
-              given with its formula, units, and assumptions, and maps one-to-one onto the production code
-              referenced at the end.
+              This page follows the whole chain in order: how individual wave and sea-level storms are
+              catalogued, how their temporal co-occurrence defines a <em>compound</em> event, how each grid
+              point is characterized (duration, seasonality, trends, return levels, and wave–surge
+              dependence), and how frequency, duration, and intensity are finally combined into the
+              composite <strong>Hazard Index</strong> that feeds the municipal risk index. Every definition
+              is given with its formula, units, and assumptions, and maps one-to-one onto the production
+              code referenced at the end.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -249,9 +278,11 @@ export default function CompoundDetectionPage() {
             Step 3 turns 33 years of reanalysis (1993–2025) into an objective inventory of these
             co-occurrences along the whole coast — 808 coastal grid points — and measures, for each one, how
             often, how long, how strong, and how seasonally and inter-annually variable the compound hazard
-            is. Those measurements are what later feed the municipal risk index (Step 4). The sections below
-            follow the pipeline in order: from raw series, to single-variable storms, to compound events, to
-            the full hazard characterization.
+            is. The sections below follow the pipeline in order: from raw series, to single-variable storms,
+            to compound events, to the per-grid-point characterization, and finally to the composite Hazard
+            Index and the municipal risk integration. The three questions that open the chain — <em>how
+            often</em>, <em>how long</em>, <em>how strong</em> — are exactly the three components that close
+            it.
           </p>
         </Section>
 
@@ -531,30 +562,157 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
         </Section>
 
         {/* ── 6. Bridge to the risk index (Step 4) ───────────────── */}
-        <Section eyebrow="Hand-off" title="From hazard characterization to the municipal risk index" tint="gray">
-          <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            Step 3 stops at the <strong>hazard</strong>: an objective, per-grid-point portrait of compound
-            coastal events. Step 4 joins these outputs to each coastal municipality and combines them with a
-            Social Vulnerability Index. In the current scope, normalized compound-event frequency, mean overlap
-            duration, and mean normalized intensity receive equal weights in the native-grid Hazard Index.
-            The composite is normalized to 0–1 before it is transferred to municipalities.
+        <Section
+          eyebrow="Stage C · Step 4"
+          title="From the three catalog metrics to the composite Hazard Index"
+          tint="gray"
+        >
+          <p className="mb-4 text-sm leading-relaxed text-gray-700">
+            Everything above produces, for each of the 808 grid points, a compact portrait of compound
+            events. The Hazard Index turns that portrait into a <strong>single comparable number</strong>.
+            The chain has six links, and each one answers a specific question.
           </p>
-          <ul className="mb-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
-            <li><code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> — absolute compound-event count (compound_count_total), normalized as the frequency component</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> — mean overlap duration, normalized as the duration component</li>
-            <li><code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> — mean normalized compound intensity, rescaled as the intensity component</li>
-          </ul>
-          <p className="text-sm leading-relaxed text-gray-700">
-            The full construction — normalization domain, equal weights, coastal rendering, and
-            integration with social vulnerability — is documented on the{' '}
+
+          <Stage
+            step={1}
+            title="Which quantities describe the hazard?"
+            question="How often, how long, and how strong?"
+          >
+            <p>
+              A coast can be dangerous because events are <em>frequent</em>, because they{' '}
+              <em>last longer</em>, or because they are <em>more intense</em>. Reducing the hazard to
+              event counts alone would ignore the last two. Three per-grid-point metrics from the
+              table above therefore enter the index — one for each question:
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>
+                <code className="rounded bg-gray-100 px-1 text-xs">compound_count_total</code> —
+                frequency (number of compound events over 1993–2025);
+              </li>
+              <li>
+                <code className="rounded bg-gray-100 px-1 text-xs">mean_overlap_duration</code> —
+                duration (mean days of wave/sea-level overlap);
+              </li>
+              <li>
+                <code className="rounded bg-gray-100 px-1 text-xs">mean_compound_intensity_norm</code>{' '}
+                — intensity (mean of the event-level compound intensity defined above).
+              </li>
+            </ul>
+            <p className="mt-2">
+              All three are physical inputs with the same standing. None of them is a diagnostic-only
+              field.
+            </p>
+          </Stage>
+
+          <Stage
+            step={2}
+            title="Putting them on a common scale"
+            question="How do you add events, days, and a dimensionless score?"
+          >
+            <p>
+              You cannot. Counts, days, and a dimensionless score have different units and different
+              ranges, so each one is first Min–Max rescaled to [0, 1]{' '}
+              <strong>over the 808 native grid points</strong> — the whole coast at once, never
+              municipality by municipality:
+            </p>
+            <Eq>{`norm_grid(x) = (x − min_grid x) / (max_grid x − min_grid x)
+
+Hazard_Frequency = norm_grid(compound_count_total)
+Hazard_Duration  = norm_grid(mean_overlap_duration)
+Hazard_Intensity = norm_grid(mean_compound_intensity_norm)`}</Eq>
+            <p>
+              This rescaling exists <em>only</em> to make the three commensurable. It is not what the
+              maps display: the component maps keep the catalog values in events yr⁻¹, days, and the
+              dimensionless intensity.
+            </p>
+          </Stage>
+
+          <Stage
+            step={3}
+            title="Combining the three components"
+            question="How much should each one weigh?"
+          >
+            <p>
+              Equally. In the absence of impact-calibrated weights for the Brazilian coast, the three
+              rescaled components are averaged with weights of 1/3:
+            </p>
+            <Eq>{`Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3`}</Eq>
+            <p>
+              Frequency is negatively correlated with the two mean-event characteristics, so this
+              average is <strong>compensatory</strong>: many short mild events can score like few long
+              intense ones. That is a deliberate, stated property of the index, not an accident.
+            </p>
+          </Stage>
+
+          <Stage
+            step={4}
+            title="Making the composite readable"
+            question="Why normalize a second time?"
+          >
+            <p>
+              The mean of three [0, 1] components never uses the full range — across the grid it spans
+              roughly 0.18 to 0.66. A second Min–Max step over the same 808 points stretches it back to
+              a 0–1 scale without changing the ranking of any point:
+            </p>
+            <Eq>{`Hazard_Index = norm_grid(Hazard_Index_raw) ∈ [0, 1]`}</Eq>
+            <p>
+              0 marks the least hazardous grid point of the Brazilian coast and 1 the most hazardous
+              one. The index is relative to this domain — it is not an absolute hazard level.
+            </p>
+          </Stage>
+
+          <Stage
+            step={5}
+            title="Showing it on the coast"
+            question="Why do the maps draw a line and not the ocean points?"
+          >
+            <p>
+              Because a coastal index reads better along the shore. The Natural Earth 10-m coastline is
+              clipped to the coastal-municipality band, cut into segments of at most 5 km in a metric
+              projection (EPSG:5880), and each segment takes the value of its <strong>nearest</strong>{' '}
+              native grid point. Nothing is interpolated, smoothed, or recalculated — the coastline is
+              a rendering surface for the grid values.
+            </p>
+          </Stage>
+
+          <Stage
+            step={6}
+            title="From hazard to risk"
+            question="Where does social vulnerability enter?"
+          >
+            <p>
+              Step 4 joins each coastal municipality to its associated grid point and hands it the
+              Hazard Index <strong>already normalized on the grid</strong> — no renormalization after
+              the transfer. The integrated risk is then the product with the Social Vulnerability
+              Index, Min–Max normalized across municipalities:
+            </p>
+            <Eq>{`Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
+
+Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
+            <p>
+              This final Min–Max is the only normalization performed in the municipal domain, and it
+              applies to the risk product — never to the Hazard Index itself.
+            </p>
+          </Stage>
+
+          <p className="mt-6 text-sm leading-relaxed text-gray-700">
+            In the delivered municipal file the three inputs appear under their shapefile names:{' '}
+            <code className="rounded bg-gray-100 px-1 text-xs">compound_c</code> (frequency),{' '}
+            <code className="rounded bg-gray-100 px-1 text-xs">mean_overl</code> (duration), and{' '}
+            <code className="rounded bg-gray-100 px-1 text-xs">mean_compo</code> (intensity). The
+            step-by-step reference, including the full list of limitations, is on the{' '}
             <Link href="/methodology/hazard-index" className="font-semibold text-blue-600 hover:underline">
               Hazard Index methodology
             </Link>{' '}
-            page; the resulting municipal maps and audit products are on the{' '}
+            page; the resulting maps are on the{' '}
+            <Link href="/results/hazard-characterization" className="font-semibold text-blue-600 hover:underline">
+              Hazard Characterization
+            </Link>{' '}
+            and{' '}
             <Link href="/results/risk-integration" className="font-semibold text-blue-600 hover:underline">
               Risk Integration
             </Link>{' '}
-            page.
+            pages.
           </p>
         </Section>
 
