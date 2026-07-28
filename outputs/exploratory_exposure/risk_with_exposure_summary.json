@@ -82,7 +82,7 @@
     "Chaves/PA"
   ],
   "generated_by": "src.exploratory.make_exploratory_risk_with_exposure",
-  "generated_at": "2026-07-28T17:28:25.302895+00:00",
+  "generated_at": "2026-07-28T17:29:51.674239+00:00",
   "exposure_field": "pop_10km",
   "clip_floor": 0.01,
   "published_formula": "R_current = norm_municipal((SVI/100) * Hazard_Index)",
