@@ -329,6 +329,35 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         ),
     },
     {
+        "key": "Exposure_absolute",
+        "label": "Exposure half — absolute count between goalposts",
+        "short_label": "Exposure (absolute)",
+        "unit": "0–1",
+        "stage": "component",
+        "group": "Exposure",
+        "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+        "description": (
+            "How many people, on a log scale fixed between 100 and 1,000,000 "
+            "inhabitants. Fixed goalposts keep the scale independent of which "
+            "municipalities are in the set: 0.5 always denotes 10,000 people."
+        ),
+    },
+    {
+        "key": "Exposure_relative",
+        "label": "Exposure half — share of the municipal population within 10 km",
+        "short_label": "Exposure (share)",
+        "unit": "0–1",
+        "stage": "component",
+        "group": "Exposure",
+        "actual_field": "derived:pop_10km/pop_municipality",
+        "description": (
+            "How coastal the municipality is rather than how many people it "
+            "holds. A hamlet entirely on the shore and a city entirely on the "
+            "shore both reach 1, which is why it is paired with the absolute "
+            "half instead of used alone."
+        ),
+    },
+    {
         "key": "Hazard_Index",
         "label": "Multimetric compound-event hazard",
         "short_label": "Hazard Index",
@@ -358,12 +387,29 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         ),
     },
     {
+        "key": "Hazard_Index_mun",
+        "label": "Hazard rescaled over the municipalities",
+        "short_label": "Hazard (municipal)",
+        "unit": "0–1",
+        "stage": "normalized",
+        "group": "Physical hazard",
+        "actual_field": "derived:norm_municipal(Hazard_Index)",
+        "description": (
+            "The transferred Hazard Index rescaled to span [0,1] across the "
+            "municipalities. This is the field that enters the risk product: on "
+            "the native-grid scale the municipal maximum is 0.829, because the "
+            "most hazardous ocean point serves no municipality, and using it "
+            "inside a product would silently down-weight the hazard against the "
+            "other two components."
+        ),
+    },
+    {
         "key": "Hazard_Frequency",
         "label": "Normalized compound-event frequency",
         "short_label": "Frequency",
         "unit": "0–1",
         "stage": "component",
-        "group": "Hazard components",
+        "group": "Physical hazard",
         "actual_field": "transferred:norm_native(compound_count_total)",
         "description": (
             "Compound-event count over 1993-2025, Min-Max normalized across "
@@ -376,7 +422,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "short_label": "Duration",
         "unit": "0–1",
         "stage": "component",
-        "group": "Hazard components",
+        "group": "Physical hazard",
         "actual_field": "transferred:norm_native(mean_overlap_duration)",
         "description": (
             "Mean overlap duration, Min-Max normalized across the native "
@@ -389,7 +435,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "short_label": "Intensity",
         "unit": "0–1",
         "stage": "component",
-        "group": "Hazard components",
+        "group": "Physical hazard",
         "actual_field": "transferred:norm_native(mean_compound_intensity_norm)",
         "description": (
             "Mean compound intensity, Min-Max normalized across the native "
@@ -700,13 +746,7 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Present in the GeoJSON properties for reproducibility but not "
                 "offered as map layers on the website."
             ),
-            "fields": [
-                "Hazard_Index_mun",
-                "Exposure_absolute",
-                "Exposure_relative",
-                EXPOSURE_FIELD,
-                "pop_municipality",
-            ],
+            "fields": [EXPOSURE_FIELD, "pop_municipality"],
         },
         "available_layers": _current_available_layers(current_export),
         "missing_expected_layers": [

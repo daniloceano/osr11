@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DiscreteLegend,
   MAP_COLORS,
@@ -121,6 +121,27 @@ const DETAIL_FIELDS: { key: string; label: string; decimals: number }[] = [
   { key: 'mean_compo', label: 'mean_compo (dimensionless)', decimals: 3 },
 ];
 
+const MAX_ZOOM = 14;
+
+interface ViewWindow {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Keep the window inside the full extent and never larger than it. */
+function clampView(view: ViewWindow, width: number, height: number): ViewWindow {
+  const w = Math.min(view.width, width);
+  const h = Math.min(view.height, height);
+  return {
+    width: w,
+    height: h,
+    x: Math.min(Math.max(view.x, 0), width - w),
+    y: Math.min(Math.max(view.y, 0), height - h),
+  };
+}
+
 function numericValue(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() !== '') {
@@ -142,6 +163,9 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [containerWidth, setContainerWidth] = useState(460);
   const mapRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<ViewWindow | null>(null);
+  const panRef = useRef<{ pointerX: number; pointerY: number; view: ViewWindow } | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
   const layer = layers.find((entry) => entry.key === selectedKey) ?? layers[0];
 
@@ -153,6 +177,72 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
     () => buildBasemapPaths(basemap, projection),
     [basemap, projection],
   );
+
+  const fullView = useMemo<ViewWindow>(
+    () => ({ x: 0, y: 0, width: projection.width, height: projection.height }),
+    [projection.width, projection.height],
+  );
+  const currentView = view ?? fullView;
+  const zoomLevel = fullView.width / currentView.width;
+
+  /** Zoom about the cursor. Registered non-passively so the page does not
+   *  scroll while the pointer is over the map. */
+  useEffect(() => {
+    const node = mapRef.current;
+    if (!node) return undefined;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const rect = node.getBoundingClientRect();
+      setView((previous) => {
+        const base = previous ?? fullView;
+        const factor = Math.exp(event.deltaY * 0.0016);
+        const nextWidth = Math.min(
+          fullView.width,
+          Math.max(fullView.width / MAX_ZOOM, base.width * factor),
+        );
+        const scale = nextWidth / base.width;
+        // Anchor: the projected point under the cursor must not move.
+        const anchorX = base.x + ((event.clientX - rect.left) / rect.width) * base.width;
+        const anchorY = base.y + ((event.clientY - rect.top) / rect.height) * base.height;
+        return clampView(
+          {
+            x: anchorX - (anchorX - base.x) * scale,
+            y: anchorY - (anchorY - base.y) * scale,
+            width: nextWidth,
+            height: base.height * scale,
+          },
+          fullView.width,
+          fullView.height,
+        );
+      });
+    };
+    node.addEventListener('wheel', onWheel, { passive: false });
+    return () => node.removeEventListener('wheel', onWheel);
+  }, [fullView]);
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      if (event.button !== 0) return;
+      panRef.current = {
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        view: view ?? fullView,
+      };
+      setIsPanning(true);
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    },
+    [view, fullView],
+  );
+
+  const endPan = useCallback((event: React.PointerEvent) => {
+    if (panRef.current) {
+      panRef.current = null;
+      setIsPanning(false);
+      (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+    }
+  }, []);
+
+  const resetView = useCallback(() => setView(null), []);
   const featurePaths = useMemo(
     () =>
       data.features.map((feature) => {
@@ -172,7 +262,19 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
     const rect = mapRef.current.getBoundingClientRect();
     setContainerWidth(rect.width);
     setTooltipPos({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-  }, []);
+
+    const pan = panRef.current;
+    if (!pan) return;
+    const dx = ((event.clientX - pan.pointerX) / rect.width) * pan.view.width;
+    const dy = ((event.clientY - pan.pointerY) / rect.height) * pan.view.height;
+    setView(
+      clampView(
+        { ...pan.view, x: pan.view.x - dx, y: pan.view.y - dy },
+        projection.width,
+        projection.height,
+      ),
+    );
+  }, [projection.width, projection.height]);
 
   const ranked = useMemo(() => {
     if (!layer) return [];
@@ -255,13 +357,18 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
         {/* ── Map ───────────────────────────────────────────────────── */}
         <div
           ref={mapRef}
-          className="relative mx-auto w-full max-w-[460px] self-start overflow-hidden rounded-xl border border-gray-200"
+          className="relative mx-auto w-full max-w-[460px] self-start overflow-hidden rounded-xl border border-gray-200 touch-none"
+          style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredIdx(null)}
+          onPointerDown={handlePointerDown}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
         >
           <MapFrame
             projection={projection}
             basemapPaths={basemapPaths}
+            view={currentView}
             ariaLabel={`${layer.label} by coastal municipality, in ${layer.unit}`}
           >
             {data.features.map((feature, index) => {
@@ -287,7 +394,10 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
                   onMouseEnter={() => setHoveredIdx(index)}
                   onFocus={() => setHoveredIdx(index)}
                   onBlur={() => setHoveredIdx(null)}
-                  onClick={() => setSelectedIdx(selectedIdx === index ? null : index)}
+                  onClick={() => {
+                    if (isPanning) return;
+                    setSelectedIdx(selectedIdx === index ? null : index);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
@@ -299,6 +409,27 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
               );
             })}
           </MapFrame>
+
+          <div className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-2">
+            <span className="rounded border border-gray-200 bg-white/90 px-2 py-0.5 font-mono text-[10px] text-gray-500">
+              {zoomLevel.toFixed(1)}×
+            </span>
+            {zoomLevel > 1.001 && (
+              <button
+                type="button"
+                onClick={resetView}
+                onPointerDown={(event) => event.stopPropagation()}
+                className="pointer-events-auto rounded border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+              >
+                Reset view
+              </button>
+            )}
+          </div>
+          {zoomLevel <= 1.001 && (
+            <span className="pointer-events-none absolute bottom-2 right-2 z-10 rounded border border-gray-200 bg-white/85 px-2 py-0.5 text-[10px] text-gray-400">
+              scroll to zoom · drag to pan
+            </span>
+          )}
 
           {activeFeature && (
             <div

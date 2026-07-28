@@ -73,7 +73,7 @@ export const resultCards: ResultCard[] = [
     id: 'exposure',
     title: 'Population Exposure',
     subtitle: 'IBGE Grade Estatística 2022 · 200 m urban / 1 km rural · distance bands from the coastline',
-    status: 'in-progress',
+    status: 'done',
     description:
       'Counts the people and the occupied households that live near the coast, between the physical hazard '
       + 'and the integrated risk. Population comes from the IBGE Grade Estatística 2022, a direct totalisation '
@@ -84,26 +84,26 @@ export const resultCards: ResultCard[] = [
     rationale:
       'The hazard says where compound extremes are frequent, long and intense; the vulnerability index says who '
       + 'would cope badly with them. Neither says how many people are there — without exposure the product is a '
-      + 'vulnerability-weighted hazard index, not risk in the IPCC sense. The page also exposes an unresolved '
-      + 'methodological choice: Min–Max is affine, so applied to a count skewed above 7 it leaves nine '
-      + 'municipalities in ten below 0.05 and the term carries almost no influence. The logarithm and the '
-      + 'percentile rank are the two defensible alternatives, and they produce visibly different risk maps.',
+      + 'vulnerability-weighted hazard index, not risk in the IPCC sense. Bringing a population count onto [0,1] '
+      + 'is itself a scientific choice: Min–Max is affine, so applied to a count skewed above 7 it leaves nine '
+      + 'municipalities in ten below 0.05. The adopted term follows INFORM, pairing a log-scaled count between '
+      + 'fixed goalposts with the municipal share, because the count alone favours the metropolitan municipalities '
+      + 'and the share alone favours the small entirely-coastal ones.',
     outputs: [
       'municipal_exposure.csv: population and occupied households per municipality for the whole municipality and the ≤1, ≤2, ≤5 and ≤10 km bands',
-      'E_log10 = minmax(log10(pop_10km + 1)) — exposure as an order of magnitude',
-      'E_rank = percentile rank of pop_10km — exposure as a position along the coast',
-      'E_linear = minmax(pop_10km) — retained for inspection only; degenerate, 89% of municipalities below 0.05',
-      'Interactive municipal choropleth with both candidate normalisations, the raw counts, and hover values in every band',
-      'Exploratory comparison figure of the three normalisations against the conjunctive risk index',
+      'Exposure_Index = √(absolute × relative) — adopted; absolute is log10(pop_10km) between fixed goalposts of 10² and 10⁶ inhabitants',
+      'Rejected candidates retained for inspection: minmax(log10), percentile rank, and the degenerate minmax of the raw count',
+      'Interactive municipal choropleth with both halves of the term, the raw counts and the coastal share, and hover values in every band',
+      'Two exploratory figures: the normalisation comparison, and the risk map with and without exposure',
       'Reproducible acquisition of the 20 grid quadrants covering the coastline, with SHA-256 provenance',
     ],
     href: '/results/exposure',
-    parts: ['Grade Estatística', 'Distance bands', 'E (log₁₀)', 'E (rank)', 'Raw counts'],
+    parts: ['Grade Estatística', 'Distance bands', 'Absolute half', 'Coastal share', 'Exposure_Index'],
   },
   {
     id: 'risk-integration',
     title: 'Exposure, Vulnerability & Risk Integration',
-    subtitle: 'Municipal choropleth · multimetric Hazard_Index · SVI_Coast_2022 · Risk_Hazard · audit fields',
+    subtitle: 'Municipal choropleth · hazard × exposure × vulnerability · geometric, conjunctive',
     status: 'done',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '

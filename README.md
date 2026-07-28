@@ -4,7 +4,7 @@
 
 **Authors:** Danilo Couto de Souza, Carolina Barnez Gramcianinov, Ricardo de Camargo, Karine Bastos Leal  
 **Institution:** Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP)  
-**Status:** Hazard characterization and municipal risk integration complete — physical interpretation planned
+**Status:** Hazard characterization, population exposure and municipal risk integration complete
 **Current implementation:** Full Brazilian coast (808 grid points, 1993–2025; all Step 3 submodules complete; municipal risk indices produced)
 
 ---
@@ -378,18 +378,6 @@ explorer with one geometry, one basemap, and one palette catalog.
 
 ---
 
-### **STEP 5 — Physical Interpretation (Optional)**
-
-- Select the most severe compound events from the catalog
-- Analyze seasonality (monthly/seasonal distribution)
-- Characterize synoptic conditions using ERA5 (MSLP, winds, atmospheric circulation patterns)
-- Discuss dominant atmospheric mechanisms (extratropical cyclones, frontal systems, blocking patterns)
-- Assess uncertainties in threshold choices, grid resolution effects, and reanalysis biases
-
-**Status:** 🔄 Planned  
-**Implementation:** To be developed
-
----
 
 ## Current Implementation Status
 
@@ -419,7 +407,6 @@ The repository currently contains:
 - Exposure spatialized via spatial join of oceanic hazard metrics to municipalities
 - Current Hazard_Index = norm_native{[norm_native(frequency) + norm_native(duration) + norm_native(intensity)]/3}; Risk_Hazard = norm_municipal[(SVI/100) × Hazard_Index]
 
-🔄 **STEP 5 — Physical Interpretation** — Planned, not yet implemented
 
 ---
 
@@ -701,7 +688,6 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 - **STEP 4 (Exposure, Vulnerability & Risk Integration):** Complete at municipal scale from Karine's `outputs/risk_index/` shapefile outputs; interactive risk panel available at `site/app/results/risk-integration/`.
 
-- **STEP 5 (Physical Interpretation):** Planned.
 
 ### Reproducibility
 

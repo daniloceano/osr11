@@ -181,22 +181,16 @@ export const methodologySteps: MethodStep[] = [
       },
     ],
   },
-  {
-    id: 'step-5',
-    label: 'STEP 5 — Physical Interpretation (Optional)',
-    description:
-      'Select the most severe compound events and characterize synoptic conditions using ERA5. Discuss dominant atmospheric mechanisms and assess uncertainties.',
-    status: 'planned',
-    stepNumber: 5,
-  },
 ];
 
 export const conceptualFramework = `
 The project is structured around a hazard–exposure–vulnerability–risk framework, following
 established practices in multi-hazard coastal risk assessment. The compound hazard component
 (wave and surge extremes) is the foundation. Hazard characterization is complete for the full
-Brazilian coast (808 grid points, 1993–2025). Exposure spatialization, social vulnerability,
-and risk integration are complete at municipal scale (281 coastal municipalities).
+Brazilian coast (808 grid points, 1993–2025). Population exposure, social vulnerability and
+risk integration are complete at municipal scale (282 coastal municipalities): the three
+components are combined by geometric mean, which is conjunctive — risk requires a hazard,
+people exposed to it, and a susceptibility.
 
 The framework separates two distinct stages. In the calibration stage (Step 2), candidate
 Hₛ and SSH_total thresholds are selected by matching joint exceedances to reported coastal

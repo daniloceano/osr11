@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-28T19:44:57.307208+00:00",
+  "generated_at": "2026-07-28T20:51:02.945433+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 876786,
-    "coordinates_after": 46977
+    "coordinates_after": 46982
   },
   "field_aliases": {
     "layers": {
@@ -133,9 +133,6 @@
   "audit_fields": {
     "note": "Present in the GeoJSON properties for reproducibility but not offered as map layers on the website.",
     "fields": [
-      "Hazard_Index_mun",
-      "Exposure_absolute",
-      "Exposure_relative",
       "pop_10km",
       "pop_municipality"
     ]
@@ -259,6 +256,76 @@
       }
     },
     {
+      "key": "Exposure_absolute",
+      "label": "Exposure half — absolute count between goalposts",
+      "short_label": "Exposure (absolute)",
+      "unit": "0–1",
+      "stage": "component",
+      "group": "Exposure",
+      "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+      "description": "How many people, on a log scale fixed between 100 and 1,000,000 inhabitants. Fixed goalposts keep the scale independent of which municipalities are in the set: 0.5 always denotes 10,000 people.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#80D900",
+        "#FFB200",
+        "#FF8000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 282,
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.603071,
+        "median": 0.586877
+      }
+    },
+    {
+      "key": "Exposure_relative",
+      "label": "Exposure half — share of the municipal population within 10 km",
+      "short_label": "Exposure (share)",
+      "unit": "0–1",
+      "stage": "component",
+      "group": "Exposure",
+      "actual_field": "derived:pop_10km/pop_municipality",
+      "description": "How coastal the municipality is rather than how many people it holds. A hamlet entirely on the shore and a city entirely on the shore both reach 1, which is why it is paired with the absolute half instead of used alone.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#80D900",
+        "#FFB200",
+        "#FF8000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 282,
+        "min": 0.000109,
+        "max": 1.0,
+        "mean": 0.773779,
+        "median": 0.899191
+      }
+    },
+    {
       "key": "Hazard_Index",
       "label": "Multimetric compound-event hazard",
       "short_label": "Hazard Index",
@@ -337,12 +404,47 @@
       }
     },
     {
+      "key": "Hazard_Index_mun",
+      "label": "Hazard rescaled over the municipalities",
+      "short_label": "Hazard (municipal)",
+      "unit": "0–1",
+      "stage": "normalized",
+      "group": "Physical hazard",
+      "actual_field": "derived:norm_municipal(Hazard_Index)",
+      "description": "The transferred Hazard Index rescaled to span [0,1] across the municipalities. This is the field that enters the risk product: on the native-grid scale the municipal maximum is 0.829, because the most hazardous ocean point serves no municipality, and using it inside a product would silently down-weight the hazard against the other two components.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#80D900",
+        "#FFB200",
+        "#FF8000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 280,
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.408338,
+        "median": 0.381748
+      }
+    },
+    {
       "key": "Hazard_Frequency",
       "label": "Normalized compound-event frequency",
       "short_label": "Frequency",
       "unit": "0–1",
       "stage": "component",
-      "group": "Hazard components",
+      "group": "Physical hazard",
       "actual_field": "transferred:norm_native(compound_count_total)",
       "description": "Compound-event count over 1993-2025, Min-Max normalized across the native ocean grid.",
       "decimals": 2,
@@ -383,7 +485,7 @@
       "short_label": "Duration",
       "unit": "0–1",
       "stage": "component",
-      "group": "Hazard components",
+      "group": "Physical hazard",
       "actual_field": "transferred:norm_native(mean_overlap_duration)",
       "description": "Mean overlap duration, Min-Max normalized across the native ocean grid.",
       "decimals": 2,
@@ -424,7 +526,7 @@
       "short_label": "Intensity",
       "unit": "0–1",
       "stage": "component",
-      "group": "Hazard components",
+      "group": "Physical hazard",
       "actual_field": "transferred:norm_native(mean_compound_intensity_norm)",
       "description": "Mean compound intensity, Min-Max normalized across the native ocean grid.",
       "decimals": 2,

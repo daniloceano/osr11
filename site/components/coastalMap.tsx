@@ -124,6 +124,8 @@ interface MapFrameProps {
   children?: ReactNode;
   /** Data drawn over the political borders (coastline segments). */
   overlay?: ReactNode;
+  /** Visible window in projected units. Omit to show the whole extent. */
+  view?: { x: number; y: number; width: number; height: number };
 }
 
 export function MapFrame({
@@ -132,8 +134,10 @@ export function MapFrame({
   ariaLabel,
   children,
   overlay,
+  view,
 }: MapFrameProps) {
   const { width, height, extent } = projection;
+  const window_ = view ?? { x: 0, y: 0, width, height };
   const longitudes: number[] = [];
   for (let lon = Math.ceil(extent.west / 5) * 5; lon <= extent.east; lon += 5) {
     longitudes.push(lon);
@@ -145,7 +149,7 @@ export function MapFrame({
 
   return (
     <svg
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`${window_.x} ${window_.y} ${window_.width} ${window_.height}`}
       className="block h-auto w-full"
       role="img"
       aria-label={ariaLabel}

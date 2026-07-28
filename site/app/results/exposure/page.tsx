@@ -26,12 +26,12 @@ export default function ExposurePage() {
             </div>
 
             <div className="mb-4 flex flex-wrap items-start gap-2">
-              <StatusBadge status="in-progress" />
+              <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
                 IBGE Grade Estatística 2022 · 200 m urban / 1 km rural
               </span>
-              <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs text-amber-800">
-                Normalisation not yet decided
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
+                INFORM recipe · adopted in the risk index
               </span>
             </div>
 
@@ -44,10 +44,10 @@ export default function ExposurePage() {
               The step between the physical hazard and the integrated risk. The hazard says where
               compound wave and sea-level extremes are frequent, long and intense; the vulnerability
               index says who would cope badly with them. Neither says how many people are there.
-              This page counts them, from the census grid, and shows the candidate ways of bringing
-              that count into the risk index — because the choice changes the published map, and it
-              is not yet made. Neither how many people live near the coast nor how coastal a
-              municipality is answers the question alone, so the recommended term carries both.
+              This page counts them, from the census grid. Neither how many people live near the
+              coast nor how coastal a municipality is answers the question alone, so the adopted
+              term carries both, following the treatment INFORM gives its physical-exposure
+              indicators. The rejected alternatives stay on the map for comparison.
             </p>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function ExposurePage() {
               <ModuleCard
                 color="#2171b5"
                 title="E — INFORM"
-                body="The recommended term: a log-scaled count between fixed goalposts, paired by geometric mean with the coastal share."
+                body="The adopted term: a log-scaled count between fixed goalposts, paired by geometric mean with the coastal share."
               />
               <ModuleCard
                 color="#d94801"
@@ -155,9 +155,9 @@ export default function ExposurePage() {
                   in the North.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Status.</strong> Exploratory. The exposure term
-                  is not yet part of the published risk index, and which normalisation enters it is
-                  an open decision. Results are preliminary — do not cite without consulting the
+                  <strong className="text-gray-800">Status.</strong> The exposure term is part of
+                  the published risk index, which is the geometric mean of hazard, exposure and
+                  vulnerability. Results are preliminary — do not cite without consulting the
                   authors.
                 </p>
               </div>
