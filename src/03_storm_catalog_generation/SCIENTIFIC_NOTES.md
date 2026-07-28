@@ -371,7 +371,119 @@ frequency-duration-intensity Hazard Index transferred to municipalities, and the
 derived from it. Parallel scopes (`Legacy_*`, `CountOnly_*`, the
 `risk_index_legacy_*` artefacts) were removed on 2026-07-28.
 
-### 2026-07-28 — Exposure enters the framework; risk becomes conjunctive
+### 2026-07-28 — Exposure enters the published index; risk becomes conjunctive
+
+**[DECISION — the integrated index is now the geometric mean of three components]**
+
+$$
+R_m=\left(A_m\,E_m\,V_m\right)^{1/3},\qquad
+A=\mathrm{Hazard\_Index\_mun},\;
+V=\frac{\mathrm{SVI\_Coast\_2022}}{100},
+$$
+
+each component floored at 0.01 before the product and the result Min--Max
+normalized over the municipalities. This supersedes
+$\mathrm{norm}\left[(\mathrm{SVI}/100)\times\mathrm{Hazard\_Index}\right]$,
+which carried no exposure term and was therefore a vulnerability-weighted
+hazard rather than risk in the IPCC sense.
+
+**[DECISION — the exposure term follows INFORM]** $E$ is the resident
+population within 10 km of the coastline, from the IBGE Grade Estatística 2022
+(200 m urban / 1 km rural cells), brought onto $[0,1]$ as
+
+$$
+E=\left[
+\mathrm{clip}\!\left(\frac{\log_{10}P-\log_{10}P_{\min}}
+{\log_{10}P_{\max}-\log_{10}P_{\min}},0,1\right)
+\cdot
+\frac{P}{P_{\mathrm{mun}}}
+\right]^{1/2},
+\qquad P_{\min}=10^{2},\;P_{\max}=10^{6}.
+$$
+
+Three elements of that expression are taken from the Index for Risk Management
+\citep{marinferrer2017inform}, which treats this exact problem for its physical
+exposure indicators: the logarithm, applied because the indicator is a people
+count (§6.2); **fixed goalposts instead of the observed extremes** (§6.3),
+because outliers otherwise make the observed minimum and maximum
+unrepresentative; and the pairing of an absolute with a relative reading
+(Box 2), because "the absolute value of people exposed will favour more
+populated countries while the value of population exposed relative to the total
+population will reverse the problem".
+
+**[VERIFICATION — why not the simpler candidates]** Three alternatives were
+computed on the same data and rejected:
+
+| $E$ | $\rho(R,A)$ | $\rho(R,E)$ | $\rho(R,V)$ |
+|---|---|---|---|
+| Min--Max of the count | +0.667 | +0.278 | +0.131 |
+| Min--Max of $\log_{10}$ | +0.713 | **−0.043** | +0.413 |
+| percentile rank | +0.568 | +0.593 | **−0.020** |
+| **INFORM** | **+0.668** | **+0.198** | **+0.297** |
+
+The raw Min--Max is degenerate: the count has skewness above 7 and the affine
+rescaling leaves 89 % of the municipalities below 0.05. Under $\log_{10}$ the
+exposure term is present but inert. Under the rank it drives the index but
+annihilates the vulnerability signal. Only the INFORM form gives all three
+components ordered, non-trivial influence.
+
+**[VERIFICATION — the goalposts barely matter]** Risk maps built with
+$10^2$–$10^6$, $10^2$–$10^7$ and $10^3$–$10^6$ agree at Spearman $\geq 0.99$;
+the arithmetic and geometric pairings of the absolute and relative halves agree
+at $0.995$. What the fixed goalposts do buy is stability: removing Rio de
+Janeiro from the set shifts the median of $E$ by $0.0000$, against $0.0281$
+under a data-driven Min--Max. And $E=0.5$ denotes 10,000 inhabitants in any
+study using the same goalposts, whereas under a data-driven scale it denotes
+4,677 inhabitants and only in this dataset.
+
+**[CAVEAT — six municipalities saturate]** One reaches the floor and five the
+ceiling, leaving 274 of 280 on the continuous scale. Rio de Janeiro (4.37 M) and
+São Luís (1.04 M) both take 1.000 on the absolute half; the relative half
+separates them again (0.706 against 1.000). This is the same trade the Human
+Development Index makes with its own goalposts, and it is deliberate.
+
+**[CAVEAT — proximity, not impact]** No water level is propagated over land
+anywhere in this workflow. $E$ counts residents *near* the coast under a stated
+distance criterion, never residents *affected*. The count is of *de jure*
+residents on 2022-07-31, a single instant against 33 years of metocean record,
+and the seasonal population of the resort municipalities of the South and
+Southeast is not represented.
+
+**[EFFECT]** Against the superseded index, Spearman $+0.801$; the median
+municipality moves 23 positions and 62 % move more than 15. The largest rises
+are São Luís (+88), Salvador (+84) and Maceió (+75) — capitals that combine a
+large coastal population with high vulnerability. The largest falls are
+Calçoene/AP (−276) and Santa Rita/MA (−269), which the previous index ranked
+high on vulnerability alone: Calçoene has 101 residents within 10 km of the
+coast out of 10,554.
+
+### 2026-07-28 — The SVI script was obtained and audited
+
+**[VERIFICATION — the index is reproducible]** The Colab notebook that produced
+`SVI_Coast_2022` was obtained from its author (Karine Bastos Leal, INPE) and is
+stored verbatim at `src/04_risk_integration/external_svi/`. Recomputing PC1 and
+the index from the ten delivered variables reproduces the delivered values
+exactly (`r = +1.000000`, max difference 0.0000); PC1 explains 50.5 % of the
+variance of the ten standardised indicators.
+
+**[CORRECTION — an earlier suspicion in this record was wrong]** The script
+Min--Max rescales `pop_house` before the z-score step, and it was suspected here
+that the variable might therefore have entered the PCA with a different weight
+from the other nine. It does not: Min--Max and the z-score are both affine, so
+the second absorbs the first. Verified to 5.7e-15.
+
+**[CAVEAT — the published `pop_house` is not what the manuscript defines]** The
+column distributed as `pop_house` is the rescaled one on [0,1]; the manuscript
+table defines it as residents per household, which is the raw 2.40–4.45 value
+carried separately as `pop_house_`. Either the definition or the published
+column must change.
+
+**[OPEN — the spatial association is still unaudited]** The notebook contains no
+geoprocessing. The association between the 808 ocean grid points and the
+municipalities, which supplies `grid_lat`/`grid_lon`, was produced elsewhere and
+remains the one reproducibility gap in Step 4.
+
+### 2026-07-28 — Exposure enters the framework; risk becomes conjunctive (superseded by the entry above)
 
 **[DECISION — risk is the geometric mean of the three IPCC components]**
 The integrated index is redefined as

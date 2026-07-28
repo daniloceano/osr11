@@ -9,10 +9,21 @@ native-grid multimetric Hazard Index to the municipalities, and writes:
     site/public/data/risk_index_municipalities.geojson
     site/public/data/risk_index_metadata.json
 
-There is a single product and a single source. The delivered ``Haz_index`` /
-``Risk_comp`` / ``Risk_harza`` fields are not read: the hazard and the risk are
-recalculated here from the versioned native-grid metrics. A missing or
-incomplete source raises instead of falling back to any previous export.
+The published risk is the conjunctive, IPCC-style geometric mean of its three
+components,
+
+    Risk_Hazard_raw = (Hazard_Index_mun * Exposure_Index * SVI/100) ** (1/3)
+
+each floored at 0.01 first. The geometric mean is what preserves the property
+the IPCC framework implies — that risk requires a hazard, someone exposed to it,
+and a susceptibility, all three — whereas an arithmetic mean would let a large
+population compensate for the absence of a physical driver.
+
+There is a single product and a single source of municipal attributes. The
+delivered ``Haz_index`` / ``Risk_comp`` / ``Risk_harza`` fields are not read: the
+hazard and the risk are recalculated here from the versioned native-grid
+metrics. The exposure counts come from ``outputs/exposure/municipal_exposure.csv``.
+A missing or incomplete input raises instead of falling back.
 
 Usage:
     python -m src.site.export_risk_index_data
@@ -34,6 +45,14 @@ import pyogrio
 from shapely import get_num_coordinates
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT
+from src.risk_integration.exposure_index import (
+    CLIP_FLOOR,
+    GOALPOST_MAX_INHABITANTS,
+    GOALPOST_MIN_INHABITANTS,
+    exposure_absolute,
+    exposure_inform,
+    exposure_relative,
+)
 from src.risk_integration.hazard_index import (
     NATIVE_GRID_SOURCE,
     derive_native_hazard_index as _derive_native_hazard_index,
@@ -44,6 +63,9 @@ from src.risk_integration.palettes import risk_colors
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIR = ROOT / "outputs" / "risk_index"
 SOURCE_FILE = SOURCE_DIR / "risk_index.shp"
+EXPOSURE_CSV = ROOT / "outputs" / "exposure" / "municipal_exposure.csv"
+#: Distance band whose population feeds the exposure component.
+EXPOSURE_FIELD = "pop_10km"
 SITE_DATA_DIR = ROOT / "site" / "public" / "data"
 OUTPUT_GEOJSON = SITE_DATA_DIR / "risk_index_municipalities.geojson"
 OUTPUT_METADATA = SITE_DATA_DIR / "risk_index_metadata.json"
@@ -105,6 +127,27 @@ def _source_components() -> dict[str, bool]:
         suffix: (SOURCE_DIR / f"risk_index{suffix}").exists()
         for suffix in (".shp", ".shx", ".dbf", ".prj", ".cpg", ".qmd")
     }
+
+
+def _require_exposure() -> pd.DataFrame:
+    """Municipal exposure counts. Required: risk has three components now."""
+    if not EXPOSURE_CSV.exists():
+        raise FileNotFoundError(
+            f"{EXPOSURE_CSV} is required for the exposure component of the risk "
+            "index. Run src.risk_integration.municipal_exposure first; there is "
+            "no fallback to a risk index without exposure."
+        )
+    exposure = pd.read_csv(EXPOSURE_CSV, dtype={"municipality_code": str})
+    missing = [
+        column
+        for column in ("municipality_code", EXPOSURE_FIELD, "pop_municipality")
+        if column not in exposure.columns
+    ]
+    if missing:
+        raise ValueError(
+            f"{EXPOSURE_CSV} lacks required column(s): {', '.join(missing)}"
+        )
+    return exposure[["municipality_code", EXPOSURE_FIELD, "pop_municipality"]]
 
 
 def _require_source_files() -> None:
@@ -239,10 +282,16 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "normalized",
         "group": "Integrated risk",
-        "actual_field": "derived:norm_municipal((SVI_Coast_2022/100)*Hazard_Index)",
+        "actual_field": (
+            "derived:norm_municipal((Hazard_Index_mun*Exposure_Index*"
+            "SVI_Coast_2022/100)^(1/3))"
+        ),
         "description": (
-            "Final integrated risk: the SVI-hazard product Min-Max normalized "
-            "across the coastal municipalities."
+            "Final integrated risk: the geometric mean of hazard, exposure and "
+            "vulnerability, Min-Max normalized across the coastal "
+            "municipalities. Conjunctive by construction — a component near zero "
+            "pulls the whole index down, which is the property the IPCC risk "
+            "framework implies."
         ),
     },
     {
@@ -252,12 +301,31 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "dimensionless product",
         "stage": "raw",
         "group": "Integrated risk",
-        "actual_field": "derived:(SVI_Coast_2022/100)*Hazard_Index",
+        "actual_field": (
+            "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)"
+        ),
         "description": (
-            "The raw product of the social-vulnerability fraction and the "
-            "transferred Hazard Index, before the municipal Min-Max step. "
-            "Its absolute level is bounded by the SVI and hazard values, so "
-            "it never reaches 1."
+            "The geometric mean of the three components before the municipal "
+            "Min-Max step, with each floored at 0.01 so that a municipality at "
+            "the bottom of a Min-Max scale is not handed zero risk as a scaling "
+            "artefact."
+        ),
+    },
+    {
+        "key": "Exposure_Index",
+        "label": "Population exposure",
+        "short_label": "Exposure",
+        "unit": "0–1",
+        "stage": "input",
+        "group": "Exposure",
+        "actual_field": "derived:geomean(goalposts(log10(pop_10km)), pop_10km/pop_municipality)",
+        "description": (
+            "Resident population within 10 km of the coastline, on a log scale "
+            "between fixed goalposts, paired by geometric mean with the share of "
+            "the municipal population inside the band. Following INFORM, which "
+            "computes physical exposure both ways because the count favours the "
+            "metropolitan municipalities and the share favours the small "
+            "fully-coastal ones. Proximity, not modelled inundation."
         ),
     },
     {
@@ -436,13 +504,33 @@ def _derive_current_scope(
     # but it gives the hazard a narrower amplitude than SVI/100 in any
     # equal-weight aggregation, which silently down-weights it.
     # ``Hazard_Index_mun`` is the same field rescaled to [0,1] over the
-    # municipalities, for aggregations that require comparable amplitudes. No
-    # published field is derived from it; ``Risk_Hazard`` keeps using
-    # ``Hazard_Index``.
+    # municipalities. The risk product needs the three components to span
+    # comparable amplitudes; the native-grid scale would silently down-weight
+    # the hazard, since it reaches only 0.829 across municipalities.
     hazard_mun = _minmax(hazard)
     export["Hazard_Index_mun"] = hazard_mun.map(_to_jsonable)
 
-    risk_raw = svi_fraction * hazard
+    # Exposure. See src/04_risk_integration/exposure_index.py for the rationale
+    # and for the three candidates that were rejected.
+    population = pd.to_numeric(export[EXPOSURE_FIELD], errors="coerce")
+    municipal_population = pd.to_numeric(export["pop_municipality"], errors="coerce")
+    exposure = exposure_inform(population, municipal_population)
+    export["Exposure_Index"] = exposure.map(_to_jsonable)
+    export["Exposure_absolute"] = exposure_absolute(population).map(_to_jsonable)
+    export["Exposure_relative"] = exposure_relative(
+        population, municipal_population
+    ).map(_to_jsonable)
+
+    # Conjunctive risk: the geometric mean preserves the property the IPCC
+    # framework implies, that risk needs all three to be present. An arithmetic
+    # mean would let a large population compensate for the absence of a physical
+    # driver. Components are floored at CLIP_FLOOR first, so that a municipality
+    # sitting at the bottom of a Min--Max scale is not handed zero risk as a
+    # scaling artefact — Balneário Camboriú is exactly at SVI = 0.
+    floor = lambda series: series.clip(lower=CLIP_FLOOR, upper=1.0)  # noqa: E731
+    risk_raw = (
+        floor(hazard_mun) * floor(exposure) * floor(svi_fraction)
+    ) ** (1.0 / 3.0)
     risk = _minmax(risk_raw)
 
     export["Risk_Hazard_raw"] = risk_raw.map(_to_jsonable)
@@ -534,6 +622,19 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     if "state" in base_export and "uf" in gdf:
         base_export["state"] = base_export["state"].fillna(gdf["uf"].map(_to_jsonable))
 
+    exposure_counts = _require_exposure()
+    codes = base_export["municipality_code"].astype(str)
+    lookup = exposure_counts.set_index("municipality_code")
+    for column in (EXPOSURE_FIELD, "pop_municipality"):
+        base_export[column] = codes.map(lookup[column])
+    unmatched = int(base_export[EXPOSURE_FIELD].isna().sum())
+    if unmatched:
+        raise ValueError(
+            f"{unmatched} municipalities have no exposure count. The delivered "
+            "municipal file and outputs/exposure/municipal_exposure.csv must "
+            "describe the same set."
+        )
+
     common_metadata: dict[str, Any] = {
         "generated_by": "src.site.export_risk_index_data",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -576,6 +677,11 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "Hazard_Index_raw",
             "Hazard_Index",
             "Hazard_Index_mun",
+            "Exposure_Index",
+            "Exposure_absolute",
+            "Exposure_relative",
+            EXPOSURE_FIELD,
+            "pop_municipality",
             "Risk_Hazard",
             "Risk_Hazard_raw",
             "compound_c",
@@ -594,7 +700,13 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Present in the GeoJSON properties for reproducibility but not "
                 "offered as map layers on the website."
             ),
-            "fields": ["Hazard_Index_mun"],
+            "fields": [
+                "Hazard_Index_mun",
+                "Exposure_absolute",
+                "Exposure_relative",
+                EXPOSURE_FIELD,
+                "pop_municipality",
+            ],
         },
         "available_layers": _current_available_layers(current_export),
         "missing_expected_layers": [
@@ -631,12 +743,15 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Hazard_Index_mun": (
                     "derived:norm_municipal(Hazard_Index)"
                 ),
+                "Exposure_Index": (
+                    "derived:geomean(goalposts(log10(pop_10km),1e2,1e6),"
+                    "pop_10km/pop_municipality)"
+                ),
                 "Risk_Hazard_raw": (
-                    "derived:(SVI_Coast_2022/100)*Hazard_Index"
+                    "derived:(Hazard_Index_mun*Exposure_Index*"
+                    "SVI_Coast_2022/100)^(1/3)"
                 ),
-                "Risk_Hazard": (
-                    "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
-                ),
+                "Risk_Hazard": "derived:norm_municipal(Risk_Hazard_raw)",
             },
             "support": support_field_map,
         },
@@ -677,11 +792,30 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "(max(Hazard_Index) - min(Hazard_Index))"
             ),
         },
+        "integrated_risk_formula": {
+            "expression": (
+                "Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index) "
+                "* clip(SVI_Coast_2022/100)) ** (1/3)"
+            ),
+            "aggregation": "geometric mean of three components",
+            "clip_floor": CLIP_FLOOR,
+            "rationale": (
+                "Conjunctive: the IPCC framework defines risk as emerging from "
+                "the interaction of hazard, exposure and vulnerability, which "
+                "implies that the absence of any one of them removes the "
+                "potential for adverse consequences. An arithmetic mean would "
+                "allow a large population to compensate for the absence of a "
+                "physical driver. The floor prevents a municipality at the "
+                "bottom of a Min-Max scale from receiving zero risk as a "
+                "scaling artefact."
+            ),
+            "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)",
+        },
         "integrated_risk_normalization": {
             "method": "Min-Max",
             "population": (
-                "Brazilian coastal municipalities with finite "
-                "SVI_Coast_2022 and Hazard_Index"
+                "Brazilian coastal municipalities with finite SVI_Coast_2022, "
+                "Hazard_Index and Exposure_Index"
             ),
             "input_field": "Risk_Hazard_raw",
             "input_stats": _numeric_stats(current_export["Risk_Hazard_raw"]),
@@ -727,9 +861,17 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "SVI/100. Provided for equal-weight aggregations; no published "
                 "field uses it."
             ),
+            "Exposure_Index": (
+                "Resident population within 10 km of the coastline (IBGE Grade "
+                "Estatistica 2022, 200 m urban / 1 km rural cells) on a log "
+                f"scale between fixed goalposts of {GOALPOST_MIN_INHABITANTS:,.0f} "
+                f"and {GOALPOST_MAX_INHABITANTS:,.0f} inhabitants, combined by "
+                "geometric mean with the share of the municipal population "
+                "inside the band. Proximity, not modelled inundation."
+            ),
             "Risk_Hazard_raw": (
-                "(SVI_Coast_2022 / 100) x the transferred normalized "
-                "multimetric Hazard_Index."
+                "Geometric mean of Hazard_Index_mun, Exposure_Index and "
+                f"SVI_Coast_2022/100, each floored at {CLIP_FLOOR}."
             ),
             "Risk_Hazard": (
                 "Min-Max normalization to [0,1] of Risk_Hazard_raw across "

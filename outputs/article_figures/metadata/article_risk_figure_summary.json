@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-28T14:21:50.465424+00:00",
+  "generated_at": "2026-07-28T19:40:22.673318+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -22,8 +22,9 @@
         "Hazard_Index_raw": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
         "Hazard_Index": "transferred:norm_native(Hazard_Index_raw)",
         "Hazard_Index_mun": "derived:norm_municipal(Hazard_Index)",
-        "Risk_Hazard_raw": "derived:(SVI_Coast_2022/100)*Hazard_Index",
-        "Risk_Hazard": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
+        "Exposure_Index": "derived:geomean(goalposts(log10(pop_10km),1e2,1e6),pop_10km/pop_municipality)",
+        "Risk_Hazard_raw": "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)",
+        "Risk_Hazard": "derived:norm_municipal(Risk_Hazard_raw)"
       },
       "support": {
         "municipality_code": "CD_MUN",
@@ -99,31 +100,38 @@
         "mean": 0.408338,
         "median": 0.381748
       },
+      "Exposure_Index": {
+        "count": 282,
+        "min": 0.01,
+        "max": 1.0,
+        "mean": 0.670599,
+        "median": 0.709466
+      },
       "Risk_Hazard_raw": {
         "count": 280,
-        "min": 0.0,
-        "max": 0.431961,
-        "mean": 0.14988,
-        "median": 0.142879
+        "min": 0.092356,
+        "max": 0.71851,
+        "mean": 0.460289,
+        "median": 0.47804
       },
       "Risk_Hazard": {
         "count": 280,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.346975,
-        "median": 0.330767
+        "mean": 0.587607,
+        "median": 0.615957
       }
     },
     "integrated_risk_normalization": {
       "method": "Min-Max",
-      "population": "Brazilian coastal municipalities with finite SVI_Coast_2022 and Hazard_Index",
+      "population": "Brazilian coastal municipalities with finite SVI_Coast_2022, Hazard_Index and Exposure_Index",
       "input_field": "Risk_Hazard_raw",
       "input_stats": {
         "count": 280,
-        "min": 0.0,
-        "max": 0.431961,
-        "mean": 0.14988,
-        "median": 0.142879
+        "min": 0.092356,
+        "max": 0.71851,
+        "mean": 0.460289,
+        "median": 0.47804
       },
       "output_field": "Risk_Hazard",
       "output_range": [
@@ -137,7 +145,7 @@
       "tolerance_degrees": 0.001,
       "preserve_topology": true,
       "coordinates_before": 876786,
-      "coordinates_after": 46977
+      "coordinates_after": 46982
     }
   },
   "ocean_hazard": {

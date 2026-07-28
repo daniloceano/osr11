@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-28T13:57:49.822490+00:00",
+  "generated_at": "2026-07-28T19:44:14.386192+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 876786,
-    "coordinates_after": 46977
+    "coordinates_after": 46982
   },
   "field_aliases": {
     "layers": {
@@ -42,8 +42,9 @@
       "Hazard_Index_raw": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
       "Hazard_Index": "transferred:norm_native(Hazard_Index_raw)",
       "Hazard_Index_mun": "derived:norm_municipal(Hazard_Index)",
-      "Risk_Hazard_raw": "derived:(SVI_Coast_2022/100)*Hazard_Index",
-      "Risk_Hazard": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
+      "Exposure_Index": "derived:geomean(goalposts(log10(pop_10km),1e2,1e6),pop_10km/pop_municipality)",
+      "Risk_Hazard_raw": "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)",
+      "Risk_Hazard": "derived:norm_municipal(Risk_Hazard_raw)"
     },
     "support": {
       "municipality_code": "CD_MUN",
@@ -132,7 +133,11 @@
   "audit_fields": {
     "note": "Present in the GeoJSON properties for reproducibility but not offered as map layers on the website.",
     "fields": [
-      "Hazard_Index_mun"
+      "Hazard_Index_mun",
+      "Exposure_absolute",
+      "Exposure_relative",
+      "pop_10km",
+      "pop_municipality"
     ]
   },
   "available_layers": [
@@ -143,8 +148,8 @@
       "unit": "0–1",
       "stage": "normalized",
       "group": "Integrated risk",
-      "actual_field": "derived:norm_municipal((SVI_Coast_2022/100)*Hazard_Index)",
-      "description": "Final integrated risk: the SVI-hazard product Min-Max normalized across the coastal municipalities.",
+      "actual_field": "derived:norm_municipal((Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3))",
+      "description": "Final integrated risk: the geometric mean of hazard, exposure and vulnerability, Min-Max normalized across the coastal municipalities. Conjunctive by construction — a component near zero pulls the whole index down, which is the property the IPCC risk framework implies.",
       "decimals": 2,
       "boundaries": [
         0.0,
@@ -173,8 +178,8 @@
         "count": 280,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.346975,
-        "median": 0.330767
+        "mean": 0.587607,
+        "median": 0.615957
       }
     },
     {
@@ -184,8 +189,8 @@
       "unit": "dimensionless product",
       "stage": "raw",
       "group": "Integrated risk",
-      "actual_field": "derived:(SVI_Coast_2022/100)*Hazard_Index",
-      "description": "The raw product of the social-vulnerability fraction and the transferred Hazard Index, before the municipal Min-Max step. Its absolute level is bounded by the SVI and hazard values, so it never reaches 1.",
+      "actual_field": "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)",
+      "description": "The geometric mean of the three components before the municipal Min-Max step, with each floored at 0.01 so that a municipality at the bottom of a Min-Max scale is not handed zero risk as a scaling artefact.",
       "decimals": 3,
       "boundaries": [
         0.0,
@@ -193,7 +198,48 @@
         0.2,
         0.3,
         0.4,
-        0.5
+        0.5,
+        0.6,
+        0.7,
+        0.8
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
+      "stats": {
+        "count": 280,
+        "min": 0.092356,
+        "max": 0.71851,
+        "mean": 0.460289,
+        "median": 0.47804
+      }
+    },
+    {
+      "key": "Exposure_Index",
+      "label": "Population exposure",
+      "short_label": "Exposure",
+      "unit": "0–1",
+      "stage": "input",
+      "group": "Exposure",
+      "actual_field": "derived:geomean(goalposts(log10(pop_10km)), pop_10km/pop_municipality)",
+      "description": "Resident population within 10 km of the coastline, on a log scale between fixed goalposts, paired by geometric mean with the share of the municipal population inside the band. Following INFORM, which computes physical exposure both ways because the count favours the metropolitan municipalities and the share favours the small fully-coastal ones. Proximity, not modelled inundation.",
+      "decimals": 2,
+      "boundaries": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
       ],
       "colors": [
         "#008000",
@@ -205,11 +251,11 @@
       "palette": "risk",
       "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
       "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 0.431961,
-        "mean": 0.14988,
-        "median": 0.142879
+        "count": 282,
+        "min": 0.01,
+        "max": 1.0,
+        "mean": 0.670599,
+        "median": 0.709466
       }
     },
     {
@@ -506,19 +552,54 @@
       "mean": 0.408338,
       "median": 0.381748
     },
+    "Exposure_Index": {
+      "count": 282,
+      "min": 0.01,
+      "max": 1.0,
+      "mean": 0.670599,
+      "median": 0.709466
+    },
+    "Exposure_absolute": {
+      "count": 282,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.603071,
+      "median": 0.586877
+    },
+    "Exposure_relative": {
+      "count": 282,
+      "min": 0.000109,
+      "max": 1.0,
+      "mean": 0.773779,
+      "median": 0.899191
+    },
+    "pop_10km": {
+      "count": 282,
+      "min": 4.0,
+      "max": 4374900.0,
+      "mean": 109317.861702,
+      "median": 22259.5
+    },
+    "pop_municipality": {
+      "count": 282,
+      "min": 1672.0,
+      "max": 6193495.0,
+      "mean": 132592.62766,
+      "median": 31497.5
+    },
     "Risk_Hazard": {
       "count": 280,
       "min": 0.0,
       "max": 1.0,
-      "mean": 0.346975,
-      "median": 0.330767
+      "mean": 0.587607,
+      "median": 0.615957
     },
     "Risk_Hazard_raw": {
       "count": 280,
-      "min": 0.0,
-      "max": 0.431961,
-      "mean": 0.14988,
-      "median": 0.142879
+      "min": 0.092356,
+      "max": 0.71851,
+      "mean": 0.460289,
+      "median": 0.47804
     },
     "compound_c": {
       "count": 280,
@@ -688,16 +769,23 @@
     ],
     "formula": "(Hazard_Index - min(Hazard_Index)) / (max(Hazard_Index) - min(Hazard_Index))"
   },
+  "integrated_risk_formula": {
+    "expression": "Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index) * clip(SVI_Coast_2022/100)) ** (1/3)",
+    "aggregation": "geometric mean of three components",
+    "clip_floor": 0.01,
+    "rationale": "Conjunctive: the IPCC framework defines risk as emerging from the interaction of hazard, exposure and vulnerability, which implies that the absence of any one of them removes the potential for adverse consequences. An arithmetic mean would allow a large population to compensate for the absence of a physical driver. The floor prevents a municipality at the bottom of a Min-Max scale from receiving zero risk as a scaling artefact.",
+    "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)"
+  },
   "integrated_risk_normalization": {
     "method": "Min-Max",
-    "population": "Brazilian coastal municipalities with finite SVI_Coast_2022 and Hazard_Index",
+    "population": "Brazilian coastal municipalities with finite SVI_Coast_2022, Hazard_Index and Exposure_Index",
     "input_field": "Risk_Hazard_raw",
     "input_stats": {
       "count": 280,
-      "min": 0.0,
-      "max": 0.431961,
-      "mean": 0.14988,
-      "median": 0.142879
+      "min": 0.092356,
+      "max": 0.71851,
+      "mean": 0.460289,
+      "median": 0.47804
     },
     "output_field": "Risk_Hazard",
     "output_range": [
@@ -715,7 +803,8 @@
     "Hazard_Index_raw": "Equal-weight mean of Hazard_Frequency, Hazard_Duration, and Hazard_Intensity.",
     "Hazard_Index": "Min-Max normalization to [0,1] of Hazard_Index_raw across the 808 native ocean grid points, transferred without renormalization to municipalities.",
     "Hazard_Index_mun": "Min-Max renormalization of the transferred Hazard_Index over the municipalities, so that the hazard spans [0,1] like SVI/100. Provided for equal-weight aggregations; no published field uses it.",
-    "Risk_Hazard_raw": "(SVI_Coast_2022 / 100) x the transferred normalized multimetric Hazard_Index.",
+    "Exposure_Index": "Resident population within 10 km of the coastline (IBGE Grade Estatistica 2022, 200 m urban / 1 km rural cells) on a log scale between fixed goalposts of 100 and 1,000,000 inhabitants, combined by geometric mean with the share of the municipal population inside the band. Proximity, not modelled inundation.",
+    "Risk_Hazard_raw": "Geometric mean of Hazard_Index_mun, Exposure_Index and SVI_Coast_2022/100, each floored at 0.01.",
     "Risk_Hazard": "Min-Max normalization to [0,1] of Risk_Hazard_raw across municipalities with finite SVI and hazard values."
   }
 }

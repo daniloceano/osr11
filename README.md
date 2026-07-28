@@ -13,7 +13,7 @@
 
 Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast are increasingly exposed to compound coastal flooding, where meteorological tides (storm surges) coincide with extreme wave events. These compound hazards can amplify inundation, overtopping, erosion, and port disruption, producing severe socioeconomic impacts that are still poorly quantified at regional scale in Brazil. 
 
-This project assesses the joint behavior of sea-level surges and significant wave height using CMEMS multiyear reanalyses (GLORYS12 for sea level and WAVERYS for waves), complemented by ERA5 atmospheric forcing to characterize synoptic drivers and seasonality. We identify compound events through a storm-based threshold approach whose detection thresholds (q90/q90) are empirically calibrated using reported SC coastal disaster records as supporting evidence. Hazard characterization is complete for the full Brazilian coast (808 grid points, 1993–2025) and is integrated with municipal-scale exposure spatialization and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
+This project assesses the joint behavior of sea-level surges and significant wave height using CMEMS multiyear reanalyses (GLORYS12 for sea level and WAVERYS for waves), complemented by ERA5 atmospheric forcing to characterize synoptic drivers and seasonality. We identify compound events through a storm-based threshold approach whose detection thresholds (q90/q90) are empirically calibrated using reported SC coastal disaster records as supporting evidence. Hazard characterization is complete for the full Brazilian coast (808 grid points, 1993–2025) and is integrated with population exposure from the census grid and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
 
 ---
 
@@ -41,7 +41,7 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 - **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
 
-- **Exposure:** The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, frequency, mean overlap duration, and mean normalized intensity are combined with equal weights into a native-grid Hazard Index normalized to 0–1 and then transferred to municipalities.
+- **Exposure:** The people present where the hazard acts — here, the resident population within 10 km of the coastline, from the IBGE Grade Estatística 2022. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*. (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
 
 - **Vulnerability:** The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.
 
@@ -53,7 +53,7 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 **General Objective:**
 
-Quantify the joint occurrence, intensity, and temporal structure of sea-level extremes and significant wave height extremes along the eastern coast of Brazil using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS). Reported coastal disaster records support threshold calibration through a CSI grid scan and PU composite framework. Integrate hazard characterization with municipal-scale exposure spatialization and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
+Quantify the joint occurrence, intensity, and temporal structure of sea-level extremes and significant wave height extremes along the eastern coast of Brazil using multiyear CMEMS reanalyses (GLORYS12 and WAVERYS). Reported coastal disaster records support threshold calibration through a CSI grid scan and PU composite framework. Integrate hazard characterization with population exposure and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
 
 **Specific Objectives:**
 
@@ -67,7 +67,7 @@ Quantify the joint occurrence, intensity, and temporal structure of sea-level ex
 
 5. Produce spatial exposure maps of compound event frequency, intensity, and temporal trends along the Brazilian coast.
 
-6. Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 281 coastal municipalities using PCA on 10 socioeconomic and infrastructure variables, and spatialize exposure by associating oceanic hazard metrics with municipalities through spatial join.
+6. Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 282 coastal municipalities using PCA on 10 socioeconomic and infrastructure variables, and quantify population exposure from the IBGE Grade Estatística 2022.
 
 7. Generate coastal risk maps by combining hazard, exposure, and vulnerability components, identifying priority hotspots for targeted adaptation measures.
 
@@ -84,11 +84,13 @@ Quantify the joint occurrence, intensity, and temporal structure of sea-level ex
 | ECMWF | ERA5 | MSLP, 10 m wind, SST | 1993–2025 | ~0.25°, hourly | Synoptic drivers |
 | SC Civil Defense | Reported coastal disasters<br>(Leal et al. 2024) | Event date, municipality, impacts | 1998–2020 | Event-level | Threshold calibration support |
 | S2ID / Atlas Digital | Brazilian disaster registry | Declared disasters, affected population, damages | 1991–present | Municipal | Threshold calibration support |
-| IBGE | Localidades / Malhas APIs | Coordinates, boundaries, census | Current | Municipal | Exposure indicators |
+| IBGE | Localidades / Malhas APIs | Coordinates, boundaries | Current | Municipal | Municipal geometry |
+| IBGE | Censo 2022 via SIDRA | 10 socioeconomic indicators | 2022 | Municipal | Social vulnerability |
+| IBGE | Grade Estatística 2022 | Population, occupied households | 2022 | 200 m urban / 1 km rural | Population exposure |
 | MMA | Macrodiagnóstico da Zona<br>Costeira e Marinha | Geomorphology, erosion,<br>occupation, barriers | — | Coastal segments | Vulnerability layers |
 
 **Data acknowledgments:**  
-CMEMS products are accessed via the `copernicusmarine` Python toolbox. Disaster records from S2ID and SC Civil Defense are used exclusively to support threshold calibration (Step 2); they are not used as a separate downstream validation product, given systematic under-reporting acknowledged in both databases. IBGE Census 2022 data accessed via SIDRA for 281 coastal municipalities.
+CMEMS products are accessed via the `copernicusmarine` Python toolbox. Disaster records from S2ID and SC Civil Defense are used exclusively to support threshold calibration (Step 2); they are not used as a separate downstream validation product, given systematic under-reporting acknowledged in both databases. IBGE Census 2022 data accessed via SIDRA for 282 coastal municipalities (281 in Lima et al. 2024, plus Balneário Rincão, created in 2013 and absent from the standard SIDRA aggregates). Population exposure from the IBGE Grade Estatística 2022.
 
 ---
 
@@ -195,21 +197,33 @@ python -m src.03_storm_catalog_generation.hazard_characterization --module all
 
 ### **STEP 4 — Exposure, Vulnerability & Risk Integration**
 
-Integration of compound hazard characterization with municipal-scale exposure and social vulnerability (Karine Bastos Leal / INPE). Produces compound coastal risk indices for the coastal municipalities (the delivered shapefile carries 282 municipality features with SVI; 280 of them have populated hazard/risk fields).
+Integration of the compound hazard with population exposure and social vulnerability. The delivered municipal file carries 282 municipalities with SVI; 280 of them have a hazard association and therefore a risk value.
 
-#### Sub-step 4.1 — Exposure Spatialization
+#### Sub-step 4.1 — Transfer of the hazard to municipalities
 
 Compound-event frequency (`compound_count_total`), mean overlap duration
 (`mean_overlap_duration`), and mean normalized compound intensity
 (`mean_compound_intensity_norm`) are combined first on the 808-point native
 ocean grid. The resulting normalized Hazard Index is then transferred to each
-municipality at the grid point selected by the existing spatial-association
+municipality at the grid point selected by the external spatial-association
 workflow (the point with the highest compound-event count within the
-association).
+association). This is a cartographic transfer, not an exposure component.
 
-#### Sub-step 4.2 — Social Vulnerability Index (SVI_Coast_2022)
+#### Sub-step 4.2 — Population exposure
 
-The SVI was built from 10 socioeconomic and infrastructure variables from the 2022 IBGE Census (SIDRA) for 281 coastal municipalities:
+Resident population and occupied households within 1, 2, 5 and 10 km of the
+Natural Earth coastline, aggregated from the IBGE Grade Estatística 2022 by
+cell centroid in EPSG:5880. The 10 km band feeds the risk index; the others
+exist so the criterion can be varied. Across the 282 coastal municipalities,
+**30.8 million** of the 37.4 million residents are within 10 km of the coast.
+
+**Implementation:** `src/04_risk_integration/municipal_exposure.py` (aggregation),
+`src/04_risk_integration/exposure_index.py` (normalisation),
+`src/01_data_preparation/acquisition/download_ibge_grade.py` (acquisition).
+
+#### Sub-step 4.3 — Social Vulnerability Index (SVI_Coast_2022)
+
+The SVI was built from 10 socioeconomic and infrastructure variables from the 2022 IBGE Census (SIDRA) for 282 coastal municipalities:
 
 | Variable | Description |
 |----------|-------------|
@@ -226,38 +240,57 @@ The SVI was built from 10 socioeconomic and infrastructure variables from the 20
 
 Variables were standardized with `StandardScaler` and submitted to PCA. PC1 was used as the main vulnerability axis; its sign was adjusted so that higher values represent higher social vulnerability. The final `SVI_Coast_2022` was normalized to 0–100 (Min–Max). Methodology based on Lima et al. (2024, *Nat. Hazards*, https://doi.org/10.1007/s11069-023-06246-w).
 
-#### Sub-step 4.3 — Hazard Index and Risk Indices
-
-Current product:
+#### Sub-step 4.4 — Hazard Index and integrated risk
 
 ```
 Hazard_Frequency = norm_native(compound_count_total)
-
-Hazard_Duration = norm_native(mean_overlap_duration)
-
+Hazard_Duration  = norm_native(mean_overlap_duration)
 Hazard_Intensity = norm_native(mean_compound_intensity_norm)
-
 Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3
+Hazard_Index     = norm_native(Hazard_Index_raw)
+Hazard_Index_mun = norm_municipal(Hazard_Index)
 
-Hazard_Index = norm_native(Hazard_Index_raw)
+Exposure_absolute = clip[(log10(pop_10km) - 2) / (6 - 2), 0, 1]
+Exposure_relative = pop_10km / pop_municipality
+Exposure_Index    = sqrt(clip(Exposure_absolute) * clip(Exposure_relative))
 
-Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
-
-Risk_Hazard = norm(Risk_Hazard_raw)
-
+Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index)
+                   * clip(SVI_Coast_2022/100)) ^ (1/3)
+Risk_Hazard     = norm_municipal(Risk_Hazard_raw)
 ```
 
 Where:
-- `compound_count_total` — absolute compound-event count over 1993–2025, not an annual rate
-- `mean_overlap_duration` — mean temporal overlap of the compound events, in days
-- `mean_compound_intensity_norm` — mean event intensity from Step 3.2: for each event, how far each driver rose above its **own local q90 detection threshold**, rescaled by the domain-wide Q05/Q95 of those excesses (Hₛ 0.02–1.38 m; SSH_total 0.02–0.43 m) and averaged with equal weights
-- `mean_compound_intensity_norm_abspeak` — superseded absolute-peak variant retained for audit (see the 2026-07-27 entry in `SCIENTIFIC_NOTES.md`)
-- `norm_native()` — Min–Max normalization to [0, 1] across the 808 native ocean grid points
-- `Hazard_Index` — final physical hazard index, normalized to [0, 1] on the native grid and transferred without renormalization to municipalities
-- `Risk_Hazard_raw` — unnormalized vulnerability–hazard product retained for audit
-- `Risk_Hazard` — final integrated index, normalized to [0, 1] across municipalities with finite SVI and hazard values
+- `clip()` floors a component at **0.01** before any product, so that a
+  municipality sitting at the bottom of a Min–Max scale is not handed zero risk
+  as a scaling artefact — Balneário Camboriú is exactly at `SVI = 0`
+- `Hazard_Index_mun` — the hazard renormalized over the municipalities. The
+  native-grid `Hazard_Index` reaches only 0.829 across municipalities, which
+  would silently down-weight it in the product
+- `Exposure_Index` — resident population within 10 km of the coastline, from the
+  IBGE Grade Estatística 2022 (200 m urban / 1 km rural cells). Goalposts of
+  10² and 10⁶ inhabitants are **fixed**, not taken from the data, so the scale
+  does not move when the set of municipalities changes
+- `Risk_Hazard` — the **geometric** mean of the three components. Conjunctive by
+  construction: a component near zero pulls the index down, which is the
+  property the IPCC risk framework implies. An arithmetic mean would let a large
+  population compensate for the absence of a physical driver
 
-> **Notes.** (1) The authoritative calculation is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned native-grid file `outputs/storm_catalog/compound/compound_metrics.csv`; the external municipal file supplies SVI, municipality geometry, and the pre-associated grid coordinates. (2) The export produces a single product: the delivered hazard/risk DBF columns are ignored and the superseded count-only fields were removed on 2026-07-28. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
+The exposure recipe follows the Index for Risk Management
+([INFORM, JRC](https://drmkc.jrc.ec.europa.eu/inform-index/INFORM-Risk/Methodology)),
+which treats the same problem for its physical-exposure indicators: log for a
+people count (§6.2), fixed goalposts rather than observed extremes (§6.3), and
+an absolute reading paired with a relative one (Box 2), because the count
+favours the metropolitan municipalities while the share favours the small,
+entirely coastal ones.
+
+**Products generated:**
+- `SVI_Coast_2022` — Social Vulnerability Index (external; audited, see below)
+- `Exposure_Index`, `Exposure_absolute`, `Exposure_relative`
+- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid components
+- `Hazard_Index_raw`, `Hazard_Index`, `Hazard_Index_mun`
+- `Risk_Hazard_raw`, `Risk_Hazard` — integrated risk, before and after normalization
+
+> **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index
@@ -294,7 +327,7 @@ not read at all — they were computed with a superseded definition. If
 `outputs/risk_index/risk_index.shp` is absent the export raises
 `FileNotFoundError`; there is no fallback to a previous export.
 
-#### Sub-step 4.4 — Coastal representation of the Hazard Index
+#### Sub-step 4.5 — Coastal representation of the Hazard Index
 
 The Hazard Index lives on ocean grid points but is communicated along the
 shoreline. `src/04_risk_integration/coastal_projection.py` is the single

@@ -41,9 +41,11 @@ export default function RiskIntegrationPage() {
               <span className="text-blue-600">Multimetric Coastal Risk</span>
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
-              Municipal-scale coastal risk indices combining social vulnerability with the native-grid
-              Hazard_Index: normalized compound-event frequency, mean overlap duration, and mean
-              normalized intensity receive equal weights before the composite is normalized to 0–1.
+              Municipal-scale coastal risk from its three IPCC components: the native-grid
+              Hazard_Index (equal-weight compound-event frequency, mean overlap duration and mean
+              normalized intensity), the population within 10 km of the coastline, and the coastal
+              Social Vulnerability Index. They are combined by <strong>geometric mean</strong>, which
+              is conjunctive — risk requires a hazard, people exposed to it, and a susceptibility.
               Each quantity is available <strong>before and after</strong> its Min–Max normalization,
               so the effect of every rescaling step can be inspected directly on the map.
             </p>
@@ -65,14 +67,14 @@ export default function RiskIntegrationPage() {
                 body="Normalized equal-weight combination of native-grid compound-event frequency, mean overlap duration, and mean intensity."
               />
               <ModuleCard
-                color="#d94801"
-                title="Risk_Hazard"
-                body="Current final risk: social vulnerability multiplied by the normalized multimetric hazard layer and normalized to 0–1."
+                color="#31a354"
+                title="Exposure_Index"
+                body="Resident population within 10 km of the coastline, from the IBGE Grade Estatística 2022. Proximity, not modelled inundation."
               />
               <ModuleCard
-                color="#737373"
-                title="Raw stages"
-                body="Hazard_Index_raw and Risk_Hazard_raw expose the values before each Min–Max normalization."
+                color="#d94801"
+                title="Risk_Hazard"
+                body="Geometric mean of hazard, exposure and vulnerability, normalized to 0–1. Conjunctive: a component near zero pulls the index down."
               />
             </div>
           </div>
@@ -101,18 +103,22 @@ export default function RiskIntegrationPage() {
                 <p>
                   <strong className="text-gray-800">Current index definitions.</strong>{' '}
                   Hazard_Index = norm_grid{'{'}[norm_grid(frequency) + norm_grid(duration) +
-                  norm_grid(intensity)] / 3{'}'}; Risk_Hazard_raw =
-                  (SVI_Coast_2022 / 100)·Hazard_Index; and Risk_Hazard =
-                  norm_municipal(Risk_Hazard_raw). The physical Hazard Index spans 0–1 on the native grid,
-                  and the final integrated index spans 0–1 across municipalities. The map publishes both
-                  the raw and the normalized stage of each quantity: Min–Max rescaling changes the
-                  numeric range, never the ranking of municipalities.
+                  norm_grid(intensity)] / 3{'}'}; Exposure_Index = √(absolute × relative), the
+                  population within 10 km log-scaled between fixed goalposts of 10² and 10⁶
+                  inhabitants paired with the municipal share; Risk_Hazard_raw =
+                  (Hazard_Index_mun · Exposure_Index · SVI_Coast_2022/100)^(1/3) with each
+                  component floored at 0.01; and Risk_Hazard = norm_municipal(Risk_Hazard_raw).
+                  The map publishes both the raw and the normalized stage of each quantity: Min–Max
+                  rescaling changes the numeric range, never the ranking of municipalities.
                 </p>
                 <p>
                   <strong className="text-gray-800">Component aggregation.</strong>{' '}
-                  Frequency, duration, and intensity receive equal weights. Because frequency is negatively
-                  correlated with the two mean-event characteristics, this is a compensatory index rather
-                  than a combination of three mutually reinforcing signals.
+                  Inside the hazard, frequency, duration and intensity receive equal weights and
+                  combine arithmetically; because frequency is negatively correlated with the two
+                  mean-event characteristics, that layer is compensatory. Across the three risk
+                  components the aggregation is <em>geometric</em> and therefore not compensatory:
+                  a municipality with almost nobody within 10 km of the coast cannot reach a high
+                  risk on vulnerability alone.
                 </p>
               </div>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
@@ -133,9 +139,11 @@ export default function RiskIntegrationPage() {
                   Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
                   SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
                   level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
-                  coast-wide. The export carries a single product: the superseded count-only
-                  calculation and the originally delivered hazard/risk fields are no longer
-                  published, so every value on this page comes from the current method.
+                  coast-wide. Exposure is a proximity criterion — no water level is propagated
+                  over land anywhere in this workflow, so it counts residents near the coast and
+                  never residents affected — and it uses de jure residents on a single census date
+                  against 33 years of metocean record. The export carries a single product, so
+                  every value on this page comes from the current method.
                   Results are preliminary — do not cite without consulting the authors.
                 </p>
               </div>

@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-07-28T14:21:51.000379+00:00",
+  "generated_at": "2026-07-28T19:40:24.088662+00:00",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
   "risk_key": "Risk_Hazard",
   "risk_normalization": {
     "method": "Min-Max",
-    "population": "Brazilian coastal municipalities with finite SVI_Coast_2022 and Hazard_Index",
+    "population": "Brazilian coastal municipalities with finite SVI_Coast_2022, Hazard_Index and Exposure_Index",
     "input_field": "Risk_Hazard_raw",
     "input_stats": {
       "count": 280,
-      "min": 0.0,
-      "max": 0.431961,
-      "mean": 0.14988,
-      "median": 0.142879
+      "min": 0.092356,
+      "max": 0.71851,
+      "mean": 0.460289,
+      "median": 0.47804
     },
     "output_field": "Risk_Hazard",
     "output_range": [
@@ -185,9 +185,9 @@
       "rows": [
         {
           "Rank": 1,
-          "Municipality": "Calçoene",
-          "State": "Amapá",
-          "UF": "AP",
+          "Municipality": "Icatu",
+          "State": "Maranhão",
+          "UF": "MA",
           "Risk index": 1.0
         },
         {
@@ -195,63 +195,63 @@
           "Municipality": "Turiaçu",
           "State": "Maranhão",
           "UF": "MA",
-          "Risk index": 0.9964
+          "Risk index": 0.958015
         },
         {
           "Rank": 3,
-          "Municipality": "Icatu",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.976825
-        },
-        {
-          "Rank": 4,
-          "Municipality": "Cândido Mendes",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.95495
-        },
-        {
-          "Rank": 5,
-          "Municipality": "Bacuri",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.920345
-        },
-        {
-          "Rank": 6,
-          "Municipality": "Axixá",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.824209
-        },
-        {
-          "Rank": 7,
           "Municipality": "Apicum-Açu",
           "State": "Maranhão",
           "UF": "MA",
-          "Risk index": 0.796063
+          "Risk index": 0.93282
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Macapá",
+          "State": "Amapá",
+          "UF": "AP",
+          "Risk index": 0.931571
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Axixá",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.924144
+        },
+        {
+          "Rank": 6,
+          "Municipality": "Magé",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.895256
+        },
+        {
+          "Rank": 7,
+          "Municipality": "Maricá",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.888523
         },
         {
           "Rank": 8,
-          "Municipality": "Serrano do Maranhão",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.786909
-        },
-        {
-          "Rank": 9,
-          "Municipality": "Santa Rita",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.769575
-        },
-        {
-          "Rank": 10,
           "Municipality": "Chaves",
           "State": "Pará",
           "UF": "PA",
-          "Risk index": 0.753428
+          "Risk index": 0.885953
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Saquarema",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.884535
+        },
+        {
+          "Rank": 10,
+          "Municipality": "Salvaterra",
+          "State": "Pará",
+          "UF": "PA",
+          "Risk index": 0.878911
         }
       ],
       "csv": "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.csv",

@@ -344,26 +344,57 @@ Hazard_Intensity = norm_grid(mean_compound_intensity_norm)`}</Eq>
         <Section step={9} eyebrow="Hand-off" title="Transfer to municipalities">
           <p className="text-sm leading-relaxed text-gray-700">
             Each coastal municipality is already associated with one ocean grid point by the
-            exposure spatialization of Step 4.1. The municipality simply <strong>receives the
-            Hazard Index already normalized on the grid</strong>. The index is{' '}
-            <strong>not renormalized</strong> after the transfer, so a municipal Hazard Index value
-            is directly comparable with the coastal map and with the native grid.
+            external spatial-association workflow — a cartographic transfer, not an exposure
+            component. The municipality <strong>receives the Hazard Index already normalized on
+            the grid</strong>, and it is <strong>not renormalized</strong>, so a municipal
+            Hazard Index value stays directly comparable with the coastal map and with the native
+            grid. The risk product uses a separate field,{' '}
+            <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_mun</code>,
+            which is that same field rescaled over the municipalities: across them the native scale
+            reaches only 0.829, which would silently down-weight the hazard inside a product.
           </p>
         </Section>
 
         {/* ── 10. SVI integration ────────────────────────────────── */}
-        <Section step={10} eyebrow="Risk" title="Integration with social vulnerability" tint="gray">
+        <Section step={10} eyebrow="Risk" title="Exposure, vulnerability and the integrated risk" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            The integrated risk multiplies the transferred hazard by the Social Vulnerability Index
-            (SVI_Coast_2022, 0–100 from PCA on ten IBGE 2022 Census variables), and the product is
-            Min–Max normalized across municipalities:
+            Risk has three components. The hazard says where compound extremes are frequent, long
+            and intense; <strong>exposure</strong> says how many people are there; and the Social
+            Vulnerability Index (SVI_Coast_2022, 0–100 from PCA on ten IBGE 2022 Census variables)
+            says who would cope badly. Exposure is the resident population within 10 km of the
+            coastline, from the IBGE Grade Estatística 2022:
           </p>
-          <Eq>{`Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
+          <Eq>{`Exposure_absolute = clip[(log₁₀(pop_10km) − 2) / (6 − 2), 0, 1]
+Exposure_relative = pop_10km / pop_municipality
+Exposure_Index    = √(Exposure_absolute × Exposure_relative)`}</Eq>
+          <p className="mb-3 mt-3 text-sm leading-relaxed text-gray-700">
+            The goalposts of 10² and 10⁶ inhabitants are <strong>fixed, not taken from the
+            data</strong>, so the scale does not move when the set of municipalities changes and
+            0.5 always denotes 10,000 people. The absolute count and the municipal share are paired
+            because neither is exposure on its own: the count favours the metropolitan
+            municipalities, the share favours the small entirely-coastal ones. Both choices follow
+            the treatment INFORM gives its physical-exposure indicators.
+          </p>
+          <Eq>{`Risk_Hazard_raw = (Hazard_Index_mun × Exposure_Index × SVI_Coast_2022/100)^(1/3)
 
 Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
-          <p className="text-sm leading-relaxed text-gray-700">
-            This final Min–Max is the only normalization performed in the municipal domain, and it
-            applies to the risk product — never to the Hazard Index itself.
+          <p className="mt-3 text-sm leading-relaxed text-gray-700">
+            The <strong>geometric</strong> mean is conjunctive: a component near zero pulls the
+            whole index down. That is the property the IPCC risk framework implies — without a
+            hazard, or with nobody exposed, there is no potential for adverse consequences — and it
+            is what an arithmetic mean would discard, letting a large population compensate for the
+            absence of a physical driver. Each component is floored at 0.01 first, so that a
+            municipality sitting at the bottom of a Min–Max scale is not handed zero risk as a
+            scaling artefact. The final Min–Max is the only normalization performed in the
+            municipal domain, and it applies to the risk product — never to the Hazard Index
+            itself.
+          </p>
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+            <strong>Proximity, not impact.</strong> No water level is propagated over land anywhere
+            in this workflow, so the exposure term counts residents <em>near</em> the coast under a
+            stated distance criterion, never residents <em>affected</em>. It is a count of{' '}
+            <em>de jure</em> residents on 31 July 2022, so the seasonal population of the resort
+            municipalities is not represented.
           </p>
           <Link
             href="/results/risk-integration"
