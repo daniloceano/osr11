@@ -153,6 +153,10 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  // Where the card sits once a municipality is clicked. Without it the pinned
+  // card would keep following the cursor and read as a tooltip that failed to
+  // dismiss.
+  const [pinnedPos, setPinnedPos] = useState({ x: 0, y: 0 });
   const [containerWidth, setContainerWidth] = useState(460);
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -199,6 +203,7 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
   }, [data.features, layer]);
 
   const activeIdx = hoveredIdx ?? selectedIdx;
+  const cardPos = hoveredIdx !== null ? tooltipPos : pinnedPos;
   const activeFeature = activeIdx !== null ? data.features[activeIdx] : null;
 
   if (!layer) {
@@ -303,12 +308,21 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
                     feature.properties.state ?? ''
                   } ${layer.label} ${formatValue(value, layer.decimals)}`}
                   onMouseEnter={() => setHoveredIdx(index)}
+                  // Without this the hover survives until the pointer leaves
+                  // the whole frame, so the tooltip lingered over the ocean.
+                  // Moving straight to a neighbour is safe: the browser fires
+                  // mouseleave before the next mouseenter.
+                  onMouseLeave={() => setHoveredIdx(null)}
                   onFocus={() => setHoveredIdx(index)}
                   onBlur={() => setHoveredIdx(null)}
-                  onClick={() => setSelectedIdx(selectedIdx === index ? null : index)}
+                  onClick={() => {
+                    setPinnedPos(tooltipPos);
+                    setSelectedIdx(selectedIdx === index ? null : index);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
+                      setPinnedPos(tooltipPos);
                       setSelectedIdx(selectedIdx === index ? null : index);
                     }
                   }}
@@ -322,8 +336,8 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
             <div
               className="pointer-events-none absolute z-10 w-[288px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
               style={{
-                left: Math.max(6, Math.min(tooltipPos.x + 12, containerWidth - 298)),
-                top: tooltipPos.y - 10,
+                left: Math.max(6, Math.min(cardPos.x + 12, containerWidth - 298)),
+                top: cardPos.y - 10,
                 transform: 'translateY(-100%)',
               }}
             >
