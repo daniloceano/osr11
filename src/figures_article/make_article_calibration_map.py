@@ -43,7 +43,7 @@ from shapely.ops import polygonize, unary_union
 
 from config.plot_config import SECTOR_COLORS, apply_publication_style
 from src.figures_article.calibration_common import COASTLINE_SHP, SECTOR_ORDER, load_map_data
-from src.figures_article.make_article_risk_figures import _save_figure, validate_article_figure_outputs
+from src.figures_article.figure_io import _save_figure, validate_article_figure_outputs
 
 MAP_EXTENT = (-50.25, -47.95, -29.45, -25.75)
 GEOMETRY_CRS = "EPSG:31982"

@@ -14,12 +14,22 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.figures_article.make_article_risk_figures import (  # noqa: E402
-    COASTLINE_SHP,
-    CURRENT_RISK_GEOJSON,
-    METADATA_DIR,
-    _relative,
-)
+# These four names used to be imported from ``make_article_risk_figures``, which
+# was removed in 43c7c2e without updating this module; every calibration figure
+# has been unbuildable since. They are defined here, where they are used.
+CURRENT_RISK_GEOJSON = ROOT / "site" / "public" / "data" / "risk_index_municipalities.geojson"
+COASTLINE_SHP = ROOT / "data" / "ne_10m_coastline" / "ne_10m_coastline.shp"
+OUT_DIR = ROOT / "outputs" / "article_figures"
+METADATA_DIR = OUT_DIR / "metadata"
+
+
+def _relative(path: Path) -> str:
+    """Path relative to the repository root, for provenance records."""
+    try:
+        return str(Path(path).relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
 
 MUNICIPALITIES_GEOJSON = CURRENT_RISK_GEOJSON
 SCORE_DATA = ROOT / "site/public/data/tc5_score_decomposition.json"

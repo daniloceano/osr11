@@ -785,7 +785,7 @@ def main(*, article_supplement: bool = False) -> None:
     print(metadata_path)
 
     if article_supplement:
-        from src.figures_article.make_article_risk_figures import (
+        from src.figures_article.figure_io import (
             validate_article_figure_outputs,
         )
 

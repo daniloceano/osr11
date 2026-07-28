@@ -36,7 +36,7 @@ import pandas as pd
 
 from config.plot_config import apply_publication_style
 from src.figures_article.calibration_common import load_score_frame
-from src.figures_article.make_article_risk_figures import _save_figure, validate_article_figure_outputs
+from src.figures_article.figure_io import _save_figure, validate_article_figure_outputs
 
 QUALITY_COLORS_WORSE_TO_BETTER = (
     "#FDF5D0", "#FCEAA1", "#F8E070", "#F4B354", "#EC8439", "#E05020",
