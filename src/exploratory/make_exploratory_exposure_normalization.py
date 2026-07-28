@@ -195,18 +195,25 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
             for side in ax.spines.values():
                 side.set_edgecolor("#9ca3af")
             if row == 0:
-                ax.set_title(titles[name], fontsize=13, pad=8)
-                label = f"E — {titles[name]}"
+                block = summary["normalisations"][name]["E"]
+                ax.set_title(
+                    f"{titles[name]}\n"
+                    f"median {block['median']:.3f} · "
+                    f"{block['share_below_0.05']:.0%} below 0.05",
+                    fontsize=11,
+                    pad=6,
+                )
             else:
                 stats = summary["normalisations"][name]["spearman_R_with"]
-                label = (
-                    f"R = (A·E·V)$^{{1/3}}$   ρ(R,A)={stats['A']:+.2f}  "
-                    f"ρ(R,E)={stats['E']:+.2f}  ρ(R,V)={stats['V']:+.2f}"
+                ax.set_title(
+                    f"ρ(R,A) {stats['A']:+.2f}   ρ(R,E) {stats['E']:+.2f}   "
+                    f"ρ(R,V) {stats['V']:+.2f}",
+                    fontsize=10,
+                    pad=6,
                 )
-            ax.set_xlabel(label, fontsize=9)
 
-    axes[0, 0].set_ylabel("Exposure term E", fontsize=12)
-    axes[1, 0].set_ylabel("Integrated risk R", fontsize=12)
+    axes[0, 0].set_ylabel("Exposure term  E", fontsize=13)
+    axes[1, 0].set_ylabel("Risk  R = (A·E·V)$^{1/3}$", fontsize=13)
 
     mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     bar = fig.colorbar(

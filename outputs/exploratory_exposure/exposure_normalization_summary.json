@@ -1,0 +1,91 @@
+{
+  "normalisations": {
+    "linear": {
+      "E": {
+        "mean": 0.025154,
+        "median": 0.00515,
+        "share_below_0.05": 0.8929
+      },
+      "spearman_R_with": {
+        "A": 0.667,
+        "E": 0.2777,
+        "V": 0.131,
+        "Risk_Hazard_published": 0.6404
+      },
+      "top10": [
+        "Rio de Janeiro/RJ",
+        "Salvador/BA",
+        "Duque de Caxias/RJ",
+        "São Gonçalo/RJ",
+        "Recife/PE",
+        "São Luís/MA",
+        "Macapá/AP",
+        "Maceió/AL",
+        "Jaboatão dos Guararapes/PE",
+        "Guarujá/SP"
+      ]
+    },
+    "log10": {
+      "E": {
+        "mean": 0.625816,
+        "median": 0.614933,
+        "share_below_0.05": 0.0036
+      },
+      "spearman_R_with": {
+        "A": 0.7131,
+        "E": -0.0435,
+        "V": 0.4133,
+        "Risk_Hazard_published": 0.9284
+      },
+      "top10": [
+        "Turiaçu/MA",
+        "Icatu/MA",
+        "Magé/RJ",
+        "Macapá/AP",
+        "Bacuri/MA",
+        "Duque de Caxias/RJ",
+        "Apicum-Açu/MA",
+        "Cândido Mendes/MA",
+        "Axixá/MA",
+        "Maricá/RJ"
+      ]
+    },
+    "rank": {
+      "E": {
+        "mean": 0.501786,
+        "median": 0.501786,
+        "share_below_0.05": 0.0464
+      },
+      "spearman_R_with": {
+        "A": 0.5676,
+        "E": 0.5931,
+        "V": -0.0202,
+        "Risk_Hazard_published": 0.4619
+      },
+      "top10": [
+        "Magé/RJ",
+        "Macapá/AP",
+        "Turiaçu/MA",
+        "Duque de Caxias/RJ",
+        "Maricá/RJ",
+        "Saquarema/RJ",
+        "Araruama/RJ",
+        "Icatu/MA",
+        "Vigia/PA",
+        "São Sebastião/SP"
+      ]
+    }
+  },
+  "spearman_between_risk_maps": {
+    "linear_vs_log10": 0.7482,
+    "linear_vs_rank": 0.6338,
+    "log10_vs_rank": 0.6963
+  },
+  "generated_by": "src.exploratory.make_exploratory_exposure_normalization",
+  "generated_at": "2026-07-28T14:39:47.660548+00:00",
+  "exposure_field": "pop_10km",
+  "clip_floor": 0.01,
+  "formula": "R = (clip(A) * clip(E) * clip(V)) ** (1/3)",
+  "municipality_count": 280,
+  "figure": "outputs/exploratory_exposure/exposure_normalization_comparison.png"
+}

@@ -1,0 +1,132 @@
+{
+  "generated_by": "src.risk_integration.municipal_exposure",
+  "generated_at": "2026-07-28T14:37:12.813222+00:00",
+  "grid_source": "data/raw/ibge/grade_estatistica_2022",
+  "grid_provenance": "data/metadata/ibge_grade_estatistica_2022_download.json",
+  "municipality_source": "outputs/risk_index/risk_index.shp",
+  "coastline_source": "data/ne_10m_coastline/ne_10m_coastline.shp",
+  "metric_crs": "EPSG:5880",
+  "distance_bands_km": [
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "attribution": "Cell centroid: a cell counts for the municipality containing its centroid and for a band when its centroid is within that distance of the coastline. Totals are additive; the discretisation error is bounded by half a cell diagonal (141 m for 200 m cells, 707 m for 1 km cells).",
+  "interpretation": "Proximity, not modelled inundation. Resident (de jure) population on 2022-07-31; seasonal population is not represented.",
+  "municipality_count": 282,
+  "tile_count": 20,
+  "tiles": {
+    "grade_id04.zip": {
+      "cells_read": 68071,
+      "cells_populated": 11801,
+      "cells_in_municipalities": 3595
+    },
+    "grade_id14.zip": {
+      "cells_read": 582324,
+      "cells_populated": 213342,
+      "cells_in_municipalities": 283
+    },
+    "grade_id15.zip": {
+      "cells_read": 346194,
+      "cells_populated": 109144,
+      "cells_in_municipalities": 29338
+    },
+    "grade_id25.zip": {
+      "cells_read": 929387,
+      "cells_populated": 331244,
+      "cells_in_municipalities": 18309
+    },
+    "grade_id26.zip": {
+      "cells_read": 489160,
+      "cells_populated": 145145,
+      "cells_in_municipalities": 59334
+    },
+    "grade_id27.zip": {
+      "cells_read": 2849,
+      "cells_populated": 330,
+      "cells_in_municipalities": 329
+    },
+    "grade_id36.zip": {
+      "cells_read": 698608,
+      "cells_populated": 233635,
+      "cells_in_municipalities": 885
+    },
+    "grade_id37.zip": {
+      "cells_read": 235038,
+      "cells_populated": 73907,
+      "cells_in_municipalities": 25151
+    },
+    "grade_id39.zip": {
+      "cells_read": 2588,
+      "cells_populated": 0
+    },
+    "grade_id47.zip": {
+      "cells_read": 273204,
+      "cells_populated": 86038,
+      "cells_in_municipalities": 18566
+    },
+    "grade_id57.zip": {
+      "cells_read": 444757,
+      "cells_populated": 136703,
+      "cells_in_municipalities": 11362
+    },
+    "grade_id58.zip": {
+      "cells_read": 168479,
+      "cells_populated": 61753,
+      "cells_in_municipalities": 13145
+    },
+    "grade_id67.zip": {
+      "cells_read": 462991,
+      "cells_populated": 141677,
+      "cells_in_municipalities": 4957
+    },
+    "grade_id68.zip": {
+      "cells_read": 310685,
+      "cells_populated": 110078,
+      "cells_in_municipalities": 26992
+    },
+    "grade_id69.zip": {
+      "cells_read": 2020,
+      "cells_populated": 75,
+      "cells_in_municipalities": 75
+    },
+    "grade_id75.zip": {
+      "cells_read": 328873,
+      "cells_populated": 75950,
+      "cells_in_municipalities": 9235
+    },
+    "grade_id76.zip": {
+      "cells_read": 237226,
+      "cells_populated": 60024,
+      "cells_in_municipalities": 23040
+    },
+    "grade_id77.zip": {
+      "cells_read": 151225,
+      "cells_populated": 51204,
+      "cells_in_municipalities": 25031
+    },
+    "grade_id84.zip": {
+      "cells_read": 157228,
+      "cells_populated": 1813,
+      "cells_in_municipalities": 459
+    },
+    "grade_id85.zip": {
+      "cells_read": 56321,
+      "cells_populated": 2714,
+      "cells_in_municipalities": 1562
+    }
+  },
+  "totals": {
+    "pop_municipality": 37391121,
+    "dom_municipality": 13714191,
+    "pop_1km": 5935668,
+    "dom_1km": 2274428,
+    "pop_2km": 11537220,
+    "dom_2km": 4388613,
+    "pop_5km": 21552910,
+    "dom_5km": 8053549,
+    "pop_10km": 30827637,
+    "dom_10km": 11396273
+  }
+}
