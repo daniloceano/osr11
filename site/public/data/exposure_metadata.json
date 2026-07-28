@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-28T19:04:55.234640+00:00",
+  "generated_at": "2026-07-28T19:13:30.745523+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",
@@ -65,6 +65,88 @@
         "max": 1.0,
         "mean": 0.670599,
         "median": 0.709466
+      }
+    },
+    {
+      "key": "E_inform_absolute",
+      "label": "INFORM half — absolute count between goalposts",
+      "short_label": "E abs (goalposts)",
+      "unit": "0–1",
+      "stage": "normalized",
+      "group": "The two halves of E (INFORM)",
+      "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+      "decimals": 3,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette shared with the hazard and risk layers",
+      "description": "How many people, on a log scale fixed between 100 and 1,000,000 inhabitants. 0.5 always denotes 10,000 people, whichever municipalities are in the set. On its own it favours the metropolitan municipalities.",
+      "stats": {
+        "count": 282,
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.603071,
+        "median": 0.586877
+      }
+    },
+    {
+      "key": "share_pop_10km",
+      "label": "INFORM half — share of the municipal population within 10 km",
+      "short_label": "Share ≤10 km",
+      "unit": "%",
+      "stage": "raw",
+      "group": "The two halves of E (INFORM)",
+      "actual_field": "derived:100*pop_10km/pop_municipality",
+      "decimals": 1,
+      "boundaries": [
+        0.0,
+        25.0,
+        50.0,
+        65.0,
+        80.0,
+        90.0,
+        95.0,
+        99.0,
+        100.0
+      ],
+      "colors": [
+        "#fde7a9",
+        "#feae77",
+        "#f8765c",
+        "#dc4869",
+        "#ab337c",
+        "#7b2382",
+        "#4c117a",
+        "#1a1042"
+      ],
+      "palette": "component",
+      "palette_source": "magma ramp shared with the hazard components",
+      "description": "How coastal the municipality is, rather than how many people it holds: a hamlet entirely on the shore and a city entirely on the shore both reach 100 %. On its own it is not exposure, which is why it is paired with the absolute half. Class limits are not uniform — the median municipality is at 90 % and a quarter above 99.8 %, so even classes would collapse the top of the scale.",
+      "stats": {
+        "count": 282,
+        "min": 0.010873,
+        "max": 100.0,
+        "mean": 77.377893,
+        "median": 89.919035
       }
     },
     {
@@ -323,12 +405,68 @@
       "mean": 40412.315603,
       "median": 7346.5
     },
-    "E_linear": {
+    "share_pop_1km": {
       "count": 282,
       "min": 0.0,
+      "max": 94.960489,
+      "mean": 21.735843,
+      "median": 11.387329
+    },
+    "share_dom_1km": {
+      "count": 282,
+      "min": 0.0,
+      "max": 95.223712,
+      "mean": 22.145426,
+      "median": 11.813108
+    },
+    "share_pop_2km": {
+      "count": 282,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 38.88066,
+      "median": 30.734291
+    },
+    "share_dom_2km": {
+      "count": 282,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 39.288222,
+      "median": 32.020135
+    },
+    "share_pop_5km": {
+      "count": 282,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 59.052114,
+      "median": 67.147734
+    },
+    "share_dom_5km": {
+      "count": 282,
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 59.145126,
+      "median": 67.275081
+    },
+    "share_pop_10km": {
+      "count": 282,
+      "min": 0.010873,
+      "max": 100.0,
+      "mean": 77.377893,
+      "median": 89.919035
+    },
+    "share_dom_10km": {
+      "count": 282,
+      "min": 0.017771,
+      "max": 100.0,
+      "mean": 77.426441,
+      "median": 90.246265
+    },
+    "E_inform": {
+      "count": 282,
+      "min": 0.01,
       "max": 1.0,
-      "mean": 0.024987,
-      "median": 0.005087
+      "mean": 0.670599,
+      "median": 0.709466
     },
     "E_log10": {
       "count": 282,
@@ -343,6 +481,27 @@
       "max": 1.0,
       "mean": 0.501773,
       "median": 0.501773
+    },
+    "E_linear": {
+      "count": 282,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.024987,
+      "median": 0.005087
+    },
+    "E_inform_absolute": {
+      "count": 282,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.603071,
+      "median": 0.586877
+    },
+    "E_inform_relative": {
+      "count": 282,
+      "min": 0.000109,
+      "max": 1.0,
+      "mean": 0.773779,
+      "median": 0.899191
     }
   },
   "decision_pending": "Which normalisation enters the published risk index is not decided. E_log10 leaves the exposure term present but inert (Spearman -0.04 against the integrated risk); E_rank makes it the driver (+0.59) but neutralises social vulnerability (-0.02). The Min--Max of the raw count is retained as E_linear for inspection only: it puts 89% of the municipalities below 0.05.",

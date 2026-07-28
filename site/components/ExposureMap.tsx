@@ -101,15 +101,25 @@ const STAGE_BADGES: Record<ExposureLayerMeta['stage'], { label: string; classNam
 
 /** Raw counts first, then the normalisations, so the tooltip reads bottom-up
  *  from the observation to the derived number. */
-const DETAIL_FIELDS: { key: string; label: string; decimals: number; rule?: boolean }[] = [
+type DetailField = {
+  key: string;
+  label: string;
+  decimals: number;
+  rule?: boolean;
+  /** Sibling field rendered as a share, in per cent, next to the count. */
+  shareKey?: string;
+};
+
+const DETAIL_FIELDS: DetailField[] = [
   { key: 'pop_municipality', label: 'Population, whole municipality', decimals: 0 },
-  { key: 'pop_10km', label: 'Population ≤10 km', decimals: 0 },
-  { key: 'pop_5km', label: 'Population ≤5 km', decimals: 0 },
-  { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0 },
-  { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0 },
-  { key: 'dom_10km', label: 'Households ≤10 km', decimals: 0, rule: true },
+  { key: 'pop_10km', label: 'Population ≤10 km', decimals: 0, shareKey: 'share_pop_10km' },
+  { key: 'pop_5km', label: 'Population ≤5 km', decimals: 0, shareKey: 'share_pop_5km' },
+  { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0, shareKey: 'share_pop_2km' },
+  { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0, shareKey: 'share_pop_1km' },
+  { key: 'dom_municipality', label: 'Households, whole municipality', decimals: 0, rule: true },
+  { key: 'dom_10km', label: 'Households ≤10 km', decimals: 0, shareKey: 'share_dom_10km' },
   { key: 'E_inform_absolute', label: 'E — absolute half (goalposts)', decimals: 3, rule: true },
-  { key: 'E_inform_relative', label: 'E — relative half (share)', decimals: 3 },
+  { key: 'E_inform_relative', label: 'E — relative half (share ÷ 100)', decimals: 3 },
   { key: 'E_inform', label: 'E — INFORM (0–1)', decimals: 3 },
   { key: 'E_log10', label: 'E — log₁₀ (0–1)', decimals: 3, rule: true },
   { key: 'E_rank', label: 'E — rank (0–1)', decimals: 3 },
@@ -127,6 +137,10 @@ function numericValue(value: unknown): number | null {
 
 function formatCount(value: number | null): string {
   return value === null ? '—' : Math.round(value).toLocaleString('en-US');
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '' : `${value.toFixed(1)} %`;
 }
 
 /* ── Component ─────────────────────────────────────────────────────────── */
@@ -197,7 +211,8 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
 
   const groups = [...new Set(layers.map((entry) => entry.group))];
   const badge = STAGE_BADGES[layer.stage];
-  const isCount = layer.stage === 'raw';
+  const isPercent = layer.unit === '%';
+  const isCount = layer.stage === 'raw' && !isPercent;
 
   return (
     <div className="space-y-6">
@@ -320,6 +335,9 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
                 {DETAIL_FIELDS.map((field) => {
                   if (!(field.key in activeFeature.properties)) return null;
                   const value = numericValue(activeFeature.properties[field.key]);
+                  const share = field.shareKey
+                    ? numericValue(activeFeature.properties[field.shareKey])
+                    : null;
                   return (
                     <div
                       key={field.key}
@@ -331,6 +349,11 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
                       <span className="font-mono">
                         {field.decimals === 0 ? formatCount(value) : formatValue(value, field.decimals)}
                       </span>
+                      {share !== null && (
+                        <span className="ml-1 font-mono text-gray-400">
+                          ({formatPercent(share)})
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -347,7 +370,7 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
             boundaries={layer.boundaries}
             colors={layer.colors}
             decimals={layer.decimals}
-            formatLabel={isCount ? formatCount : undefined}
+            formatLabel={isCount ? formatCount : isPercent ? formatPercent : undefined}
             note={
               <>
                 <div className="mt-3 flex flex-wrap items-center gap-2">

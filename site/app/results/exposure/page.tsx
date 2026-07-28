@@ -44,9 +44,10 @@ export default function ExposurePage() {
               The step between the physical hazard and the integrated risk. The hazard says where
               compound wave and sea-level extremes are frequent, long and intense; the vulnerability
               index says who would cope badly with them. Neither says how many people are there.
-              This page counts them, from the census grid, and shows the two candidate ways of
-              bringing that count into the risk index — because the choice changes the published
-              map, and it is not yet made.
+              This page counts them, from the census grid, and shows the candidate ways of bringing
+              that count into the risk index — because the choice changes the published map, and it
+              is not yet made. Neither how many people live near the coast nor how coastal a
+              municipality is answers the question alone, so the recommended term carries both.
             </p>
           </div>
         </div>
@@ -57,30 +58,30 @@ export default function ExposurePage() {
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <ModuleCard
                 color="#2171b5"
-                title="E — log₁₀"
-                body="Exposure as an order of magnitude. Every municipality occupies the scale, but real differences are compressed."
+                title="E — INFORM"
+                body="The recommended term: a log-scaled count between fixed goalposts, paired by geometric mean with the coastal share."
               />
               <ModuleCard
                 color="#d94801"
-                title="E — rank"
-                body="Exposure as a position along the coast. Discriminates everywhere; discards magnitude entirely."
+                title="E — log₁₀ and rank"
+                body="The two single-facet candidates. One leaves exposure inert in the index, the other neutralises social vulnerability."
               />
               <ModuleCard
                 color="#756bb1"
-                title="Population ≤10 km"
-                body="The count itself, on log-spaced classes. Equal-width classes would put almost every municipality in the first one."
+                title="Share ≤10 km"
+                body="How coastal the municipality is: the percentage of its population inside the band. The relative half of E (INFORM)."
               />
               <ModuleCard
                 color="#737373"
-                title="Households ≤10 km"
-                body="Occupied dwellings, as a proxy for the residential asset stock. Excludes seasonal-use dwellings."
+                title="Raw counts"
+                body="Population and occupied households within 10 km, on log-spaced classes, plus the absolute half of E (INFORM)."
               />
             </div>
             <p className="mt-4 text-xs text-gray-500">
               Hovering a municipality shows the raw counts in every distance band —{' '}
               <span className="font-mono">1, 2, 5, 10 km</span> and the municipality as a whole —
-              next to all three normalised values, so the derived number can always be traced back
-              to the population behind it.
+              each with the share of the municipal total in per cent, next to every normalised
+              value, so the derived number can always be traced back to the population behind it.
             </p>
           </div>
         </div>
@@ -115,6 +116,15 @@ export default function ExposurePage() {
                   municipality and to a distance band, which keeps the totals additive at the cost
                   of a discretisation error bounded by half a cell diagonal. Distances are measured
                   in EPSG:5880, the same metric projection the coastal hazard projection uses.
+                </p>
+                <p>
+                  <strong className="text-gray-800">Absolute and relative together.</strong> The
+                  count favours the metropolitan municipalities; the share of the municipal
+                  population inside the band favours the small, entirely coastal ones — Bombinhas
+                  and Santos both reach 100 %, though one holds 25 thousand people and the other
+                  418 thousand. Neither facet alone is exposure, so the recommended term computes
+                  both and pairs them, following the treatment INFORM gives its physical-exposure
+                  indicators. Both halves are published as their own layers.
                 </p>
                 <p>
                   <strong className="text-gray-800">Why the normalisation is a scientific choice.</strong>{' '}

@@ -64,6 +64,10 @@ OUTPUT_METADATA = SITE_DATA_DIR / "exposure_metadata.json"
 OUTPUT_CRS = "EPSG:4326"
 EXPOSURE_FIELD = "pop_10km"
 NORMALIZED_BOUNDARIES = [round(value, 3) for value in np.linspace(0.0, 1.0, 9)]
+#: Class limits for the coastal share, in per cent. Deliberately not uniform:
+#: the median municipality has 90 % of its people inside the band and a quarter
+#: has more than 99.8 %, so equal-width classes would collapse the top.
+SHARE_BOUNDARIES = [0.0, 25.0, 50.0, 65.0, 80.0, 90.0, 95.0, 99.0, 100.0]
 
 
 def _to_jsonable(value: Any) -> Any:
@@ -146,6 +150,23 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     for name, values in derived.items():
         merged[name] = values
 
+    # The coastal share in its readable unit. ``E_inform_relative`` is the same
+    # quantity as a fraction, which is what the formula consumes; these are for
+    # reading and mapping.
+    share_fields: list[str] = []
+    for band in ("1km", "2km", "5km", "10km"):
+        for prefix, total in (("pop", "pop_municipality"), ("dom", "dom_municipality")):
+            source, denominator = f"{prefix}_{band}", total
+            if source not in merged or denominator not in merged:
+                continue
+            field = f"share_{prefix}_{band}"
+            merged[field] = (
+                pd.to_numeric(merged[source], errors="coerce")
+                / pd.to_numeric(merged[denominator], errors="coerce").replace(0, np.nan)
+                * 100.0
+            ).fillna(0.0).clip(0.0, 100.0)
+            share_fields.append(field)
+
     export = gpd.GeoDataFrame(geometry=merged.geometry, crs=OUTPUT_CRS)
     for column in (
         "municipality_code",
@@ -153,6 +174,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         "state",
         "state_name",
         *count_fields,
+        *share_fields,
         *derived,
     ):
         export[column] = merged[column].map(_to_jsonable)
@@ -187,6 +209,51 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "the six municipalities outside them."
             ),
             "stats": _numeric_stats(export["E_inform"]),
+        },
+        {
+            "key": "E_inform_absolute",
+            "label": "INFORM half — absolute count between goalposts",
+            "short_label": "E abs (goalposts)",
+            "unit": "0–1",
+            "stage": "normalized",
+            "group": "The two halves of E (INFORM)",
+            "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+            "decimals": 3,
+            "boundaries": NORMALIZED_BOUNDARIES,
+            "colors": risk_colors(8),
+            "palette": "risk",
+            "palette_source": "green-to-red palette shared with the hazard and risk layers",
+            "description": (
+                "How many people, on a log scale fixed between "
+                f"{GOALPOST_MIN_INHABITANTS:,.0f} and {GOALPOST_MAX_INHABITANTS:,.0f} "
+                "inhabitants. 0.5 always denotes 10,000 people, whichever "
+                "municipalities are in the set. On its own it favours the "
+                "metropolitan municipalities."
+            ),
+            "stats": _numeric_stats(export["E_inform_absolute"]),
+        },
+        {
+            "key": "share_pop_10km",
+            "label": "INFORM half — share of the municipal population within 10 km",
+            "short_label": "Share ≤10 km",
+            "unit": "%",
+            "stage": "raw",
+            "group": "The two halves of E (INFORM)",
+            "actual_field": "derived:100*pop_10km/pop_municipality",
+            "decimals": 1,
+            "boundaries": SHARE_BOUNDARIES,
+            "colors": component_colors(len(SHARE_BOUNDARIES) - 1),
+            "palette": "component",
+            "palette_source": "magma ramp shared with the hazard components",
+            "description": (
+                "How coastal the municipality is, rather than how many people it "
+                "holds: a hamlet entirely on the shore and a city entirely on the "
+                "shore both reach 100 %. On its own it is not exposure, which is "
+                "why it is paired with the absolute half. Class limits are not "
+                "uniform — the median municipality is at 90 % and a quarter above "
+                "99.8 %, so even classes would collapse the top of the scale."
+            ),
+            "stats": _numeric_stats(export["share_pop_10km"]),
         },
         {
             "key": "E_log10",
@@ -308,7 +375,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         },
         "numeric_stats": {
             field: _numeric_stats(export[field])
-            for field in (*count_fields, "E_linear", "E_log10", "E_rank")
+            for field in (*count_fields, *share_fields, *derived)
         },
         "decision_pending": (
             "Which normalisation enters the published risk index is not decided. "
