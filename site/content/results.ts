@@ -70,6 +70,37 @@ export const resultCards: ResultCard[] = [
     ],
   },
   {
+    id: 'exposure',
+    title: 'Population Exposure',
+    subtitle: 'IBGE Grade Estatística 2022 · 200 m urban / 1 km rural · distance bands from the coastline',
+    status: 'in-progress',
+    description:
+      'Counts the people and the occupied households that live near the coast, between the physical hazard '
+      + 'and the integrated risk. Population comes from the IBGE Grade Estatística 2022, a direct totalisation '
+      + 'of census microdata over the CNEFE household coordinates rather than a modelled disaggregation. '
+      + 'Cells are attributed by centroid to a municipality and to a distance band, in EPSG:5880. '
+      + '30.8 million residents fall within 10 km of the coastline, against 37.4 million in the 282 coastal '
+      + 'municipalities as a whole. Bands of 1, 2, 5 and 10 km are all published so the criterion can be varied.',
+    rationale:
+      'The hazard says where compound extremes are frequent, long and intense; the vulnerability index says who '
+      + 'would cope badly with them. Neither says how many people are there — without exposure the product is a '
+      + 'vulnerability-weighted hazard index, not risk in the IPCC sense. The page also exposes an unresolved '
+      + 'methodological choice: Min–Max is affine, so applied to a count skewed above 7 it leaves nine '
+      + 'municipalities in ten below 0.05 and the term carries almost no influence. The logarithm and the '
+      + 'percentile rank are the two defensible alternatives, and they produce visibly different risk maps.',
+    outputs: [
+      'municipal_exposure.csv: population and occupied households per municipality for the whole municipality and the ≤1, ≤2, ≤5 and ≤10 km bands',
+      'E_log10 = minmax(log10(pop_10km + 1)) — exposure as an order of magnitude',
+      'E_rank = percentile rank of pop_10km — exposure as a position along the coast',
+      'E_linear = minmax(pop_10km) — retained for inspection only; degenerate, 89% of municipalities below 0.05',
+      'Interactive municipal choropleth with both candidate normalisations, the raw counts, and hover values in every band',
+      'Exploratory comparison figure of the three normalisations against the conjunctive risk index',
+      'Reproducible acquisition of the 20 grid quadrants covering the coastline, with SHA-256 provenance',
+    ],
+    href: '/results/exposure',
+    parts: ['Grade Estatística', 'Distance bands', 'E (log₁₀)', 'E (rank)', 'Raw counts'],
+  },
+  {
     id: 'risk-integration',
     title: 'Exposure, Vulnerability & Risk Integration',
     subtitle: 'Municipal choropleth · multimetric Hazard_Index · SVI_Coast_2022 · Risk_Hazard · audit fields',

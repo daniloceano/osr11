@@ -320,6 +320,8 @@ interface DiscreteLegendProps {
   decimals: number;
   /** Render class labels as month names instead of numbers. */
   monthLabels?: boolean;
+  /** Override the class-label formatting, e.g. thousands separators on counts. */
+  formatLabel?: (value: number) => string;
   note?: ReactNode;
 }
 
@@ -330,10 +332,12 @@ export function DiscreteLegend({
   colors,
   decimals,
   monthLabels = false,
+  formatLabel,
   note,
 }: DiscreteLegendProps) {
   const format = (value: number) => {
     if (monthLabels) return MONTH_NAMES[Math.round(value) - 1] ?? String(value);
+    if (formatLabel) return formatLabel(value);
     return formatValue(value, decimals);
   };
   return (
