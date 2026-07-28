@@ -369,6 +369,7 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
             projection={projection}
             basemapPaths={basemapPaths}
             view={currentView}
+            strokeScale={1 / zoomLevel}
             ariaLabel={`${layer.label} by coastal municipality, in ${layer.unit}`}
           >
             {data.features.map((feature, index) => {
@@ -385,7 +386,10 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
                   fill={color}
                   fillRule="evenodd"
                   stroke={isActive ? MAP_COLORS.highlight : 'none'}
-                  strokeWidth={isActive ? 1.1 : 0}
+                  // In user units, so it must shrink with the viewBox to keep
+                  // a constant thickness on screen instead of swallowing the
+                  // municipality it is meant to outline.
+                  strokeWidth={isActive ? 1.1 / zoomLevel : 0}
                   role="button"
                   tabIndex={0}
                   aria-label={`${feature.properties.municipality_name ?? 'Municipality'} ${

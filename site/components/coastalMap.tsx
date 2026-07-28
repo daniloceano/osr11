@@ -126,6 +126,9 @@ interface MapFrameProps {
   overlay?: ReactNode;
   /** Visible window in projected units. Omit to show the whole extent. */
   view?: { x: number; y: number; width: number; height: number };
+  /** Divides every stroke width and label size. Pass 1/zoom so that lines keep
+   *  a constant on-screen thickness while the viewBox shrinks. */
+  strokeScale?: number;
 }
 
 export function MapFrame({
@@ -135,9 +138,11 @@ export function MapFrame({
   children,
   overlay,
   view,
+  strokeScale = 1,
 }: MapFrameProps) {
   const { width, height, extent } = projection;
   const window_ = view ?? { x: 0, y: 0, width, height };
+  const k = strokeScale;
   const longitudes: number[] = [];
   for (let lon = Math.ceil(extent.west / 5) * 5; lon <= extent.east; lon += 5) {
     longitudes.push(lon);
@@ -170,7 +175,7 @@ export function MapFrame({
               x2={x}
               y2={height}
               stroke={MAP_COLORS.graticule}
-              strokeWidth={0.4}
+              strokeWidth={0.4 * k}
               strokeDasharray="3 3"
               opacity={0.55}
             />
@@ -179,7 +184,7 @@ export function MapFrame({
               y={height - 4}
               textAnchor="middle"
               fill="#374151"
-              style={{ fontSize: '8px' }}
+              style={{ fontSize: `${8 * k}px` }}
             >
               {Math.abs(lon)}°W
             </text>
@@ -196,11 +201,11 @@ export function MapFrame({
               x2={width}
               y2={y}
               stroke={MAP_COLORS.graticule}
-              strokeWidth={0.4}
+              strokeWidth={0.4 * k}
               strokeDasharray="3 3"
               opacity={0.55}
             />
-            <text x={4} y={y - 3} fill="#374151" style={{ fontSize: '8px' }}>
+            <text x={4 * k} y={y - 3 * k} fill="#374151" style={{ fontSize: `${8 * k}px` }}>
               {Math.abs(lat)}°{lat < 0 ? 'S' : 'N'}
             </text>
           </g>
@@ -215,7 +220,7 @@ export function MapFrame({
           d={path}
           fill="none"
           stroke={MAP_COLORS.stateBorder}
-          strokeWidth={0.5}
+          strokeWidth={0.5 * k}
         />
       ))}
       {basemapPaths.country.map((path, index) => (
@@ -224,7 +229,7 @@ export function MapFrame({
           d={path}
           fill="none"
           stroke={MAP_COLORS.countryBorder}
-          strokeWidth={0.8}
+          strokeWidth={0.8 * k}
         />
       ))}
 
