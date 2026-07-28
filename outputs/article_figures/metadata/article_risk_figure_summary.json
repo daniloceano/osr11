@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T22:31:10.985603+00:00",
+  "generated_at": "2026-07-28T14:21:50.465424+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -15,28 +15,21 @@
     },
     "field_aliases": {
       "layers": {
-        "SVI_Coast_2022": "SVI_Coast_2022",
+        "SVI_Coast_2022": "SVI_Coast_",
         "Hazard_Frequency": "transferred:norm_native(compound_count_total)",
         "Hazard_Duration": "transferred:norm_native(mean_overlap_duration)",
         "Hazard_Intensity": "transferred:norm_native(mean_compound_intensity_norm)",
         "Hazard_Index_raw": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
         "Hazard_Index": "transferred:norm_native(Hazard_Index_raw)",
-        "Risk_Comp_raw": "derived:(SVI_Coast_2022/100)*Hazard_Index",
+        "Hazard_Index_mun": "derived:norm_municipal(Hazard_Index)",
         "Risk_Hazard_raw": "derived:(SVI_Coast_2022/100)*Hazard_Index",
-        "Risk_Comp": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)",
-        "Risk_Hazard": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)",
-        "CountOnly_Hazard_Index": "derived:norm_municipal(compound_c)",
-        "CountOnly_Risk_Hazard_raw": "derived:(SVI_Coast_2022/100)*CountOnly_Hazard_Index",
-        "CountOnly_Risk_Hazard": "derived:norm(CountOnly_Risk_Hazard_raw)",
-        "Legacy_Hazard_Index": "Hazard_Index",
-        "Legacy_Risk_Comp": "Risk_Comp",
-        "Legacy_Risk_Hazard": "Risk_Hazard"
+        "Risk_Hazard": "derived:norm((SVI_Coast_2022/100)*Hazard_Index)"
       },
       "support": {
-        "municipality_code": "municipality_code",
-        "municipality_name": "municipality_name",
-        "state": "state",
-        "state_name": "state_name",
+        "municipality_code": "CD_MUN",
+        "municipality_name": "NM_MUN",
+        "state": "SIGLA_UF",
+        "state_name": "NM_UF",
         "compound_c": "compound_c",
         "mean_overl": "mean_overl",
         "mean_compo": "mean_compo",
@@ -45,14 +38,14 @@
         "PC1": "PC1",
         "pop_house": "pop_house",
         "pop_rent": "pop_rent",
-        "pop_poverty": "pop_poverty",
+        "pop_poverty": "pop_povert",
         "pop_agevul": "pop_agevul",
-        "pop_nonwhite": "pop_nonwhite",
-        "pop_illiterate": "pop_illiterate",
-        "pop_nowater": "pop_nowater",
-        "pop_nosewage": "pop_nosewage",
-        "pop_nogarbage": "pop_nogarbage",
-        "pop_nopaving": "pop_nopaving"
+        "pop_nonwhite": "pop_nonwhi",
+        "pop_illiterate": "pop_illite",
+        "pop_nowater": "pop_nowate",
+        "pop_nosewage": "pop_nosewa",
+        "pop_nogarbage": "pop_nogarb",
+        "pop_nopaving": "pop_nopavi"
       }
     },
     "risk_panel_key": "Risk_Hazard",
@@ -99,12 +92,12 @@
         "mean": 0.340576,
         "median": 0.318623
       },
-      "Risk_Comp_raw": {
+      "Hazard_Index_mun": {
         "count": 280,
         "min": 0.0,
-        "max": 0.431961,
-        "mean": 0.14988,
-        "median": 0.142879
+        "max": 1.0,
+        "mean": 0.408338,
+        "median": 0.381748
       },
       "Risk_Hazard_raw": {
         "count": 280,
@@ -112,13 +105,6 @@
         "max": 0.431961,
         "mean": 0.14988,
         "median": 0.142879
-      },
-      "Risk_Comp": {
-        "count": 280,
-        "min": 0.0,
-        "max": 1.0,
-        "mean": 0.346975,
-        "median": 0.330767
       },
       "Risk_Hazard": {
         "count": 280,
@@ -150,8 +136,8 @@
       "enabled": true,
       "tolerance_degrees": 0.001,
       "preserve_topology": true,
-      "coordinates_before": 46894,
-      "coordinates_after": 46894
+      "coordinates_before": 876786,
+      "coordinates_after": 46977
     }
   },
   "ocean_hazard": {
@@ -184,6 +170,13 @@
         "max": 9.76,
         "mean": 3.602364,
         "median": 2.73
+      },
+      "mean_compound_intensity_norm_abspeak": {
+        "count": 808,
+        "min": 0.0659,
+        "max": 0.6946,
+        "mean": 0.406997,
+        "median": 0.40685
       },
       "mean_overlap_duration": {
         "count": 808,

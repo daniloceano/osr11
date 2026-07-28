@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T22:32:10.966656+00:00",
+  "generated_at": "2026-07-28T14:21:45.262691+00:00",
   "output": "outputs/article_figures/coastal_hazard_index_components.png",
   "native_grid_source": "outputs/storm_catalog/compound/compound_metrics.csv",
   "native_hazard_index": {
@@ -32,6 +32,13 @@
         "max": 9.76,
         "mean": 3.602364,
         "median": 2.73
+      },
+      "mean_compound_intensity_norm_abspeak": {
+        "count": 808,
+        "min": 0.0659,
+        "max": 0.6946,
+        "mean": 0.406997,
+        "median": 0.40685
       },
       "mean_overlap_duration": {
         "count": 808,
@@ -112,7 +119,7 @@
     "nearest_distance_km": {
       "minimum": 0.248232,
       "median": 18.704526,
-      "mean": 21.497405,
+      "mean": 21.497406,
       "p90": 36.590475,
       "p99": 83.108735,
       "maximum": 119.944668
