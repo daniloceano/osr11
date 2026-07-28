@@ -273,8 +273,8 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
                   d={featurePaths[index]}
                   fill={color}
                   fillRule="evenodd"
-                  stroke={isActive ? MAP_COLORS.highlight : MAP_COLORS.municipalBorder}
-                  strokeWidth={isActive ? 1.1 : 0.3}
+                  stroke={isActive ? MAP_COLORS.highlight : 'none'}
+                  strokeWidth={isActive ? 1.1 : 0}
                   role="button"
                   tabIndex={0}
                   aria-label={`${feature.properties.municipality_name ?? 'Municipality'} ${

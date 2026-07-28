@@ -20,7 +20,6 @@ export const MAP_COLORS = {
   stateBorder: '#92928e',
   countryBorder: '#555553',
   graticule: '#9aa9b0',
-  municipalBorder: '#f8fafc',
   highlight: '#111827',
 } as const;
 
