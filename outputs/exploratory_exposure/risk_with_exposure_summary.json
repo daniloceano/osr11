@@ -1,0 +1,91 @@
+{
+  "municipality_count": 280,
+  "spearman": {
+    "R_current_vs_R_log10": 0.9284,
+    "R_current_vs_R_rank": 0.4619,
+    "R_log10_vs_R_rank": 0.6963
+  },
+  "candidates": {
+    "log10": {
+      "spearman_with_current": 0.9284,
+      "median_absolute_shift": 12,
+      "share_moving_more_than_15_positions": 0.3821,
+      "largest_rise": [
+        "Rio de Janeiro/RJ +96",
+        "Salvador/BA +89",
+        "São Luís/MA +83",
+        "Jaboatão dos Guararapes/PE +71",
+        "Maceió/AL +65"
+      ],
+      "largest_fall": [
+        "Santa Rita/MA -269",
+        "Calçoene/AP -123",
+        "Oiapoque/AP -108",
+        "Santo Amaro do Maranhão/MA -84",
+        "Galinhos/RN -75"
+      ],
+      "top10": [
+        "Turiaçu/MA",
+        "Icatu/MA",
+        "Magé/RJ",
+        "Macapá/AP",
+        "Bacuri/MA",
+        "Duque de Caxias/RJ",
+        "Apicum-Açu/MA",
+        "Cândido Mendes/MA",
+        "Axixá/MA",
+        "Maricá/RJ"
+      ]
+    },
+    "rank": {
+      "spearman_with_current": 0.4619,
+      "median_absolute_shift": 56,
+      "share_moving_more_than_15_positions": 0.825,
+      "largest_rise": [
+        "São Luís/MA +126",
+        "Rio de Janeiro/RJ +125",
+        "Jaboatão dos Guararapes/PE +122",
+        "Maceió/AL +119",
+        "Praia Grande/SP +118"
+      ],
+      "largest_fall": [
+        "Calçoene/AP -268",
+        "Santa Rita/MA -263",
+        "São João Batista/MA -240",
+        "Serrano do Maranhão/MA -235",
+        "Bacurituba/MA -225"
+      ],
+      "top10": [
+        "Magé/RJ",
+        "Macapá/AP",
+        "Turiaçu/MA",
+        "Duque de Caxias/RJ",
+        "Maricá/RJ",
+        "Saquarema/RJ",
+        "Araruama/RJ",
+        "Icatu/MA",
+        "Vigia/PA",
+        "São Sebastião/SP"
+      ]
+    }
+  },
+  "top10_current": [
+    "Calçoene/AP",
+    "Turiaçu/MA",
+    "Icatu/MA",
+    "Cândido Mendes/MA",
+    "Bacuri/MA",
+    "Axixá/MA",
+    "Apicum-Açu/MA",
+    "Serrano do Maranhão/MA",
+    "Santa Rita/MA",
+    "Chaves/PA"
+  ],
+  "generated_by": "src.exploratory.make_exploratory_risk_with_exposure",
+  "generated_at": "2026-07-28T17:28:25.302895+00:00",
+  "exposure_field": "pop_10km",
+  "clip_floor": 0.01,
+  "published_formula": "R_current = norm_municipal((SVI/100) * Hazard_Index)",
+  "candidate_formula": "R = norm_municipal((clip(A) * clip(E) * clip(V)) ** (1/3))",
+  "figure": "outputs/exploratory_exposure/risk_with_exposure_comparison.png"
+}
