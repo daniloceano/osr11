@@ -1,11 +1,45 @@
 {
   "municipality_count": 280,
   "spearman": {
+    "R_current_vs_R_inform": 0.8015,
     "R_current_vs_R_log10": 0.9284,
     "R_current_vs_R_rank": 0.4619,
+    "R_inform_vs_R_log10": 0.9206,
+    "R_inform_vs_R_rank": 0.7726,
     "R_log10_vs_R_rank": 0.6963
   },
   "candidates": {
+    "inform": {
+      "spearman_with_current": 0.8015,
+      "median_absolute_shift": 23,
+      "share_moving_more_than_15_positions": 0.6179,
+      "largest_rise": [
+        "São Luís/MA +88",
+        "Salvador/BA +84",
+        "Maceió/AL +75",
+        "São Vicente/SP +75",
+        "Lauro de Freitas/BA +66"
+      ],
+      "largest_fall": [
+        "Calçoene/AP -276",
+        "Santa Rita/MA -269",
+        "São João Batista/MA -204",
+        "Oiapoque/AP -195",
+        "Santo Amaro do Maranhão/MA -180"
+      ],
+      "top10": [
+        "Icatu/MA",
+        "Turiaçu/MA",
+        "Apicum-Açu/MA",
+        "Macapá/AP",
+        "Axixá/MA",
+        "Magé/RJ",
+        "Maricá/RJ",
+        "Chaves/PA",
+        "Saquarema/RJ",
+        "Salvaterra/PA"
+      ]
+    },
     "log10": {
       "spearman_with_current": 0.9284,
       "median_absolute_shift": 12,
@@ -82,7 +116,7 @@
     "Chaves/PA"
   ],
   "generated_by": "src.exploratory.make_exploratory_risk_with_exposure",
-  "generated_at": "2026-07-28T17:29:51.674239+00:00",
+  "generated_at": "2026-07-28T19:03:31.124730+00:00",
   "exposure_field": "pop_10km",
   "clip_floor": 0.01,
   "published_formula": "R_current = norm_municipal((SVI/100) * Hazard_Index)",

@@ -6,11 +6,16 @@ already published for the risk layer and writes:
     site/public/data/exposure_municipalities.geojson
     site/public/data/exposure_metadata.json
 
-Two candidate normalisations of the exposure term are published side by side,
+Three candidate normalisations of the exposure term are published side by side,
 because the choice between them is still open and is the point of the page:
 
-* ``E_log10`` — Min--Max of log10(population + 1)
-* ``E_rank``  — percentile rank of the population
+* ``E_inform`` — the INFORM recipe: log-scaled count between fixed goalposts,
+  combined with the municipal share. Recommended, and the default layer.
+* ``E_log10``  — Min--Max of log10(population + 1)
+* ``E_rank``   — percentile rank of the population
+
+The two halves of ``E_inform`` travel with it as ``E_inform_absolute`` and
+``E_inform_relative`` so the pair can be inspected separately.
 
 The Min--Max of the raw count is deliberately *not* offered as a map layer. It
 is degenerate here: the count is skewed above 7, so the affine rescaling leaves
@@ -38,6 +43,12 @@ import numpy as np
 import pandas as pd
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT
+from src.risk_integration.exposure_index import (
+    GOALPOST_MAX_INHABITANTS,
+    GOALPOST_MIN_INHABITANTS,
+    all_variants,
+    variant_components,
+)
 from src.risk_integration.palettes import component_colors, risk_colors
 
 
@@ -78,14 +89,6 @@ def _numeric_stats(series: pd.Series) -> dict[str, float | int | None]:
         "mean": round(float(values.mean()), 6),
         "median": round(float(values.median()), 6),
     }
-
-
-def _minmax(values: pd.Series) -> pd.Series:
-    finite = values[np.isfinite(values)]
-    lower, upper = float(finite.min()), float(finite.max())
-    if math.isclose(lower, upper):
-        return pd.Series(0.0, index=values.index)
-    return (values - lower) / (upper - lower)
 
 
 def _count_boundaries(series: pd.Series) -> list[float]:
@@ -135,9 +138,13 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         )
 
     population = pd.to_numeric(merged[EXPOSURE_FIELD], errors="coerce")
-    merged["E_linear"] = _minmax(population)
-    merged["E_log10"] = _minmax(np.log10(population + 1.0))
-    merged["E_rank"] = population.rank(pct=True)
+    municipal_population = pd.to_numeric(merged["pop_municipality"], errors="coerce")
+    derived = {
+        **all_variants(population, municipal_population),
+        **variant_components(population, municipal_population),
+    }
+    for name, values in derived.items():
+        merged[name] = values
 
     export = gpd.GeoDataFrame(geometry=merged.geometry, crs=OUTPUT_CRS)
     for column in (
@@ -146,13 +153,41 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         "state",
         "state_name",
         *count_fields,
-        "E_linear",
-        "E_log10",
-        "E_rank",
+        *derived,
     ):
         export[column] = merged[column].map(_to_jsonable)
 
     layers: list[dict[str, Any]] = [
+        {
+            "key": "E_inform",
+            "label": "Exposure — INFORM recipe (recommended)",
+            "short_label": "E (INFORM)",
+            "unit": "0–1",
+            "stage": "normalized",
+            "group": "Candidate normalisations",
+            "actual_field": (
+                "derived:geomean(goalposts(log10(pop_10km), 1e2, 1e6), "
+                "pop_10km/pop_municipality)"
+            ),
+            "decimals": 3,
+            "boundaries": NORMALIZED_BOUNDARIES,
+            "colors": risk_colors(8),
+            "palette": "risk",
+            "palette_source": "green-to-red palette shared with the hazard and risk layers",
+            "description": (
+                "The count on a log scale between fixed goalposts of "
+                f"{GOALPOST_MIN_INHABITANTS:,.0f} and {GOALPOST_MAX_INHABITANTS:,.0f} "
+                "inhabitants, combined by geometric mean with the share of the "
+                "municipal population inside the band. Following INFORM: the "
+                "absolute count favours the metropolitan municipalities and the "
+                "share favours the small fully-coastal ones, so the indicator is "
+                "computed both ways and the pair aggregated. Fixed goalposts make "
+                "the scale independent of which municipalities are in the set — "
+                "0.5 always denotes 10,000 inhabitants — at the cost of saturating "
+                "the six municipalities outside them."
+            ),
+            "stats": _numeric_stats(export["E_inform"]),
+        },
         {
             "key": "E_log10",
             "label": "Exposure — Min–Max of log₁₀(population+1)",

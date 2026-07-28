@@ -56,6 +56,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import BoundaryNorm, ListedColormap  # noqa: E402
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT  # noqa: E402
+from src.risk_integration.exposure_index import CLIP_FLOOR, all_variants  # noqa: E402
 from src.risk_integration.palettes import risk_colors  # noqa: E402
 
 
@@ -67,7 +68,6 @@ OUTPUT_FIGURE = OUTPUT_DIR / "exposure_normalization_comparison.png"
 OUTPUT_SUMMARY = OUTPUT_DIR / "exposure_normalization_summary.json"
 
 EXPOSURE_FIELD = "pop_10km"
-CLIP_FLOOR = 0.01
 CLASS_BOUNDARIES = np.linspace(0.0, 1.0, 9)
 
 
@@ -77,15 +77,6 @@ def minmax(values: pd.Series) -> pd.Series:
     if np.isclose(lower, upper):
         return pd.Series(0.0, index=values.index)
     return (values - lower) / (upper - lower)
-
-
-def normalisations(population: pd.Series) -> dict[str, pd.Series]:
-    """The three candidate ways of bringing a population count onto [0, 1]."""
-    return {
-        "linear": minmax(population),
-        "log10": minmax(np.log10(population + 1.0)),
-        "rank": population.rank(pct=True),
-    }
 
 
 def load_components() -> gpd.GeoDataFrame:
@@ -98,7 +89,7 @@ def load_components() -> gpd.GeoDataFrame:
     risk["municipality_code"] = risk["municipality_code"].astype(str)
 
     merged = risk.merge(
-        exposure[["municipality_code", EXPOSURE_FIELD]],
+        exposure[["municipality_code", EXPOSURE_FIELD, "pop_municipality"]],
         on="municipality_code",
         how="left",
         validate="one_to_one",
@@ -123,11 +114,12 @@ def build_frame(components: gpd.GeoDataFrame) -> tuple[gpd.GeoDataFrame, dict[st
     frame["A"] = hazard
     frame["V"] = vulnerability
 
+    municipal = pd.to_numeric(frame["pop_municipality"], errors="coerce")
     clip = lambda s: s.clip(lower=CLIP_FLOOR, upper=1.0)  # noqa: E731
     summary: dict[str, Any] = {"normalisations": {}}
-    for name, exposure in normalisations(population).items():
+    for name, exposure in all_variants(population, municipal).items():
         risk = (clip(hazard) * clip(exposure) * clip(vulnerability)) ** (1.0 / 3.0)
-        frame[f"E_{name}"] = exposure
+        frame[name] = exposure
         frame[f"R_{name}"] = risk
         summary["normalisations"][name] = {
             "E": {
@@ -154,7 +146,7 @@ def build_frame(components: gpd.GeoDataFrame) -> tuple[gpd.GeoDataFrame, dict[st
             ],
         }
 
-    pairs = [("linear", "log10"), ("linear", "rank"), ("log10", "rank")]
+    pairs = [("E_inform", "E_log10"), ("E_inform", "E_rank"), ("E_log10", "E_rank")]
     summary["spearman_between_risk_maps"] = {
         f"{a}_vs_{b}": round(
             float(spearmanr(frame[f"R_{a}"], frame[f"R_{b}"]).statistic), 4
@@ -169,18 +161,19 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
     cmap = ListedColormap(colors)
     norm = BoundaryNorm(CLASS_BOUNDARIES, cmap.N)
 
-    names = ("linear", "log10", "rank")
+    names = ("E_inform", "E_log10", "E_rank", "E_linear")
     titles = {
-        "linear": "Min–Max of the count",
-        "log10": "Min–Max of log₁₀(count+1)",
-        "rank": "Percentile rank",
+        "E_inform": "INFORM: goalposts + share",
+        "E_log10": "Min–Max of log₁₀(count+1)",
+        "E_rank": "Percentile rank",
+        "E_linear": "Min–Max of the count",
     }
-    fig, axes = plt.subplots(2, 3, figsize=(15, 13), constrained_layout=True)
+    fig, axes = plt.subplots(2, 4, figsize=(20, 13), constrained_layout=True)
     for column, name in enumerate(names):
         for row, prefix in enumerate(("E", "R")):
             ax = axes[row, column]
             frame.plot(
-                column=f"{prefix}_{name}",
+                column=name if prefix == "E" else f"R_{name}",
                 cmap=cmap,
                 norm=norm,
                 linewidth=0.1,
@@ -260,7 +253,7 @@ def main() -> None:
     for name, block in summary["normalisations"].items():
         stats = block["spearman_R_with"]
         print(
-            f"  E_{name:6s} mediana={block['E']['median']:.3f} "
+            f"  {name:9s} mediana={block['E']['median']:.3f} "
             f"abaixo de 0.05={block['E']['share_below_0.05']:.0%} | "
             f"rho(R,A)={stats['A']:+.3f} rho(R,E)={stats['E']:+.3f} "
             f"rho(R,V)={stats['V']:+.3f}"

@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-28T17:08:10.509927+00:00",
+  "generated_at": "2026-07-28T19:01:50.998886+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",
@@ -26,6 +26,47 @@
   "interpretation": "Proximity, not modelled inundation. Resident (de jure) population on 2022-07-31; seasonal population is not represented.",
   "grid_provenance": "data/metadata/ibge_grade_estatistica_2022_download.json",
   "available_layers": [
+    {
+      "key": "E_inform",
+      "label": "Exposure — INFORM recipe (recommended)",
+      "short_label": "E (INFORM)",
+      "unit": "0–1",
+      "stage": "normalized",
+      "group": "Candidate normalisations",
+      "actual_field": "derived:geomean(goalposts(log10(pop_10km), 1e2, 1e6), pop_10km/pop_municipality)",
+      "decimals": 3,
+      "boundaries": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ],
+      "colors": [
+        "#008000",
+        "#33B200",
+        "#80D900",
+        "#CCE600",
+        "#FFB200",
+        "#FF8000",
+        "#FF4000",
+        "#FF0000"
+      ],
+      "palette": "risk",
+      "palette_source": "green-to-red palette shared with the hazard and risk layers",
+      "description": "The count on a log scale between fixed goalposts of 100 and 1,000,000 inhabitants, combined by geometric mean with the share of the municipal population inside the band. Following INFORM: the absolute count favours the metropolitan municipalities and the share favours the small fully-coastal ones, so the indicator is computed both ways and the pair aggregated. Fixed goalposts make the scale independent of which municipalities are in the set — 0.5 always denotes 10,000 inhabitants — at the cost of saturating the six municipalities outside them.",
+      "stats": {
+        "count": 282,
+        "min": 0.01,
+        "max": 1.0,
+        "mean": 0.670599,
+        "median": 0.709466
+      }
+    },
     {
       "key": "E_log10",
       "label": "Exposure — Min–Max of log₁₀(population+1)",

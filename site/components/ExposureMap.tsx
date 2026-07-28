@@ -108,6 +108,9 @@ const DETAIL_FIELDS: { key: string; label: string; decimals: number; rule?: bool
   { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0 },
   { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0 },
   { key: 'dom_10km', label: 'Households ≤10 km', decimals: 0, rule: true },
+  { key: 'E_inform_absolute', label: 'E — absolute half (goalposts)', decimals: 3, rule: true },
+  { key: 'E_inform_relative', label: 'E — relative half (share)', decimals: 3 },
+  { key: 'E_inform', label: 'E — INFORM (0–1)', decimals: 3 },
   { key: 'E_log10', label: 'E — log₁₀ (0–1)', decimals: 3, rule: true },
   { key: 'E_rank', label: 'E — rank (0–1)', decimals: 3 },
   { key: 'E_linear', label: 'E — Min–Max of the count (0–1)', decimals: 3 },
@@ -131,7 +134,7 @@ function formatCount(value: number | null): string {
 export default function ExposureMap({ data, metadata, basemap }: Props) {
   const layers = metadata.available_layers;
   const [selectedKey, setSelectedKey] = useState<string>(
-    layers.find((layer) => layer.key === 'E_log10')?.key ?? layers[0]?.key ?? '',
+    layers.find((layer) => layer.key === 'E_inform')?.key ?? layers[0]?.key ?? '',
   );
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -302,9 +305,9 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
 
           {activeFeature && (
             <div
-              className="pointer-events-none absolute z-10 w-[268px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
+              className="pointer-events-none absolute z-10 w-[288px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
               style={{
-                left: Math.max(6, Math.min(tooltipPos.x + 12, containerWidth - 278)),
+                left: Math.max(6, Math.min(tooltipPos.x + 12, containerWidth - 298)),
                 top: tooltipPos.y - 10,
                 transform: 'translateY(-100%)',
               }}

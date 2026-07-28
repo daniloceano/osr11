@@ -51,6 +51,12 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import BoundaryNorm, ListedColormap  # noqa: E402
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT  # noqa: E402
+from src.risk_integration.exposure_index import (  # noqa: E402
+    CLIP_FLOOR,
+    exposure_inform,
+    exposure_log10,
+    exposure_rank,
+)
 from src.risk_integration.palettes import diverging_colors, risk_colors  # noqa: E402
 
 
@@ -62,7 +68,6 @@ OUTPUT_FIGURE = OUTPUT_DIR / "risk_with_exposure_comparison.png"
 OUTPUT_SUMMARY = OUTPUT_DIR / "risk_with_exposure_summary.json"
 
 EXPOSURE_FIELD = "pop_10km"
-CLIP_FLOOR = 0.01
 RISK_BOUNDARIES = [round(value, 3) for value in np.linspace(0.0, 1.0, 9)]
 #: Rank-shift classes, in positions. Symmetric, with a neutral middle class.
 SHIFT_BOUNDARIES = [-280.0, -80.0, -40.0, -15.0, 15.0, 40.0, 80.0, 280.0]
@@ -84,7 +89,7 @@ def load_frame() -> gpd.GeoDataFrame:
     exposure = pd.read_csv(EXPOSURE_CSV, dtype={"municipality_code": str})
     risk["municipality_code"] = risk["municipality_code"].astype(str)
     merged = risk.merge(
-        exposure[["municipality_code", EXPOSURE_FIELD]],
+        exposure[["municipality_code", EXPOSURE_FIELD, "pop_municipality"]],
         on="municipality_code",
         how="left",
         validate="one_to_one",
@@ -103,9 +108,11 @@ def build(frame: gpd.GeoDataFrame) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     population = pd.to_numeric(result[EXPOSURE_FIELD], errors="coerce")
     clip = lambda series: series.clip(lower=CLIP_FLOOR, upper=1.0)  # noqa: E731
 
+    municipal = pd.to_numeric(result["pop_municipality"], errors="coerce")
     exposures = {
-        "log10": minmax(np.log10(population + 1.0)),
-        "rank": population.rank(pct=True),
+        "inform": exposure_inform(population, municipal),
+        "log10": exposure_log10(population),
+        "rank": exposure_rank(population),
     }
     result["R_current"] = minmax(pd.to_numeric(result["Risk_Hazard"], errors="coerce"))
     for name, exposure in exposures.items():
@@ -120,7 +127,7 @@ def build(frame: gpd.GeoDataFrame) -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     for name in exposures:
         result[f"shift_{name}"] = position("R_current") - position(f"R_{name}")
 
-    keys = ["R_current", "R_log10", "R_rank"]
+    keys = ["R_current", "R_inform", "R_log10", "R_rank"]
     summary: dict[str, Any] = {
         "municipality_count": int(len(result)),
         "spearman": {
@@ -187,14 +194,14 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
     shift_cmap = ListedColormap(diverging_colors(len(SHIFT_BOUNDARIES) - 1))
     shift_norm = BoundaryNorm(SHIFT_BOUNDARIES, shift_cmap.N)
 
-    fig, axes = plt.subplots(2, 3, figsize=(15, 13), constrained_layout=True)
+    fig, axes = plt.subplots(2, 4, figsize=(20, 13), constrained_layout=True)
 
     _panel(
         axes[0, 0], frame, "R_current", risk_cmap, risk_norm,
         "Published index — no exposure",
         "norm(SVI/100 × Hazard_Index)",
     )
-    for column, name, label in ((1, "log10", "log₁₀"), (2, "rank", "rank")):
+    for column, name, label in ((1, "inform", "INFORM"), (2, "log10", "log₁₀"), (3, "rank", "rank")):
         rho = summary["candidates"][name]["spearman_with_current"]
         _panel(
             axes[0, column], frame, f"R_{name}", risk_cmap, risk_norm,
@@ -219,7 +226,7 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
         linespacing=1.5,
         transform=axes[1, 0].transAxes,
     )
-    for column, name, label in ((1, "log10", "log₁₀"), (2, "rank", "rank")):
+    for column, name, label in ((1, "inform", "INFORM"), (2, "log10", "log₁₀"), (3, "rank", "rank")):
         block = summary["candidates"][name]
         _panel(
             axes[1, column], frame, f"shift_{name}", shift_cmap, shift_norm,

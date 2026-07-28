@@ -1,31 +1,31 @@
 {
   "normalisations": {
-    "linear": {
+    "E_inform": {
       "E": {
-        "mean": 0.025154,
-        "median": 0.00515,
-        "share_below_0.05": 0.8929
+        "mean": 0.672172,
+        "median": 0.711708,
+        "share_below_0.05": 0.0071
       },
       "spearman_R_with": {
-        "A": 0.667,
-        "E": 0.2777,
-        "V": 0.131,
-        "Risk_Hazard_published": 0.6404
+        "A": 0.6683,
+        "E": 0.1977,
+        "V": 0.2972,
+        "Risk_Hazard_published": 0.8015
       },
       "top10": [
-        "Rio de Janeiro/RJ",
-        "Salvador/BA",
-        "Duque de Caxias/RJ",
-        "São Gonçalo/RJ",
-        "Recife/PE",
-        "São Luís/MA",
+        "Icatu/MA",
+        "Turiaçu/MA",
+        "Apicum-Açu/MA",
         "Macapá/AP",
-        "Maceió/AL",
-        "Jaboatão dos Guararapes/PE",
-        "Guarujá/SP"
+        "Axixá/MA",
+        "Magé/RJ",
+        "Maricá/RJ",
+        "Chaves/PA",
+        "Saquarema/RJ",
+        "Salvaterra/PA"
       ]
     },
-    "log10": {
+    "E_log10": {
       "E": {
         "mean": 0.625816,
         "median": 0.614933,
@@ -50,7 +50,7 @@
         "Maricá/RJ"
       ]
     },
-    "rank": {
+    "E_rank": {
       "E": {
         "mean": 0.501786,
         "median": 0.501786,
@@ -74,15 +74,40 @@
         "Vigia/PA",
         "São Sebastião/SP"
       ]
+    },
+    "E_linear": {
+      "E": {
+        "mean": 0.025154,
+        "median": 0.00515,
+        "share_below_0.05": 0.8929
+      },
+      "spearman_R_with": {
+        "A": 0.667,
+        "E": 0.2777,
+        "V": 0.131,
+        "Risk_Hazard_published": 0.6404
+      },
+      "top10": [
+        "Rio de Janeiro/RJ",
+        "Salvador/BA",
+        "Duque de Caxias/RJ",
+        "São Gonçalo/RJ",
+        "Recife/PE",
+        "São Luís/MA",
+        "Macapá/AP",
+        "Maceió/AL",
+        "Jaboatão dos Guararapes/PE",
+        "Guarujá/SP"
+      ]
     }
   },
   "spearman_between_risk_maps": {
-    "linear_vs_log10": 0.7482,
-    "linear_vs_rank": 0.6338,
-    "log10_vs_rank": 0.6963
+    "E_inform_vs_E_log10": 0.9206,
+    "E_inform_vs_E_rank": 0.7726,
+    "E_log10_vs_E_rank": 0.6963
   },
   "generated_by": "src.exploratory.make_exploratory_exposure_normalization",
-  "generated_at": "2026-07-28T14:43:14.681105+00:00",
+  "generated_at": "2026-07-28T19:03:55.986947+00:00",
   "exposure_field": "pop_10km",
   "clip_floor": 0.01,
   "formula": "R = (clip(A) * clip(E) * clip(V)) ** (1/3)",
