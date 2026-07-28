@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-28T19:01:50.998886+00:00",
+  "generated_at": "2026-07-28T19:04:55.234640+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",

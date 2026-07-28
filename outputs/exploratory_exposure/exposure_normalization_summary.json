@@ -107,7 +107,7 @@
     "E_log10_vs_E_rank": 0.6963
   },
   "generated_by": "src.exploratory.make_exploratory_exposure_normalization",
-  "generated_at": "2026-07-28T19:03:55.986947+00:00",
+  "generated_at": "2026-07-28T19:04:59.048550+00:00",
   "exposure_field": "pop_10km",
   "clip_floor": 0.01,
   "formula": "R = (clip(A) * clip(E) * clip(V)) ** (1/3)",
