@@ -203,15 +203,20 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
         )
 
     axes[1, 0].axis("off")
+    # The diverging ramp is RdBu_r: low (negative) is blue, high (positive) is
+    # red. A positive shift means the candidate ranks the municipality as more
+    # at risk, so red is the rise and blue is the fall.
     axes[1, 0].text(
-        0.5, 0.5,
+        0.5, 0.96,
         "Rank shift against the\npublished index\n\n"
-        "blue  = candidate ranks it\n          more at risk\n"
-        "red   = less at risk\n\n"
+        "red   = candidate ranks it\n          MORE at risk\n"
+        "blue  = LESS at risk\n"
+        "white = within 15 positions\n\n"
         f"{summary['municipality_count']} municipalities\n"
         "components clipped to\n"
         f"[{CLIP_FLOOR}, 1] before the product",
-        ha="center", va="center", fontsize=11, color="#374151",
+        ha="center", va="top", fontsize=11, color="#374151",
+        linespacing=1.5,
         transform=axes[1, 0].transAxes,
     )
     for column, name, label in ((1, "log10", "log₁₀"), (2, "rank", "rank")):
@@ -234,7 +239,10 @@ def draw(frame: gpd.GeoDataFrame, summary: dict[str, Any]) -> None:
         ax=axes[1, :], orientation="horizontal", fraction=0.045, pad=0.02,
         ticks=SHIFT_BOUNDARIES,
     )
-    shift_bar.set_label("change in ranking position (positive = more at risk)", fontsize=10)
+    shift_bar.set_label(
+        "change in ranking position — red = rises (more at risk), blue = falls",
+        fontsize=10,
+    )
 
     fig.suptitle(
         "Does the exposure term change the risk map?\n"
