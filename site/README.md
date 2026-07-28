@@ -195,14 +195,15 @@ Edit `content/figures.ts` to:
 
 ### Risk-Index Data
 
-Karine's risk-index shapefile outputs live in `../outputs/risk_index/`. The website consumes a current normalized multimetric product plus preserved audit fields in `public/data/`:
+The externally delivered municipal shapefile lives in `../outputs/risk_index/` and is the
+only accepted upstream source. The website consumes a single product in `public/data/`:
 
-- `risk_index_municipalities.geojson` — current product consumed by the site
+- `risk_index_municipalities.geojson` — the municipal product
 - `risk_index_metadata.json` — layer catalogue, class limits, palettes, statistics
-- `risk_index_legacy_municipalities.geojson` — originally delivered fields; **also the
-  upstream data source** when `../outputs/risk_index/risk_index.shp` is absent, so it
-  must not be deleted
-- `risk_index_legacy_metadata.json` — detected DBF aliases of that source
+
+If `../outputs/risk_index/risk_index.shp` is absent the export raises `FileNotFoundError`.
+There is no fallback: an incomplete source must fail rather than publish a product
+rebuilt from a previous export.
 
 Regenerate them from the repository root:
 
@@ -216,12 +217,11 @@ its transfer to municipalities,
 `Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index`, and
 `Risk_Hazard = norm_municipal(Risk_Hazard_raw)` on a 0–1 scale. Each quantity is
 published both before and after its Min–Max normalization (`Hazard_Index_raw`,
-`Risk_Hazard_raw`), and the superseded `CountOnly_*` and delivered `Legacy_*`
-fields stay in the GeoJSON properties for reproducibility but are no longer
-offered as map layers or as a separate legacy page. The legacy metadata
-records detected DBF aliases such as `SVI_Coast_` -> `SVI_Coast_2022`,
-`Haz_index` -> `Hazard_Index`, `Risk_comp` -> `Risk_Comp`, and
-`Risk_harza` -> `Risk_Hazard`.
+`Risk_Hazard_raw`). `Hazard_Index_mun`, the hazard renormalized over the
+municipalities for equal-weight aggregations, stays in the GeoJSON properties
+but is not offered as a map layer. The metadata records the single resolved DBF
+alias, `SVI_Coast_` -> `SVI_Coast_2022`; the delivered `Haz_index`,
+`Risk_comp` and `Risk_harza` columns are not read.
 The native-grid formula itself is centralized in
 `../src/04_risk_integration/hazard_index.py` and reused by the exporter and
 article figures.

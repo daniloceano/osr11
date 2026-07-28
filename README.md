@@ -245,9 +245,6 @@ Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
 
 Risk_Hazard = norm(Risk_Hazard_raw)
 
-Risk_Comp_raw = Risk_Hazard_raw
-
-Risk_Comp = Risk_Hazard
 ```
 
 Where:
@@ -259,16 +256,8 @@ Where:
 - `Hazard_Index` — final physical hazard index, normalized to [0, 1] on the native grid and transferred without renormalization to municipalities
 - `Risk_Hazard_raw` — unnormalized vulnerability–hazard product retained for audit
 - `Risk_Hazard` — final integrated index, normalized to [0, 1] across municipalities with finite SVI and hazard values
-- `Risk_Comp_raw` and `Risk_Comp` are compatibility aliases for the raw and normalized integrated-risk products, respectively
 
-Former count-only product retained for audit/comparison:
-
-```
-CountOnly_Hazard_Index = norm_municipal(compound_c)
-CountOnly_Risk_Hazard = norm[(SVI_Coast_2022 / 100) × CountOnly_Hazard_Index]
-```
-
-> **Notes.** (1) The authoritative calculation is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned native-grid file `outputs/storm_catalog/compound/compound_metrics.csv`; the external municipal file supplies SVI, municipality geometry, and the pre-associated grid coordinates. (2) The delivered multimetric DBF fields remain preserved as `Legacy_*`, while the former repository count-only product is preserved as `CountOnly_*`. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
+> **Notes.** (1) The authoritative calculation is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned native-grid file `outputs/storm_catalog/compound/compound_metrics.csv`; the external municipal file supplies SVI, municipality geometry, and the pre-associated grid coordinates. (2) The export produces a single product: the delivered hazard/risk DBF columns are ignored and the superseded count-only fields were removed on 2026-07-28. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index
@@ -277,12 +266,10 @@ CountOnly_Risk_Hazard = norm[(SVI_Coast_2022 / 100) × CountOnly_Hazard_Index]
 - `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`
 - `Risk_Hazard_raw` — unnormalized product of SVI fraction and multimetric hazard
 - `Risk_Hazard` — current integrated coastal risk, Min–Max normalized to [0, 1]
-- `Risk_Comp_raw`, `Risk_Comp` — compatibility aliases for the raw and normalized products
-- `CountOnly_Hazard_Index`, `CountOnly_Risk_Hazard*` — former repository count-only product
-- `Legacy_Hazard_Index`, `Legacy_Risk_Comp`, `Legacy_Risk_Hazard` — delivered external fields retained for audit
+- `Hazard_Index_mun` — hazard renormalized over the municipalities, for equal-weight aggregations
 
 **Status:** ✅ Complete  
-**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the 87-metric explorer below it, transposed to the same coastline with the same graphic style. `/results/risk-integration` displays the current municipal product with every quantity available **before and after** its Min–Max normalization (`Hazard_Index_raw`, `Risk_Hazard_raw`). `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index. The superseded `CountOnly_*` and delivered `Legacy_*` fields remain in the exported GeoJSON for reproducibility, but are no longer published as map layers or as a separate legacy page.
+**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the 87-metric explorer below it, transposed to the same coastline with the same graphic style. `/results/risk-integration` displays the current municipal product with every quantity available **before and after** its Min–Max normalization (`Hazard_Index_raw`, `Risk_Hazard_raw`). `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index.
 
 **Risk-index shapefile export:**
 Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
@@ -294,20 +281,18 @@ python -m src.site.export_risk_index_data
 The exporter writes:
 - `site/public/data/risk_index_municipalities.geojson`
 - `site/public/data/risk_index_metadata.json`
-- `site/public/data/risk_index_legacy_municipalities.geojson`
-- `site/public/data/risk_index_legacy_metadata.json`
 
-Detected shapefile aliases are recorded in the metadata. In the legacy source:
+Only one quantity is read from the shapefile by name, and DBF truncation means it
+can arrive under several spellings; the resolved alias is recorded in the metadata:
 - `SVI_Coast_2022` maps to `SVI_Coast_`
-- `Hazard_Index` maps to `Haz_index`
-- `Risk_Comp` maps to `Risk_comp`
-- `Risk_Hazard` maps to `Risk_harza`
 
-In the current export, `Hazard_Index` is calculated on the native grid from
-frequency, duration, and intensity and transferred by `grid_lat`/`grid_lon`
-**without renormalization**. `Risk_Hazard_raw` and the normalized `Risk_Hazard`
-are then derived from this hazard and SVI. The delivered DBF fields remain under
-`Legacy_*`; the former repository count-only fields remain under `CountOnly_*`.
+`Hazard_Index` is calculated on the native grid from frequency, duration, and
+intensity and transferred by `grid_lat`/`grid_lon` **without renormalization**.
+`Risk_Hazard_raw` and the normalized `Risk_Hazard` are then derived from this
+hazard and SVI. The delivered `Haz_index`/`Risk_comp`/`Risk_harza` columns are
+not read at all — they were computed with a superseded definition. If
+`outputs/risk_index/risk_index.shp` is absent the export raises
+`FileNotFoundError`; there is no fallback to a previous export.
 
 #### Sub-step 4.4 — Coastal representation of the Hazard Index
 

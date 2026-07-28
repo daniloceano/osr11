@@ -361,13 +361,101 @@ This section documents methodological decisions in the municipal risk integratio
 are explicit in the scientific record. The external workflow (QGIS / Python workflow by
 Karine Bastos Leal, INPE) delivered `outputs/risk_index/risk_index.shp` with SVI, compound
 metrics, and the former risk fields (`Haz_index`, `Risk_comp`, `Risk_harza`,
-`SVI_Coast_`). The repository export now creates three auditable scopes:
+`SVI_Coast_`). Of those, only the geometry, `SVI_Coast_`, the ten IBGE/SIDRA indicators,
+`PC1` and the pre-associated `grid_lat`/`grid_lon` are read; the delivered hazard and risk
+columns are ignored and recalculated from the versioned native-grid metrics.
 
-1. **Current product** (`site/public/data/risk_index_municipalities.geojson`): the normalized
-   native-grid frequency-duration-intensity Hazard Index transferred to municipalities.
-2. **Former repository count-only product**: retained as `CountOnly_*` fields.
-3. **Delivered legacy product** (`site/public/data/risk_index_legacy_municipalities.geojson`):
-   the original external fields preserved for audit and comparison.
+The repository export produces **one** product,
+`site/public/data/risk_index_municipalities.geojson`: the normalized native-grid
+frequency-duration-intensity Hazard Index transferred to municipalities, and the risk
+derived from it. Parallel scopes (`Legacy_*`, `CountOnly_*`, the
+`risk_index_legacy_*` artefacts) were removed on 2026-07-28.
+
+### 2026-07-28 — Exposure enters the framework; risk becomes conjunctive
+
+**[DECISION — risk is the geometric mean of the three IPCC components]**
+The integrated index is redefined as
+
+$$
+R_m=\left(A_m\,E_m\,V_m\right)^{1/3},
+$$
+
+where $A$ is the compound-event Hazard Index, $E$ a population-exposure index,
+and $V=\mathrm{SVI\_Coast\_2022}/100$. The superseded form was the compensatory
+product $(\mathrm{SVI}/100)\times\mathrm{Hazard\_Index}$ without any exposure
+term.
+
+The reason for the geometric mean is conceptual, not numerical. The IPCC
+framework \citep{reisinger2020risk} defines risk as emerging from the
+*interaction* of hazard, exposure and vulnerability, and supplies no formula.
+What the framework does imply is that risk is **conjunctive**: with no hazard,
+or with nobody exposed, there is no potential for adverse consequences. An
+arithmetic mean $(A+E+V)/3$ violates that property — it lets a high population
+compensate for the absence of a physical driver — whereas the geometric mean
+preserves it. The same argument underlies the INFORM Risk Index of the European
+Commission JRC, which aggregates its dimensions geometrically and deliberately
+fuses exposure with hazard rather than treating exposure as a peer of
+vulnerability.
+
+**[DECISION — only the conjunctive index is published]** An additive
+prioritisation variant was evaluated (Spearman $0.932$ against the geometric
+form on the exploratory dataset) and is *not* published, to keep the article
+focused. Only the geometric index may be called "risk".
+
+**[DECISION — components are clipped at 0.01 before the product]** Min–Max
+normalisation places at least one municipality at exactly zero on each
+component; in a product that municipality would receive zero risk as an
+artefact of the scaling, not as a physical statement. Balneário Camboriú (SC)
+sits at $\mathrm{SVI}=0$ for this reason. All components are therefore clipped
+to $[0.01,1]$ before the geometric mean. The clip is a floor on the scale, not
+on the underlying quantity, and it must be reported in the manuscript.
+
+**[DECISION — the hazard is renormalised over the municipalities for this
+aggregation only]** `Hazard_Index` keeps the native-grid scale, so its municipal
+range is $[0.003439, 0.829072]$ while $\mathrm{SVI}/100$ spans $[0,1]$. In an
+equal-weight aggregation that difference in amplitude silently down-weights the
+hazard. `Hazard_Index_mun` = Min–Max of `Hazard_Index` over the municipalities
+is therefore introduced as the hazard input to $R$. It is a pure rescaling
+(Spearman $1.000000$ against `Hazard_Index`) and no other published field uses
+it. The native-grid scale is retained for `Hazard_Index` so that the municipal
+layer and the coastal-line figure remain on one field.
+
+**[PENDING — the exposure component]** $E$ will be built from the population
+within 10 km of the coastline, from the IBGE Grade Estatística 2022
+(200 m urban / 1 km rural cells; `TOTAL`). The **normalisation of $E$ is not yet
+decided** and is the subject of an exploratory comparison, because Min–Max on a
+raw population count is degenerate: the count has skewness $7.5$, 90 % of the
+municipalities fall below $0.05$, and removing a single municipality (Rio de
+Janeiro) shifts the median of $E$ by a factor of $1.7$. The candidates are
+$\log_{10}$-then-Min–Max and the percentile rank. **[CAVEAT]** The choice is
+consequential rather than technical: the ratio between Rio de Janeiro and the
+median municipality is $188\times$ under Min–Max, $1.5\times$ under $\log_{10}$
+and $2\times$ under ranks, and the exposure term only drives the ranking under
+the rank normalisation. Whichever is adopted, the alternatives must be reported
+as a sensitivity analysis.
+
+**[CAVEAT — $E$ is proximity, not affected population]** No inundation extent is
+modelled anywhere in this workflow. The 10 km band is a proximity criterion, and
+the manuscript must say so explicitly; "potentially exposed population under the
+10 km criterion" is admissible, "affected population" is not.
+
+### 2026-07-28 — The municipal export has no fallback
+
+**[DECISION]** `src/site/export_risk_index_data.py` previously fell back to the
+previously exported `risk_index_legacy_municipalities.geojson` when
+`outputs/risk_index/risk_index.shp` was absent. That path re-simplified already
+simplified geometry and could publish a product rebuilt from a stale export
+while reporting success. The externally delivered shapefile is now the only
+accepted source and a missing component raises `FileNotFoundError`.
+
+**[STATUS]** The shapefile is currently absent from both the workstation and the
+`swell` server, so the export cannot be regenerated until the file is obtained
+from the co-author. The last generated products remain committed under
+`site/public/data/`.
+
+**[CORRECTION]** The municipal maximum of `Hazard_Index` recorded in the
+2026-07-27 entry below (0.782047) is superseded: the value in the current
+product is **0.829072** (São Sebastião, SP), with a minimum of 0.003439.
 
 ### 2026-07-27 — Multimetric Hazard Index promoted to the current workflow
 
@@ -405,8 +493,8 @@ $$
 \text{norm}_{municipal}\left(\text{Risk\_Hazard}_{raw}\right).
 $$
 
-`Risk_Comp_raw` and `Risk_Comp` remain compatibility aliases for
-`Risk_Hazard_raw` and `Risk_Hazard`, respectively.
+*(Superseded on 2026-07-28: the `Risk_Comp_raw`/`Risk_Comp` compatibility
+aliases were removed; `Risk_Hazard_raw` and `Risk_Hazard` are the only names.)*
 
 For the native grid, $H_{raw}\in[0.181936,0.661876]$ and the published
 $\text{Hazard\_Index}\in[0,1]$. The 280 municipalities with a valid
@@ -422,8 +510,9 @@ $$
 =\text{norm}_{municipal}(\text{compound\_c}).
 $$
 
-The externally delivered fields remain under the `Legacy_*` names and in the
-dedicated legacy GeoJSON.
+*(Superseded on 2026-07-28: the `CountOnly_*` and `Legacy_*` fields and the
+dedicated legacy GeoJSON were removed; the count-only index is now rebuilt
+inside the exploratory comparison script that uses it.)*
 
 ### 2026-07-24 — Normalization of the final integrated index
 
@@ -677,12 +766,10 @@ the ranking of municipalities. Class limits are chosen so that every observed
 value falls inside the published legend.
 
 **[DECISION — the delivered legacy product is no longer a website page]** The
-`/results/risk-integration/legacy` page was removed. The `Legacy_*` and
-`CountOnly_*` fields remain inside `risk_index_municipalities.geojson` for
-reproducibility, and `risk_index_legacy_municipalities.geojson` is retained
-because it is also the upstream data source whenever
-`outputs/risk_index/risk_index.shp` is absent from a checkout. Neither is
-presented as a current product.
+`/results/risk-integration/legacy` page was removed. *(Superseded on 2026-07-28:
+the `Legacy_*` and `CountOnly_*` fields and the two
+`risk_index_legacy_*` artefacts were removed altogether — see the
+2026-07-28 entry above.)*
 
 ---
 

@@ -124,7 +124,6 @@ REQUIRED_FIELDS = {
     "Hazard_Intensity",
     "Hazard_Index_raw",
     "Hazard_Index",
-    "CountOnly_Hazard_Index",
 }
 
 CURRENT_KEY = "hazard_former_count_only"
@@ -163,10 +162,10 @@ def _derive_indices(
         "duration": pd.to_numeric(result["Hazard_Duration"], errors="coerce"),
         "intensity": pd.to_numeric(result["Hazard_Intensity"], errors="coerce"),
     }
-    result[CURRENT_KEY] = pd.to_numeric(
-        result["CountOnly_Hazard_Index"],
-        errors="coerce",
-    )
+    # The superseded count-only index is no longer carried in the published
+    # product; it is rebuilt here, where it is actually compared, from the
+    # compound-event count that the export still provides.
+    result[CURRENT_KEY] = _minmax(pd.to_numeric(result["compound_c"], errors="coerce"))
     result[RAW_ALTERNATIVE_KEY] = pd.to_numeric(
         result["Hazard_Index_raw"],
         errors="coerce",
@@ -535,7 +534,8 @@ def _write_metadata(
         "source_metadata": _relative(RISK_METADATA_PATH),
         "formulas": {
             CURRENT_KEY: (
-                "CountOnly_Hazard_Index = minmax_municipal(compound_c)"
+                "superseded count-only index, rebuilt here as "
+                "minmax_municipal(compound_c)"
             ),
             RAW_ALTERNATIVE_KEY: (
                 "[Hazard_Frequency + Hazard_Duration + Hazard_Intensity] / 3; "

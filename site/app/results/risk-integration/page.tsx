@@ -133,11 +133,10 @@ export default function RiskIntegrationPage() {
                   Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
                   SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
                   level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
-                  coast-wide. The superseded count-only calculation and the originally delivered
-                  fields remain inside the exported GeoJSON as <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">CountOnly_*</code>{' '}
-                  and <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Legacy_*</code> properties for
-                  reproducibility, but they are not published as map layers and do not describe the
-                  current method. Results are preliminary — do not cite without consulting the authors.
+                  coast-wide. The export carries a single product: the superseded count-only
+                  calculation and the originally delivered hazard/risk fields are no longer
+                  published, so every value on this page comes from the current method.
+                  Results are preliminary — do not cite without consulting the authors.
                 </p>
               </div>
             </div>

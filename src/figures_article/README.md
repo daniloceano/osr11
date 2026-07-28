@@ -125,9 +125,6 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 - municipality name: `NM_MUN`, `municipio`, `municipali`
 - state/UF: `SIGLA_UF`, `uf`
 - `SVI_Coast_2022`: `SVI_Coast_2022`, `SVI_Coast_`, `SVI_Coast`, `SVI_Coa`, `SVI`
-- `Hazard_Index`: `Hazard_Index`, `Haz_index`, `Hazard_In`, `Hazard`, `azard_Inde`
-- `Risk_Comp`: `Risk_Comp`, `Risk_comp`, `Risk_Com`, `risk_index`
-- `Risk_Hazard`: `Risk_Hazard`, `Risk_harza`, `Risk_Haza`, `Risk_Haz`, `risk_inde1`
 - `compound_c`: `compound_c`, `compound`, `comp_c`
 - `mean_overl`: `mean_overl`, `mean_ove`, `mean_overlap_duration`
 - `mean_compo`: `mean_compo`, `mean_com`, `mean_compound_intensity_norm`
