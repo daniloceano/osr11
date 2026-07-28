@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T17:25:14.462192+00:00",
+  "generated_at": "2026-07-27T22:31:17.987009+00:00",
   "output": "outputs/article_figures/supplementary_integrated_risk_zooms.png",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
@@ -42,9 +42,9 @@
       "statistics": {
         "count": 99,
         "min": 0.0,
-        "mean": 0.161372,
-        "median": 0.140659,
-        "max": 0.469125
+        "mean": 0.270063,
+        "median": 0.2521,
+        "max": 0.698283
       }
     },
     {
@@ -73,9 +73,9 @@
       "missing_risk_municipalities": [],
       "statistics": {
         "count": 63,
-        "min": 0.121311,
-        "mean": 0.472527,
-        "median": 0.477065,
+        "min": 0.177355,
+        "mean": 0.559381,
+        "median": 0.591156,
         "max": 1.0
       }
     }

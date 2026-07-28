@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_coastal_hazard_data",
-  "generated_at": "2026-07-27T18:11:47.927012+00:00",
+  "generated_at": "2026-07-27T22:30:25.652108+00:00",
   "period": "1993-2025",
   "source_file": "outputs/storm_catalog/compound/compound_metrics.csv",
   "native_hazard_index": {
@@ -43,10 +43,10 @@
       },
       "mean_compound_intensity_norm": {
         "count": 808,
-        "min": 0.0659,
-        "max": 0.6946,
-        "mean": 0.406997,
-        "median": 0.40685
+        "min": 0.1691,
+        "max": 0.5096,
+        "mean": 0.324783,
+        "median": 0.3209
       },
       "Hazard_Frequency": {
         "count": 808,
@@ -66,22 +66,22 @@
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.542543,
-        "median": 0.54231
+        "mean": 0.457218,
+        "median": 0.445815
       },
       "Hazard_Index_raw": {
         "count": 808,
-        "min": 0.181936,
-        "max": 0.661876,
-        "mean": 0.399004,
-        "median": 0.3847
+        "min": 0.146836,
+        "max": 0.72782,
+        "mean": 0.370562,
+        "median": 0.345036
       },
       "Hazard_Index": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.452282,
-        "median": 0.422479
+        "mean": 0.385082,
+        "median": 0.341147
       }
     }
   },
@@ -136,17 +136,17 @@
       },
       "mean_compound_intensity_norm": {
         "count": 6743,
-        "min": 0.0659,
-        "max": 0.6728,
-        "mean": 0.378781,
-        "median": 0.3772
+        "min": 0.1691,
+        "max": 0.4856,
+        "mean": 0.33099,
+        "median": 0.3253
       },
       "Hazard_Index": {
         "count": 6743,
-        "min": 0.0,
-        "max": 0.942765,
-        "mean": 0.411385,
-        "median": 0.401092
+        "min": 0.003439,
+        "max": 0.829072,
+        "mean": 0.387506,
+        "median": 0.341091
       },
       "Hazard_Frequency": {
         "count": 6743,
@@ -165,16 +165,16 @@
       "Hazard_Intensity": {
         "count": 6743,
         "min": 0.0,
-        "max": 0.965325,
-        "mean": 0.497664,
-        "median": 0.495149
+        "max": 0.929515,
+        "mean": 0.475447,
+        "median": 0.458737
       },
       "Hazard_Index_raw": {
         "count": 6743,
-        "min": 0.181936,
-        "max": 0.634407,
-        "mean": 0.379376,
-        "median": 0.374436
+        "min": 0.148833,
+        "max": 0.628513,
+        "mean": 0.37197,
+        "median": 0.345004
       }
     },
     "feature_count": 865,
@@ -347,34 +347,36 @@
       "value_kind": "catalog",
       "decimals": 3,
       "boundaries": [
-        0.0,
-        0.1,
+        0.15,
         0.2,
+        0.25,
         0.3,
+        0.35,
         0.4,
+        0.45,
         0.5,
-        0.6,
-        0.7
+        0.55
       ],
       "colors": [
         "#fde7a9",
-        "#fea571",
-        "#f2645c",
-        "#c43c75",
-        "#8b2981",
-        "#54137d",
+        "#feae77",
+        "#f8765c",
+        "#dc4869",
+        "#ab337c",
+        "#7b2382",
+        "#4c117a",
         "#1a1042"
       ],
       "palette": "component",
       "palette_source": "matplotlib magma sampled from 0.95 to 0.12, as in outputs/article_figures/coastal_hazard_index_components.png",
       "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
-      "description": "Event-level compound intensity stored in the catalog: the mean of 0.5*(hs_norm + ssh_norm), where each driver is rescaled by domain-wide Q05/Q95 references. It is already a dimensionless compound intensity, so the map shows it unchanged — no extra Min-Max scaling is applied for display.",
+      "description": "Event-level compound intensity stored in the catalog: how far each driver rose above its own local q90 detection threshold, rescaled by the domain-wide Q05/Q95 of those excesses and averaged with equal weights. Subtracting the local baseline keeps the astronomical tide out of the severity score. It is already a dimensionless compound intensity, so the map shows it unchanged — no extra Min-Max scaling is applied for display.",
       "statistics": {
         "count": 865,
-        "min": 0.0659,
-        "max": 0.6728,
-        "mean": 0.36704,
-        "median": 0.362
+        "min": 0.1691,
+        "max": 0.4856,
+        "mean": 0.322268,
+        "median": 0.3164
       }
     },
     {
@@ -412,10 +414,10 @@
       "description": "Final composite Hazard Index: the three components are Min-Max normalized over the 808 native grid points, averaged with equal weights of 1/3, and the mean is Min-Max normalized again to span 0-1.",
       "statistics": {
         "count": 865,
-        "min": 0.0,
-        "max": 0.942765,
-        "mean": 0.401008,
-        "median": 0.391982
+        "min": 0.003439,
+        "max": 0.829072,
+        "mean": 0.374952,
+        "median": 0.331302
       }
     }
   ],
@@ -437,16 +439,16 @@
     "Hazard_Intensity": {
       "count": 865,
       "min": 0.0,
-      "max": 0.965325,
-      "mean": 0.478988,
-      "median": 0.470972
+      "max": 0.929515,
+      "mean": 0.449832,
+      "median": 0.432599
     },
     "Hazard_Index_raw": {
       "count": 865,
-      "min": 0.181936,
-      "max": 0.634407,
-      "mean": 0.374395,
-      "median": 0.370064
+      "min": 0.148833,
+      "max": 0.628513,
+      "mean": 0.364677,
+      "median": 0.339317
     }
   },
   "normalization_note": "The Min-Max normalization of the three components happens only inside the index construction on the native grid. The frequency, duration, and intensity layers of this map show the catalog values themselves.",

@@ -78,7 +78,11 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
     (dimensionless), and the resulting 0--1 Hazard Index.
   - Panels A--C display the native-grid catalog values without the additional
     cross-grid Min--Max scaling. The intensity is the dimensionless
-    event-level compound metric stored in the catalog.
+    event-level compound metric stored in the catalog: the excess of each
+    driver over its own local q90 detection threshold, rescaled by the
+    domain-wide Q05/Q95 of those excesses. Subtracting the local baseline
+    keeps the astronomical tide out of the severity score (superseded
+    absolute-peak variant retained as `*_abspeak`).
   - For the Hazard calculation, the three components are still Min--Max
     normalized independently across all 808 native ocean-grid points. Their
     equal-weight mean is normalized again to 0--1.

@@ -16,20 +16,31 @@ Compound event definition (Step 4 minimal):
   - SSH_total_only:  SSH_total storm with no temporal overlap with any Hs storm
   - compound:        Group of Hs + SSH_total storms sharing at least one day
 
-Compound intensity — normalized (domain-wide):
+Compound intensity — excess over the local threshold, rescaled domain-wide:
   Raw peak values of Hs and SSH_total are in different physical units and have
   different spatial gradients (Hs increases offshore; SSH_total depends on shelf
   geometry and tidal regime). A simple additive combination (peak_hs + peak_ssh)
   creates a metric dominated by whichever variable has larger absolute values
   and is not comparable across grid points with different baseline magnitudes.
 
-  Instead, we normalize each component against the domain-wide distribution:
-    hs_peak_norm  = clip((hs_peak - Q05_hs) / (Q95_hs - Q05_hs), 0, 1)
-    ssh_peak_norm = clip((ssh_peak - Q05_ssh) / (Q95_ssh - Q05_ssh), 0, 1)
+  Each driver therefore contributes how far it rose above its OWN local q90
+  detection threshold, and that excess is rescaled against the domain-wide
+  distribution of excesses:
+    hs_excess  = hs_peak  - thr_hs(local)
+    ssh_excess = ssh_peak - thr_ssh_total(local)
+    hs_peak_norm  = clip((hs_excess  - Q05_E_hs ) / (Q95_E_hs  - Q05_E_hs ), 0, 1)
+    ssh_peak_norm = clip((ssh_excess - Q05_E_ssh) / (Q95_E_ssh - Q05_E_ssh), 0, 1)
     compound_intensity_norm = 0.5 * (hs_peak_norm + ssh_peak_norm)
 
   This yields a dimensionless [0, 1] score comparable across all grid points.
-  Q05/Q95 are computed from ALL compound event peaks across the full domain.
+  Q05/Q95 are computed from ALL compound event excesses across the full domain.
+
+  Subtracting the local threshold is what keeps the astronomical tide out of the
+  score: SSH_total = zos + daily-maximum tide, so the ABSOLUTE sea-level peak is
+  almost entirely set by the tidal regime (R^2 = 0.998 regressing the mean peak
+  on the local threshold). This matches the canonical definition in
+  src/03_storm_catalog_generation/02_compound_detection/detection.py — the two
+  products must not diverge.
 
 Period: full series from run_metadata.json (1993-01-01 to 2025-12-31)
 
@@ -271,42 +282,54 @@ def normalize_compound_intensity(
 
     Returns a dict with the normalization reference values used.
     """
-    # Collect ALL compound event peaks across the domain
-    all_hs_peaks = []
-    all_ssh_peaks = []
-    for classified in all_classified:
+    # Collect ALL compound event excesses over the local thresholds
+    all_hs_excess = []
+    all_ssh_excess = []
+    for classified, entry in zip(all_classified, results):
+        thr_hs = entry.get("thr_hs")
+        thr_ssh = entry.get("thr_ssh")
+        if thr_hs is None or thr_ssh is None:
+            continue
         for c in classified["compound"]:
-            all_hs_peaks.append(c["compound_peak_hs"])
-            all_ssh_peaks.append(c["compound_peak_ssh_total"])
+            all_hs_excess.append(c["compound_peak_hs"] - thr_hs)
+            all_ssh_excess.append(c["compound_peak_ssh_total"] - thr_ssh)
 
-    if not all_hs_peaks:
+    if not all_hs_excess:
         return {"hs_ref_low": None, "hs_ref_high": None,
                 "ssh_ref_low": None, "ssh_ref_high": None}
 
-    hs_ref_low = float(np.percentile(all_hs_peaks, 5))
-    hs_ref_high = float(np.percentile(all_hs_peaks, 95))
-    ssh_ref_low = float(np.percentile(all_ssh_peaks, 5))
-    ssh_ref_high = float(np.percentile(all_ssh_peaks, 95))
+    hs_ref_low = float(np.percentile(all_hs_excess, 5))
+    hs_ref_high = float(np.percentile(all_hs_excess, 95))
+    ssh_ref_low = float(np.percentile(all_ssh_excess, 5))
+    ssh_ref_high = float(np.percentile(all_ssh_excess, 95))
 
     hs_range = max(hs_ref_high - hs_ref_low, 1e-9)
     ssh_range = max(ssh_ref_high - ssh_ref_low, 1e-9)
 
-    print(f"\n  Normalization refs (domain-wide compound peaks):")
+    print(f"\n  Normalization refs (domain-wide compound excesses over local q90):")
     print(f"    Hs:  Q05={hs_ref_low:.4f} m,  Q95={hs_ref_high:.4f} m")
     print(f"    SSH: Q05={ssh_ref_low:.4f} m,  Q95={ssh_ref_high:.4f} m")
 
     # For each grid point, normalize compound events and compute stats
     for classified, entry in zip(all_classified, results):
         compound = classified["compound"]
-        if not compound:
+        thr_hs = entry.get("thr_hs")
+        thr_ssh = entry.get("thr_ssh")
+        if not compound or thr_hs is None or thr_ssh is None:
             continue
 
         int_norms = []
         hs_norms = []
         ssh_norms = []
         for c in compound:
-            hn = np.clip((c["compound_peak_hs"] - hs_ref_low) / hs_range, 0, 1)
-            sn = np.clip((c["compound_peak_ssh_total"] - ssh_ref_low) / ssh_range, 0, 1)
+            hn = np.clip(
+                (c["compound_peak_hs"] - thr_hs - hs_ref_low) / hs_range, 0, 1
+            )
+            sn = np.clip(
+                (c["compound_peak_ssh_total"] - thr_ssh - ssh_ref_low) / ssh_range,
+                0,
+                1,
+            )
             ci = 0.5 * (hn + sn)
             int_norms.append(float(ci))
             hs_norms.append(float(hn))
@@ -522,8 +545,12 @@ def main():
             ),
             "compound_intensity_definition": (
                 "Normalized compound intensity: 0.5 * (hs_peak_norm + ssh_peak_norm), "
-                "where each component is scaled to [0, 1] using domain-wide Q05/Q95 "
-                "of compound event peaks. Dimensionless and comparable across grid points."
+                "where each component is the excess of the event peak over its own "
+                "local q90 detection threshold, scaled to [0, 1] using the domain-wide "
+                "Q05/Q95 of those excesses. Dimensionless and comparable across grid "
+                "points. Subtracting the local threshold keeps the astronomical tide "
+                "out of the score. Matches the canonical definition in "
+                "src/03_storm_catalog_generation/02_compound_detection/detection.py."
             ),
             "compound_intensity_normalization": norm_refs,
             "zos_raw_definition": (

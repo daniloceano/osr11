@@ -195,7 +195,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max compound_intensity_norm',
-    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. The mean is the intensity component of the Hazard_Index (Step 4); the p95 and max remain diagnostic.',
+    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. Since 2026-07-27 the intensity measures the excess over the local q90 threshold, not the absolute peak. The mean is the intensity component of the Hazard_Index (Step 4); the p95 and max remain diagnostic. The superseded absolute-peak variant is retained as *_abspeak for audit.',
     formula: 'mean, 95th pct, max of compound_intensity_norm',
   },
 ];
@@ -427,36 +427,58 @@ classes:     { Hs_only , SSH_total_only , compound }`}</Eq>
         <Section eyebrow="Key metric" title="Normalized compound intensity — definition and assumptions" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             Compound intensity must combine two variables on different physical scales (wave height in
-            metres vs. total sea level in metres, but with very different dynamic ranges). Each driver is
-            therefore rescaled to a common [0, 1] range using <strong>domain-wide</strong> reference
-            quantiles, then averaged with equal weight.
+            metres vs. total sea level in metres, but with very different dynamic ranges). Each driver
+            contributes <strong>how far it rose above its own local q90 detection threshold</strong> —
+            the same threshold that defined the event — and that excess is then rescaled to a common
+            [0, 1] range using <strong>domain-wide</strong> reference quantiles and averaged with equal
+            weight.
           </p>
-          <Eq>{`# Domain-wide references (over ALL compound-event peaks, all grid points)
-Hₛ_low  = Q05(all peak_hs)        Hₛ_high  = Q95(all peak_hs)
-SSH_low = Q05(all peak_ssh_total) SSH_high = Q95(all peak_ssh_total)
+          <Eq>{`# Excess over the local threshold, per event
+E_Hₛ  = peak_hs        − thr_hs(local q90)
+E_SSH = peak_ssh_total − thr_ssh_total(local q90)
+
+# Domain-wide references (over ALL compound-event excesses, all grid points)
+Hₛ_low  = Q05(all E_Hₛ)   = 0.02 m     Hₛ_high  = Q95(all E_Hₛ)  = 1.38 m
+SSH_low = Q05(all E_SSH)  = 0.02 m     SSH_high = Q95(all E_SSH) = 0.43 m
 
 # Per-event normalization (clipped to [0, 1])
-hs_norm  = clip( (peak_hs        − Hₛ_low ) / (Hₛ_high  − Hₛ_low ), 0, 1)
-ssh_norm = clip( (peak_ssh_total − SSH_low) / (SSH_high − SSH_low), 0, 1)
+hs_norm  = clip( (E_Hₛ  − Hₛ_low ) / (Hₛ_high  − Hₛ_low ), 0, 1)
+ssh_norm = clip( (E_SSH − SSH_low) / (SSH_high − SSH_low), 0, 1)
 
 compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
+          <div className="my-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">
+              Why the local threshold is subtracted
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-amber-900">
+              Until 2026-07-27 this metric used the <em>absolute</em> peaks. That variant was
+              superseded because SSH_total = zos + daily-maximum tide, so the absolute sea-level peak
+              is almost entirely set by the local tidal regime: regressing the mean SSH_total peak of a
+              grid point on its own q90 threshold gives <strong>R² = 0.998</strong>, and in the
+              macrotidal north <strong>91%</strong> of the peak is that baseline against 9% of storm
+              excess. The sea-level term was therefore encoding the astronomical tide — a deterministic
+              signal that recurs twice a month regardless of weather — rather than event severity. The
+              superseded values are kept in the{' '}
+              <code className="rounded bg-amber-100 px-1 text-xs">*_abspeak</code> catalog fields.
+            </p>
+          </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-gray-200 bg-white p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Assumptions</p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm text-gray-700">
                 <li><strong>Equal weighting (0.5 / 0.5):</strong> wave and surge are treated as equally important contributors to compound severity, absent site-specific impact weights.</li>
-                <li><strong>Q05–Q95 references:</strong> the 5th–95th percentiles of observed compound peaks define the dynamic range, making intensity robust to a handful of outliers at either tail.</li>
-                <li><strong>Domain-wide (not local) scaling:</strong> a single reference range is used across the whole coast so that intensity is comparable between grid points and municipalities.</li>
+                <li><strong>Q05–Q95 references:</strong> the 5th–95th percentiles of observed compound excesses define the dynamic range, making intensity robust to a handful of outliers at either tail.</li>
+                <li><strong>Local baseline, domain-wide scaling:</strong> the local q90 threshold is subtracted first so the metric measures the event and not the tidal or wave setting of the site; the rescaling that follows is a single domain-wide range, so intensity remains comparable between grid points. Fully local rescalings were tested and rejected — normalizing each point against itself drives the per-point mean to a near-constant and destroys the spatial signal.</li>
                 <li><strong>Clipping to [0, 1]:</strong> peaks beyond Q05/Q95 saturate at 0 or 1, so intensity is a bounded, interpretable severity score.</li>
               </ul>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Interpretation</p>
               <p className="text-sm leading-relaxed text-gray-700">
-                A value near <strong>1.0</strong> means both drivers peaked near the upper end of their
-                coast-wide observed range during the event; near <strong>0.0</strong> means both were only
-                marginally above threshold. Because scaling is domain-wide, a high value at one
+                A value near <strong>1.0</strong> means both drivers exceeded their local thresholds by
+                an amount near the upper end of the coast-wide observed range; near <strong>0.0</strong>
+                means both were only marginally above threshold. Because scaling is domain-wide, a high value at one
                 municipality is directly comparable to a high value at another. The per-grid-point mean of
                 this metric is one of the three equally weighted inputs to the current Hazard_Index; the
                 maps show it in its dimensionless catalog form, without further rescaling.
@@ -595,7 +617,8 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
               </li>
               <li>
                 <code className="rounded bg-gray-100 px-1 text-xs">mean_compound_intensity_norm</code>{' '}
-                — intensity (mean of the event-level compound intensity defined above).
+                — intensity (mean of the event-level compound intensity defined above, i.e. the excess
+                over the local threshold).
               </li>
             </ul>
             <p className="mt-2">

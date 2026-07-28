@@ -172,7 +172,7 @@ The most comprehensive analysis step. Applies the PU-optimal thresholds from Ste
 | Submodule | Analysis | Key outputs |
 |-----------|----------|-------------|
 | **3.1 Storm Catalogs** | POT detection + episode clustering | Per-grid-point JSON catalogs for Hₛ and SSH_total |
-| **3.2 Compound Detection** | Temporal overlap of Hₛ/SSH_total storms | Compound events, overlap duration, peak lag, normalized intensity |
+| **3.2 Compound Detection** | Temporal overlap of Hₛ/SSH_total storms | Compound events, overlap duration, peak lag, normalized intensity (excess over the local q90 threshold, rescaled domain-wide) |
 | **3.3 Duration & Persistence** | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
 | **3.4 Monthly Seasonality** | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
 | **3.5 Trend Analysis** | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
@@ -253,7 +253,8 @@ Risk_Comp = Risk_Hazard
 Where:
 - `compound_count_total` — absolute compound-event count over 1993–2025, not an annual rate
 - `mean_overlap_duration` — mean temporal overlap of the compound events, in days
-- `mean_compound_intensity_norm` — mean event intensity after the domain-wide event-level normalization in Step 3.2
+- `mean_compound_intensity_norm` — mean event intensity from Step 3.2: for each event, how far each driver rose above its **own local q90 detection threshold**, rescaled by the domain-wide Q05/Q95 of those excesses (Hₛ 0.02–1.38 m; SSH_total 0.02–0.43 m) and averaged with equal weights
+- `mean_compound_intensity_norm_abspeak` — superseded absolute-peak variant retained for audit (see the 2026-07-27 entry in `SCIENTIFIC_NOTES.md`)
 - `norm_native()` — Min–Max normalization to [0, 1] across the 808 native ocean grid points
 - `Hazard_Index` — final physical hazard index, normalized to [0, 1] on the native grid and transferred without renormalization to municipalities
 - `Risk_Hazard_raw` — unnormalized vulnerability–hazard product retained for audit

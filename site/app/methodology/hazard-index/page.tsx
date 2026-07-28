@@ -119,7 +119,7 @@ const componentRows = [
   {
     field: 'mean_compound_intensity_norm',
     meaning:
-      'Mean of the event-level compound intensity 0.5·(hs_norm + ssh_norm), where each driver is rescaled by domain-wide Q05/Q95 references. It is already a dimensionless compound intensity at event level.',
+      'Mean of the event-level compound intensity 0.5·(hs_norm + ssh_norm). Each driver contributes how far it rose above its own local q90 detection threshold, rescaled by the domain-wide Q05/Q95 of those excesses. Subtracting the local baseline keeps the astronomical tide out of the severity score; the superseded absolute-peak variant is retained as *_abspeak for audit.',
     unit: 'dimensionless',
   },
 ];
@@ -218,6 +218,22 @@ export default function HazardIndexMethodologyPage() {
             current index — none of them is a diagnostic-only field.
           </p>
           <FieldTable rows={componentRows} />
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">
+              Revision of 2026-07-27
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-amber-900">
+              The intensity component previously used the <em>absolute</em> peaks of each event. It
+              now uses the excess over the local q90 threshold. The absolute sea-level peak was almost
+              entirely determined by the tidal regime (R² = 0.998 regressing the mean peak on the local
+              threshold; 91% of the northern peak is baseline), so the term encoded the astronomical
+              tide rather than event severity. The revision leaves the Hazard Index ranking largely
+              intact (Spearman 0.88) but restores a southward gradient to the intensity itself, and
+              cuts the worst regional clipping from 30% to 10% of events. The superseded values remain
+              in the catalog as{' '}
+              <code className="rounded bg-amber-100 px-1 text-xs">*_abspeak</code>.
+            </p>
+          </div>
         </Section>
 
         {/* ── 4. Displayed values ────────────────────────────────── */}
@@ -229,7 +245,10 @@ export default function HazardIndexMethodologyPage() {
           <ul className="mb-4 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
             <li>frequency in <strong>events yr⁻¹</strong>;</li>
             <li>overlap duration in <strong>days</strong>;</li>
-            <li>compound intensity as the <strong>dimensionless</strong> catalog metric.</li>
+            <li>
+              compound intensity as the <strong>dimensionless</strong> catalog metric (the excess over
+              the local threshold, already rescaled at event level).
+            </li>
           </ul>
           <p className="text-sm leading-relaxed text-gray-700">
             No extra Min–Max scaling is applied for presentation. A reader can therefore compare a
@@ -377,8 +396,9 @@ Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li>
                 <strong>Dimensionless intensity.</strong> The intensity component is an event-level
-                dimensionless score built from domain-wide Q05/Q95 references, not a physical
-                magnitude in metres.
+                dimensionless score built from the excess over the local threshold and domain-wide
+                Q05/Q95 references, not a physical magnitude in metres. Because the local baseline is
+                removed, it measures how anomalous an event was, not how high the water reached.
               </li>
               <li>
                 <strong>Segment-to-point distance.</strong> Coastal segments are up to ~120 km from

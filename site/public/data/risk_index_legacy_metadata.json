@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-27T18:11:28.127053+00:00",
+  "generated_at": "2026-07-27T22:30:12.223748+00:00",
   "source_path": "site/public/data/risk_index_legacy_municipalities.geojson",
   "source_mode": "canonical_legacy_geojson_fallback",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",

@@ -3,15 +3,29 @@
 Exploratory analysis only. Replicates the seasonal region/map figures produced
 for compound episode counts, but uses mean normalized compound intensity.
 
-Intensity follows the Step 3 storm-catalog convention:
+Intensity here uses the **absolute-peak** convention:
 
     hs_peak_norm = clip((hs_peak - Q05_hs) / (Q95_hs - Q05_hs), 0, 1)
     ssh_peak_norm = clip((ssh_peak - Q05_ssh) / (Q95_ssh - Q05_ssh), 0, 1)
     compound_intensity_norm = 0.5 * (hs_peak_norm + ssh_peak_norm)
 
-Here Q05/Q95 are computed across all compound-event peaks detected in this
+Q05/Q95 are computed across all compound-event peaks detected in this
 exploratory comparison, pooling the global-q90 and seasonal-q90 methods so the
 two methods share a common intensity scale.
+
+.. note::
+
+    This is **no longer** the Step 3 convention. Since 2026-07-27 the
+    production intensity in
+    ``src/03_storm_catalog_generation/02_compound_detection/detection.py``
+    measures the excess over the local detection threshold, because the
+    absolute sea-level peak is dominated by the astronomical tide. The
+    absolute-peak form is retained here on purpose: this script compares two
+    *detection* methods that use different thresholds (global vs seasonal
+    q90), so subtracting each method's own threshold would confound the very
+    contrast being examined. The values produced here are therefore internally
+    comparable but are **not** comparable with the published
+    ``mean_compound_intensity_norm``.
 """
 from __future__ import annotations
 

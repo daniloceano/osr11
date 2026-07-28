@@ -26,7 +26,14 @@ COMPONENT_SOURCE_FIELDS = {
     "Hazard_Duration": "mean_overlap_duration",
     "Hazard_Intensity": "mean_compound_intensity_norm",
 }
-PASSTHROUGH_SOURCE_FIELDS = ("compound_count_annual_mean",)
+#: Carried through unchanged for display and audit. They take no part in the
+#: index: ``compound_count_annual_mean`` is the per-year reading of the
+#: frequency component, and ``mean_compound_intensity_norm_abspeak`` is the
+#: superseded absolute-peak intensity kept for comparison.
+PASSTHROUGH_SOURCE_FIELDS = (
+    "compound_count_annual_mean",
+    "mean_compound_intensity_norm_abspeak",
+)
 
 
 def _minmax(series: pd.Series) -> pd.Series:

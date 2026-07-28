@@ -491,6 +491,92 @@ hazard/risk municipal layers (280 of 282 features populated). Missing values
 are not coerced to zero and are excluded from the municipal risk
 normalization.
 
+### 2026-07-27 — Compound intensity redefined as excess over the local threshold
+
+**[DECISION — the intensity now measures the event, not the setting]** The
+event-level compound intensity previously rescaled the **absolute** peaks by
+the 5th/95th percentiles of all peaks pooled over the domain. That definition
+is superseded. Each driver now contributes how far its peak rose **above its
+own local q90 detection threshold** — the same threshold that defined the
+event — and that excess is rescaled by the domain-wide Q05/Q95 of the excesses:
+
+$$
+\begin{aligned}
+E_{H_s} &= \text{peak}_{H_s} - \text{thr}_{H_s}^{local}, \qquad
+E_{SSH}  = \text{peak}_{SSH} - \text{thr}_{SSH}^{local},\\
+I &= \tfrac{1}{2}\Big[\text{clip}\Big(\tfrac{E_{H_s}-Q_{05}(E_{H_s})}{Q_{95}(E_{H_s})-Q_{05}(E_{H_s})},0,1\Big)
+   + \text{clip}\Big(\tfrac{E_{SSH}-Q_{05}(E_{SSH})}{Q_{95}(E_{SSH})-Q_{05}(E_{SSH})},0,1\Big)\Big].
+\end{aligned}
+$$
+
+Reference values on the current dataset: $E_{H_s}\in[0.020,\,1.380]$ m and
+$E_{SSH}\in[0.0153,\,0.4273]$ m. The normalization population remains global,
+so the metric stays comparable between grid points.
+
+**[EVIDENCE — the superseded metric encoded the astronomical tide]** Because
+$SSH_{total} = zos + \text{tide}_{daily\,max}$, the absolute sea-level peak is
+almost entirely set by the local tidal regime. Regressing the mean SSH_total
+peak of a grid point on its own q90 threshold gives
+
+$$\overline{\text{peak}}_{SSH} = 1.060\,\text{thr}_{SSH}^{local} + 0.089,
+\qquad R^2 = 0.998 .$$
+
+Decomposing the peak into baseline and storm excess by latitude band: the
+threshold accounts for 91% of the peak in the north and 78% in the south, while
+the storm excess itself varies only 1.7-fold along the coast (0.126–0.217 m)
+against a 3.1-fold variation of the absolute peak (0.794–2.472 m). In the north
+the peaks are also nearly identical between events (sd/peak = 0.05), i.e. the
+sea-level term contributed a fixed regional offset rather than discriminating
+events. Under the superseded definition the intensity therefore increased
+**northward** ($r=+0.463$ with latitude), opposite to the wave-energy gradient.
+
+**[VERIFICATION — effect of the change]** Diagnosed before adoption in
+`src/exploratory/make_exploratory_intensity_definition_comparison.py`:
+
+- the intensity reverses sign with latitude, $r=+0.463 \rightarrow -0.410$;
+  the two definitions rank the grid almost independently (Spearman $0.280$);
+- the Hazard Index becomes moderately southward,
+  $r=-0.203 \rightarrow -0.523$, but its ranking is largely preserved
+  (Spearman $0.883$; 53 of the top 80 grid points in common);
+- the municipal integrated risk keeps Spearman $0.885$; the Norte/Nordeste
+  hotspots persist because the municipal hazard is essentially flat with
+  latitude ($r=+0.014$) and the pattern of `Risk_Hazard` is driven by the SVI
+  ($r=+0.828$ with latitude; mean SVI 67.5 in the north against 23.1 in the
+  south);
+- the worst regional clipping falls from **30%** of northern events saturating
+  the sea-level term to **10.5%**, and from 15% to 5.4% at the lower bound in
+  the south.
+
+**[DECOMPOSITION — which driver caused the change]** The intensity is an
+unweighted mean, so the change splits exactly as
+$\Delta I = \tfrac{1}{2}\Delta(H_s\text{ term}) + \tfrac{1}{2}\Delta(SSH\text{ term})$
+(closes to $3\times10^{-16}$). The mean absolute contributions are nearly equal
+(0.0856 for $H_s$, 0.0831 for SSH), but the two act differently: the $H_s$ term
+shifts by a nearly uniform offset (positive at every point, sd 0.127) whereas
+the SSH term changes sign, from $+0.73$ at the Amazon mouth to $-0.43$ in the
+far south (sd 0.205). Since the intensity is Min–Max normalized again inside
+the Hazard Index, a uniform offset has **no effect** (verified: adding a
+constant leaves the index rank identical, Spearman $1.000000$). Isolating the
+two terms confirms that the SSH term carries the whole spatial change:
+substituting only the SSH term gives $r(H,\text{lat})=-0.615$, whereas
+substituting only the $H_s$ term gives $+0.065$.
+
+**[CAVEAT — accepted cost]** The $H_s$ term loses spatial contrast
+(sd $0.227 \rightarrow 0.127$; range $0.00$–$0.91 \rightarrow 0.02$–$0.58$).
+This is partly genuine information loss: the southern wave climate really is
+more energetic. It is accepted because a more energetic setting also requires a
+larger swell to cause damage there, so the excess over the local threshold
+remains the impact-relevant quantity.
+
+**[AUDIT]** The superseded values are preserved per grid point as
+`mean_compound_intensity_norm_abspeak`, `p95_*_abspeak` and `max_*_abspeak`,
+and both reference sets are recorded in
+`outputs/storm_catalog/compound/compound_summary.json`. The exploratory script
+reproduces both definitions from the raw catalog and checks each against its
+published column at every run.
+
+---
+
 ### 2026-07-27 — Repository-wide audit of the official Hazard Index
 
 **[VERIFICATION — the canonical formula is consistent across the repository]**

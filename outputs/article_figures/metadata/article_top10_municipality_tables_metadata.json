@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T17:25:15.876590+00:00",
+  "generated_at": "2026-07-27T22:31:19.301637+00:00",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
   "risk_key": "Risk_Hazard",
@@ -10,9 +10,9 @@
     "input_stats": {
       "count": 280,
       "min": 0.0,
-      "max": 0.61321,
-      "mean": 0.172981,
-      "median": 0.16387
+      "max": 0.431961,
+      "mean": 0.14988,
+      "median": 0.142879
     },
     "output_field": "Risk_Hazard",
     "output_range": [
@@ -29,73 +29,73 @@
       "rows": [
         {
           "Rank": 1,
-          "Municipality": "Araruama",
-          "State": "Rio de Janeiro",
-          "UF": "RJ",
-          "Hazard index": 0.782047
-        },
-        {
-          "Rank": 2,
-          "Municipality": "Saquarema",
-          "State": "Rio de Janeiro",
-          "UF": "RJ",
-          "Hazard index": 0.778536
-        },
-        {
-          "Rank": 3,
-          "Municipality": "Arraial do Cabo",
-          "State": "Rio de Janeiro",
-          "UF": "RJ",
-          "Hazard index": 0.769628
-        },
-        {
-          "Rank": 4,
-          "Municipality": "Laguna",
-          "State": "Santa Catarina",
-          "UF": "SC",
-          "Hazard index": 0.763631
-        },
-        {
-          "Rank": 5,
-          "Municipality": "Bertioga",
-          "State": "São Paulo",
-          "UF": "SP",
-          "Hazard index": 0.760295
-        },
-        {
-          "Rank": 6,
-          "Municipality": "Maricá",
-          "State": "Rio de Janeiro",
-          "UF": "RJ",
-          "Hazard index": 0.746324
-        },
-        {
-          "Rank": 7,
           "Municipality": "São Sebastião",
           "State": "São Paulo",
           "UF": "SP",
-          "Hazard index": 0.734661
+          "Hazard index": 0.829072
         },
         {
-          "Rank": 8,
-          "Municipality": "Jaguaruna",
+          "Rank": 2,
+          "Municipality": "Bertioga",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.825681
+        },
+        {
+          "Rank": 3,
+          "Municipality": "Laguna",
           "State": "Santa Catarina",
           "UF": "SC",
-          "Hazard index": 0.728015
+          "Hazard index": 0.787807
         },
         {
-          "Rank": 9,
+          "Rank": 4,
+          "Municipality": "Saquarema",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Hazard index": 0.763433
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Santa Vitória do Palmar",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Hazard index": 0.761554
+        },
+        {
+          "Rank": 6,
+          "Municipality": "Araruama",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Hazard index": 0.760339
+        },
+        {
+          "Rank": 7,
           "Municipality": "Angra dos Reis",
           "State": "Rio de Janeiro",
           "UF": "RJ",
-          "Hazard index": 0.724894
+          "Hazard index": 0.755297
+        },
+        {
+          "Rank": 8,
+          "Municipality": "Maricá",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Hazard index": 0.755286
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Duque de Caxias",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Hazard index": 0.751585
         },
         {
           "Rank": 10,
-          "Municipality": "Cabo Frio",
+          "Municipality": "Guapimirim",
           "State": "Rio de Janeiro",
           "UF": "RJ",
-          "Hazard index": 0.719758
+          "Hazard index": 0.751585
         }
       ],
       "csv": "outputs/article_figures/tables/top10_municipalities_by_hazard.csv",
@@ -185,73 +185,73 @@
       "rows": [
         {
           "Rank": 1,
-          "Municipality": "Chaves",
-          "State": "Pará",
-          "UF": "PA",
+          "Municipality": "Calçoene",
+          "State": "Amapá",
+          "UF": "AP",
           "Risk index": 1.0
         },
         {
           "Rank": 2,
-          "Municipality": "Calçoene",
-          "State": "Amapá",
-          "UF": "AP",
-          "Risk index": 0.823079
+          "Municipality": "Turiaçu",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.9964
         },
         {
           "Rank": 3,
-          "Municipality": "Amapá",
-          "State": "Amapá",
-          "UF": "AP",
-          "Risk index": 0.712084
-        },
-        {
-          "Rank": 4,
           "Municipality": "Icatu",
           "State": "Maranhão",
           "UF": "MA",
-          "Risk index": 0.700081
+          "Risk index": 0.976825
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Cândido Mendes",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.95495
         },
         {
           "Rank": 5,
-          "Municipality": "Tracuateua",
-          "State": "Pará",
-          "UF": "PA",
-          "Risk index": 0.695004
+          "Municipality": "Bacuri",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.920345
         },
         {
           "Rank": 6,
-          "Municipality": "Colares",
-          "State": "Pará",
-          "UF": "PA",
-          "Risk index": 0.66209
+          "Municipality": "Axixá",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.824209
         },
         {
           "Rank": 7,
-          "Municipality": "Maracanã",
-          "State": "Pará",
-          "UF": "PA",
-          "Risk index": 0.639886
+          "Municipality": "Apicum-Açu",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.796063
         },
         {
           "Rank": 8,
-          "Municipality": "Salvaterra",
-          "State": "Pará",
-          "UF": "PA",
-          "Risk index": 0.623892
+          "Municipality": "Serrano do Maranhão",
+          "State": "Maranhão",
+          "UF": "MA",
+          "Risk index": 0.786909
         },
         {
           "Rank": 9,
-          "Municipality": "Humberto de Campos",
+          "Municipality": "Santa Rita",
           "State": "Maranhão",
           "UF": "MA",
-          "Risk index": 0.619806
+          "Risk index": 0.769575
         },
         {
           "Rank": 10,
-          "Municipality": "Vigia",
+          "Municipality": "Chaves",
           "State": "Pará",
           "UF": "PA",
-          "Risk index": 0.615769
+          "Risk index": 0.753428
         }
       ],
       "csv": "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.csv",

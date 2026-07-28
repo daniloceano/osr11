@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T17:25:06.985532+00:00",
+  "generated_at": "2026-07-27T22:31:10.985603+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -80,52 +80,52 @@
       },
       "Hazard_Intensity": {
         "count": 280,
-        "min": 0.04215,
-        "max": 0.805631,
-        "mean": 0.445013,
-        "median": 0.439478
+        "min": 0.098678,
+        "max": 0.929515,
+        "mean": 0.407752,
+        "median": 0.380617
       },
       "Hazard_Index_raw": {
         "count": 280,
-        "min": 0.181936,
-        "max": 0.557272,
-        "mean": 0.357125,
-        "median": 0.355107
+        "min": 0.148833,
+        "max": 0.628513,
+        "mean": 0.344705,
+        "median": 0.331951
       },
       "Hazard_Index": {
         "count": 280,
-        "min": 0.0,
-        "max": 0.782047,
-        "mean": 0.365024,
-        "median": 0.360819
+        "min": 0.003439,
+        "max": 0.829072,
+        "mean": 0.340576,
+        "median": 0.318623
       },
       "Risk_Comp_raw": {
         "count": 280,
         "min": 0.0,
-        "max": 0.61321,
-        "mean": 0.172981,
-        "median": 0.16387
+        "max": 0.431961,
+        "mean": 0.14988,
+        "median": 0.142879
       },
       "Risk_Hazard_raw": {
         "count": 280,
         "min": 0.0,
-        "max": 0.61321,
-        "mean": 0.172981,
-        "median": 0.16387
+        "max": 0.431961,
+        "mean": 0.14988,
+        "median": 0.142879
       },
       "Risk_Comp": {
         "count": 280,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.282091,
-        "median": 0.267232
+        "mean": 0.346975,
+        "median": 0.330767
       },
       "Risk_Hazard": {
         "count": 280,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.282091,
-        "median": 0.267232
+        "mean": 0.346975,
+        "median": 0.330767
       }
     },
     "integrated_risk_normalization": {
@@ -135,9 +135,9 @@
       "input_stats": {
         "count": 280,
         "min": 0.0,
-        "max": 0.61321,
-        "mean": 0.172981,
-        "median": 0.16387
+        "max": 0.431961,
+        "mean": 0.14988,
+        "median": 0.142879
       },
       "output_field": "Risk_Hazard",
       "output_range": [
@@ -150,8 +150,8 @@
       "enabled": true,
       "tolerance_degrees": 0.001,
       "preserve_topology": true,
-      "coordinates_before": 47686,
-      "coordinates_after": 46941
+      "coordinates_before": 46894,
+      "coordinates_after": 46894
     }
   },
   "ocean_hazard": {
@@ -194,10 +194,10 @@
       },
       "mean_compound_intensity_norm": {
         "count": 808,
-        "min": 0.0659,
-        "max": 0.6946,
-        "mean": 0.406997,
-        "median": 0.40685
+        "min": 0.1691,
+        "max": 0.5096,
+        "mean": 0.324783,
+        "median": 0.3209
       },
       "Hazard_Frequency": {
         "count": 808,
@@ -217,22 +217,22 @@
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.542543,
-        "median": 0.54231
+        "mean": 0.457218,
+        "median": 0.445815
       },
       "Hazard_Index_raw": {
         "count": 808,
-        "min": 0.181936,
-        "max": 0.661876,
-        "mean": 0.399004,
-        "median": 0.3847
+        "min": 0.146836,
+        "max": 0.72782,
+        "mean": 0.370562,
+        "median": 0.345036
       },
       "Hazard_Index": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.452282,
-        "median": 0.422479
+        "mean": 0.385082,
+        "median": 0.341147
       }
     }
   },

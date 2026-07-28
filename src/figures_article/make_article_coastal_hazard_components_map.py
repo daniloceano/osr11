@@ -12,7 +12,12 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     composite Hazard Index. Panels (a)--(c) show the native-grid values
     without the additional cross-grid Min--Max scaling used to construct the
     Hazard Index. The intensity in panel (c) is the dimensionless compound
-    event-level metric stored in the catalog. To calculate panel (d), the
+    event-level metric stored in the catalog: for each event, how far each
+    driver rose above its own local q90 detection threshold, rescaled by the
+    5th--95th percentiles of those excesses pooled over the domain and
+    averaged with equal weights. Subtracting the local threshold keeps the
+    astronomical tide, which dominates the absolute sea level in the
+    macrotidal north, out of the severity score. To calculate panel (d), the
     three components are Min--Max normalized over the 808-point native ocean
     grid, averaged with equal weights, and the mean is Min--Max normalized
     again to obtain the final Hazard Index on a 0--1 scale. For visualization,
@@ -97,11 +102,11 @@ OUTPUT_CRS = "EPSG:4326"
 CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
 FREQUENCY_BOUNDARIES = np.arange(1.0, 11.0, 1.0)
 DURATION_BOUNDARIES = np.arange(1.2, 2.61, 0.2)
-INTENSITY_BOUNDARIES = np.arange(0.0, 0.71, 0.1)
+INTENSITY_BOUNDARIES = np.round(np.arange(0.15, 0.551, 0.05), 2)
 HAZARD_BOUNDARIES = np.linspace(0.0, 1.0, 9)
 FREQUENCY_TICKS = FREQUENCY_BOUNDARIES[[0, 2, 4, 6, 8, 9]]
 DURATION_TICKS = DURATION_BOUNDARIES
-INTENSITY_TICKS = INTENSITY_BOUNDARIES
+INTENSITY_TICKS = INTENSITY_BOUNDARIES[::2]
 HAZARD_TICKS = HAZARD_BOUNDARIES[[0, 2, 4, 6, 8]]
 DISPLAY_COMPONENT_FIELDS = (
     "compound_count_annual_mean",
@@ -143,7 +148,7 @@ PANEL_SPECS = (
         "boundaries": INTENSITY_BOUNDARIES,
         "ticks": INTENSITY_TICKS,
         "colorbar_label": "Mean compound intensity (dimensionless)",
-        "tick_format": "%.1f",
+        "tick_format": "%.2f",
         "unit": "dimensionless",
         "palette": "component",
     },

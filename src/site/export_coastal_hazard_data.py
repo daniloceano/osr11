@@ -105,14 +105,16 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
         "unit_plain": "dimensionless",
         "value_kind": "catalog",
         "decimals": 3,
-        "boundaries": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+        "boundaries": [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
         "palette": "component",
         "description": (
-            "Event-level compound intensity stored in the catalog: the mean "
-            "of 0.5*(hs_norm + ssh_norm), where each driver is rescaled by "
-            "domain-wide Q05/Q95 references. It is already a dimensionless "
-            "compound intensity, so the map shows it unchanged — no extra "
-            "Min-Max scaling is applied for display."
+            "Event-level compound intensity stored in the catalog: how far "
+            "each driver rose above its own local q90 detection threshold, "
+            "rescaled by the domain-wide Q05/Q95 of those excesses and "
+            "averaged with equal weights. Subtracting the local baseline "
+            "keeps the astronomical tide out of the severity score. It is "
+            "already a dimensionless compound intensity, so the map shows it "
+            "unchanged — no extra Min-Max scaling is applied for display."
         ),
     },
     {

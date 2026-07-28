@@ -14,10 +14,20 @@ Compound event definition (Zscheischler et al. 2020):
     - SSH_total_only:  SSH_total storm with no temporal overlap with any Hₛ storm
     - compound:        Group of Hₛ + SSH_total storms sharing ≥ 1 calendar day
 
-Normalized compound intensity (domain-wide):
-    hs_peak_norm  = clip((hs_peak - Q05_hs) / (Q95_hs - Q05_hs), 0, 1)
-    ssh_peak_norm = clip((ssh_peak - Q05_ssh) / (Q95_ssh - Q05_ssh), 0, 1)
-    compound_intensity_norm = 0.5 * (hs_peak_norm + ssh_peak_norm)
+Normalized compound intensity (excess over the local threshold, rescaled
+domain-wide):
+    hs_excess   = hs_peak  - thr_hs_local
+    ssh_excess  = ssh_peak - thr_ssh_total_local
+    hs_norm     = clip((hs_excess  - Q05_E_hs ) / (Q95_E_hs  - Q05_E_hs ), 0, 1)
+    ssh_norm    = clip((ssh_excess - Q05_E_ssh) / (Q95_E_ssh - Q05_E_ssh), 0, 1)
+    compound_intensity_norm = 0.5 * (hs_norm + ssh_norm)
+
+    Subtracting the local q90 detection threshold removes the local baseline —
+    decisive for sea level, whose absolute peak is dominated by the
+    astronomical tide (R^2 = 0.998 regressing the mean peak on the local
+    threshold). The percentiles remain pooled over the whole domain so the
+    metric stays comparable between grid points. The superseded absolute-peak
+    variant is retained in the ``*_abspeak`` fields for audit.
 
 References:
     - Zscheischler et al. (2020). A typology of compound weather and climate
@@ -248,6 +258,9 @@ def compute_compound_metrics(
             "mean_compound_intensity_norm": None,
             "p95_compound_intensity_norm": None,
             "max_compound_intensity_norm": None,
+            "mean_compound_intensity_norm_abspeak": None,
+            "p95_compound_intensity_norm_abspeak": None,
+            "max_compound_intensity_norm_abspeak": None,
         }
 
     overlaps = [e["overlap_duration_days"] for e in events]
@@ -264,56 +277,156 @@ def compute_compound_metrics(
         "mean_compound_intensity_norm": None,
         "p95_compound_intensity_norm": None,
         "max_compound_intensity_norm": None,
+        "mean_compound_intensity_norm_abspeak": None,
+        "p95_compound_intensity_norm_abspeak": None,
+        "max_compound_intensity_norm_abspeak": None,
     }
 
 
 def normalize_compound_intensity(
     all_classified: list[dict],
     all_metrics: list[dict],
-) -> dict[str, float | None]:
-    """Compute domain-wide normalization and fill intensity fields.
+    all_thresholds: list[dict],
+) -> dict[str, Any]:
+    """Compute the compound intensity from the excess over the local threshold.
 
-    Returns normalization reference values.
+    Each driver contributes how far its peak rose **above the local q90
+    detection threshold**, rescaled by the 5th/95th percentiles of those
+    excesses pooled over the whole domain. The population is global, so the
+    metric stays comparable between grid points, but the local baseline is
+    removed first, so the metric measures the event and not the setting.
+
+    The former definition — the absolute peak rescaled by the domain-wide
+    percentiles of the peaks themselves — is retained under the
+    ``*_abspeak`` fields for audit. It is superseded because the absolute
+    sea-level peak is almost entirely determined by the local tidal regime
+    (regressing the mean SSH_total peak of a grid point on its own q90
+    threshold gives R^2 = 0.998), so it encoded the astronomical tide rather
+    than event severity.
+
+    Parameters
+    ----------
+    all_classified, all_metrics, all_thresholds
+        Parallel per-grid-point lists. ``all_thresholds`` carries
+        ``thr_hs_abs`` and ``thr_ssh_total_abs`` for the same points.
+
+    Returns
+    -------
+    dict with the reference values of both the current and the audit metric.
     """
-    all_hs_peaks = []
-    all_ssh_peaks = []
-    for classified in all_classified:
+    empty = {
+        "definition": None,
+        "hs_excess_ref_low": None,
+        "hs_excess_ref_high": None,
+        "ssh_excess_ref_low": None,
+        "ssh_excess_ref_high": None,
+        "abspeak_hs_ref_low": None,
+        "abspeak_hs_ref_high": None,
+        "abspeak_ssh_ref_low": None,
+        "abspeak_ssh_ref_high": None,
+    }
+    if len(all_thresholds) != len(all_classified):
+        raise ValueError(
+            "all_thresholds must be parallel to all_classified "
+            f"({len(all_thresholds)} vs {len(all_classified)})"
+        )
+
+    hs_excesses: list[float] = []
+    ssh_excesses: list[float] = []
+    hs_peaks: list[float] = []
+    ssh_peaks: list[float] = []
+    for classified, thresholds in zip(all_classified, all_thresholds):
+        thr_hs = thresholds.get("thr_hs_abs")
+        thr_ssh = thresholds.get("thr_ssh_total_abs")
         for e in classified["compound_events"]:
-            all_hs_peaks.append(e["peak_hs"])
-            all_ssh_peaks.append(e["peak_ssh_total"])
+            hs_peaks.append(e["peak_hs"])
+            ssh_peaks.append(e["peak_ssh_total"])
+            if thr_hs is None or thr_ssh is None:
+                continue
+            hs_excesses.append(e["peak_hs"] - thr_hs)
+            ssh_excesses.append(e["peak_ssh_total"] - thr_ssh)
 
-    if not all_hs_peaks:
-        return {"hs_ref_low": None, "hs_ref_high": None,
-                "ssh_ref_low": None, "ssh_ref_high": None}
+    if not hs_excesses:
+        return empty
 
-    hs_ref_low = float(np.percentile(all_hs_peaks, 5))
-    hs_ref_high = float(np.percentile(all_hs_peaks, 95))
-    ssh_ref_low = float(np.percentile(all_ssh_peaks, 5))
-    ssh_ref_high = float(np.percentile(all_ssh_peaks, 95))
+    hs_low = float(np.percentile(hs_excesses, 5))
+    hs_high = float(np.percentile(hs_excesses, 95))
+    ssh_low = float(np.percentile(ssh_excesses, 5))
+    ssh_high = float(np.percentile(ssh_excesses, 95))
+    hs_range = max(hs_high - hs_low, 1e-9)
+    ssh_range = max(ssh_high - ssh_low, 1e-9)
 
-    hs_range = max(hs_ref_high - hs_ref_low, 1e-9)
-    ssh_range = max(ssh_ref_high - ssh_ref_low, 1e-9)
+    # Superseded absolute-peak references, kept so the audit fields below can
+    # be reproduced exactly.
+    abs_hs_low = float(np.percentile(hs_peaks, 5))
+    abs_hs_high = float(np.percentile(hs_peaks, 95))
+    abs_ssh_low = float(np.percentile(ssh_peaks, 5))
+    abs_ssh_high = float(np.percentile(ssh_peaks, 95))
+    abs_hs_range = max(abs_hs_high - abs_hs_low, 1e-9)
+    abs_ssh_range = max(abs_ssh_high - abs_ssh_low, 1e-9)
 
-    for classified, metrics in zip(all_classified, all_metrics):
+    for classified, metrics, thresholds in zip(
+        all_classified, all_metrics, all_thresholds
+    ):
         events = classified["compound_events"]
         if not events:
             continue
+        thr_hs = thresholds.get("thr_hs_abs")
+        thr_ssh = thresholds.get("thr_ssh_total_abs")
 
-        int_norms = []
+        current: list[float] = []
+        abspeak: list[float] = []
         for e in events:
-            hn = float(np.clip((e["peak_hs"] - hs_ref_low) / hs_range, 0, 1))
-            sn = float(np.clip((e["peak_ssh_total"] - ssh_ref_low) / ssh_range, 0, 1))
-            int_norms.append(0.5 * (hn + sn))
+            hn_abs = float(np.clip((e["peak_hs"] - abs_hs_low) / abs_hs_range, 0, 1))
+            sn_abs = float(
+                np.clip((e["peak_ssh_total"] - abs_ssh_low) / abs_ssh_range, 0, 1)
+            )
+            abspeak.append(0.5 * (hn_abs + sn_abs))
+            if thr_hs is None or thr_ssh is None:
+                continue
+            hn = float(np.clip((e["peak_hs"] - thr_hs - hs_low) / hs_range, 0, 1))
+            sn = float(
+                np.clip((e["peak_ssh_total"] - thr_ssh - ssh_low) / ssh_range, 0, 1)
+            )
+            current.append(0.5 * (hn + sn))
 
-        metrics["mean_compound_intensity_norm"] = round(float(np.mean(int_norms)), 4)
-        metrics["p95_compound_intensity_norm"] = round(float(np.percentile(int_norms, 95)), 4)
-        metrics["max_compound_intensity_norm"] = round(float(np.max(int_norms)), 4)
+        if current:
+            metrics["mean_compound_intensity_norm"] = round(float(np.mean(current)), 4)
+            metrics["p95_compound_intensity_norm"] = round(
+                float(np.percentile(current, 95)), 4
+            )
+            metrics["max_compound_intensity_norm"] = round(float(np.max(current)), 4)
+        metrics["mean_compound_intensity_norm_abspeak"] = round(
+            float(np.mean(abspeak)), 4
+        )
+        metrics["p95_compound_intensity_norm_abspeak"] = round(
+            float(np.percentile(abspeak, 95)), 4
+        )
+        metrics["max_compound_intensity_norm_abspeak"] = round(
+            float(np.max(abspeak)), 4
+        )
 
     return {
-        "hs_ref_low": round(hs_ref_low, 4),
-        "hs_ref_high": round(hs_ref_high, 4),
-        "ssh_ref_low": round(ssh_ref_low, 4),
-        "ssh_ref_high": round(ssh_ref_high, 4),
+        "definition": (
+            "0.5 * [clip((peak_Hs - thr_Hs_local - Q05_E_Hs) / (Q95_E_Hs - "
+            "Q05_E_Hs), 0, 1) + clip((peak_SSH - thr_SSH_local - Q05_E_SSH) / "
+            "(Q95_E_SSH - Q05_E_SSH), 0, 1)], where E denotes the excess over "
+            "the local q90 detection threshold and the percentiles are pooled "
+            "over all compound events of all grid points"
+        ),
+        "population": "all compound-event excesses pooled over the native grid",
+        "hs_excess_ref_low": round(hs_low, 4),
+        "hs_excess_ref_high": round(hs_high, 4),
+        "ssh_excess_ref_low": round(ssh_low, 4),
+        "ssh_excess_ref_high": round(ssh_high, 4),
+        "abspeak_definition": (
+            "Superseded audit metric: the same average applied to the absolute "
+            "peaks rescaled by the domain-wide percentiles of the peaks"
+        ),
+        "abspeak_hs_ref_low": round(abs_hs_low, 4),
+        "abspeak_hs_ref_high": round(abs_hs_high, 4),
+        "abspeak_ssh_ref_low": round(abs_ssh_low, 4),
+        "abspeak_ssh_ref_high": round(abs_ssh_high, 4),
     }
 
 
@@ -338,6 +451,7 @@ def run_compound_detection(
     grid_results = []
     all_classified = []
     all_metrics = []
+    all_thresholds = []
 
     for hs_gp in hs_catalog:
         lat = hs_gp["grid_lat"]
@@ -366,15 +480,30 @@ def run_compound_detection(
         })
         all_classified.append(classified)
         all_metrics.append(metrics)
+        all_thresholds.append(
+            {
+                "thr_hs_abs": hs_gp.get("thr_hs_abs"),
+                "thr_ssh_total_abs": ssh_gp.get("thr_ssh_total_abs"),
+            }
+        )
 
-    # Domain-wide normalization
-    norm_refs = normalize_compound_intensity(all_classified, all_metrics)
+    # Domain-wide normalization of the excess over the local thresholds
+    norm_refs = normalize_compound_intensity(
+        all_classified, all_metrics, all_thresholds
+    )
 
     # Update grid_results with normalized metrics
+    intensity_fields = (
+        "mean_compound_intensity_norm",
+        "p95_compound_intensity_norm",
+        "max_compound_intensity_norm",
+        "mean_compound_intensity_norm_abspeak",
+        "p95_compound_intensity_norm_abspeak",
+        "max_compound_intensity_norm_abspeak",
+    )
     for gr, m in zip(grid_results, all_metrics):
-        gr["mean_compound_intensity_norm"] = m["mean_compound_intensity_norm"]
-        gr["p95_compound_intensity_norm"] = m["p95_compound_intensity_norm"]
-        gr["max_compound_intensity_norm"] = m["max_compound_intensity_norm"]
+        for field in intensity_fields:
+            gr[field] = m.get(field)
 
     # Summary
     total_compound = sum(m["compound_count_total"] for m in all_metrics)
