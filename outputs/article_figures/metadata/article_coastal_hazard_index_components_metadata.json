@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-28T14:21:45.262691+00:00",
+  "generated_at": "2026-07-28T19:45:11.359088+00:00",
   "output": "outputs/article_figures/coastal_hazard_index_components.png",
   "native_grid_source": "outputs/storm_catalog/compound/compound_metrics.csv",
   "native_hazard_index": {

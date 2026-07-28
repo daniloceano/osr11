@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-28T19:44:14.386192+00:00",
+  "generated_at": "2026-07-28T19:44:57.307208+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 876786,
-    "coordinates_after": 46982
+    "coordinates_after": 46977
   },
   "field_aliases": {
     "layers": {

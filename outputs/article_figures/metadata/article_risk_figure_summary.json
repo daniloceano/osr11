@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-28T19:40:22.673318+00:00",
+  "generated_at": "2026-07-28T19:45:18.451802+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -145,7 +145,7 @@
       "tolerance_degrees": 0.001,
       "preserve_topology": true,
       "coordinates_before": 876786,
-      "coordinates_after": 46982
+      "coordinates_after": 46977
     }
   },
   "ocean_hazard": {
