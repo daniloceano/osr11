@@ -1,0 +1,251 @@
+{
+  "dataset": "Grade Estatistica do IBGE",
+  "product": "Grade Estatistica - Censo Demografico 2022",
+  "institution": "Instituto Brasileiro de Geografia e Estatistica (IBGE)",
+  "edition": "Notas metodologicas 01/2025",
+  "reference_year": 2022,
+  "reference_date": "2022-07-31",
+  "spatial_coverage": "Brazil, restricted here to the coastal quadrants",
+  "spatial_unit": "regular grid cell",
+  "resolution": "200 m in urban census tracts, 1 km in rural ones",
+  "crs": "EPSG:4674 (SIRGAS 2000 geographic)",
+  "working_projection": "Albers equal-area, SIRGAS 2000, central meridian -54, standard parallels -2 and -22, latitude of origin -12",
+  "variables": {
+    "TOTAL": "resident population in the cell",
+    "TOTAL_DOM": "occupied households in the cell (private and collective)"
+  },
+  "allocation": "Census 2022 universe microdata linked to CNEFE 2022 household coordinates. Geocoding quality levels 1-4 are included; levels 5 and 6 (median of street/postcode and census-tract centroid) are excluded by IBGE, which removes 0.028% of the national population and 0.019% of the households. The excluded share is regionally uneven and largest in the North (0.370% in Roraima, 0.161% in Amapa).",
+  "known_limitations": [
+    "Only population and occupied households are published for 2022; the 2010 edition also carried sex and age.",
+    "Cell geometry is inherited from the 2010 grid: 1 km cells that became urban were split into 200 m cells, but no 200 m cell was merged back.",
+    "The grid is not a complete tessellation of the territory.",
+    "The methodological notes do not describe any suppression or perturbation of small counts."
+  ],
+  "license": "Public data distributed by IBGE; cite the source.",
+  "documentation": [
+    "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/Notas_metodologicas_grade_estatistica_2022.pdf",
+    "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/Tutorial_grade_estatistica_2022.pdf"
+  ],
+  "source_url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022",
+  "tool": "urllib (standard library)",
+  "downloaded_by": "Danilo Couto de Souza",
+  "download_date": "2026-07-28T14:26:43.492989+00:00",
+  "quadrant_selection": {
+    "method": "Articulation quadrants of the 500 km layer intersecting the coastal municipalities of the study",
+    "municipality_source": "site/public/data/risk_index_municipalities.geojson",
+    "municipality_count": 282,
+    "quadrant_count_total": 56,
+    "quadrant_count_selected": 20,
+    "quadrants": [
+      "ID_04",
+      "ID_14",
+      "ID_15",
+      "ID_25",
+      "ID_26",
+      "ID_27",
+      "ID_36",
+      "ID_37",
+      "ID_39",
+      "ID_47",
+      "ID_57",
+      "ID_58",
+      "ID_67",
+      "ID_68",
+      "ID_69",
+      "ID_75",
+      "ID_76",
+      "ID_77",
+      "ID_84",
+      "ID_85"
+    ]
+  },
+  "files": [
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_500km/BR500KM.zip",
+      "name": "BR500KM.zip",
+      "size_bytes": 8470,
+      "last_modified": "Thu, 12 Jun 2025 13:13:13 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/BR500KM.zip",
+      "sha256": "8213eaa81d50a805b12f68ebe5c1972e0a9766663e1c0b5043beaa9cf08e362c"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/Notas_metodologicas_grade_estatistica_2022.pdf",
+      "name": "Notas_metodologicas_grade_estatistica_2022.pdf",
+      "size_bytes": 869225,
+      "last_modified": "Thu, 12 Jun 2025 13:13:13 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/Notas_metodologicas_grade_estatistica_2022.pdf",
+      "sha256": "ce520fad239c3784efa31f0a43d3438cbb07dfb58f8847ce8fcc09fcfb56bd2d"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/Tutorial_grade_estatistica_2022.pdf",
+      "name": "Tutorial_grade_estatistica_2022.pdf",
+      "size_bytes": 1204992,
+      "last_modified": "Thu, 12 Jun 2025 13:13:13 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/Tutorial_grade_estatistica_2022.pdf",
+      "sha256": "50e10fafe12797994489234fef8809ebcd357229bfdcb69d5e42c1cdb062a614"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id04.zip",
+      "name": "grade_id04.zip",
+      "size_bytes": 3031479,
+      "last_modified": "Thu, 12 Jun 2025 13:13:14 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id04.zip",
+      "sha256": "1fe7c663bb2633d7870cf4ea79c87ed5a1312c49f1fa7d6f2841532b67434fe0"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id14.zip",
+      "name": "grade_id14.zip",
+      "size_bytes": 26890770,
+      "last_modified": "Thu, 12 Jun 2025 13:13:15 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id14.zip",
+      "sha256": "69f42d066d152091fd72d3b43a5ecd37bb4347d91dcc954fd42c9c642b3d28e3"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id15.zip",
+      "name": "grade_id15.zip",
+      "size_bytes": 14637041,
+      "last_modified": "Thu, 12 Jun 2025 13:13:15 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id15.zip",
+      "sha256": "5a614a6765a7f23ee1139a37481679e82b3d6adf7fff7e0f12203834c3c38cd3"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id25.zip",
+      "name": "grade_id25.zip",
+      "size_bytes": 40283809,
+      "last_modified": "Thu, 12 Jun 2025 13:13:17 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id25.zip",
+      "sha256": "fa9f041962622254a17a3a5ef0f883152ce12ac925204c6be1618f545f4f37ab"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id26.zip",
+      "name": "grade_id26.zip",
+      "size_bytes": 20458153,
+      "last_modified": "Thu, 12 Jun 2025 13:13:16 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id26.zip",
+      "sha256": "497df9f0f6d33a7db19a89dad8e94023626b7bf75bed61685779f6e74697457c"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id27.zip",
+      "name": "grade_id27.zip",
+      "size_bytes": 131311,
+      "last_modified": "Thu, 12 Jun 2025 13:13:16 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id27.zip",
+      "sha256": "55eefdef102e23a291566d0f43109a17a1a44add721dcdf338f64fd7249c31d2"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id36.zip",
+      "name": "grade_id36.zip",
+      "size_bytes": 32435537,
+      "last_modified": "Thu, 12 Jun 2025 13:13:18 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id36.zip",
+      "sha256": "69282afd6652257e29d9b1a2f87030c9dfa5c0b0cb792896d9a32b34fbae6193"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id37.zip",
+      "name": "grade_id37.zip",
+      "size_bytes": 10115308,
+      "last_modified": "Thu, 12 Jun 2025 13:13:18 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id37.zip",
+      "sha256": "0b4cb8b0e79d7ae0908961d225432a201b5cb79ecf6ca09cadf3e5578d2c89b2"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id39.zip",
+      "name": "grade_id39.zip",
+      "size_bytes": 122681,
+      "last_modified": "Thu, 12 Jun 2025 13:13:18 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id39.zip",
+      "sha256": "f0183eae6fa7dbd184fe69f53ca45883854a79172f3b133fdd76c29e38c1a9a5"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id47.zip",
+      "name": "grade_id47.zip",
+      "size_bytes": 13731939,
+      "last_modified": "Thu, 12 Jun 2025 13:13:20 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id47.zip",
+      "sha256": "da1071ab0172a68ac20ddc72a236775533bda5c4fccb40e13cb7e032389e3754"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id57.zip",
+      "name": "grade_id57.zip",
+      "size_bytes": 22217940,
+      "last_modified": "Thu, 12 Jun 2025 13:13:22 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id57.zip",
+      "sha256": "f257a70803f5594dfc7f9b6024dbfc49dfaa829073c0c3c133fa8d75e584a0dd"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id58.zip",
+      "name": "grade_id58.zip",
+      "size_bytes": 7564975,
+      "last_modified": "Thu, 12 Jun 2025 13:13:22 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id58.zip",
+      "sha256": "0bf938bcd7bc466013f913e340301b9dfc5dfdabb7ac1e47c0cdf9ba6176221c"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id67.zip",
+      "name": "grade_id67.zip",
+      "size_bytes": 23273814,
+      "last_modified": "Thu, 12 Jun 2025 13:13:24 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id67.zip",
+      "sha256": "22e4c1106a3f9ba5ddba6a10590e2efc4b3107c3d13f3c5dab67c438344b287c"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id68.zip",
+      "name": "grade_id68.zip",
+      "size_bytes": 14573369,
+      "last_modified": "Thu, 12 Jun 2025 13:13:24 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id68.zip",
+      "sha256": "34a834f872706112f8cd1e31b82c2ac6e84f00bde1e66b2c5a1be2d03bf42fb5"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id69.zip",
+      "name": "grade_id69.zip",
+      "size_bytes": 96001,
+      "last_modified": "Thu, 12 Jun 2025 13:13:24 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id69.zip",
+      "sha256": "7da09dfdace326a3a1c530cd1d69861a5a7fc6985797edcfd28608ea5b2abf83"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id75.zip",
+      "name": "grade_id75.zip",
+      "size_bytes": 17370077,
+      "last_modified": "Thu, 12 Jun 2025 13:13:26 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id75.zip",
+      "sha256": "f230c4d9c647c4f662554c78812b3a8adb37eecaf26a36d2f3b859b5bf424a5b"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id76.zip",
+      "name": "grade_id76.zip",
+      "size_bytes": 12080836,
+      "last_modified": "Thu, 12 Jun 2025 13:13:26 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id76.zip",
+      "sha256": "8ebc9ff2694d19b315deb233d74954624cc881511b71014bcc2434434da5e3fd"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id77.zip",
+      "name": "grade_id77.zip",
+      "size_bytes": 7297584,
+      "last_modified": "Thu, 12 Jun 2025 13:13:26 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id77.zip",
+      "sha256": "88ce74efbc841ab85bd38e8bae834b5c13e9f4d74102c6bb61501a98d8de8c4c"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id84.zip",
+      "name": "grade_id84.zip",
+      "size_bytes": 8182285,
+      "last_modified": "Thu, 12 Jun 2025 13:13:27 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id84.zip",
+      "sha256": "960a865e1bd3fce09fdba532816c137ac15546889e2bd76fba23934a94ed28d8"
+    },
+    {
+      "url": "https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2022/grade_estatistica/grade_id85.zip",
+      "name": "grade_id85.zip",
+      "size_bytes": 2449386,
+      "last_modified": "Thu, 12 Jun 2025 13:13:27 GMT",
+      "path": "data/raw/ibge/grade_estatistica_2022/grade_id85.zip",
+      "sha256": "e3258cdb1b61672159247c330e044f71e85171811db72c356e4f29f99beab06b"
+    }
+  ],
+  "file_count": 23,
+  "total_bytes": 279026982,
+  "notes": "Downloaded to build a coastal population-exposure layer for the compound coastal extremes study. Raw archives are not versioned; this metadata file is."
+}
