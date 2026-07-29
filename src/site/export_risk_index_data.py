@@ -816,8 +816,8 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "method": "Min-Max over the municipalities",
             "purpose": (
                 "Provide a hazard component whose amplitude matches SVI/100 "
-                "for equal-weight aggregations. It is not used by any "
-                "published field."
+                "for equal-weight aggregations. Used as the hazard factor of "
+                "Risk_Hazard_raw; see integrated_risk_formula."
             ),
             "population": (
                 "Brazilian coastal municipalities with a finite transferred "
@@ -898,8 +898,8 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "Hazard_Index_mun": (
                 "Min-Max renormalization of the transferred Hazard_Index over "
                 "the municipalities, so that the hazard spans [0,1] like "
-                "SVI/100. Provided for equal-weight aggregations; no published "
-                "field uses it."
+                "SVI/100 for equal-weight aggregations. Used as the hazard "
+                "factor of Risk_Hazard_raw."
             ),
             "Exposure_Index": (
                 "Resident population within 10 km of the coastline (IBGE Grade "

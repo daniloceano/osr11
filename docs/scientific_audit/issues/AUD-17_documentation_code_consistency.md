@@ -1,0 +1,355 @@
+# AUD-17 — Oito inconsistências entre documentação, código e saídas, três delas materiais
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | AUD-17 |
+| **Tipo** | `inconsistencia-documental` (confirmado por inspeção) |
+| **Componente** | transversal |
+| **Etapa do fluxo** | Step 4 (principalmente), README raiz |
+| **Afeta** | documentação, saídas (metadados publicados) |
+| **Prioridade** | P1 |
+| **Bloqueia publicação?** | Sim, salvo correção — o README, como está, leva o leitor a reconstruir uma fórmula errada |
+| **Status** | `em-investigacao` |
+| **Desfecho** | — |
+| **Depende de** | — |
+| **Bloqueia** | — |
+| **Relacionado a** | AUD-04, AUD-08, AUD-09, AUD-10, AUD-11, AUD-15 |
+| **Origem** | `baseline/2026-07-29_initial_review.md` §2.2, §8 item 16, §9.1 item 6 |
+| **Criado em** | 2026-07-29 |
+| **Última atualização** | 2026-07-29 |
+
+---
+
+## 1. Problema
+
+Oito divergências verificadas entre o que a documentação afirma, o que o código
+faz e o que as saídas contêm — sete na revisão de linha de base, uma
+(#8) encontrada durante a criação desta auditoria. Três são materiais: um leitor
+do `README.md` reconstruiria a fórmula de risco **errada**, e duas
+docstrings/metadados contêm afirmações **factualmente falsas** sobre o próprio
+código.
+
+Estão agrupadas numa única questão porque compartilham o mesmo tipo de trabalho
+(correção de texto), o mesmo critério de aceitação (documentação e código
+concordam) e a mesma verificação (releitura dirigida).
+
+## 2. Por que importa cientificamente
+
+- O `README.md` é o documento de entrada do repositório e o que será apontado na
+  declaração de disponibilidade de código do manuscrito. Se ele descreve uma
+  fórmula superada, a reprodutibilidade declarada é falsa.
+- `risk_index_metadata.json` é **publicado no site** e se autocontradiz: afirma
+  que um campo não é usado por nenhum produto publicado, enquanto a fórmula de
+  risco no mesmo arquivo o usa como fator.
+- Uma docstring que afirma "nada neste módulo alimenta o índice de risco
+  publicado" leva um agente futuro — ou um coautor — a modificar o módulo
+  acreditando que a mudança é inócua.
+
+## 3. Evidência original — as sete inconsistências
+
+### #1 — README declara a fórmula de risco superada · **Material**
+
+`README.md` L405–408, seção "Current Implementation Status":
+
+> *"Exposure spatialized via spatial join of oceanic hazard metrics to
+> municipalities"*
+> *"Risk_Hazard = norm_municipal[(SVI/100) × Hazard_Index]"*
+
+Duas afirmações erradas:
+
+- a fórmula é a de **duas** componentes, superada. A implementada
+  (`export_risk_index_data.py` L576–583) é a média geométrica de **três**;
+- descrever exposição como "spatial join of oceanic hazard metrics to
+  municipalities" é exatamente o uso que o §4.1 do **mesmo README** declara
+  errado e removido em 2026-07-28.
+
+O §4.4 do README está correto. O documento se contradiz internamente.
+
+### #2 — Docstring de `exposure_index.py` afirma não alimentar o risco · **Material**
+
+`src/04_risk_integration/exposure_index.py` L47–48:
+
+> *"Nothing in this module feeds the published risk index. It is wired into the
+> website exposure layer and the exploratory comparisons only."*
+
+Falso. `src/site/export_risk_index_data.py`:
+
+- L48–55 importa `CLIP_FLOOR`, `GOALPOST_MAX_INHABITANTS`,
+  `GOALPOST_MIN_INHABITANTS`, `exposure_absolute`, `exposure_inform`,
+  `exposure_relative`;
+- L563 chama `exposure_inform(population, municipal_population)`;
+- L578 usa o resultado como fator de `Risk_Hazard_raw`.
+
+### #3 — Metadados publicados afirmam que `Hazard_Index_mun` não é usado · **Material**
+
+`src/site/export_risk_index_data.py`:
+
+- L818–822 (`municipal_hazard_renormalization.purpose`):
+  *"Provide a hazard component whose amplitude matches SVI/100 for equal-weight
+  aggregations. It is not used by any published field."*
+- L898–903 (`methodology.Hazard_Index_mun`):
+  *"Provided for equal-weight aggregations; no published field uses it."*
+
+Ambas falsas. No mesmo JSON, `integrated_risk_formula.expression` (L836–839) é:
+
+```
+Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index)
+                   * clip(SVI_Coast_2022/100)) ** (1/3)
+```
+
+E `export_risk_index_data.py` L577 confirma. O arquivo publicado no site
+contradiz a si mesmo.
+
+### #4 — `SCIENTIFIC_NOTES.md` referenciado não existe na raiz
+
+`README.md` L293 remete a *"`SCIENTIFIC_NOTES.md` → 'Step 4 — Exposure,
+Vulnerability & Risk Integration'"*. **O arquivo não existe na raiz do
+repositório.** Existem apenas versões em submódulos:
+
+- `src/02_threshold_calibration/04_csi_grid_scan/SCIENTIFIC_NOTES.md`
+- `src/02_threshold_calibration/05_pu_composite_calibration/SCIENTIFIC_NOTES.md`
+- `src/03_storm_catalog_generation/SCIENTIFIC_NOTES.md`
+
+Nenhum contém uma seção "Step 4".
+
+### #5 — Regra de associação documentada não se reproduz · **Material**
+
+`README.md` L202–210 descreve a seleção do ponto como *"the point with the
+highest compound-event count within the association"*. Reproduz-se em apenas
+15–31 % dos municípios. Rastreado em detalhe em **AUD-04**; registrado aqui
+apenas para completude do catálogo.
+
+### #6 — Bloco "Products generated" duplicado no README
+
+O §4.4 do `README.md` contém **duas** listas "Products generated" com conteúdos
+diferentes (L286–292 e L295–302). A segunda repete parcialmente a primeira e
+descreve `Risk_Hazard_raw` como *"unnormalized product of SVI fraction and
+multimetric hazard"* — de novo a fórmula de duas componentes.
+
+### #7 — Contagem de municípios inconsistente
+
+`README.md` L406 diz *"281 coastal municipalities"*; o restante do documento
+(L200, L217, L226, L93) diz **282**. O valor correto é 282 — 281 de
+Lima et al. (2024) mais Balneário Rincão, conforme
+`src/04_risk_integration/external_svi/README.md`.
+
+### #8 — Mapa de estrutura do repositório desatualizado no README · *encontrada em 2026-07-29, na criação desta estrutura*
+
+`README.md` L480–485 lista, sob `src/03_storm_catalog_generation/`, os módulos
+`main.py`, `segmentation.py`, `metrics.py`, `io.py`, `tides.py` e `figures.py`
+como se estivessem na raiz do diretório do Step 3. **Todos estão em
+`src/03_storm_catalog_generation/01_storm_catalogs/`.**
+
+Verificado:
+
+```
+src/03_storm_catalog_generation/
+├── 01_storm_catalogs/   ← main.py, segmentation.py, metrics.py,
+│                           io.py, tides.py, figures.py estão AQUI
+├── 02_compound_detection/ … 08_site_export/
+├── config/  shared/
+└── hazard_characterization.py   ← este sim está na raiz
+```
+
+Consequência prática: um agente ou coautor que use o mapa do README para
+localizar o código de detecção POT não encontra os arquivos. Esta inconsistência
+**induziu erro real** durante a criação desta auditoria, corrigido em AUD-02 §4
+e AUD-03 §4.
+
+O README também lista `src/04_risk_integration/` com apenas três módulos
+(`hazard_index.py`, `coastal_projection.py`, `palettes.py`); o diretório contém
+ainda `exposure_index.py`, `municipal_exposure.py` e `external_svi/`.
+
+### Item adicional já auditado, não contado entre os sete
+
+`pop_house` é publicado **pré-normalizado** (Min–Max 0–1) enquanto o manuscrito o
+define como residentes por domicílio (2,40–4,45 raw). A auditoria de 2026-07-28
+(`src/04_risk_integration/external_svi/README.md`) demonstrou ser **inócuo para o
+índice** e **real para a tabela publicada**, com a recomendação: *"Either the
+manuscript definition or the published column should be changed so they agree."*
+Pendência aberta.
+
+## 4. Localização exata
+
+| # | Arquivo | Linhas |
+|---|---|---|
+| 1 | `README.md` | 405–408 |
+| 2 | `src/04_risk_integration/exposure_index.py` | 47–48 |
+| 3 | `src/site/export_risk_index_data.py` | 818–822, 898–903 |
+| 4 | `README.md` | 293 |
+| 5 | `README.md` | 202–210 |
+| 6 | `README.md` | 286–292 e 295–302 |
+| 7 | `README.md` | 406 |
+| 8 | `README.md` | 480–485 (Step 3) e 496–499 (Step 4) |
+| extra | `outputs/risk_index/risk_index.shp` (col. `pop_house` vs. `pop_house_`) | — |
+| novo (2026-07-29) | `src/figures_article/README.md` | 92–97 — mesma fórmula de duas componentes, aplicada à Figura C do multiplot; script já lê 4 painéis |
+| novo (2026-07-29) | `site/README.md` | 214–222 — mesma fórmula de duas componentes; afirmação falsa de que `Hazard_Index_mun` não é oferecido como camada de mapa (é, ver `RiskIntegrationMap.tsx` e `available_layers` do metadata) |
+
+### Saídas afetadas
+
+- `site/public/data/risk_index_metadata.json` — contém as afirmações falsas de #3
+  e é regenerado a cada execução do exportador.
+
+## 5. Comportamento atual vs. comportamento pretendido
+
+| | Descrição |
+|---|---|
+| **Implementado** | Código correto; documentação parcialmente desatualizada; metadados publicados autocontraditórios |
+| **Pretendido** | Documentação, código e metadados descrevendo a mesma coisa |
+
+Vale registrar que **o código é a fonte confiável** em todos os sete casos. Este
+não é um problema de implementação.
+
+## 6. Divergência documentação ↔ implementação ↔ saídas
+
+É a própria questão. Resumo por nível:
+
+| Inconsistência | Documentação | Código | Saídas |
+|---|---|---|---|
+| #1 | errada | correto | corretas |
+| #2 | errada (docstring) | correto | corretas |
+| #3 | errada | correto | **erradas** (JSON publicado) |
+| #4 | referência quebrada | — | — |
+| #5 | errada | não implementa a regra | não verificáveis |
+| #6 | duplicada e parcialmente errada | correto | corretas |
+| #7 | inconsistente | correto | corretas |
+| #8 | mapa de estrutura errado | correto | corretas |
+
+## 7. Explicações alternativas plausíveis
+
+1. **São resíduos de refatorações sucessivas**, todas documentadas no histórico
+   do repositório (o índice migrou de duas para três componentes; a exposição foi
+   redefinida em 2026-07-28). O README foi atualizado em algumas seções e não em
+   outras. Explicação mais provável.
+2. **A docstring #2 pode ter sido escrita antes** de o módulo ser conectado ao
+   exportador e nunca revisada. Verificável no histórico do git.
+3. **O `SCIENTIFIC_NOTES.md` da raiz pode ter sido planejado e não escrito.** As
+   regras do projeto (`~/.claude/rules/scientific_notes_rules.md`) exigem esse
+   arquivo para repositórios de artigo; a ausência é uma pendência real, não
+   apenas uma referência quebrada.
+
+## 8. Diagnósticos propostos
+
+1. **Verificar cada uma das sete no estado atual do código** antes de corrigir —
+   os números de linha citados são de 2026-07-29 e podem ter mudado.
+2. **Varredura sistemática** de todas as fórmulas presentes em documentação e
+   docstrings, confrontando com a implementação. Um script simples que extraia
+   expressões de blocos de código dos `.md` e as compare com o código pode
+   automatizar parte disso.
+3. **Verificar o histórico do git** de `exposure_index.py` e
+   `export_risk_index_data.py` para datar cada inconsistência e evitar que
+   reapareçam.
+4. **Auditar os demais README de submódulo** quanto às mesmas fórmulas.
+
+## 9. Critérios objetivos de resolução
+
+- [x] #1 — `README.md` "Current Implementation Status" descreve a fórmula de
+      **três** componentes e a definição corrigida de exposição, coerente com §4.4.
+      *(L397–400, verificado 2026-07-29)*
+- [x] #2 — a docstring de `exposure_index.py` declara corretamente que o módulo
+      alimenta `Risk_Hazard` via `export_risk_index_data.py`.
+      *(L47–55, verificado 2026-07-29)*
+- [x] #3 — os dois blocos de metadados sobre `Hazard_Index_mun` descrevem
+      corretamente seu uso como fator do risco; **o JSON publicado foi corrigido**
+      e validado como JSON íntegro. *(Correção aplicada diretamente ao arquivo
+      publicado, não por regeneração completa — ver §14 sobre o motivo.)*
+- [ ] #4 — existe `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada,
+      seguindo as seções obrigatórias de `~/.claude/rules/scientific_notes_rules.md`;
+      **ou** a referência foi removida do README. **Adiado deliberadamente** — ver §10.
+- [ ] #5 — remetido a AUD-04; fecha quando AUD-04 fechar.
+- [x] #6 — existe uma única lista "Products generated" no §4.4, correta.
+      *(L286–294, verificado 2026-07-29)*
+- [x] #7 — todas as menções à contagem de municípios dizem 282, com a nota sobre
+      Balneário Rincão. *(única ocorrência de "281" remanescente é a citação correta
+      de Lima et al. 2024 em L93; verificado por `grep -n "281" README.md`)*
+- [x] #8 — o mapa de estrutura do `README.md` reflete a árvore real de
+      `src/03_storm_catalog_generation/` e de `src/04_risk_integration/`,
+      verificado contra a saída de `find src -name '*.py'`.
+- [ ] extra — `pop_house` e sua definição no manuscrito concordam. **Não tocado**
+      nesta sessão — exige decidir qual dos dois lados muda (decisão fora do escopo
+      de uma correção puramente factual).
+- [ ] Uma releitura completa do `README.md` confirma que nenhuma fórmula ou
+      descrição contradiz o código. **Parcial**: #1, #2, #3, #6, #7, #8 confirmados;
+      #4, #5 e o item "extra" permanecem em aberto, portanto a questão **não** pode
+      ser fechada nesta sessão.
+
+## 10. Riscos de alteração prematura
+
+- **Corrigir o README antes de AUD-01, AUD-04 e AUD-06** significa reescrever
+  duas vezes, porque essas questões podem mudar o método. Recomenda-se corrigir
+  agora as inconsistências que descrevem o **estado atual** (#1, #2, #3, #6, #7) e
+  adiar #4 (o `SCIENTIFIC_NOTES.md` deve refletir o método final).
+- **Editar `export_risk_index_data.py`** para corrigir #3 exige **regenerar** o
+  JSON publicado; corrigir apenas o código-fonte deixa o site com o texto antigo.
+- Cuidado para não corrigir uma docstring de forma que passe a descrever um
+  comportamento **desejado** em vez do **implementado** — o erro seria simétrico.
+
+## 11. Condições sob as quais o resultado atual pode ser mantido
+
+Nenhuma. Afirmações factualmente falsas sobre o próprio código não têm
+justificativa. Esta é a única questão da auditoria sem cenário de manutenção do
+estado atual.
+
+É também a **mais barata de resolver** e a única que pode ser fechada
+integralmente sem depender de nenhuma decisão científica.
+
+## 12. Produtos a jusante que exigiriam regeneração
+
+Apenas para #3. **Atualizado 2026-07-29**: a regeneração completa via
+
+```bash
+python -m src.site.export_risk_index_data   # regenera risk_index_metadata.json
+```
+
+foi testada e descartada nesta sessão porque produz uma diferença de
+simplificação de geometria não relacionada (ver §14, achado "d") neste
+ambiente. `site/public/data/risk_index_metadata.json` foi corrigido por edição
+direta das duas strings falsas, preservando o restante do arquivo
+byte-a-byte. **Se o exportador for executado por qualquer outro motivo no
+futuro** (nova associação de município, novo catálogo, etc.), a regeneração
+completa passará a ser o caminho correto novamente — a edição cirúrgica foi
+uma medida desta sessão, não uma prática permanente.
+
+As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
+
+## 13. Rastreabilidade de versionamento
+
+| Data | Commit | Ramo | Arquivos alterados | Natureza |
+|------|--------|------|--------------------|----------|
+| — | — | — | — | *nenhuma alteração até o momento* |
+
+> **Nota.** A criação da estrutura de auditoria em `docs/scientific_audit/`
+> **não** corrigiu nenhuma destas sete inconsistências. Elas permanecem no
+> repositório no estado descrito na §3.
+
+## 14. Histórico de investigação
+
+### 2026-07-29 — Catalogação; descoberta da inconsistência #8
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | As sete inconsistências da revisão de linha de base persistem? Existem outras? |
+| **Dados e métodos** | Releitura dirigida de `README.md`, `exposure_index.py`, `export_risk_index_data.py`; varredura automática de todos os caminhos de arquivo citados nos registros da auditoria contra o sistema de arquivos |
+| **Scripts executados** | Nenhum versionado — verificação por `grep` e `find` durante a criação de `docs/scientific_audit/` |
+| **Novas saídas geradas** | Nenhuma |
+| **Achados** | As sete persistem, sem alteração. Descoberta a **#8**: o mapa de estrutura do README aponta `segmentation.py`, `metrics.py`, `io.py`, `tides.py`, `figures.py` e `main.py` na raiz de `src/03_storm_catalog_generation/`, quando estão em `01_storm_catalogs/`; e omite três módulos de `src/04_risk_integration/` |
+| **Interpretação** | A #8 tem consequência prática demonstrada: induziu erro de referência na redação de AUD-02 §4 e AUD-03 §4, corrigido na mesma sessão. Um agente futuro que confie no mapa do README não encontra o código de detecção POT |
+| **Alterações implementadas** | **Nenhuma no código nem no README.** Apenas correção dos caminhos dentro dos registros AUD-02 e AUD-03 desta auditoria |
+| **Validação realizada** | Varredura automática confirma que todo caminho citado nos registros existe, exceto os prospectivos de `outputs/audit/` e `src/exploratory/audit_*.py`, que são saídas ainda a criar |
+| **Incerteza remanescente** | Não foi feita varredura exaustiva dos README de submódulo (diagnóstico 4) |
+| **Próxima decisão necessária** | Aplicar as correções de #1, #2, #3, #6, #7 e #8, que descrevem o estado atual e não dependem de decisão científica pendente. Adiar #4 (`SCIENTIFIC_NOTES.md`) e #5 (remetida a AUD-04) |
+
+### 2026-07-29 — Correção de #1, #2, #3, #6, #7, #8; varredura por resíduos além dos arquivos citados
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | As seis correções sem decisão científica pendente (#1, #2, #3, #6, #7, #8) podem ser aplicadas sem alterar nenhum resultado numérico, e existem inconsistências do mesmo tipo em arquivos não citados no registro original? |
+| **Dados e métodos** | Releitura de `README.md` (L286–312, L397–401, L472–499), `src/04_risk_integration/exposure_index.py` (L1–56), `src/site/export_risk_index_data.py` (L544–583, L790–920). Reconstrução da fórmula a partir do código (não da documentação), conforme exigido pelo procedimento. Varredura por `grep -rn` de todas as frases citadas como falsas em #1–#3, #6, #7 em todo o repositório (`.py`, `.md`, `.json`), para além dos arquivos listados na §4 do registro original |
+| **Scripts executados** | Nenhum script novo. `grep`/`find` para varredura textual; `python -m src.site.export_risk_index_data` executado uma vez para testar a regeneração do JSON publicado (ver "Achados" sobre por que o resultado foi descartado) |
+| **Novas saídas geradas** | Nenhuma output de análise. `site/public/data/risk_index_metadata.json` foi editado diretamente (duas strings), não regenerado |
+| **Achados** | (a) As seis inconsistências descritas em #1, #2, #3, #6, #7, #8 foram confirmadas byte a byte no estado atual do código antes da correção — nenhuma tinha sido corrigida por sessões anteriores. (b) `export_risk_index_data.py` L577 confirma a fórmula de três componentes; nenhuma ambiguidade. (c) A varredura por resíduos encontrou **duas inconsistências adicionais do mesmo tipo**, não listadas no registro original: `src/figures_article/README.md:97` descrevia a fórmula de duas componentes para a Figura C do multiplot artigo, enquanto o script `make_article_hazard_vulnerability_risk_multiplot.py` (L73–99) já lê `Hazard_Index_mun` e `Exposure_Index` como painéis A e B — o script tem 4 painéis, a documentação descrevia 3; `site/README.md:214-222` também continha a fórmula de duas componentes e afirmava que `Hazard_Index_mun` "is not offered as a map layer", o que é falso: `risk_index_metadata.json.available_layers` e `site/components/RiskIntegrationMap.tsx` confirmam que é uma camada selecionável. Ambas corrigidas pelo mesmo critério do item #1/#3 (código como fonte de verdade, sem ambiguidade). (d) **Efeito colateral identificado e revertido**: a regeneração completa via `python -m src.site.export_risk_index_data` produz um `risk_index_municipalities.geojson` com simplificação de geometria numericamente diferente da versão versionada (46.977 vs. 47.730 coordenadas após simplificação; `coordinates_after` no metadata muda também), embora **todas as 282 propriedades municipais e a ordem dos registros permaneçam idênticas** (verificado por comparação campo a campo em Python — zero municípios com qualquer propriedade numérica alterada). A causa provável é deriva de versão do GEOS/Shapely neste ambiente frente ao ambiente que gerou o commit anterior, não uma mudança de dado ou de método. Como esse efeito está fora do escopo de uma correção textual, a regeneração completa foi **descartada** (`git checkout` do geojson e do metadata.json) e as duas strings falsas do metadata foram corrigidas por edição direta e cirúrgica do JSON publicado, preservando geometria e `generated_at`/`coordinates_after` originais |
+| **Interpretação** | Confirma a conclusão do registro original: em todos os casos verificados, o código é a fonte confiável e a documentação estava desatualizada por resíduo de refatoração. Nenhuma das correções aplicadas envolveu escolha metodológica. O efeito colateral de simplificação geométrica (item d) é uma **descoberta nova**, de natureza puramente ambiental/de reprodutibilidade de biblioteca, não uma fragilidade científica — registrada aqui para rastreabilidade, mas **não é uma sub-questão de AUD-17** nem foi convertida em questão nova, por não afetar nenhum valor publicado |
+| **Alterações implementadas** | `README.md` (fórmula de 2→3 componentes em "Current Implementation Status"; contagem 281→282; lista "Products generated" duplicada consolidada em uma única lista correta; mapa de estrutura de `03_storm_catalog_generation/` e `04_risk_integration/` corrigido); `src/04_risk_integration/exposure_index.py` (docstring corrigida, distinguindo `exposure_inform` — usada no risco — de `exposure_absolute`/`exposure_relative` — publicadas mas não usadas no produto de risco — das variantes puramente exploratórias); `src/site/export_risk_index_data.py` (dois blocos de metadados `purpose`/`methodology.Hazard_Index_mun` corrigidos); `site/public/data/risk_index_metadata.json` (as mesmas duas strings, editadas diretamente); `src/figures_article/README.md` (fórmula e contagem de painéis corrigidas); `site/README.md` (fórmula e afirmação sobre camada de mapa corrigidas). **Nenhum arquivo em `outputs/` foi alterado. Nenhum valor de `Risk_Hazard`, `Hazard_Index` ou qualquer campo numérico publicado mudou** |
+| **Validação realizada** | (1) JSON publicado validado com `json.load` após a edição — íntegro. (2) Comparação campo a campo do `risk_index_municipalities.geojson` candidato (gerado, depois descartado) contra o commitado: 282/282 municípios com propriedades idênticas, mesma ordem, zero diferenças numéricas — confirma que a correção de metadados não teria alterado nenhum resultado científico mesmo se a regeneração completa tivesse sido mantida. (3) `grep -rn` pós-edição confirma que nenhuma das frases falsas originais (fórmula de duas componentes, "not used by any published field", "spatial join of oceanic hazard metrics", "281 coastal municipalities" fora do contexto correto) permanece em nenhum arquivo do repositório fora dos documentos imutáveis de auditoria |
+| **Incerteza remanescente** | (1) Deriva de simplificação geométrica entre ambientes (achado d) não foi investigada a fundo — não se sabe se é GEOS, Shapely, GDAL/pyogrio, ou uma diferença de plataforma; recomenda-se registrar a versão exata das bibliotecas geoespaciais no `environment.yml` se ainda não estiver fixada, mas isso é uma melhoria de reprodutibilidade de infraestrutura, não uma questão de auditoria científica. (2) A varredura por resíduos não foi exaustiva sobre todos os `README.md` de submódulo do Step 2/Step 3 (apenas os que citam `Risk_Hazard =` ou `Hazard_Index_mun` foram varridos); nenhuma ocorrência adicional foi encontrada nessa varredura direcionada, mas uma varredura completa de todo o repositório não foi realizada |
+| **Próxima decisão necessária** | #4 (`SCIENTIFIC_NOTES.md` na raiz) permanece deliberadamente adiado até que o método final do Step 3/4 esteja decidido (AUD-01 e relacionadas), para não escrever o documento duas vezes. #5 fecha junto com AUD-04. O item "extra" (`pop_house` pré-normalizado) exige decidir se a definição do manuscrito ou a coluna publicada deve mudar — não é uma correção puramente factual e não foi tocado. Nenhuma consulta ao usuário foi necessária nesta sessão: todas as seis correções aplicadas eram inequívocas pelo critério da §3 do procedimento |

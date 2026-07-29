@@ -285,21 +285,15 @@ entirely coastal ones.
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index (external; audited, see below)
-- `Exposure_Index`, `Exposure_absolute`, `Exposure_relative`
-- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid components
-- `Hazard_Index_raw`, `Hazard_Index`, `Hazard_Index_mun`
-- `Risk_Hazard_raw`, `Risk_Hazard` — integrated risk, before and after normalization
-
-> **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (3) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
-
-**Products generated:**
-- `SVI_Coast_2022` — Social Vulnerability Index
-- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid normalized hazard components transferred to municipalities
+- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid normalized hazard components
 - `Hazard_Index_raw` — equal-weight mean of the three normalized components
-- `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`
-- `Risk_Hazard_raw` — unnormalized product of SVI fraction and multimetric hazard
-- `Risk_Hazard` — current integrated coastal risk, Min–Max normalized to [0, 1]
-- `Hazard_Index_mun` — hazard renormalized over the municipalities, for equal-weight aggregations
+- `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`, transferred to municipalities
+- `Hazard_Index_mun` — `Hazard_Index` renormalized over the municipalities, so its amplitude matches SVI/100 in the equal-weight product
+- `Exposure_Index`, `Exposure_absolute`, `Exposure_relative`
+- `Risk_Hazard_raw` — geometric mean of `Hazard_Index_mun`, `Exposure_Index` and `SVI_Coast_2022/100` (each floored at 0.01)
+- `Risk_Hazard` — `Risk_Hazard_raw` Min–Max normalized to [0, 1] — current integrated coastal risk
+
+> **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (4) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Status:** ✅ Complete  
 **Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the 87-metric explorer below it, transposed to the same coastline with the same graphic style. `/results/risk-integration` displays the current municipal product with every quantity available **before and after** its Min–Max normalization (`Hazard_Index_raw`, `Risk_Hazard_raw`). `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index.
@@ -403,9 +397,9 @@ The repository currently contains:
 - ~96k compound events detected; all submodules 3.2–3.8 complete (duration, seasonality, trends, EVA, dependence, site export)
 
 ✅ **STEP 4 — Exposure, Vulnerability & Risk Integration** (complete at municipal scale)
-- SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (281 coastal municipalities)
-- Exposure spatialized via spatial join of oceanic hazard metrics to municipalities
-- Current Hazard_Index = norm_native{[norm_native(frequency) + norm_native(duration) + norm_native(intensity)]/3}; Risk_Hazard = norm_municipal[(SVI/100) × Hazard_Index]
+- SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (282 coastal municipalities)
+- Exposure from resident population within 10 km of the coastline (IBGE Grade Estatística 2022), not a spatial join of oceanic hazard metrics
+- Current Hazard_Index = norm_native{[norm_native(frequency) + norm_native(duration) + norm_native(intensity)]/3}; Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) × clip(Exposure_Index) × clip(SVI/100)) ^ (1/3)] — see Sub-step 4.4 for the full three-component formula
 
 
 ---
@@ -478,10 +472,10 @@ osr11/
 │           └── README.md, RUN.md, SCIENTIFIC_NOTES.md, INTEGRATION_NOTES.md
 │
 │   └── 03_storm_catalog_generation/          # STEP 3 — Hazard Characterization
-│       ├── main.py                           #   CLI orchestrator (catalog generation)
+│       ├── 01_storm_catalogs/                #   Submodule 3.1 — Catalog generation
+│       │   ├── main.py                       #     CLI orchestrator
+│       │   └── segmentation.py, metrics.py, io.py, tides.py, figures.py
 │       ├── hazard_characterization.py        #   CLI orchestrator (submodules 3.2–3.8)
-│       ├── segmentation.py, metrics.py       #   POT detection + episode attributes
-│       ├── io.py, tides.py, figures.py       #   I/O, tides, QA figures
 │       ├── config/analysis_config.py         #   Configuration
 │       ├── shared/catalog_utils.py           #   Shared I/O utilities
 │       ├── 02_compound_detection/            #   Submodule 3.2 — Compound events
@@ -495,8 +489,11 @@ osr11/
 │
 │   ├── 04_risk_integration/                  # STEP 4 — Exposure, Vulnerability & Risk
 │   │   ├── hazard_index.py                   #   Canonical native-grid Hazard Index
+│   │   ├── exposure_index.py                 #   Canonical exposure term definitions
+│   │   ├── municipal_exposure.py             #   Population aggregation by distance band
 │   │   ├── coastal_projection.py             #   Canonical grid → coastline projection
-│   │   └── palettes.py                       #   Shared discrete class palettes
+│   │   ├── palettes.py                       #   Shared discrete class palettes
+│   │   └── external_svi/                     #   Externally delivered SVI + audit
 │   │
 │   ├── figures_article/                      # Manuscript-quality figures and tables
 │   │   ├── make_article_coastal_hazard_components_map.py

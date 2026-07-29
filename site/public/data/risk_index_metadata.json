@@ -854,7 +854,7 @@
   },
   "municipal_hazard_renormalization": {
     "method": "Min-Max over the municipalities",
-    "purpose": "Provide a hazard component whose amplitude matches SVI/100 for equal-weight aggregations. It is not used by any published field.",
+    "purpose": "Provide a hazard component whose amplitude matches SVI/100 for equal-weight aggregations. Used as the hazard factor of Risk_Hazard_raw; see integrated_risk_formula.",
     "population": "Brazilian coastal municipalities with a finite transferred Hazard_Index",
     "input_field": "Hazard_Index",
     "input_stats": {
@@ -904,7 +904,7 @@
     "Hazard_Intensity": "Min-Max normalization across the native grid of mean_compound_intensity_norm.",
     "Hazard_Index_raw": "Equal-weight mean of Hazard_Frequency, Hazard_Duration, and Hazard_Intensity.",
     "Hazard_Index": "Min-Max normalization to [0,1] of Hazard_Index_raw across the 808 native ocean grid points, transferred without renormalization to municipalities.",
-    "Hazard_Index_mun": "Min-Max renormalization of the transferred Hazard_Index over the municipalities, so that the hazard spans [0,1] like SVI/100. Provided for equal-weight aggregations; no published field uses it.",
+    "Hazard_Index_mun": "Min-Max renormalization of the transferred Hazard_Index over the municipalities, so that the hazard spans [0,1] like SVI/100 for equal-weight aggregations. Used as the hazard factor of Risk_Hazard_raw.",
     "Exposure_Index": "Resident population within 10 km of the coastline (IBGE Grade Estatistica 2022, 200 m urban / 1 km rural cells) on a log scale between fixed goalposts of 100 and 1,000,000 inhabitants, combined by geometric mean with the share of the municipal population inside the band. Proximity, not modelled inundation.",
     "Risk_Hazard_raw": "Geometric mean of Hazard_Index_mun, Exposure_Index and SVI_Coast_2022/100, each floored at 0.01.",
     "Risk_Hazard": "Min-Max normalization to [0,1] of Risk_Hazard_raw across municipalities with finite SVI and hazard values."

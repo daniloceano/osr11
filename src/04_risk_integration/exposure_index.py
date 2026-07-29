@@ -44,8 +44,15 @@ Table 5 shows geometric averages inside the hazard components; the geometric
 form is used here so that a single operator governs both this pair and the
 final risk product, and the two agree to Spearman 0.995 on this dataset anyway.
 
-Nothing in this module feeds the published risk index. It is wired into the
-website exposure layer and the exploratory comparisons only.
+``exposure_inform`` (the INFORM recipe above) feeds the published risk index:
+``src/site/export_risk_index_data.py`` imports it and uses its result as the
+``Exposure_Index`` factor of ``Risk_Hazard_raw``. ``exposure_absolute`` and
+``exposure_relative`` are also imported by that exporter and published as the
+auxiliary ``Exposure_absolute``/``Exposure_relative`` fields, but neither feeds
+the risk product directly. The remaining candidates (``exposure_linear``,
+``exposure_log10``, ``exposure_rank``, ``all_variants``, ``variant_components``)
+are wired into the website exposure layer (`export_exposure_data.py`) and the
+exploratory comparisons only.
 """
 
 from __future__ import annotations

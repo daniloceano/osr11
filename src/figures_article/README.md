@@ -90,11 +90,13 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
     5 km. Each segment receives the value at its nearest grid point in SIRGAS
     2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
-  - Panel A: current
+  - Panel A: `Hazard_Index_mun` — municipal-renormalized
     `Hazard_Index = norm_native[(norm_native(frequency) + norm_native(duration) + norm_native(intensity))/3]`
-  - Panel B: `SVI_Coast_2022`
-  - Panel C: current
-    `Risk_Hazard = norm[(SVI_Coast_2022/100) * Hazard_Index]`, on a 0–1 scale
+  - Panel B: `Exposure_Index` — INFORM-style municipal population exposure
+  - Panel C: `SVI_Coast_2022`
+  - Panel D: current
+    `Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) * clip(Exposure_Index) * clip(SVI_Coast_2022/100)) ^ (1/3)]`,
+    on a 0–1 scale
   - Uses discrete green-to-red classes derived from the inverted Composite
     Score heatmap palette.
   - Includes Natural Earth country and Brazilian-state boundaries over gray

@@ -1,0 +1,12 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_rayleigh_phase_test",
+  "source": "outputs/storm_catalog/compound/compound_catalog.json",
+  "reference_epoch": "1993-01-23",
+  "period_days": 14.765294,
+  "min_events_threshold": 10,
+  "n_points_total_in_catalog": 808,
+  "n_points_tested": 808,
+  "pct_points_significant_p01_overall": 88.49009900990099,
+  "spearman_R_vs_latitude": 0.6848064630189353,
+  "spearman_R_vs_thr_ssh_total_abs": 0.5838509506103376
+}
