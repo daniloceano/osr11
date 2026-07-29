@@ -316,11 +316,18 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-29 | `e2680ed` | `main` | `README.md`, `site/README.md`, `site/public/data/risk_index_metadata.json`, `src/04_risk_integration/exposure_index.py`, `src/site/export_risk_index_data.py`, `src/figures_article/README.md` | Correção de #1, #2, #3, #6, #7, #8 e dos dois resíduos adicionais encontrados por varredura. Puramente documental; nenhum valor numérico publicado alterado |
 
 > **Nota.** A criação da estrutura de auditoria em `docs/scientific_audit/`
-> **não** corrigiu nenhuma destas sete inconsistências. Elas permanecem no
-> repositório no estado descrito na §3.
+> **não** corrigiu nenhuma destas sete inconsistências. O commit `e2680ed`,
+> acima, é que as corrigiu — e apenas as seis sem decisão científica pendente.
+> Os itens **#4** (`SCIENTIFIC_NOTES.md` na raiz) e **#5** (remetido a AUD-04),
+> mais o item "extra" (`pop_house`), **permanecem abertos** no estado descrito
+> na §3.
+>
+> O commit foi criado pelo autor do repositório e agrega, além destas
+> correções, a estrutura `docs/scientific_audit/` e o primeiro script
+> diagnóstico de AUD-01 — seu escopo é, portanto, mais amplo que esta questão.
 
 ## 14. Histórico de investigação
 

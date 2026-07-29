@@ -1,0 +1,16 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_storm_corroboration",
+  "definition": "fraction of SSH_total-based compound events containing at least one day on which zos also exceeds its own local q90",
+  "n_points": 808,
+  "overall_median_corroborated_fraction": 0.3286527886881383,
+  "keep_tide_branch": {
+    "n_points": 281,
+    "median_corroborated_fraction": 0.8348214285714286
+  },
+  "locked_points_inside_keep_tide_branch": {
+    "n_points": 189,
+    "median_corroborated_fraction": 0.7951219512195122,
+    "interpretation_note": "If this fraction is high, the residual phase locking inside the keep-tide branch reflects tidal modulation of real storms (case b) rather than tide-only events (case a)."
+  },
+  "spearman_corroboration_vs_q": 0.6437581620043713
+}

@@ -1,0 +1,11 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_zos_vs_ssh_total_detector",
+  "quantile": 0.9,
+  "max_gap_days": 1,
+  "n_points": 808,
+  "pct_sig_ssh_total_springneap_overall": 98.39108910891089,
+  "pct_sig_zos_springneap_overall": 0.0,
+  "pct_sig_zos_annual_overall": 91.46039603960396,
+  "spearman_R_zos_vs_latitude": 0.5506809207700527,
+  "spearman_R_ssh_vs_latitude": 0.7928772642709679
+}

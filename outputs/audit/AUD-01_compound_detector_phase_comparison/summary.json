@@ -1,0 +1,18 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_compound_detector_phase_comparison",
+  "quantile": 0.9,
+  "max_gap_days": 1,
+  "n_points": 808,
+  "pct_sig_hs_springneap": 0.0,
+  "pct_sig_compound_ssh_total_springneap": 88.61386138613861,
+  "pct_sig_compound_zos_springneap": 0.12376237623762376,
+  "mean_R_hs": 0.03336420492723566,
+  "mean_R_compound_ssh_total": 0.6582699849108119,
+  "mean_R_compound_zos": 0.06694267043380982,
+  "validation_vs_production": {
+    "note": "Simplified contiguous-run grouping vs production union-find; counts are expected to be close but not identical.",
+    "spearman_count_ssh_arm_vs_production": 0.9984527027294123,
+    "mean_count_ssh_arm": 122.5730198019802,
+    "mean_count_production": 118.85024752475248
+  }
+}

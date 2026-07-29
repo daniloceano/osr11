@@ -224,3 +224,20 @@ sucessivos.
 
 *Nenhuma investigação registrada além do diagnóstico de linha de base de
 2026-07-29.*
+
+### 2026-07-29 — Achado incidental da investigação de AUD-01: a patologia não é exclusiva do Hs
+
+> **Nota de escopo.** Esta entrada registra um achado obtido durante a
+> investigação de **AUD-01**, não uma execução dos diagnósticos próprios de
+> AUD-02 (§8), que permanecem **não executados**. A situação da questão segue
+> `aberto`.
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Não dirigida a AUD-02. Surgiu ao avaliar uma proposta do usuário de trocar o nível de `SSH_total` para `zos` puro: qual seria a magnitude física do limiar q90 sobre `zos`? |
+| **Dados e métodos** | `python -m src.exploratory.audit_AUD_01_surge_vs_tide_magnitude`; anomalia de `zos` em q90 relativa à média local, por ponto e por faixa de latitude |
+| **Achados** | A anomalia de sobrelevação em q90 vale **5,8 a 8,6 cm** nas faixas de BA-N ao Amapá (contra 21,3 cm no RS). Um detector de nível baseado em `zos` que mantivesse o limiar percentílico local chamaria uma anomalia de ~6 cm de "evento de sobrelevação" |
+| **Interpretação** | **A patologia diagnosticada em AUD-02 não é uma propriedade do Hs — é uma propriedade do limiar percentílico local aplicado a uma variável cuja variância colapsa regionalmente.** O q90 mede raridade local, não severidade; onde a variabilidade meteorológica é pequena, o q90 seleciona flutuações fisicamente irrelevantes, seja em onda (0,20 m em Vigia) seja em nível (6 cm no Norte). Isso **amplia** o alcance de AUD-02: qualquer redesenho do detector que preserve limiares percentílicos locais herda o problema, apenas mudando a variável em que ele se manifesta. Reforça a alternativa já listada em AUD-02 §7.4 e §9 (piso físico absoluto), agora com um segundo caso concreto que a sustenta |
+| **Alterações implementadas** | Nenhuma |
+| **Incerteza remanescente** | A ancoragem de um piso absoluto continua sem critério definido — é a mesma lacuna registrada em AUD-02 §7.4. Ver também a ressalva de AUD-01 §14 (2026-07-29, magnitude física): não é possível distinguir "sinal ausente na natureza" de "sinal não resolvido pelo GLORYS12" sem maregrafo no Norte (AUD-18) |
+| **Próxima decisão necessária** | Decisão estruturante pendente do usuário, comum a AUD-01, AUD-02 e AUD-18: substituir o limiar percentílico local por piso físico absoluto nos forçantes |

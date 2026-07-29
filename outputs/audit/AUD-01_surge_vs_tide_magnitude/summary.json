@@ -1,0 +1,8 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_surge_vs_tide_magnitude",
+  "n_points": 808,
+  "interpretation": "surge_q99_over_swing near or above 1 means the meteorological surge competes with the astronomical tide in setting the total water level; a few per cent means the tide decides whether a given elevation is crossed and the surge is a perturbation.",
+  "surge_q99_over_swing_min": 0.028038449050077834,
+  "surge_q99_over_swing_max": 2.1059109990649794,
+  "spearman_ratio_vs_latitude": -0.8115118295646809
+}

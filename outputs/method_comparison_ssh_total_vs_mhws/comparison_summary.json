@@ -1,0 +1,345 @@
+{
+  "generated_by": "src.exploratory.compare_methods_ssh_total_vs_mhws",
+  "arms": {
+    "legacy": {
+      "source": "outputs/legacy_ssh_total_method/hazard/compound_metrics.csv",
+      "detector": "SSH_total = zos + tide, local q90",
+      "grid_points": 808
+    },
+    "mhws": {
+      "source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+      "detector": "zos \u2229 Hs, conditioned on SWL > MHWS",
+      "grid_points": 808
+    }
+  },
+  "hazard_grid": {
+    "spearman_Hazard_Index": 0.7555531983322264,
+    "by_band": {
+      "AP": {
+        "n_points": 132,
+        "Hazard_Index_legacy": 0.3914,
+        "Hazard_Index_mhws": 0.3331
+      },
+      "BA-N": {
+        "n_points": 65,
+        "Hazard_Index_legacy": 0.3291,
+        "Hazard_Index_mhws": 0.2195
+      },
+      "ES/BA-S": {
+        "n_points": 57,
+        "Hazard_Index_legacy": 0.3324,
+        "Hazard_Index_mhws": 0.2623
+      },
+      "NE": {
+        "n_points": 62,
+        "Hazard_Index_legacy": 0.2528,
+        "Hazard_Index_mhws": 0.2435
+      },
+      "N_equatorial": {
+        "n_points": 192,
+        "Hazard_Index_legacy": 0.2335,
+        "Hazard_Index_mhws": 0.3344
+      },
+      "RS": {
+        "n_points": 77,
+        "Hazard_Index_legacy": 0.7219,
+        "Hazard_Index_mhws": 0.8309
+      },
+      "SC/PR": {
+        "n_points": 67,
+        "Hazard_Index_legacy": 0.4805,
+        "Hazard_Index_mhws": 0.5776
+      },
+      "SP/RJ": {
+        "n_points": 156,
+        "Hazard_Index_legacy": 0.4542,
+        "Hazard_Index_mhws": 0.4772
+      }
+    }
+  },
+  "municipal_risk": {
+    "n_municipalities": 280,
+    "spearman_Risk_Hazard": 0.8543046285211363,
+    "top10_overlap": 2,
+    "top20_overlap": 8,
+    "pct_north_of_20S_in_top10_legacy": 70.0,
+    "pct_north_of_20S_in_top10_mhws": 90.0,
+    "pct_north_of_20S_in_top20_legacy": 75.0,
+    "pct_north_of_20S_in_top20_mhws": 90.0,
+    "top10_legacy": [
+      {
+        "municipality_name": "Icatu",
+        "state": "MA",
+        "Risk_Hazard_legacy": 1.0
+      },
+      {
+        "municipality_name": "Turia\u00e7u",
+        "state": "MA",
+        "Risk_Hazard_legacy": 0.95801450042527
+      },
+      {
+        "municipality_name": "Apicum-A\u00e7u",
+        "state": "MA",
+        "Risk_Hazard_legacy": 0.9328203947074731
+      },
+      {
+        "municipality_name": "Macap\u00e1",
+        "state": "AP",
+        "Risk_Hazard_legacy": 0.931570501758384
+      },
+      {
+        "municipality_name": "Axix\u00e1",
+        "state": "MA",
+        "Risk_Hazard_legacy": 0.9241441462900076
+      },
+      {
+        "municipality_name": "Mag\u00e9",
+        "state": "RJ",
+        "Risk_Hazard_legacy": 0.8952559162793248
+      },
+      {
+        "municipality_name": "Maric\u00e1",
+        "state": "RJ",
+        "Risk_Hazard_legacy": 0.8885230115249849
+      },
+      {
+        "municipality_name": "Chaves",
+        "state": "PA",
+        "Risk_Hazard_legacy": 0.8859527139972573
+      },
+      {
+        "municipality_name": "Saquarema",
+        "state": "RJ",
+        "Risk_Hazard_legacy": 0.8845340967881016
+      },
+      {
+        "municipality_name": "Salvaterra",
+        "state": "PA",
+        "Risk_Hazard_legacy": 0.878911318849436
+      }
+    ],
+    "top10_mhws": [
+      {
+        "municipality_name": "Apicum-A\u00e7u",
+        "state": "MA",
+        "Risk_Hazard_mhws": 1.0
+      },
+      {
+        "municipality_name": "Cururupu",
+        "state": "MA",
+        "Risk_Hazard_mhws": 0.9585137722060912
+      },
+      {
+        "municipality_name": "Augusto Corr\u00eaa",
+        "state": "PA",
+        "Risk_Hazard_mhws": 0.9445361995159984
+      },
+      {
+        "municipality_name": "Turia\u00e7u",
+        "state": "MA",
+        "Risk_Hazard_mhws": 0.9354740982974014
+      },
+      {
+        "municipality_name": "Cajueiro da Praia",
+        "state": "PI",
+        "Risk_Hazard_mhws": 0.9158044440013458
+      },
+      {
+        "municipality_name": "Carutapera",
+        "state": "MA",
+        "Risk_Hazard_mhws": 0.8959215985593415
+      },
+      {
+        "municipality_name": "Viseu",
+        "state": "PA",
+        "Risk_Hazard_mhws": 0.8843780177961393
+      },
+      {
+        "municipality_name": "Bragan\u00e7a",
+        "state": "PA",
+        "Risk_Hazard_mhws": 0.8715767996954281
+      },
+      {
+        "municipality_name": "Quatipuru",
+        "state": "PA",
+        "Risk_Hazard_mhws": 0.8689937459167623
+      },
+      {
+        "municipality_name": "S\u00e3o Jos\u00e9 do Norte",
+        "state": "RS",
+        "Risk_Hazard_mhws": 0.8637870245318185
+      }
+    ],
+    "biggest_risers": [
+      {
+        "municipality_name": "Ilha Grande",
+        "state": "PI",
+        "rank_legacy": 177.0,
+        "rank_mhws": 19.0
+      },
+      {
+        "municipality_name": "Lu\u00eds Correia",
+        "state": "PI",
+        "rank_legacy": 172.0,
+        "rank_mhws": 16.0
+      },
+      {
+        "municipality_name": "Parna\u00edba",
+        "state": "PI",
+        "rank_legacy": 195.0,
+        "rank_mhws": 50.0
+      },
+      {
+        "municipality_name": "Araioses",
+        "state": "MA",
+        "rank_legacy": 157.0,
+        "rank_mhws": 30.0
+      },
+      {
+        "municipality_name": "Cajueiro da Praia",
+        "state": "PI",
+        "rank_legacy": 104.0,
+        "rank_mhws": 5.0
+      },
+      {
+        "municipality_name": "Barroquinha",
+        "state": "CE",
+        "rank_legacy": 165.0,
+        "rank_mhws": 66.0
+      },
+      {
+        "municipality_name": "Itarema",
+        "state": "CE",
+        "rank_legacy": 124.0,
+        "rank_mhws": 31.0
+      },
+      {
+        "municipality_name": "Paulino Neves",
+        "state": "MA",
+        "rank_legacy": 169.0,
+        "rank_mhws": 76.0
+      },
+      {
+        "municipality_name": "Guaratuba",
+        "state": "PR",
+        "rank_legacy": 234.0,
+        "rank_mhws": 144.0
+      },
+      {
+        "municipality_name": "Itapo\u00e1",
+        "state": "SC",
+        "rank_legacy": 224.0,
+        "rank_mhws": 135.0
+      }
+    ],
+    "biggest_fallers": [
+      {
+        "municipality_name": "Camamu",
+        "state": "BA",
+        "rank_legacy": 79.0,
+        "rank_mhws": 165.0
+      },
+      {
+        "municipality_name": "Itacar\u00e9",
+        "state": "BA",
+        "rank_legacy": 131.0,
+        "rank_mhws": 213.0
+      },
+      {
+        "municipality_name": "Ituber\u00e1",
+        "state": "BA",
+        "rank_legacy": 89.0,
+        "rank_mhws": 171.0
+      },
+      {
+        "municipality_name": "Igrapi\u00fana",
+        "state": "BA",
+        "rank_legacy": 91.0,
+        "rank_mhws": 172.0
+      },
+      {
+        "municipality_name": "Una",
+        "state": "BA",
+        "rank_legacy": 173.0,
+        "rank_mhws": 250.0
+      },
+      {
+        "municipality_name": "Nilo Pe\u00e7anha",
+        "state": "BA",
+        "rank_legacy": 118.0,
+        "rank_mhws": 195.0
+      },
+      {
+        "municipality_name": "Cairu",
+        "state": "BA",
+        "rank_legacy": 125.0,
+        "rank_mhws": 201.0
+      },
+      {
+        "municipality_name": "Lauro de Freitas",
+        "state": "BA",
+        "rank_legacy": 93.0,
+        "rank_mhws": 163.0
+      },
+      {
+        "municipality_name": "Cruz",
+        "state": "CE",
+        "rank_legacy": 176.0,
+        "rank_mhws": 246.0
+      },
+      {
+        "municipality_name": "Salvaterra",
+        "state": "PA",
+        "rank_legacy": 10.0,
+        "rank_mhws": 80.0
+      }
+    ]
+  },
+  "aggregation_variants": {
+    "three_components_F_D_I__legacy": {
+      "pct_north_of_20S_in_top10": 70.0,
+      "pct_north_of_20S_in_top20": 75.0,
+      "top5": [
+        "Icatu",
+        "Turia\u00e7u",
+        "Apicum-A\u00e7u",
+        "Macap\u00e1",
+        "Axix\u00e1"
+      ]
+    },
+    "three_components_F_D_I__mhws": {
+      "pct_north_of_20S_in_top10": 90.0,
+      "pct_north_of_20S_in_top20": 90.0,
+      "top5": [
+        "Apicum-A\u00e7u",
+        "Cururupu",
+        "Augusto Corr\u00eaa",
+        "Turia\u00e7u",
+        "Cajueiro da Praia"
+      ]
+    },
+    "two_components_F_I__legacy": {
+      "pct_north_of_20S_in_top10": 90.0,
+      "pct_north_of_20S_in_top20": 65.0,
+      "top5": [
+        "Apicum-A\u00e7u",
+        "Icatu",
+        "Turia\u00e7u",
+        "Cururupu",
+        "Axix\u00e1"
+      ]
+    },
+    "two_components_F_I__mhws": {
+      "pct_north_of_20S_in_top10": 30.0,
+      "pct_north_of_20S_in_top20": 30.0,
+      "top5": [
+        "S\u00e3o Jos\u00e9 do Norte",
+        "Apicum-A\u00e7u",
+        "Guaraque\u00e7aba",
+        "Chaves",
+        "Turia\u00e7u"
+      ]
+    }
+  },
+  "aggregation_note": "Removing the duration component moves the MHWS arm from 90 % to 30 % of the top-10 north of 20 S. The detector correction is therefore conditional on resolving AUD-06; with duration retained at weight 1/3 the correction is reversed rather than merely diluted."
+}

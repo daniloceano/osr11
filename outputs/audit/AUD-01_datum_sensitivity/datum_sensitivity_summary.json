@@ -1,0 +1,36 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_datum_sensitivity",
+  "detector": "uniform zos \u2229 Hs (tide-free detection)",
+  "datums_tested": {
+    "q90_permissive": 0.9,
+    "q95_MHWS_proxy": 0.95,
+    "q99_high_springs": 0.99,
+    "max_HAT_estimate": 1.0
+  },
+  "n_points": 808,
+  "regional_bias_spearman_vs_abs_latitude": {
+    "excess_q90_permissive_m": 0.9249746960405609,
+    "excess_q95_MHWS_proxy_m": 0.9301237608001426,
+    "excess_q99_high_springs_m": 0.9305079497563838,
+    "excess_max_HAT_estimate_m": 0.9316855073915581
+  },
+  "mean_excess_north_of_15S_m": {
+    "excess_q90_permissive_m": 0.2227077675482659,
+    "excess_q95_MHWS_proxy_m": 0.11256649963371711,
+    "excess_q99_high_springs_m": -0.029736395277167357,
+    "excess_max_HAT_estimate_m": -0.1459456076143131
+  },
+  "mean_excess_south_of_25S_m": {
+    "excess_q90_permissive_m": 0.8712134897185371,
+    "excess_q95_MHWS_proxy_m": 0.8389430428849001,
+    "excess_q99_high_springs_m": 0.7892277248176939,
+    "excess_max_HAT_estimate_m": 0.7349988490647414
+  },
+  "south_to_north_contrast": {
+    "excess_q90_permissive_m": 0.6485057221702711,
+    "excess_q95_MHWS_proxy_m": 0.726376543251183,
+    "excess_q99_high_springs_m": 0.8189641200948612,
+    "excess_max_HAT_estimate_m": 0.8809444566790545
+  },
+  "robustness_question": "Does the qualitative conclusion \u2014 northern severity near zero and a strong poleward gradient \u2014 hold for every datum, or does it depend on the percentile chosen?"
+}

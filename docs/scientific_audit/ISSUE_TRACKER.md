@@ -2,19 +2,24 @@
 
 **Última atualização:** 2026-07-29
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 16 de 18 · **em investigação:** 2 (AUD-01, AUD-17) · **resolvidas:** 0 · **arquivadas:** 0
+**Questões abertas:** 15 de 18 · **em investigação:** 1 (AUD-17) · **aguardando decisão:** 2 (AUD-01, AUD-06) · **resolvidas:** 0 · **arquivadas:** 0
 
 > **Nenhuma fragilidade científica foi resolvida.** AUD-17 teve seis de seus oito
 > itens corrigidos (correção puramente documental, sem efeito em nenhum valor
-> numérico publicado — ver seu registro, §14); permanece `em-investigacao`
-> porque dois itens dependem de decisões ainda pendentes (AUD-04 e o método
-> final do Step 3/4). AUD-01 teve seu achado central (travamento de fase com a
-> sizígia) reproduzido de forma independente (§14 do seu registro; ver também
-> `outputs/audit/AUD-01_rayleigh_phase_test/`); a decisão sobre como tratar o
-> detector composto ao norte de ~25–30°S está pendente do usuário, em conjunto
-> com AUD-02, AUD-03, AUD-12 e AUD-18. Nenhuma alteração de método foi
-> implementada. Todas as demais 16 estão com situação `aberto` e desfecho
-> vazio.
+> numérico publicado — ver seu registro, §14).
+>
+> **AUD-01 e AUD-06 formam agora um par indissociável.** O método MHWS — maré
+> como variável condicionante em vez de forçante — foi **implementado em
+> caminhos novos**, com o método legado preservado em
+> `outputs/legacy_ssh_total_method/` e comparado em
+> `outputs/method_comparison_ssh_total_vs_mhws/`. Ele corrige a frequência e a
+> intensidade como pretendido, mas **a componente de duração inverte e reverte
+> a correção**: o top-10 municipal ao norte de 20°S passa de 70 % para 90 %.
+> Removendo a duração, cai para 30 %. Nenhuma das duas mudanças isoladas é
+> defensável. **Nenhum produto publicado foi regenerado** e o método vigente
+> continua sendo o legado até que a duração seja decidida.
+>
+> As demais 15 questões estão com situação `aberto` e desfecho vazio.
 
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
@@ -25,11 +30,11 @@ ver [`README.md`](README.md).
 
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
-| **P0 — bloqueia publicação** | 6 | 5 | 1 | 0 | 0 |
+| **P0 — bloqueia publicação** | 6 | 4 | 0 | 2 | 0 |
 | **P1 — resolver ou justificar** | 9 | 8 | 1 | 0 | 0 |
 | **P2 — recomendado** | 3 | 3 | 0 | 0 | 0 |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **16** | **2** | **0** | **0** |
+| **Total** | **18** | **15** | **1** | **2** | **0** |
 
 ---
 
@@ -37,12 +42,12 @@ ver [`README.md`](README.md).
 
 | ID | Título | Tipo | Componente | Etapa | Afeta | Prio | Bloqueia publicação? | Status | Desfecho | Depende de | Registro |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **AUD-01** | Eventos compostos travados em fase com a sizígia ao norte de ~20°S | fragilidade-metodologica | perigo | 3.2 (orig. 2e) | dados, interp., saídas, doc. | **P0** | **Sim** | `em-investigacao` | — | — | [AUD-01](issues/AUD-01_compound_detector_tidal_phase_locking.md) |
+| **AUD-01** | Eventos compostos travados em fase com a sizígia ao norte de ~20°S | fragilidade-metodologica | perigo | 3.2 (orig. 2e) | dados, interp., saídas, doc. | **P0** | **Sim** | `aguardando-decisao` | — | **06** | [AUD-01](issues/AUD-01_compound_detector_tidal_phase_locking.md) |
 | **AUD-02** | Limiares de "onda extrema" fisicamente vazios no Norte (0,20–1,05 m) | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
 | **AUD-03** | Incoerência de fase em `SSH_total` (zos 00Z + maré máx. diária) | fragilidade-metodologica | perigo | 2c → 3.1/3.2 | código, dados, interp., doc. | P1 | Não | `aberto` | — | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
 | **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
-| **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `aberto` | — | — | [AUD-06](issues/AUD-06_duration_component_validity.md) |
+| **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `aguardando-decisao` | — | — | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Instabilidade do ranking sob agregação alternativa do perigo (ρ = 0,384) | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
 | **AUD-08** | Exposição: saturação do termo relativo e MAUP | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `aberto` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
 | **AUD-09** | SVI: dois indicadores com direcionalidade invertida; eixo de pobreza | fragilidade-metodologica | vulnerabilidade | 4.3 | dados, interp., saídas, doc. | P1 | Sim, salvo qualificação | `aberto` | — | — | [AUD-09](issues/AUD-09_svi_directionality.md) |
@@ -68,6 +73,11 @@ AUD-06 (duração) ────┤        │
 AUD-08 (exposição) ──┤        │
 AUD-09 (SVI) ────────┤        │
 AUD-11 (Min–Max) ────┴────────┘
+
+AUD-01 ◄──► AUD-06   PAR INDISSOCIÁVEL (demonstrado em 2026-07-29):
+                     nenhuma das duas correções isoladas é defensável.
+                     top-10 ao N de 20°S — legado+3comp 70 % · legado+2comp 90 %
+                                         · MHWS+3comp   90 % · MHWS+2comp   30 %
 
 AUD-01 ──► AUD-12 (contaminação estuarina)
 AUD-01, AUD-02 ──► AUD-13 (comportamento do índice)

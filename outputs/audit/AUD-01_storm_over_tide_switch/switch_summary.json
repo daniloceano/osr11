@@ -1,0 +1,39 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_storm_over_tide_switch",
+  "setup_coefficient": 0.2,
+  "q_definition": "(0.2*Hs_q99 + surge_q99_anomaly) / spring-neap swing",
+  "n_points": 808,
+  "q_distribution": {
+    "min": 0.08449375877034959,
+    "p10": 0.25862503472647597,
+    "median": 0.6008824281029711,
+    "p90": 2.377157312596119,
+    "max": 4.285396438303056
+  },
+  "partition_at_q_1": {
+    "keep_tide_SSH_total": {
+      "n_points": 281,
+      "lat_min": -35.0,
+      "lat_max": -19.8
+    },
+    "zos_only": {
+      "n_points": 527,
+      "lat_min": -26.2,
+      "lat_max": 6.0
+    }
+  },
+  "FAILURE_TEST_phase_locking_of_selected_catalogue": {
+    "note": "Points whose selected branch still yields a spring-neap-locked compound catalogue. Any count above chance in the keep_tide branch means the switch does not deliver a tide-free catalogue there.",
+    "keep_tide_branch_points_still_locked": 189,
+    "keep_tide_branch_pct_still_locked": 67.25978647686833,
+    "keep_tide_branch_mean_R": 0.3913841227698585,
+    "zos_branch_points_still_locked": 1,
+    "zos_branch_pct_still_locked": 0.18975332068311196,
+    "overall_pct_locked_after_switch": 23.51485148514851
+  },
+  "discontinuity_at_switch": {
+    "n_points_near_q1": 113,
+    "median_relative_jump_in_compound_count": 0.35,
+    "note": "Relative difference between the two candidate catalogues for points bracketing q = 1; a large value means neighbouring points land on materially different counts purely because of which side of the switch they fall."
+  }
+}

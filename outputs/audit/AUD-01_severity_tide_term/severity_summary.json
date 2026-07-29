@@ -1,0 +1,20 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_severity_tide_term",
+  "detector": "uniform zos \u2229 Hs (tide-free detection)",
+  "setup_coefficient": 0.2,
+  "datum_quantile_of_tide_daily_max": 0.95,
+  "n_points": 808,
+  "regional_bias_spearman_vs_abs_latitude": {
+    "A_absolute_total_level_m": -0.8471416876151202,
+    "B_excess_over_local_datum_m": 0.9301237608001426,
+    "C_dimensionless_tidal_phase": 0.15272543287356835,
+    "D_surge_anomaly_only_m": 0.6395388293565047
+  },
+  "reading": "Negative means severity grows toward the equator, i.e. the North is inflated. Positive means it grows poleward. Near zero means no systematic north-south drift.",
+  "verdict": {
+    "A_absolute_total_level_m": "inflates the North; the astronomical tide dominates the absolute level, so this reproduces the bias the redesign set out to remove",
+    "B_excess_over_local_datum_m": "no northern inflation, but swings strongly poleward: the mean excess over local spring high water is near zero in the equatorial sector, effectively assigning it negligible severity",
+    "C_dimensionless_tidal_phase": "regionally unbiased by construction; modulates events within a site without shifting regional means, but represents tidal amplification only in relative terms, so a spring tide in a 1.6 m macrotidal setting counts the same as in a 0.46 m one",
+    "D_surge_anomaly_only_m": "reference without any tidal information; retains a moderate poleward gradient that reflects genuinely larger surges in the south"
+  }
+}

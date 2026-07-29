@@ -1,0 +1,66 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_validity_domain_partition",
+  "source_ratio": "outputs/audit/AUD-01_surge_vs_tide_magnitude/surge_vs_tide_by_point.csv",
+  "n_points": 808,
+  "antimode_search": {
+    "method": "largest interior gap in the sorted log10 ratio, edges trimmed 5% each side",
+    "gap_between_ratios": [
+      0.24932785058434953,
+      0.26581886858509385
+    ],
+    "derived_cut": 0.2574413470075954,
+    "gap_dex": 0.0278150121051578,
+    "median_gap_dex": 0.0008601300843474879,
+    "gap_over_median": 32.338145835532345,
+    "note": "gap_over_median >> 1 indicates the cut sits in a genuine antimode rather than being imposed"
+  },
+  "partition": {
+    "surge_competitive": {
+      "n_points": 268,
+      "lat_min": -35.0,
+      "lat_max": -19.8,
+      "thr_hs_min_m": 0.77,
+      "thr_hs_p05_m": 1.604,
+      "thr_hs_median_m": 2.4
+    },
+    "tide_dominated": {
+      "n_points": 540,
+      "lat_min": -21.0,
+      "lat_max": 6.0,
+      "thr_hs_min_m": 0.2,
+      "thr_hs_p05_m": 0.91,
+      "thr_hs_median_m": 1.93
+    },
+    "geographic_coherence": {
+      "tide_dominated_points_south_of_20S": 35,
+      "surge_competitive_points_north_of_20S": 2,
+      "note": "near-perfect split at about 20-21 S, but derived from the physical ratio rather than imposed as a latitude cut"
+    }
+  },
+  "aud02_overlap": {
+    "thr_hs_below_1.0m": {
+      "total_points": 35,
+      "remaining_in_valid_domain": 1,
+      "pct_removed": 97.14285714285714
+    },
+    "thr_hs_below_1.5m": {
+      "total_points": 129,
+      "remaining_in_valid_domain": 10,
+      "pct_removed": 92.24806201550388
+    },
+    "thr_hs_below_2.0m": {
+      "total_points": 360,
+      "remaining_in_valid_domain": 58,
+      "pct_removed": 83.88888888888889
+    }
+  },
+  "cost_of_partition": {
+    "pct_points_excluded": 66.83168316831683,
+    "pct_compound_events_excluded": 42.09369890972707
+  },
+  "caveats": [
+    "The ratio depends on GLORYS12 surge, which may be underestimated on the wide shallow Amazon shelf; the partition is conditional on the model and cannot be verified without tide gauges (AUD-18).",
+    "Bimodality may be partly amplified by uneven grid-point sampling along a convoluted coastline, though the sharp spatial transition near 21-22 S has a physical basis in shelf geometry.",
+    "The partition does not fully resolve AUD-02: some low wave thresholds survive inside the retained domain."
+  ]
+}

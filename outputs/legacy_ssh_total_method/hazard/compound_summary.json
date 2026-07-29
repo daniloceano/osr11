@@ -1,0 +1,23 @@
+{
+  "summary": {
+    "n_grid_points": 808,
+    "n_compound_total": 96031,
+    "n_hs_only_total": 306256,
+    "n_ssh_only_total": 228426,
+    "period": "1993-01-01 to 2025-12-31",
+    "n_years": 33.0
+  },
+  "normalization_refs": {
+    "definition": "0.5 * [clip((peak_Hs - thr_Hs_local - Q05_E_Hs) / (Q95_E_Hs - Q05_E_Hs), 0, 1) + clip((peak_SSH - thr_SSH_local - Q05_E_SSH) / (Q95_E_SSH - Q05_E_SSH), 0, 1)], where E denotes the excess over the local q90 detection threshold and the percentiles are pooled over all compound events of all grid points",
+    "population": "all compound-event excesses pooled over the native grid",
+    "hs_excess_ref_low": 0.02,
+    "hs_excess_ref_high": 1.38,
+    "ssh_excess_ref_low": 0.0153,
+    "ssh_excess_ref_high": 0.4273,
+    "abspeak_definition": "Superseded audit metric: the same average applied to the absolute peaks rescaled by the domain-wide percentiles of the peaks",
+    "abspeak_hs_ref_low": 1.24,
+    "abspeak_hs_ref_high": 3.97,
+    "abspeak_ssh_ref_low": 0.5675,
+    "abspeak_ssh_ref_high": 3.0438
+  }
+}

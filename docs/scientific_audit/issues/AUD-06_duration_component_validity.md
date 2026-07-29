@@ -266,3 +266,17 @@ Os catálogos **não** precisam ser reprocessados: `mean_overlap_duration`,
 
 *Nenhuma investigação registrada além do diagnóstico de linha de base de
 2026-07-29.*
+
+### 2026-07-29 — Esta questão passou a ser **bloqueante** para AUD-01
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Não dirigida a AUD-06. Surgiu ao implementar o método MHWS de AUD-01: como a componente de duração se comporta sob o detector novo? |
+| **Dados e métodos** | Comparação por faixa de latitude das três componentes normalizadas do perigo, entre o detector legado (`SSH_total`) e o novo (`zos` ∩ Hs condicionado a MHWS). Ver `outputs/method_comparison_ssh_total_vs_mhws/` e AUD-01 §14 (entrada de 2026-07-29, implementação) |
+| **Scripts executados** | `python -m src.compound_detection.detection_mhws`; `python -m src.exploratory.compare_methods_ssh_total_vs_mhws` |
+| **Achados** | **(1) A componente inverteu sob o detector novo.** `Hazard_Duration` médio: RS 0,235 → **0,039** (passa a ser o mínimo do domínio); N equatorial 0,301 → **0,431** (passa a ser o máximo). A duração média da sobreposição no N equatorial vai de 1,64 para **5,31 dias**. **(2) Causa física identificada**: sob detecção livre de maré, os episódios de nível no trópico são anomalias de `zos` de baixa frequência com 7–8 dias de duração, não tempestades sinóticas; a sobreposição herda essa persistência. **A componente passa a medir persistência de estado oceanográfico, não duração de tempestade.** **(3) Consequência decisiva**: com a duração mantida a peso 1/3, o perigo no N equatorial **sobe** de 0,234 para 0,334 apesar de frequência (0,153 → 0,048) e intensidade (0,394 → 0,239) terem caído, e o top-10 municipal ao norte de 20°S passa de 70 % para **90 %**. **(4) As correções não são separáveis**: top-10 ao norte de 20°S sob as quatro combinações — legado+3comp **70 %**, legado+2comp **90 %**, MHWS+3comp **90 %**, MHWS+2comp **30 %** |
+| **Interpretação** | A duração deixou de ser uma fragilidade de peso secundário (6,0 % da variância do `Hazard_Index_raw` sob o método antigo, conforme a revisão de linha de base) e passou a ser **o componente dominante do erro**. O achado (4) estabelece que **AUD-01 e AUD-06 formam um par indissociável**: nenhuma das duas correções isoladas é defensável, e adotar o detector novo sem decidir a duração produz resultado pior que o publicado. Isso eleva de fato a prioridade prática desta questão, embora ela já estivesse classificada como P0 |
+| **Alterações implementadas** | Nenhuma. A remoção da duração foi **calculada como diagnóstico**, não adotada — é decisão científica do usuário |
+| **Validação realizada** | As quatro combinações usam a mesma função `derive_native_hazard_index` e a mesma exposição/SVI, variando apenas a fonte de métricas e o conjunto de componentes agregadas |
+| **Incerteza remanescente** | As alternativas listadas na §8 desta questão — remover a componente, substituir Min–Max por percentil, usar p95 em vez da média, ou redefinir a duração (por exemplo, a duração do episódio de onda, ou dos dias com `SWL > MHWS`) — **não foram comparadas entre si**. Só a remoção completa foi quantificada |
+| **Próxima decisão necessária** | Decisão do usuário sobre o tratamento da duração. É pré-requisito para adotar o método de AUD-01 |
