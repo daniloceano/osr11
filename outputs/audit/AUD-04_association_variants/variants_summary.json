@@ -1,0 +1,72 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_04_association_variants",
+  "radius_km": 30.0,
+  "idw_power": 2.0,
+  "n_municipalities": 280,
+  "note": "Hazard field is the revised two-component index (AUD-01/AUD-06). Values are the native-grid Hazard_Index before municipal renormalisation.",
+  "comparison_vs_delivered": {
+    "nearest": {
+      "spearman_vs_delivered": 0.9695054779885721,
+      "mean_abs_difference": 0.021315289121588428,
+      "max_abs_difference": 0.3969353978557899,
+      "top20_overlap_with_delivered": 18,
+      "std_of_field": 0.2012148398238658
+    },
+    "maxcount": {
+      "spearman_vs_delivered": 0.9412728944810901,
+      "mean_abs_difference": 0.04337447754253873,
+      "max_abs_difference": 0.3969353978557899,
+      "top20_overlap_with_delivered": 14,
+      "std_of_field": 0.21897496862184085
+    },
+    "idw": {
+      "spearman_vs_delivered": 0.9743175677047923,
+      "mean_abs_difference": 0.02441400986701549,
+      "max_abs_difference": 0.24471412324705977,
+      "top20_overlap_with_delivered": 17,
+      "std_of_field": 0.19869337274515753
+    },
+    "exposed": {
+      "spearman_vs_delivered": 0.9247114064187196,
+      "mean_abs_difference": 0.04855816846314096,
+      "max_abs_difference": 0.37410121554276454,
+      "top20_overlap_with_delivered": 11,
+      "std_of_field": 0.21492427628395375
+    },
+    "coastline": {
+      "spearman_vs_delivered": 0.9742596045774676,
+      "mean_abs_difference": 0.018974604555937084,
+      "max_abs_difference": 0.24767807629987884,
+      "top20_overlap_with_delivered": 16,
+      "std_of_field": 0.19871314188118044
+    }
+  },
+  "field_dispersion": {
+    "delivered": {
+      "std": 0.202731432731113,
+      "iqr": 0.27379641037900665
+    },
+    "nearest": {
+      "std": 0.2012148398238658,
+      "iqr": 0.2974130638665662
+    },
+    "maxcount": {
+      "std": 0.21897496862184085,
+      "iqr": 0.368147860387282
+    },
+    "idw": {
+      "std": 0.19869337274515753,
+      "iqr": 0.28552994162935136
+    },
+    "exposed": {
+      "std": 0.21492427628395375,
+      "iqr": 0.3434650784310119
+    },
+    "coastline": {
+      "std": 0.19871314188118044,
+      "iqr": 0.2931672494630765
+    }
+  },
+  "radius_fallbacks": 11,
+  "municipalities_with_no_coastal_segment": 0
+}

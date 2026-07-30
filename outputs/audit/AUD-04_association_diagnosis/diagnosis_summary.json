@@ -1,0 +1,120 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_04_association_diagnosis",
+  "hazard_source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+  "note": "Re-measured on the revised compound catalogue (AUD-01/AUD-06), so the counts differ from the baseline review, which used the superseded SSH_total catalogue.",
+  "n_municipalities": 5573,
+  "n_resolved": 280,
+  "rule_reproducibility": {
+    "assigned_is_nearest_pct": 59.285714285714285,
+    "assigned_is_maxcount_30km_pct": 24.642857142857146,
+    "assigned_is_maxcount_50km_pct": 15.714285714285714
+  },
+  "distance_assigned_km": {
+    "min": 0.0,
+    "q25": 7.483020182102741,
+    "median": 13.112219982774723,
+    "q75": 19.144494029819793,
+    "max": 89.16718873437068,
+    "n_above_30km": 20
+  },
+  "point_sharing": {
+    "unique_points_used": 178,
+    "municipalities_served": 280,
+    "max_municipalities_per_point": 9,
+    "points_serving_4_or_more": 11,
+    "top_shared": [
+      {
+        "lat": -2.4,
+        "lon": -44.2,
+        "municipalities": 9
+      },
+      {
+        "lat": -23.0,
+        "lon": -43.0,
+        "municipalities": 6
+      },
+      {
+        "lat": -9.6,
+        "lon": -35.6,
+        "municipalities": 5
+      },
+      {
+        "lat": -2.4,
+        "lon": -44.0,
+        "municipalities": 5
+      },
+      {
+        "lat": -30.0,
+        "lon": -50.0,
+        "municipalities": 4
+      },
+      {
+        "lat": -6.2,
+        "lon": -35.0,
+        "municipalities": 4
+      }
+    ]
+  },
+  "farthest_assignments": [
+    {
+      "municipality_name": "Paracuru",
+      "state": "CE",
+      "distance_assigned_km": 89.16718873437068,
+      "distance_nearest_km": 16.389637215616105
+    },
+    {
+      "municipality_name": "Santa Rita",
+      "state": "MA",
+      "distance_assigned_km": 77.04932432913516,
+      "distance_nearest_km": 71.64508841546598
+    },
+    {
+      "municipality_name": "S\u00e3o Jo\u00e3o Batista",
+      "state": "MA",
+      "distance_assigned_km": 74.43780646137502,
+      "distance_nearest_km": 74.43780646137502
+    },
+    {
+      "municipality_name": "S\u00e3o Gon\u00e7alo do Amarante",
+      "state": "CE",
+      "distance_assigned_km": 73.29123315652902,
+      "distance_nearest_km": 15.805019384500355
+    },
+    {
+      "municipality_name": "Vigia",
+      "state": "PA",
+      "distance_assigned_km": 61.10830919330247,
+      "distance_nearest_km": 3.6539427404534752
+    },
+    {
+      "municipality_name": "Bacabeira",
+      "state": "MA",
+      "distance_assigned_km": 51.66753105843622,
+      "distance_nearest_km": 42.06330023747349
+    },
+    {
+      "municipality_name": "Bequim\u00e3o",
+      "state": "MA",
+      "distance_assigned_km": 49.837505251540605,
+      "distance_nearest_km": 42.92094847067652
+    },
+    {
+      "municipality_name": "Colares",
+      "state": "PA",
+      "distance_assigned_km": 49.709082480141014,
+      "distance_nearest_km": 0.7106532432087399
+    },
+    {
+      "municipality_name": "Cajapi\u00f3",
+      "state": "MA",
+      "distance_assigned_km": 48.135224018563164,
+      "distance_nearest_km": 48.135224018563164
+    },
+    {
+      "municipality_name": "Bacurituba",
+      "state": "MA",
+      "distance_assigned_km": 45.15233681034599,
+      "distance_nearest_km": 45.15233681034599
+    }
+  ]
+}

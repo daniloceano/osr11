@@ -9,14 +9,14 @@
 | **Afeta** | código, dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — é a única lacuna de reprodutibilidade declarada em aberto no Step 4, e determina o valor de perigo de todos os 280 municípios |
-| **Status** | `aberto` |
+| **Status** | `aguardando-decisao` |
 | **Desfecho** | — |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-13 |
 | **Relacionado a** | AUD-06, AUD-12, AUD-15, AUD-17 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §1 (preocupação 5), §2.1, §5, §6.1, §8 itens 3 e 4, §9.1 item 3 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-30 |
 
 ---
 
@@ -115,6 +115,47 @@ Duque de Caxias/RJ 35,2 km.
 | (−27,0; −48,2) | 2,33 | 172 | 1,43 |
 | (−28,2; −48,4) | 2,58 | 245 | 1,58 |
 
+### 3.1 Evidência decisiva sobre a regra — comunicação da autora *(acrescentado em 2026-07-30)*
+
+A pergunta "qual era a regra?" está **encerrada**. A autora da associação
+(K. B. Leal, INPE) descreveu o procedimento em comunicação pessoal, transmitida
+pelo autor principal em 2026-07-30:
+
+> *"quando fui associar os teus resultados com o shp de municípios, peguei
+> manualmente o ponto mais próximo **e** de maior número de ocorrência de eventos
+> perto do município"* — acrescentando que o trabalho foi feito **no QGIS**.
+
+Ou seja: a associação foi produzida por **inspeção visual, município a
+município**, arbitrando simultaneamente dois critérios — proximidade e
+atividade de eventos.
+
+Isto explica exatamente o padrão de reprodutibilidade medido, que nenhuma regra
+determinística isolada reproduzia:
+
+| Critério testado isoladamente | Reproduz |
+|---|---|
+| ponto mais próximo do polígono | 59,3 % |
+| maior `compound_count_total` em 30 km | 24,6 % |
+| maior `compound_count_total` em 50 km | 15,7 % |
+
+Uma pessoa que equilibra dois critérios a olho não coincide sistematicamente
+com nenhum deles; a mistura observada é a assinatura esperada desse
+procedimento. **Confirma a hipótese 3 da §7.**
+
+Três consequências:
+
+1. **A irreprodutibilidade é estrutural, não uma falha de arquivamento.** Não
+   existe código a recuperar — o diagnóstico 6 da §8 fica encerrado sem ação.
+2. **Não se trata de erro.** O critério empregado é sensato; o que falta é ser
+   declarável em uma seção de métodos e verificável por um revisor.
+3. **A descrição do `README.md` §4.1 estava aproximadamente correta e
+   incompleta**: registrava o critério de maior contagem, omitindo o de
+   proximidade e o fato de a arbitragem ter sido manual.
+
+Consequência prática para a escolha da regra substituta: a intenção declarada —
+*proximidade combinada com exposição efetiva do município* — deve ser preservada.
+Uma regra que a formalize é preferível a uma que a substitua por outro conceito.
+
 ## 4. Localização exata
 
 ### Código
@@ -181,9 +222,11 @@ Componente da inconsistência #5 catalogada em
    `compound_metrics.csv`**, quando as contagens eram outras. Nesse caso a regra
    era válida quando aplicada e ficou obsoleta — o que reforça a necessidade de
    reimplementar dentro do repositório.
-3. **O critério pode ter sido "ponto mais próximo do centroide"** em vez do
-   polígono. A coincidência de 59 % com o vizinho mais próximo do polígono sugere
-   que a regra é predominantemente de proximidade com alguma variação.
+3. **O critério pode ter sido "ponto mais próximo" com alguma variação.**
+   A coincidência de 59 % com o vizinho mais próximo do polígono sugere que a
+   regra é predominantemente de proximidade. ✅ **CONFIRMADA em 2026-07-30**
+   pela comunicação da autora (§3.1): proximidade *e* contagem de eventos,
+   arbitradas manualmente no QGIS.
 4. **Os casos de baía podem ser deliberados.** Se o objetivo for caracterizar o
    forçante oceânico regional a que o município está sujeito, atribuir o ponto de
    plataforma aberta a um município de fundo de baía é defensável — desde que
@@ -214,8 +257,9 @@ Componente da inconsistência #5 catalogada em
 5. **Quantificar a pseudo-replicação**: número efetivo de graus de liberdade
    espaciais (178 pontos para 280 municípios) e efeito sobre qualquer estatística
    de agrupamento regional.
-6. **Solicitar o código original** da associação, conforme já recomendado em
-   `src/04_risk_integration/external_svi/README.md`.
+6. ~~**Solicitar o código original** da associação.~~ **ENCERRADO sem ação em
+   2026-07-30**: a autora confirmou que a associação foi feita manualmente no
+   QGIS (§3.1). Não existe código a solicitar.
 
 ## 9. Critérios objetivos de resolução
 
@@ -256,8 +300,8 @@ Componente da inconsistência #5 catalogada em
 
 Difícil de sustentar. A associação atual só poderia ser mantida se:
 
-1. O código original fosse obtido, versionado e auditado, demonstrando que a
-   regra é determinística e cientificamente justificada;
+1. ~~O código original fosse obtido, versionado e auditado~~ — **impossível**:
+   a associação foi manual (§3.1), portanto não é determinística nem auditável;
 2. Os casos de baía e de costa exposta subestimada fossem explicados por essa
    regra;
 3. O `README.md` fosse corrigido para descrever a regra efetiva.
@@ -289,3 +333,18 @@ associação é posterior ao Step 3.
 
 *Nenhuma investigação registrada além do diagnóstico de linha de base de
 2026-07-29, cujos números estão na §3.*
+
+### 2026-07-30 — Verificação da associação entregue e comparação de regras substitutas
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | As alegações da §3 se sustentam sobre o catálogo revisado (AUD-01/AUD-06)? Qual regra substituta adotar? |
+| **Dados e métodos** | Auditoria geométrica em EPSG:5880 sobre `outputs/risk_index/risk_index.shp` e o campo de perigo revisado: distância polígono→ponto atribuído, coincidência com o vizinho mais próximo, coincidência com a maior contagem em raios de 30 e 50 km, e compartilhamento de pontos. Em seguida, cinco regras substitutas implementadas e comparadas sobre o mesmo campo de perigo |
+| **Scripts executados** | `audit_AUD_04_association_diagnosis`, `audit_AUD_04_association_variants` |
+| **Novas saídas geradas** | `outputs/audit/AUD-04_association_diagnosis/`, `outputs/audit/AUD-04_association_variants/` |
+| **Achados** | **(1) A §3 confirma-se com precisão** sobre o catálogo revisado: vizinho mais próximo 59,3 %; maior contagem 24,6 % (30 km) e 15,7 % (50 km); distância mediana 13,1 km, máxima 89,2 km; 20 municípios acima de 30 km; 178 pontos únicos para 280 municípios, com máximo de 9 municípios por ponto. **(2) Duas classes distintas de problema**, que a revisão de linha de base tratava em conjunto: *(a)* **erro de atribuição** — existe ponto próximo e foi atribuído um distante: Colares/PA 49,7 km existindo 0,7 km; Vigia/PA 61,1 existindo 3,7; Paracuru/CE 89,2 existindo 16,4; e o pior caso individual, **Caraguatatuba/SP**, com perigo 0,381 atribuído contra 0,778 no ponto mais próximo, a distância praticamente igual; *(b)* **limitação de cobertura da grade** — não existe ponto adequado: **Magé e Guapimirim têm zero pontos de grade em 30 km**, e as seis variantes lhes atribuem o mesmo valor (~0,67). **(3) Comparação das regras** (ρ com a entregue · dif. média · top-20 comum): vizinho mais próximo 0,970 · 0,021 · 18; maior contagem 0,941 · 0,043 · 14; média ponderada por distância 0,974 · 0,024 · 17; ponto mais exposto 0,925 · 0,049 · 11; **média dos segmentos costeiros 0,974 · 0,019 · 16**. **(4)** Em Santa Catarina o ponto entregue **já é o mais próximo**; apenas as regras de extremo (maior contagem, mais exposto) elevam Itajaí e Balneário Camboriú de 0,283 para 0,360 |
+| **Interpretação** | O achado (2) reduz o escopo desta questão: **o caso da Baía de Guanabara não é um problema de regra de associação e nenhuma regra o resolve** — é ausência de ponto de grade representativo dentro da baía, e deve ser declarado como limitação de cobertura, não corrigido. O achado (4) mostra que o caso de Santa Catarina só é atacável por regras de extremo, que introduzem viés otimista sistemático em todo o domínio; corrigir SC por essa via custaria inflar o restante da costa |
+| **Alterações implementadas** | **Nenhuma.** Alterar a associação muda os 280 valores de perigo simultaneamente; a decisão é do usuário |
+| **Validação realizada** | Os números da §3, medidos de forma independente sobre o catálogo revisado, coincidem com os da revisão de linha de base dentro de arredondamento — divergindo apenas em "maior contagem em 30 km" (24,6 % contra 31 %), o que é esperado porque as contagens de eventos mudaram com o novo detector |
+| **Incerteza remanescente** | (1) A classificação de exposição da frente costeira de cada município (diagnóstico 3 da §8) **não foi feita**; sem ela, não há verificação automática de coerência entre o ponto atribuído e a classe de exposição. (2) O efeito de cada variante sobre o **ranking final de risco** não foi propagado — a comparação foi feita no nível do perigo municipal. (3) O número efetivo de graus de liberdade espaciais (diagnóstico 5) não foi quantificado |
+| **Próxima decisão necessária** | Escolher a regra substituta e definir o tratamento dos 11 municípios sem ponto em 30 km e dos casos de fundo de baía — declarar como limitação ou excluir do produto |
