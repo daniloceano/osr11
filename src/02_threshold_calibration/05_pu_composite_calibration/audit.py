@@ -72,8 +72,17 @@ class EpisodeRecord:
     date_start: pd.Timestamp
     date_end: pd.Timestamp
     hs_peak: float                # episode maximum Hₛ value
-    ssh_peak: float               # episode maximum SSH_total value
+    # Episode maximum of the LEVEL DETECTION VARIABLE. Since the 2026-07-30
+    # recalibration that variable is tide-free ``zos``, not ``SSH_total``. The
+    # field name is kept so that compute_I_i keeps comparing a peak against the
+    # percentile of the very series that produced it.
+    ssh_peak: float
     n_days: int                   # number of compound days in episode
+    # Gate diagnostics, added 2026-07-30. swl_peak is max(SWL) over the episode
+    # and hat is the local datum; the episode was accepted because
+    # swl_peak > hat. Defaults keep older pickled caches loadable.
+    swl_peak: float = float("nan")
+    hat: float = float("nan")
 
 
 # ── E_i: external evidence ────────────────────────────────────────────────────
@@ -402,9 +411,12 @@ def build_episode_audit_table(
             from src.tidal_sensitivity.tides import add_tide_to_ssh, get_tide_for_record  # noqa: F401
             # Use the climatological series stored on the EventRecord
             hs_clim  = rec.hs_clim
-            ssh_clim = getattr(rec, "_ssh_total_clim", None)
+            ssh_clim = getattr(rec, "_level_clim", None)
             if ssh_clim is None:
-                # Fall back to raw SSH clim (without tide) for intensity ranking
+                ssh_clim = getattr(rec, "_ssh_total_clim", None)
+            if ssh_clim is None:
+                # rec.ssh_clim IS the tide-free zos series, which is what the
+                # recalibrated detector thresholds.
                 ssh_clim = rec.ssh_clim
         else:
             hs_clim = ssh_clim = pd.Series(dtype=float)
@@ -430,6 +442,8 @@ def build_episode_audit_table(
             "date_end":     ep.date_end,
             "hs_peak":      ep.hs_peak,
             "ssh_peak":     ep.ssh_peak,
+            "swl_peak":     getattr(ep, "swl_peak", float("nan")),
+            "hat":          getattr(ep, "hat", float("nan")),
             "n_days":       ep.n_days,
             "E_i":          E_i,
             "I_i":          round(I_i, 4),
@@ -459,33 +473,52 @@ def build_episode_audit_table(
     return df
 
 
-def attach_ssh_total_to_records(
+def attach_level_series_to_records(
     records: list,
-    ssh_total_cache: dict,
+    level_cache: dict,
 ) -> dict[str, any]:
-    """Build a municipality → EventRecord mapping and attach SSH_total clim series.
+    """Build a municipality → EventRecord mapping and attach the level series.
 
     Used by build_episode_audit_table to look up climatological series for I_i.
     When multiple EventRecords share a municipality, the first is used.
 
+    The series attached is the LEVEL DETECTION VARIABLE, so that I_i compares
+    ``EpisodeRecord.ssh_peak`` against the percentile of the same series the
+    detector thresholded. Since the 2026-07-30 recalibration that is tide-free
+    ``zos`` (``PointLevelData.zos``); before it, it was ``SSH_total``. Plain
+    ``pd.Series`` values are still accepted so older caches keep working.
+
     Parameters
     ----------
     records : list[EventRecord]
-    ssh_total_cache : dict mapping (lat, lon) → SSH_total pd.Series
+    level_cache : dict mapping (lat, lon) → PointLevelData (or pd.Series)
 
     Returns
     -------
-    dict mapping municipality name → EventRecord (with _ssh_total_clim set)
+    dict mapping municipality name → EventRecord (with _level_clim set)
     """
     muni_map: dict[str, any] = {}
     for rec in records:
         if rec.municipality in muni_map:
             continue
         key = (round(float(rec.grid_lat), 6), round(float(rec.grid_lon), 6))
-        ssh_total = ssh_total_cache.get(key, pd.Series(dtype=float))
-        rec._ssh_total_clim = ssh_total
+        entry = level_cache.get(key)
+        if entry is None:
+            series = pd.Series(dtype=float)
+        elif isinstance(entry, pd.Series):
+            series = entry
+        else:
+            series = entry.zos
+        rec._level_clim = series
+        # Retained so that any consumer still reading the former attribute name
+        # sees the series the detector actually used.
+        rec._ssh_total_clim = series
         muni_map[rec.municipality] = rec
     return muni_map
+
+
+#: Backwards-compatible alias for the pre-2026-07-30 name.
+attach_ssh_total_to_records = attach_level_series_to_records
 
 
 def build_qi_decomposition(
@@ -513,7 +546,7 @@ def build_qi_decomposition(
 
     cols = [
         "episode_id", "municipality", "date_start", "date_end",
-        "hs_peak", "ssh_peak", "n_days",
+        "hs_peak", "ssh_peak", "swl_peak", "hat", "n_days",
         "E_i", "I_i",
         "C_season", "C_multi", "C_exposure", "C_i",
         "alpha_E", "alpha_I", "alpha_C",

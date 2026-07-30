@@ -42,10 +42,14 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 NATIVE_GRID_SOURCE = (
-    ROOT / "outputs" / "storm_catalog" / "compound_mhws" / "compound_metrics_mhws.csv"
+    ROOT / "outputs" / "storm_catalog" / "compound_hat" / "compound_metrics_hat.csv"
 )
-#: The superseded SSH_total product, preserved for comparison. Not read here.
+#: The superseded MHWS product, preserved for comparison. Not read here.
 LEGACY_GRID_SOURCE = (
+    ROOT / "outputs" / "legacy_mhws_method" / "hazard" / "compound_metrics_mhws.csv"
+)
+#: The SSH_total product superseded before it. Not read here either.
+LEGACY_SSH_TOTAL_GRID_SOURCE = (
     ROOT / "outputs" / "legacy_ssh_total_method" / "hazard" / "compound_metrics.csv"
 )
 COMPONENT_SOURCE_FIELDS = {
@@ -65,6 +69,9 @@ PASSTHROUGH_SOURCE_FIELDS = (
     "mean_compound_intensity_norm_abspeak",
     "thr_hs_abs",
     "thr_zos_abs",
+    # Level datum of the current method. ``mhws_m`` is the superseded field
+    # name; both are listed so a legacy CSV still passes its datum through.
+    "hat_m",
     "mhws_m",
 )
 

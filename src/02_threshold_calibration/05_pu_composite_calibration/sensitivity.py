@@ -256,31 +256,39 @@ def run_b_target_sensitivity(
 def run_gap_sensitivity(
     contingency_df: pd.DataFrame,
     records: list,
-    ssh_total_cache: dict,
+    level_cache: dict,
     time_index: "pd.DatetimeIndex",
     legacy_df: "pd.DataFrame",
     n_years: float,
     P: int,
     cfg: dict,
+    workers: int = 1,
 ) -> pd.DataFrame:
-    """Re-run Layer 2 + scoring under alternative EPISODE_MAX_GAP_DAYS values.
+    """Re-run Layers 1 and 2 + scoring under alternative EPISODE_MAX_GAP_DAYS.
 
     Unlike the weight/alpha/B_target experiments, changing the gap tolerance
-    requires re-running the full unmatched-episode collection (Layer 2) and
-    rebuilding the audit table, because episode clustering boundaries change.
-    Layer 1 (hits/misses) is NOT affected — the compound condition at each
-    event is independent of gap tolerance.
+    requires re-detecting, because episode clustering boundaries change.
+
+    Layer 1 is re-run too, which it was NOT before the 2026-07-30
+    recalibration. The old note that "Layer 1 is not affected" rested on the
+    old detector, where capture was a day-level test independent of clustering.
+    Under the production detector the level gate is applied to the episode as a
+    whole, so merging or splitting episodes can change which ones clear
+    ``max(SWL) > HAT`` and therefore which events are captured. Holding Layer 1
+    fixed would silently mix gap tolerances between the two layers.
 
     Parameters
     ----------
-    contingency_df : DataFrame [thr_hs_pct, thr_ssh_pct, H, M] from Layer 1.
+    contingency_df : DataFrame [thr_hs_pct, thr_ssh_pct, H, M] from Layer 1 at
+        the configured gap; used only as a fallback shape reference.
     records : list[EventRecord]
-    ssh_total_cache : dict
+    level_cache : dict mapping (lat, lon) → PointLevelData
     time_index : pd.DatetimeIndex — validated-period time index for the scan
     legacy_df : pd.DataFrame — legacy events for audit E_i calculation
     n_years : float — validated period duration in years
     P : int — total positive events
     cfg : dict — configuration dictionary
+    workers : int — process pool size for the sweep
 
     Returns
     -------
@@ -288,25 +296,26 @@ def run_gap_sensitivity(
         gap_days, thr_hs_pct, thr_ssh_pct, H, U, R_pos, B, F_soft, Score
     """
     from src.pu_composite_calibration.scoring import (
+        run_hits_misses_pu,
         run_unmatched_all_pairs,
         compute_pu_scores,
         select_optimal_pair_pu,
     )
     from src.pu_composite_calibration.audit import (
         build_episode_audit_table,
-        attach_ssh_total_to_records,
+        attach_level_series_to_records,
     )
-    from src.pu_composite_calibration.utils import build_percentile_levels
+    from src.pu_composite_calibration.utils import resolve_percentile_levels
 
     gap_values = cfg.get("sensitivity_gap_days", [0, 1, 2, 3])
-    hs_pcts  = build_percentile_levels(cfg["pct_start"], cfg["pct_stop"], cfg["pct_step"])
-    ssh_pcts = build_percentile_levels(cfg["pct_start"], cfg["pct_stop"], cfg["pct_step"])
+    hs_pcts  = resolve_percentile_levels(cfg)
+    ssh_pcts = resolve_percentile_levels(cfg)
 
     # n_municipalities for burden: use union count from records
     n_municipalities = len({rec.municipality for rec in records})
 
     # Pre-compute records_by_muni (needed for audit table)
-    records_by_muni = attach_ssh_total_to_records(records, ssh_total_cache)
+    records_by_muni = attach_level_series_to_records(records, level_cache)
 
     rows: list[dict] = []
 
@@ -315,15 +324,23 @@ def run_gap_sensitivity(
             "  [gap sensitivity] EPISODE_MAX_GAP_DAYS=%d — running Layer 2...",
             gap_val,
         )
-        # Re-run Layer 2 with the alternative gap value
+        # Re-run BOTH layers with the alternative gap value
+        contingency_gap = run_hits_misses_pu(
+            records, level_cache, time_index,
+            hs_pcts, ssh_pcts,
+            cfg["match_window_offsets"],
+            max_gap_days=gap_val,
+            workers=workers,
+        )
         unmatched = run_unmatched_all_pairs(
-            records, ssh_total_cache, time_index,
+            records, level_cache, time_index,
             hs_pcts, ssh_pcts,
             gap_val,
             cfg["match_window_offsets"],
+            workers=workers,
         )
         log.info(
-            "    Layer 2 complete: %d unmatched episodes (gap=%d)",
+            "    Layers 1-2 complete: %d unmatched episodes (gap=%d)",
             len(unmatched), gap_val,
         )
 
@@ -334,7 +351,7 @@ def run_gap_sensitivity(
 
         # Compute scores
         df_scores = compute_pu_scores(
-            contingency_df, unmatched, audit, n_years, P, cfg,
+            contingency_gap, unmatched, audit, n_years, P, cfg,
             n_municipalities=n_municipalities,
         )
         opt = select_optimal_pair_pu(df_scores)
@@ -370,9 +387,10 @@ def run_all_sensitivity(
     P: int,
     cfg: dict,
     records: list | None = None,
-    ssh_total_cache: dict | None = None,
+    level_cache: dict | None = None,
     time_index: "pd.DatetimeIndex | None" = None,
     legacy_df: "pd.DataFrame | None" = None,
+    workers: int = 1,
 ) -> None:
     """Run all sensitivity experiments and save results.
 
@@ -380,7 +398,7 @@ def run_all_sensitivity(
         tab_TC5_sensitivity_weights.csv
         tab_TC5_sensitivity_alpha.csv
         tab_TC5_sensitivity_b_target.csv
-        tab_TC5_sensitivity_gap_days.csv   (if records/ssh_total_cache/time_index provided)
+        tab_TC5_sensitivity_gap_days.csv   (if records/level_cache/time_index provided)
     """
     tab_dir = Path(cfg["tab_dir"])
     tab_dir.mkdir(parents=True, exist_ok=True)
@@ -403,19 +421,19 @@ def run_all_sensitivity(
     df_b.to_csv(tab_dir / "tab_TC5_sensitivity_b_target.csv", index=False)
     log.info("Saved: tab_TC5_sensitivity_b_target.csv")
 
-    # Gap sensitivity requires records, ssh_total_cache, and time_index
+    # Gap sensitivity requires records, level_cache, and time_index
     df_g = None
-    if records is not None and ssh_total_cache is not None and time_index is not None:
+    if records is not None and level_cache is not None and time_index is not None:
         log.info("Sensitivity experiment 4/4: EPISODE_MAX_GAP_DAYS...")
         df_g = run_gap_sensitivity(
-            contingency_df, records, ssh_total_cache, time_index,
-            legacy_df, n_years, P, cfg,
+            contingency_df, records, level_cache, time_index,
+            legacy_df, n_years, P, cfg, workers=workers,
         )
         df_g.to_csv(tab_dir / "tab_TC5_sensitivity_gap_days.csv", index=False)
         log.info("Saved: tab_TC5_sensitivity_gap_days.csv")
     else:
         log.warning(
-            "Gap sensitivity skipped — requires records, ssh_total_cache, and "
+            "Gap sensitivity skipped — requires records, level_cache, and "
             "time_index (pass via run_all_sensitivity kwargs)."
         )
 

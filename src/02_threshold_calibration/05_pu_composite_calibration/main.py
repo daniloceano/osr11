@@ -81,14 +81,15 @@ import pandas as pd
 from src.pu_composite_calibration.config.analysis_config import CFG
 from src.pu_composite_calibration.utils import (
     make_output_dirs,
-    build_percentile_levels,
+    resolve_percentile_levels,
     load_combined_events,
     load_legacy_events,
     load_unified_dataset,
     setup_logging,
 )
 from src.pu_composite_calibration.scoring import (
-    build_ssh_total_cache_pu,
+    build_detection_census,
+    build_level_cache_pu,
     run_hits_misses_pu,
     run_unmatched_all_pairs,
     compute_pu_scores,
@@ -100,7 +101,7 @@ from src.pu_composite_calibration.scoring import (
 from src.pu_composite_calibration.audit import (
     build_episode_audit_table,
     build_qi_decomposition,
-    attach_ssh_total_to_records,
+    attach_level_series_to_records,
 )
 
 from src.csi_grid_scan.preprocessing import clip_to_validated_period
@@ -114,6 +115,7 @@ _CACHE_DIR   = CFG["log_dir"]
 _HM_CACHE    = Path(_CACHE_DIR) / "pu_cache_hits_misses.pkl"
 _EP_CACHE    = Path(_CACHE_DIR) / "pu_cache_unmatched_episodes.pkl"
 _META_CACHE  = Path(_CACHE_DIR) / "pu_cache_scoring_metadata.json"
+_CENSUS_CACHE = Path(_CACHE_DIR) / "pu_cache_detection_census.pkl"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -145,6 +147,9 @@ def _parse_args() -> argparse.Namespace:
                        help="Figures only (requires scoring results)")
     group.add_argument("--summary",     action="store_true",
                        help="Export tables and print summary (requires scoring results)")
+    parser.add_argument("--workers", type=int, default=1,
+                        help="Process pool size for the threshold sweep "
+                             "(Layers 1 and 2 are parallel by threshold pair)")
     return parser.parse_args()
 
 
@@ -246,13 +251,18 @@ def main(args: argparse.Namespace | None = None) -> None:
     log.info("=" * 68)
 
     # ── Build threshold grid ───────────────────────────────────────────────────
-    hs_pcts  = build_percentile_levels(CFG["pct_start"], CFG["pct_stop"], CFG["pct_step"])
-    ssh_pcts = build_percentile_levels(CFG["pct_start"], CFG["pct_stop"], CFG["pct_step"])
+    hs_pcts  = resolve_percentile_levels(CFG)
+    ssh_pcts = resolve_percentile_levels(CFG)
     n_pairs  = len(hs_pcts) * len(ssh_pcts)
+    workers  = max(1, int(getattr(args, "workers", 1)))
     log.info(
-        "Threshold grid: %d × %d = %d pairs  (q%.0f–q%.0f, step=%.0f%%)",
+        "Threshold grid: %d × %d = %d pairs  [%s]",
         len(hs_pcts), len(ssh_pcts), n_pairs,
-        CFG["pct_start"] * 100, CFG["pct_stop"] * 100, CFG["pct_step"] * 100,
+        ", ".join(f"q{round(p * 100)}" for p in hs_pcts),
+    )
+    log.info(
+        "Scored detector: Hs >= q_hs local AND zos >= q_zos local (tide-free), "
+        "gated by max(SWL) > HAT over the overlap days."
     )
 
     # ── Load data (required for most stages) ──────────────────────────────────
@@ -263,7 +273,7 @@ def main(args: argparse.Namespace | None = None) -> None:
 
     records = None
     tide_cache = None
-    ssh_total_cache = None
+    level_cache = None
     time_index = None
     events_combined = None
     legacy_df       = None
@@ -288,9 +298,9 @@ def main(args: argparse.Namespace | None = None) -> None:
             )
         log.info("FES2022 tide validated for %d grid point(s).", len(tide_cache))
 
-        # ── SSH_total cache ────────────────────────────────────────────────────
-        log.info("Building SSH_total = SSH + tide per grid point...")
-        ssh_total_cache = build_ssh_total_cache_pu(records, tide_cache)
+        # ── Level cache: zos (detection), SWL and HAT (gate) ──────────────────
+        log.info("Building tide-free zos, SWL and HAT per grid point...")
+        level_cache = build_level_cache_pu(records, tide_cache)
 
     # ── Layer 1: hits / misses ────────────────────────────────────────────────
     contingency_df = None
@@ -298,9 +308,11 @@ def main(args: argparse.Namespace | None = None) -> None:
     if run_all or getattr(args, "hits_misses", False):
         log.info("Layer 1: event-by-event hit/miss scan...")
         contingency_df = run_hits_misses_pu(
-            records, ssh_total_cache, time_index,
+            records, level_cache, time_index,
             hs_pcts, ssh_pcts,
             CFG["match_window_offsets"],
+            max_gap_days=CFG["episode_max_gap_days"],
+            workers=workers,
         )
         # Save intermediate result
         contingency_df.to_pickle(str(_HM_CACHE))
@@ -308,18 +320,22 @@ def main(args: argparse.Namespace | None = None) -> None:
 
     # ── Layer 2: unmatched episode collection ─────────────────────────────────
     unmatched_episodes = None
+    census_df = None
 
     if run_all or getattr(args, "unmatched", False):
         log.info("Layer 2: collecting unmatched episode details...")
-        unmatched_episodes = run_unmatched_all_pairs(
-            records, ssh_total_cache, time_index,
+        unmatched_episodes, census_df = run_unmatched_all_pairs(
+            records, level_cache, time_index,
             hs_pcts, ssh_pcts,
             CFG["episode_max_gap_days"],
             CFG["match_window_offsets"],
+            workers=workers,
+            return_census=True,
         )
-        # Save intermediate result
+        # Save intermediate results
         with open(_EP_CACHE, "wb") as f:
             pickle.dump(unmatched_episodes, f)
+        census_df.to_pickle(str(_CENSUS_CACHE))
         log.info(
             "Layer 2 complete. %d total unmatched episodes. Cache saved: %s",
             len(unmatched_episodes), _EP_CACHE,
@@ -368,7 +384,7 @@ def main(args: argparse.Namespace | None = None) -> None:
                     "Run inside the 'osr' conda environment with eo_tides installed."
                 )
             log.info("FES2022 tide validated for %d grid point(s).", len(tide_cache))
-            ssh_total_cache = build_ssh_total_cache_pu(records, tide_cache)
+            level_cache = build_level_cache_pu(records, tide_cache)
 
         # Determine n_years from clipped time index
         if n_years is None:
@@ -398,7 +414,7 @@ def main(args: argparse.Namespace | None = None) -> None:
 
         # Build audit table (q_i components for all unmatched episodes)
         log.info("Building episode audit table (q_i components)...")
-        records_by_muni = attach_ssh_total_to_records(records, ssh_total_cache)
+        records_by_muni = attach_level_series_to_records(records, level_cache)
         audit_df = build_episode_audit_table(
             unmatched_episodes, records_by_muni, legacy_df, CFG
         )
@@ -430,6 +446,34 @@ def main(args: argparse.Namespace | None = None) -> None:
         )
         log.info("Saved: tab_TC5_optimal_pair_pu.csv")
 
+        # ── Detection census: the sample size behind each score ────────────────
+        # Without this a high-percentile pair that accepts almost nothing looks
+        # excellent to the score, because the burden and soft-penalty terms both
+        # collapse toward zero. The census makes that visible instead of letting
+        # the optimum be chosen on noise.
+        if census_df is None and _CENSUS_CACHE.exists():
+            census_df = pd.read_pickle(str(_CENSUS_CACHE))
+        if census_df is not None:
+            census_full = build_detection_census(census_df, contingency_df, P)
+            census_full.to_csv(
+                tab_dir / "tab_TC5_detection_census.csv", index=False
+            )
+            n_degenerate = int(census_full["degenerate"].sum())
+            log.info(
+                "Saved: tab_TC5_detection_census.csv — %d of %d pairs flagged "
+                "degenerate (fewer accepted episodes than the %d positives)",
+                n_degenerate, len(census_full), P,
+            )
+            _log_selected_pair_support(census_full, optimal)
+        else:
+            log.warning(
+                "Detection census unavailable — run --unmatched (or --all) to "
+                "produce it. Sample size per pair will not be reported."
+            )
+
+        # ── Side-by-side against the superseded q90/q90 pair ───────────────────
+        _save_incumbent_comparison(df_scores, census_df, optimal, tab_dir, P)
+
         # ── Step 2d comparison table ───────────────────────────────────────────
         _save_csi_comparison(optimal, tab_dir)
 
@@ -452,11 +496,12 @@ def main(args: argparse.Namespace | None = None) -> None:
         log.info("Computing per-event capture status at optimal pair...")
         event_status_df = get_event_capture_status(
             records=records,
-            ssh_total_cache=ssh_total_cache,
+            level_cache=level_cache,
             time_index=time_index,
             thr_hs_pct=float(optimal["thr_hs_pct"]),
             thr_ssh_pct=float(optimal["thr_ssh_pct"]),
             offsets=CFG["match_window_offsets"],
+            max_gap_days=CFG["episode_max_gap_days"],
             events_combined=events_combined,
         )
         event_status_df.to_csv(tab_dir / "tab_TC5_event_capture_status.csv", index=False)
@@ -577,9 +622,10 @@ def main(args: argparse.Namespace | None = None) -> None:
             P=P,
             cfg=CFG,
             records=records,
-            ssh_total_cache=ssh_total_cache,
+            level_cache=level_cache,
             time_index=time_index,
             legacy_df=legacy_df,
+            workers=workers,
         )
 
     # ── Figures ───────────────────────────────────────────────────────────────
@@ -618,6 +664,105 @@ def main(args: argparse.Namespace | None = None) -> None:
     log.info("  Tables : %s", CFG["tab_dir"])
     log.info("  Figures: %s", CFG["fig_dir"])
     log.info("=" * 68)
+
+
+#: The pair the superseded calibration selected on SSH_total. Rescored here
+#: under the NEW detector so that "the new pair is better" is a comparison, not
+#: merely a statement that it is the optimum of a different grid.
+INCUMBENT_PAIR = (0.90, 0.90)
+
+
+def _log_selected_pair_support(census: pd.DataFrame, optimal: dict) -> None:
+    """Warn loudly if the selected pair rests on a degenerate sample."""
+    mask = (
+        (census["thr_hs_pct"] == optimal["thr_hs_pct"])
+        & (census["thr_ssh_pct"] == optimal["thr_ssh_pct"])
+    )
+    if not mask.any():
+        return
+    row = census[mask].iloc[0]
+    log.info(
+        "Selected pair support: %d accepted episodes over %d of %d grid "
+        "points (%.2f episodes per positive event)",
+        int(row["n_accepted_episodes"]),
+        int(row["n_points_with_episodes"]),
+        int(row["n_points"]),
+        float(row["episodes_per_positive"]),
+    )
+    if bool(row["degenerate"]):
+        log.warning(
+            "SELECTED PAIR IS FLAGGED DEGENERATE: it accepts %d episodes "
+            "against %d positive events. The composite score cannot "
+            "discriminate detectors at this sample size — treat the selection "
+            "as unresolved and report it, do not present it as an optimum.",
+            int(row["n_accepted_episodes"]), int(row["P"]),
+        )
+
+
+def _save_incumbent_comparison(
+    df_scores: pd.DataFrame,
+    census_df: "pd.DataFrame | None",
+    optimal: dict,
+    tab_dir: Path,
+    P: int,
+) -> None:
+    """Write the selected pair and q90/q90 side by side under one detector."""
+    columns = ["thr_hs_pct", "thr_ssh_pct", "H", "M", "U", "R_pos", "B", "F_soft", "Score"]
+    wanted = [
+        (float(optimal["thr_hs_pct"]), float(optimal["thr_ssh_pct"]), "selected"),
+        (INCUMBENT_PAIR[0], INCUMBENT_PAIR[1], "incumbent_q90_q90"),
+    ]
+    rows: list[dict] = []
+    for hs_pct, ssh_pct, role in wanted:
+        mask = (
+            (df_scores["thr_hs_pct"] == hs_pct)
+            & (df_scores["thr_ssh_pct"] == ssh_pct)
+        )
+        if not mask.any():
+            continue
+        row = df_scores[mask].iloc[0]
+        entry = {"role": role, **{c: row[c] for c in columns if c in row}}
+        # Weights come from the configuration, never hard-coded: they were
+        # changed on 2026-07-30 and a stale literal here would silently print a
+        # decomposition that does not add up to the Score beside it.
+        w1, w2, w3 = CFG["w1_recall"], CFG["w2_burden"], CFG["w3_soft_penalty"]
+        entry["term_recall_weighted"] = round(w1 * float(row["R_pos"]), 6)
+        entry["term_burden_weighted"] = round(-w2 * float(row["B"]), 6)
+        entry["term_fsoft_weighted"] = round(
+            -w3 * float(row["F_soft"]) / P if P else 0.0, 6
+        )
+        if census_df is not None:
+            c_mask = (
+                (census_df["thr_hs_pct"] == hs_pct)
+                & (census_df["thr_ssh_pct"] == ssh_pct)
+            )
+            if c_mask.any():
+                c_row = census_df[c_mask].iloc[0]
+                for field in (
+                    "n_accepted_episodes",
+                    "n_points_with_episodes",
+                    "median_thr_hs_abs",
+                    "min_thr_hs_abs",
+                    "median_thr_zos_abs",
+                ):
+                    entry[field] = c_row[field]
+        rows.append(entry)
+
+    if len(rows) < 2:
+        log.warning(
+            "Incumbent comparison incomplete — q90/q90 is not in the current "
+            "grid, so the selected pair cannot be compared against it."
+        )
+    frame = pd.DataFrame(rows)
+    frame.to_csv(tab_dir / "tab_TC5_selected_vs_incumbent.csv", index=False)
+    log.info("Saved: tab_TC5_selected_vs_incumbent.csv")
+    for row in rows:
+        log.info(
+            "  %-18s q%02d/q%02d  R_pos=%.4f  B=%.4f  F_soft=%.1f  Score=%.6f",
+            row["role"], round(row["thr_hs_pct"] * 100),
+            round(row["thr_ssh_pct"] * 100), row["R_pos"], row["B"],
+            row["F_soft"], row["Score"],
+        )
 
 
 def _save_csi_comparison(optimal: dict, tab_dir: Path) -> None:

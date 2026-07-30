@@ -1,25 +1,77 @@
-"""Build the HAT-conditioned compound-event arm for the AUD-01 comparison.
+"""Compound event detection with the HAT as gate and as severity datum.
 
-The detector, calibration, episode grouping, and severity equations are the
-published MHWS implementation.  The only methodological change is the level
-datum: ``HAT = max(tide_daily_max)`` over 1993--2025 is passed to
-``compound_events_at_point`` as both gate and level-excess datum.
+Supersedes the MHWS detector implemented in :mod:`detection_mhws`, whose
+products are archived under ``outputs/legacy_mhws_method/``. The previous
+method is left untouched and remains reproducible.
 
-The calculation has two explicit phases.  Phase 1 detects events independently
-at each of the 808 points.  A barrier then pools daily excesses in stable point
-order and calculates arm-specific Q05/Q95 references.  Phase 2 scores events
-with those global references and aggregates point metrics.  Both phases use
-``ProcessPoolExecutor``; no third-party parallel dependency is required.
+What changed and why
+--------------------
+The MHWS gate ``max(SWL) > MHWS`` turned out to be weakly informative along the
+whole coast: the astronomical tide alone would already cross it in 73.0 % of
+the events north of 15 S and 79.6 % of those south of 25 S. Worse, the physical
+content of the severity varied with latitude — 56 % of the level excess at
+Amapá is astronomical against 26 % in Rio Grande do Sul — so one value of the
+index meant astronomy in the north and storm surge in the south. See
+``outputs/audit/AUD-01_hat_gate_sensitivity/`` and AUD-01 §14.
 
-Before production, the first 30 points are evaluated serially and in parallel
-and their event payloads and point metrics must be bit-for-bit identical.
+Replacing the datum with HAT removes the astronomical contribution from the
+magnitude, because ``tide <= HAT`` by definition makes the astronomical term of
+the excess always non-positive, leaving the severity as surge net of the tidal
+deficit.
+
+Gate and datum are the same level, deliberately. A HAT gate with an MHWS excess
+was shown to be indefensible: the inherited constant ``HAT - MHWS`` accounts for
+94-99 % of the excess in the north, which would turn severity into a number
+fixed by the local harmonic structure alone.
+
+Definition implemented here
+---------------------------
+::
+
+    thr_hs   = local q_hs of Hs                   from Step 2e
+    thr_zos  = local q_zos of zos                 from Step 2e, tide-free
+
+    wave episode  = Hs  >= thr_hs  , clustered with gap <= 1 day
+    level episode = zos >= thr_zos , clustered with gap <= 1 day
+
+    HAT    = max(tide_daily_max) over 1993-2025, per grid point
+    SWL(d) = (zos(d) - mean(zos)) + tide_daily_max(d)
+
+    compound event = wave episode and level episode sharing >= 1 exceedance day
+                     AND max(SWL) over the shared days > HAT
+
+    exc_wave  = peak_Hs  - thr_hs
+    exc_level = max(SWL) - HAT
+    integrated severity = sum over full-criterion days of
+                          0.5 * [norm(Hs_d - thr_hs) + norm(SWL_d - HAT)]
+
+``norm`` rescales by the 5th/95th percentiles of each excess pooled over the
+whole domain. Those references are recomputed WITHIN this arm: reusing the MHWS
+references would normalise two different event populations on one scale.
+
+Threshold pair
+--------------
+Read from the Step 2e table, which since 2026-07-30 scores this very detector
+rather than one built on ``SSH_total``. Pass ``--hs-pct/--zos-pct`` to override,
+and ``--acceptance-arm`` to reproduce the published q90/q90 comparison arm.
+
+Parallelism
+-----------
+Two explicit phases with a barrier. Phase 1 detects events independently at
+each of the 808 points. The barrier then pools daily excesses in a fixed
+point-event-day order and computes this arm's own Q05/Q95. Phase 2 scores
+events against those global references. Both phases use ``ProcessPoolExecutor``
+from the standard library; no parallel dependency is added. Before production
+the first N points are evaluated serially and in parallel and their payloads
+must be bit-for-bit identical.
 
 Usage:
     conda run -n osr11 python -m src.compound_detection.detection_hat --workers 100
 
 Output:
-    outputs/hat_method/compound_metrics_hat.csv
-    outputs/hat_method/compound_summary_hat.json
+    outputs/storm_catalog/compound_hat/compound_metrics_hat.csv
+    outputs/storm_catalog/compound_hat/compound_summary_hat.json
+    outputs/current_method_hat/                (versioned copy of both)
 """
 
 from __future__ import annotations
@@ -35,48 +87,75 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from .compound_core import (
+    assert_matches_reference_detector,
+    compound_events_at_point,
+)
 from .detection_mhws import (
     INTENSITY_REF_HIGH_PCT,
     INTENSITY_REF_LOW_PCT,
     MIN_FINITE_DAYS,
     POINT_SOURCE,
-    THRESHOLD_PCT,
     UNIFIED,
     _point_metrics,
-    compound_events_at_point,
 )
+from .mhws_datum import mhws_at_points
 
 log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[3]
-OUTPUT_DIR = ROOT / "outputs" / "hat_method"
+OUTPUT_DIR = ROOT / "outputs" / "storm_catalog" / "compound_hat"
+#: Versioned copy, because OUTPUT_DIR is inside the .gitignored
+#: ``outputs/storm_catalog/``. The MHWS product was lost from disk exactly this
+#: way and had to be regenerated on 2026-07-30.
+SNAPSHOT_DIR = ROOT / "outputs" / "current_method_hat"
 MHWS_METRICS = (
     ROOT
     / "outputs"
-    / "storm_catalog"
-    / "compound_mhws"
+    / "legacy_mhws_method"
+    / "hazard"
     / "compound_metrics_mhws.csv"
 )
+OPTIMAL_PAIR_FILE = (
+    ROOT
+    / "outputs"
+    / "threshold_calibration"
+    / "tables"
+    / "tab_TC5_optimal_pair_pu.csv"
+)
 
-EXPECTED = {
+#: Totals the published q90/q90 comparison arm must reproduce. Checked only
+#: when the run is made at that pair, since they are properties of it.
+ACCEPTANCE_Q90 = {
     "domain_events": 37_225,
     "events_north_of_15S": 545,
     "events_south_of_25S": 24_196,
     "zero_event_points": 248,
     "grid_points": 808,
 }
+ACCEPTANCE_PCT = 0.90
 
 
-def _detect_task(
-    task: tuple[int, float, float, np.ndarray, np.ndarray, np.ndarray, float]
-) -> tuple[int, dict[str, Any], list[dict[str, Any]]]:
+def load_threshold_pair(source: Path = OPTIMAL_PAIR_FILE) -> tuple[float, float]:
+    """Read the Step 2e threshold pair.
+
+    ``tab_TC5_optimal_pair_pu.csv`` is the sole authorised threshold source for
+    Step 3, as declared in
+    ``src/03_storm_catalog_generation/config/analysis_config.py``.
+    """
+    if not source.exists():
+        raise FileNotFoundError(
+            f"Step 2e threshold pair not found: {source}. Run Step 2e first."
+        )
+    row = pd.read_csv(source).iloc[0]
+    return float(row["thr_hs_pct"]), float(row["thr_ssh_pct"])
+
+
+def _detect_task(task: tuple) -> tuple[int, dict[str, Any], list[dict[str, Any]]]:
     """Phase-1 worker: detect one point and retain its raw excess arrays."""
-    index, latitude, longitude, hs, zos, tide, n_years = task
+    index, latitude, longitude, hs, zos, tide, n_years, hs_pct, zos_pct = task
     finite = np.isfinite(hs) & np.isfinite(zos) & np.isfinite(tide)
-    record: dict[str, Any] = {
-        "grid_lat": latitude,
-        "grid_lon": longitude,
-    }
+    record: dict[str, Any] = {"grid_lat": latitude, "grid_lon": longitude}
     if finite.sum() < MIN_FINITE_DAYS:
         return index, {
             **record,
@@ -86,15 +165,9 @@ def _detect_task(
 
     hat = float(np.nanmax(tide[finite]))
     events, context = compound_events_at_point(
-        hs=hs,
-        zos=zos,
-        tide=tide,
-        finite=finite,
-        mhws=hat,
+        hs=hs, zos=zos, tide=tide, finite=finite, datum=hat,
+        hs_pct=hs_pct, zos_pct=zos_pct,
     )
-    # Rename the datum field without changing the reused detector.
-    context["hat_m"] = context.pop("mhws_m")
-    context["n_rejected_by_hat"] = context.pop("n_rejected_by_mhws")
     return index, {
         **record,
         **context,
@@ -120,7 +193,8 @@ def _score_task(
             "p95_compound_intensity_norm": None,
             "max_compound_intensity_norm": None,
             # Explicit zero is the scientific choice for no accepted event:
-            # absence of an event means absence of event-derived severity.
+            # absence of an event means absence of event-derived severity. It
+            # also keeps the normalisation population at the full 808 points.
             "mean_integrated_severity": 0.0,
             "p95_integrated_severity": 0.0,
             "max_integrated_severity": 0.0,
@@ -129,13 +203,11 @@ def _score_task(
     peak = 0.5 * (
         _norm(
             [event["exc_wave"] for event in events],
-            refs["peak_wave_low"],
-            refs["peak_wave_high"],
+            refs["peak_wave_low"], refs["peak_wave_high"],
         )
         + _norm(
             [event["exc_level"] for event in events],
-            refs["peak_level_low"],
-            refs["peak_level_high"],
+            refs["peak_level_low"], refs["peak_level_high"],
         )
     )
     integrated = np.asarray(
@@ -146,13 +218,11 @@ def _score_task(
                     * (
                         _norm(
                             event["daily_exc_wave"],
-                            refs["daily_wave_low"],
-                            refs["daily_wave_high"],
+                            refs["daily_wave_low"], refs["daily_wave_high"],
                         )
                         + _norm(
                             event["daily_exc_level"],
-                            refs["daily_level_low"],
-                            refs["daily_level_high"],
+                            refs["daily_level_low"], refs["daily_level_high"],
                         )
                     )
                 )
@@ -177,11 +247,9 @@ def _parallel_map(function: Any, tasks: list[Any], workers: int) -> list[Any]:
 
 
 def _references(per_point_events: list[list[dict[str, Any]]]) -> dict[str, float]:
-    """Calculate HAT-only references in deterministic point/event/day order."""
+    """Calculate this arm's own references in deterministic point/event/day order."""
     events = [
-        event
-        for point_events in per_point_events
-        for event in point_events
+        event for point_events in per_point_events for event in point_events
     ]
     if not events:
         raise RuntimeError("No HAT events detected anywhere; refusing to write")
@@ -191,43 +259,17 @@ def _references(per_point_events: list[list[dict[str, Any]]]) -> dict[str, float
     daily_level = np.concatenate(
         [event["daily_exc_level"] for event in events if event["daily_exc_level"].size]
     )
+    peak_wave = [event["exc_wave"] for event in events]
+    peak_level = [event["exc_level"] for event in events]
     return {
-        "peak_wave_low": float(
-            np.percentile(
-                [event["exc_wave"] for event in events],
-                INTENSITY_REF_LOW_PCT,
-            )
-        ),
-        "peak_wave_high": float(
-            np.percentile(
-                [event["exc_wave"] for event in events],
-                INTENSITY_REF_HIGH_PCT,
-            )
-        ),
-        "peak_level_low": float(
-            np.percentile(
-                [event["exc_level"] for event in events],
-                INTENSITY_REF_LOW_PCT,
-            )
-        ),
-        "peak_level_high": float(
-            np.percentile(
-                [event["exc_level"] for event in events],
-                INTENSITY_REF_HIGH_PCT,
-            )
-        ),
-        "daily_wave_low": float(
-            np.percentile(daily_wave, INTENSITY_REF_LOW_PCT)
-        ),
-        "daily_wave_high": float(
-            np.percentile(daily_wave, INTENSITY_REF_HIGH_PCT)
-        ),
-        "daily_level_low": float(
-            np.percentile(daily_level, INTENSITY_REF_LOW_PCT)
-        ),
-        "daily_level_high": float(
-            np.percentile(daily_level, INTENSITY_REF_HIGH_PCT)
-        ),
+        "peak_wave_low": float(np.percentile(peak_wave, INTENSITY_REF_LOW_PCT)),
+        "peak_wave_high": float(np.percentile(peak_wave, INTENSITY_REF_HIGH_PCT)),
+        "peak_level_low": float(np.percentile(peak_level, INTENSITY_REF_LOW_PCT)),
+        "peak_level_high": float(np.percentile(peak_level, INTENSITY_REF_HIGH_PCT)),
+        "daily_wave_low": float(np.percentile(daily_wave, INTENSITY_REF_LOW_PCT)),
+        "daily_wave_high": float(np.percentile(daily_wave, INTENSITY_REF_HIGH_PCT)),
+        "daily_level_low": float(np.percentile(daily_level, INTENSITY_REF_LOW_PCT)),
+        "daily_level_high": float(np.percentile(daily_level, INTENSITY_REF_HIGH_PCT)),
     }
 
 
@@ -278,9 +320,7 @@ def _assert_serial_parallel(
     refs = _references([item[2] for item in serial])
     score_tasks = [(item[0], item[2], refs) for item in serial]
     serial_scores = [_score_task(task) for task in score_tasks]
-    parallel_scores = _parallel_map(
-        _score_task, score_tasks, min(workers, n_points)
-    )
+    parallel_scores = _parallel_map(_score_task, score_tasks, min(workers, n_points))
     assert_exact(serial_scores, parallel_scores, "phase_2")
     return {
         "n_points": n_points,
@@ -293,39 +333,93 @@ def _assert_serial_parallel(
     }
 
 
-def _acceptance(metrics: pd.DataFrame) -> dict[str, int]:
+def _assert_detector_fidelity(
+    tasks: list[Any], mhws: np.ndarray, n_points: int
+) -> dict[str, Any]:
+    """Check the parameterised detector against the frozen MHWS one at q90."""
+    checked = 0
+    for task in tasks[:n_points]:
+        index, _, _, hs, zos, tide, _, _, _ = task
+        if not np.isfinite(mhws[index]):
+            continue
+        finite = np.isfinite(hs) & np.isfinite(zos) & np.isfinite(tide)
+        if finite.sum() < MIN_FINITE_DAYS:
+            continue
+        assert_matches_reference_detector(
+            hs=hs, zos=zos, tide=tide, finite=finite, datum=float(mhws[index])
+        )
+        checked += 1
+    return {
+        "n_points_checked": checked,
+        "reference": "detection_mhws.compound_events_at_point at q90/q90 with the MHWS datum",
+        "result": "identical",
+    }
+
+
+def _band_counts(metrics: pd.DataFrame) -> dict[str, int]:
     counts = metrics["compound_count_total"].fillna(0)
-    observed = {
+    return {
         "domain_events": int(counts.sum()),
         "events_north_of_15S": int(
             metrics.loc[metrics["grid_lat"] > -15.0, "compound_count_total"]
-            .fillna(0)
-            .sum()
+            .fillna(0).sum()
         ),
         "events_south_of_25S": int(
             metrics.loc[metrics["grid_lat"] < -25.0, "compound_count_total"]
-            .fillna(0)
-            .sum()
+            .fillna(0).sum()
         ),
         "zero_event_points": int((counts == 0).sum()),
         "grid_points": int(len(metrics)),
     }
-    if observed != EXPECTED:
-        raise AssertionError(
-            f"HAT acceptance totals differ: observed={observed}, expected={EXPECTED}"
-        )
-    return observed
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workers", type=int, default=100)
     parser.add_argument("--validate-points", type=int, default=30)
+    parser.add_argument(
+        "--hs-pct", type=float, default=None,
+        help="Override the Step 2e wave percentile",
+    )
+    parser.add_argument(
+        "--zos-pct", type=float, default=None,
+        help="Override the Step 2e level percentile",
+    )
+    parser.add_argument(
+        "--acceptance-arm", action="store_true",
+        help="Run at q90/q90 and assert the published comparison totals",
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=None,
+        help="Write elsewhere than the production catalogue directory",
+    )
+    parser.add_argument(
+        "--no-snapshot", action="store_true",
+        help="Skip the versioned copy under outputs/current_method_hat/",
+    )
     args = parser.parse_args()
     if args.workers < 1 or args.validate_points < 1:
         parser.error("workers and validate-points must be positive")
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
+
+    if args.acceptance_arm:
+        hs_pct = zos_pct = ACCEPTANCE_PCT
+        pair_source = "acceptance arm (q90/q90, published comparison)"
+    elif args.hs_pct is not None and args.zos_pct is not None:
+        hs_pct, zos_pct = float(args.hs_pct), float(args.zos_pct)
+        pair_source = "command line override"
+    elif args.hs_pct is not None or args.zos_pct is not None:
+        parser.error("--hs-pct and --zos-pct must be given together")
+    else:
+        hs_pct, zos_pct = load_threshold_pair()
+        pair_source = str(OPTIMAL_PAIR_FILE.relative_to(ROOT))
+    log.info(
+        "Threshold pair: Hs=q%.0f / zos=q%.0f  (from %s)",
+        hs_pct * 100, zos_pct * 100, pair_source,
+    )
+
+    output_dir = args.output_dir or OUTPUT_DIR
     for path in (UNIFIED, POINT_SOURCE, MHWS_METRICS):
         if not path.exists():
             raise FileNotFoundError(path)
@@ -361,9 +455,7 @@ def main() -> None:
     log.info("Extracting series for %d points", len(points))
     hs_all = ds["VHM0"].isel(latitude=lat_idx, longitude=lon_idx).values
     zos_all = ds["zos"].isel(latitude=lat_idx, longitude=lon_idx).values
-    tide_all = ds["tide_daily_max"].isel(
-        latitude=lat_idx, longitude=lon_idx
-    ).values
+    tide_all = ds["tide_daily_max"].isel(latitude=lat_idx, longitude=lon_idx).values
     ds.close()
 
     tasks = [
@@ -375,12 +467,21 @@ def main() -> None:
             zos_all[:, index].astype(float),
             tide_all[:, index].astype(float),
             n_years,
+            hs_pct,
+            zos_pct,
         )
         for index in range(len(points))
     ]
-    validation = _assert_serial_parallel(
-        tasks, args.workers, min(args.validate_points, len(tasks))
+
+    n_validate = min(args.validate_points, len(tasks))
+    mhws = mhws_at_points(points["grid_lat"].values, points["grid_lon"].values)
+    fidelity_detector = _assert_detector_fidelity(tasks, mhws, n_validate)
+    log.info(
+        "Parameterised detector matches the frozen MHWS detector at q90 on "
+        "%d points", fidelity_detector["n_points_checked"],
     )
+
+    validation = _assert_serial_parallel(tasks, args.workers, n_validate)
     log.info("Serial/parallel validation passed on %d points", validation["n_points"])
 
     phase_1 = _parallel_map(_detect_task, tasks, args.workers)
@@ -390,8 +491,7 @@ def main() -> None:
 
     refs = _references(events)
     score_tasks = [
-        (index, point_events, refs)
-        for index, point_events in enumerate(events)
+        (index, point_events, refs) for index, point_events in enumerate(events)
     ]
     phase_2 = _parallel_map(_score_task, score_tasks, args.workers)
     phase_2.sort(key=lambda item: item[0])
@@ -399,37 +499,91 @@ def main() -> None:
         row.update(scores)
 
     metrics = pd.DataFrame(rows)
-    acceptance = _acceptance(metrics)
+    counts = _band_counts(metrics)
+    if args.acceptance_arm and counts != ACCEPTANCE_Q90:
+        raise AssertionError(
+            f"Acceptance totals differ: observed={counts}, expected={ACCEPTANCE_Q90}"
+        )
 
-    mhws = pd.read_csv(MHWS_METRICS)
-    fidelity = metrics[["grid_lat", "grid_lon", "thr_hs_abs"]].merge(
-        mhws[["grid_lat", "grid_lon", "thr_hs_abs"]],
-        on=["grid_lat", "grid_lon"],
-        suffixes=("_hat", "_mhws"),
+    # thr_hs fidelity is only expected to reproduce the published product when
+    # the wave percentile is unchanged; at any other percentile the threshold
+    # is a different quantity by design.
+    reference = pd.read_csv(MHWS_METRICS)
+    merged = metrics[["grid_lat", "grid_lon", "thr_hs_abs"]].merge(
+        reference[["grid_lat", "grid_lon", "thr_hs_abs"]],
+        on=["grid_lat", "grid_lon"], suffixes=("_new", "_mhws"),
         validate="one_to_one",
     )
-    difference = (
-        fidelity["thr_hs_abs_hat"] - fidelity["thr_hs_abs_mhws"]
-    ).abs()
-    if len(fidelity) != EXPECTED["grid_points"] or not (difference == 0).all():
+    difference = (merged["thr_hs_abs_new"] - merged["thr_hs_abs_mhws"]).abs()
+    thr_hs_fidelity = {
+        "reference": str(MHWS_METRICS.relative_to(ROOT)),
+        "comparable": bool(hs_pct == ACCEPTANCE_PCT),
+        "exact_points": int((difference == 0).sum()),
+        "total_points": int(len(merged)),
+        "maximum_absolute_difference_m": float(difference.max()),
+    }
+    if hs_pct == ACCEPTANCE_PCT and not (difference == 0).all():
         raise AssertionError(
-            "thr_hs fidelity failed: "
-            f"{int((difference == 0).sum())}/{len(fidelity)} exact; "
+            "thr_hs fidelity failed at q90: "
+            f"{int((difference == 0).sum())}/{len(merged)} exact; "
             f"max difference={difference.max()}"
         )
 
+    thr_hs = pd.to_numeric(metrics["thr_hs_abs"], errors="coerce").dropna()
     summary = {
         "generated_by": "src.compound_detection.detection_hat",
-        "method": "HAT-conditioned comparison arm; not adopted",
+        "method": "HAT-gated compound detection; HAT is both gate and severity datum",
+        "supersedes": "outputs/legacy_mhws_method/ (MHWS detector)",
+        "threshold_pair": {
+            "thr_hs_pct": hs_pct,
+            "thr_zos_pct": zos_pct,
+            "source": pair_source,
+        },
         "definition": {
+            "wave_threshold": f"local q{hs_pct:.2f} of VHM0",
+            "level_threshold": f"local q{zos_pct:.2f} of zos (tide-free)",
+            "episode_max_gap_days": 1,
             "hat": "max(tide_daily_max) over 1993-2025 at each point",
-            "gate": "max(SWL) over shared days > HAT",
+            "gate": "max(SWL) over the shared days > HAT",
+            "swl": "(zos - mean(zos)) + tide_daily_max",
             "level_excess": "SWL - HAT",
-            "unchanged_detector": "compound_events_at_point from detection_mhws.py",
+            "peak_intensity_diagnostic": (
+                "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - HAT)]"
+            ),
+            "integrated_severity_index_component": (
+                "sum over full-criterion days of 0.5 * [norm(Hs_d - thr_hs) + "
+                "norm(SWL_d - HAT)], daily excesses pooled domain-wide"
+            ),
+            "duration_status": (
+                "computed and published as a diagnostic, no longer a hazard "
+                "index component (AUD-06)"
+            ),
             "zero_event_policy": (
                 "compound_count_total=0 and mean_integrated_severity=0; "
-                "absence of accepted events is absence of event-derived hazard"
+                "absence of accepted events is absence of event-derived hazard, "
+                "and the normalisation population stays at 808 points"
             ),
+            "wave_setup": "not used; waves act as driver and severity term only",
+        },
+        "period": {
+            "start": str(times[0].date()),
+            "end": str(times[-1].date()),
+            "years": round(n_years, 2),
+        },
+        "grid_point_count": int(len(metrics)),
+        "compound_event_total": counts["domain_events"],
+        "candidates_rejected_by_hat_gate": int(
+            pd.to_numeric(metrics.get("n_rejected_by_hat"), errors="coerce")
+            .fillna(0).sum()
+        ),
+        "band_counts": counts,
+        "thr_hs_distribution_m": {
+            "min": round(float(thr_hs.min()), 4),
+            "p05": round(float(thr_hs.quantile(0.05)), 4),
+            "median": round(float(thr_hs.median()), 4),
+            "max": round(float(thr_hs.max()), 4),
+            "n_points_below_1m": int((thr_hs < 1.0).sum()),
+            "n_points_below_1_5m": int((thr_hs < 1.5).sum()),
         },
         "parallelism": {
             "workers": args.workers,
@@ -440,22 +594,31 @@ def main() -> None:
             ],
             "serial_parallel_validation": validation,
         },
-        "rescaling_reference_percentiles": refs,
-        "acceptance_test": acceptance,
-        "thr_hs_fidelity": {
-            "reference": str(MHWS_METRICS.relative_to(ROOT)),
-            "exact_points": int((difference == 0).sum()),
-            "total_points": int(len(fidelity)),
-            "maximum_absolute_difference_m": float(difference.max()),
+        "detector_fidelity": fidelity_detector,
+        "rescaling_reference_percentiles": {
+            "low_pct": INTENSITY_REF_LOW_PCT,
+            "high_pct": INTENSITY_REF_HIGH_PCT,
+            **{key: round(value, 6) for key, value in refs.items()},
         },
+        "thr_hs_fidelity": thr_hs_fidelity,
     }
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    metrics.to_csv(OUTPUT_DIR / "compound_metrics_hat.csv", index=False)
-    (OUTPUT_DIR / "compound_summary_hat.json").write_text(
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    metrics.to_csv(output_dir / "compound_metrics_hat.csv", index=False)
+    (output_dir / "compound_summary_hat.json").write_text(
         json.dumps(summary, indent=2) + "\n"
     )
-    log.info("Acceptance test passed: %s", acceptance)
-    log.info("Saved versioned HAT snapshot: %s", OUTPUT_DIR)
+    log.info("Compound events: %d", counts["domain_events"])
+    log.info("Points with zero events: %d", counts["zero_event_points"])
+    log.info("Wrote %s", output_dir / "compound_metrics_hat.csv")
+
+    if not args.no_snapshot and output_dir == OUTPUT_DIR:
+        SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+        metrics.to_csv(SNAPSHOT_DIR / "compound_metrics_hat.csv", index=False)
+        (SNAPSHOT_DIR / "compound_summary_hat.json").write_text(
+            json.dumps(summary, indent=2) + "\n"
+        )
+        log.info("Versioned snapshot: %s", SNAPSHOT_DIR)
 
 
 if __name__ == "__main__":

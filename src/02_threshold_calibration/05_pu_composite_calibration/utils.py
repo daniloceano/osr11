@@ -96,6 +96,23 @@ def build_percentile_levels(start: float, stop: float, step: float) -> list[floa
     return [round(float(v), 10) for v in levels]
 
 
+def resolve_percentile_levels(cfg: dict) -> list[float]:
+    """Return the Step 2e threshold grid.
+
+    Since 2026-07-30 the grid is an explicit list (``cfg["pct_levels"]``),
+    because q99 does not fall on the regular 0.05 step and because AUD-02 §4
+    recorded that the selected optimum sat on the q90 edge of the old grid.
+    The start/stop/step scalars remain in the configuration for consumers that
+    still read them, and are used here only as a fallback.
+    """
+    levels = cfg.get("pct_levels")
+    if levels:
+        return [round(float(v), 10) for v in levels]
+    return build_percentile_levels(
+        cfg["pct_start"], cfg["pct_stop"], cfg["pct_step"]
+    )
+
+
 # ── Data loading: expanded events (Step 2e primary) ──────────────────────────
 
 def load_expanded_events(path: Path) -> pd.DataFrame:

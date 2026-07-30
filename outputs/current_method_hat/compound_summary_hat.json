@@ -1,0 +1,85 @@
+{
+  "generated_by": "src.compound_detection.detection_hat",
+  "method": "HAT-gated compound detection; HAT is both gate and severity datum",
+  "supersedes": "outputs/legacy_mhws_method/ (MHWS detector)",
+  "threshold_pair": {
+    "thr_hs_pct": 0.7,
+    "thr_zos_pct": 0.99,
+    "source": "outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv"
+  },
+  "definition": {
+    "wave_threshold": "local q0.70 of VHM0",
+    "level_threshold": "local q0.99 of zos (tide-free)",
+    "episode_max_gap_days": 1,
+    "hat": "max(tide_daily_max) over 1993-2025 at each point",
+    "gate": "max(SWL) over the shared days > HAT",
+    "swl": "(zos - mean(zos)) + tide_daily_max",
+    "level_excess": "SWL - HAT",
+    "peak_intensity_diagnostic": "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - HAT)]",
+    "integrated_severity_index_component": "sum over full-criterion days of 0.5 * [norm(Hs_d - thr_hs) + norm(SWL_d - HAT)], daily excesses pooled domain-wide",
+    "duration_status": "computed and published as a diagnostic, no longer a hazard index component (AUD-06)",
+    "zero_event_policy": "compound_count_total=0 and mean_integrated_severity=0; absence of accepted events is absence of event-derived hazard, and the normalisation population stays at 808 points",
+    "wave_setup": "not used; waves act as driver and severity term only"
+  },
+  "period": {
+    "start": "1993-01-01",
+    "end": "2025-12-31",
+    "years": 33.0
+  },
+  "grid_point_count": 808,
+  "compound_event_total": 16768,
+  "candidates_rejected_by_hat_gate": 15857,
+  "band_counts": {
+    "domain_events": 16768,
+    "events_north_of_15S": 431,
+    "events_south_of_25S": 10913,
+    "zero_event_points": 208,
+    "grid_points": 808
+  },
+  "thr_hs_distribution_m": {
+    "min": 0.14,
+    "p05": 0.8735,
+    "median": 1.7,
+    "max": 2.4,
+    "n_points_below_1m": 56,
+    "n_points_below_1_5m": 256
+  },
+  "parallelism": {
+    "workers": 60,
+    "phase_order": [
+      "parallel detection",
+      "global ordered Q05/Q95 barrier",
+      "parallel scoring"
+    ],
+    "serial_parallel_validation": {
+      "n_points": 30,
+      "comparison": "exact scalar equality and NumPy array_equal with identical dtype/shape (NaNs equal)",
+      "phase_1": "identical",
+      "phase_2": "identical"
+    }
+  },
+  "detector_fidelity": {
+    "n_points_checked": 30,
+    "reference": "detection_mhws.compound_events_at_point at q90/q90 with the MHWS datum",
+    "result": "identical"
+  },
+  "rescaling_reference_percentiles": {
+    "low_pct": 5.0,
+    "high_pct": 95.0,
+    "peak_wave_low": 0.2574,
+    "peak_wave_high": 2.42,
+    "peak_level_low": 0.025368,
+    "peak_level_high": 0.528491,
+    "daily_wave_low": 0.1,
+    "daily_wave_high": 2.14,
+    "daily_level_low": 0.022128,
+    "daily_level_high": 0.511197
+  },
+  "thr_hs_fidelity": {
+    "reference": "outputs/legacy_mhws_method/hazard/compound_metrics_mhws.csv",
+    "comparable": false,
+    "exact_points": 0,
+    "total_points": 808,
+    "maximum_absolute_difference_m": 0.7200000000000002
+  }
+}
