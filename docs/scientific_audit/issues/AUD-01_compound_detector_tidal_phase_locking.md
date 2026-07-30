@@ -9,14 +9,14 @@
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — nenhuma afirmação sobre hotspots ao norte de ~20°S se sustenta sem resolver ou qualificar esta questão |
-| **Status** | `reaberto` — encerrado em 2026-07-29, reaberto em 2026-07-30 sobre a incerteza remanescente (2) daquele fechamento: o poder informativo do portão de nível nunca foi medido sobre o catálogo final. Ver §14, entrada de 2026-07-30 |
+| **Status** | `reaberto` — encerrado em 2026-07-29, reaberto em 2026-07-30 sobre a incerteza remanescente (2) daquele fechamento: o poder informativo do portão de nível nunca foi medido sobre o catálogo final. Ver §14, entradas de 2026-07-30. **Decisão de adotar o portão HAT registrada em 2026-07-30, com execução e comparação pendentes** |
 | **Desfecho** | `metodologia-alterada` — detector redesenhado em 2026-07-29: a maré deixa de ser forçante e passa a variável condicionante. Fecha **em conjunto com AUD-06**, do qual é inseparável. **A afirmação de fechamento "a maré não participa mais da decisão sobre a existência do evento" é forte demais**: vale para os percentis de detecção, não para o portão `max(SWL) > MHWS`, que contém a maré e rejeitou 27,4% dos candidatos |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-12, AUD-13, AUD-16 |
 | **Relacionado a** | AUD-02, AUD-03, AUD-18 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §1 (preocupação 1), §3.1(a), §8 item 1, §9.1 item 1 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-30 |
+| **Última atualização** | 2026-07-30 (2ª revisão do dia) |
 
 ---
 
@@ -470,3 +470,15 @@ documentação e figura suplementar nova.
 | **Validação realizada** | Fases 1 e 2 idênticas em serial e paralelo nos 30 pontos de teste, por igualdade exata de escalares e arrays; teste de aceitação completo; `thr_hs` 808/808; mesma função `derive_native_hazard_index()` e mesma população nos dois braços; inspeção visual dos cinco mapas |
 | **Incerteza remanescente** | O HAT continua sendo máximo amostral dependente da janela 1993–2025, não transferível diretamente a projeções. O teste de fase continua não reexecutado sobre os catálogos finais. Portões q90/q95/q99 do detector vigente ainda não foram comparados no índice. AUD-02, AUD-04, AUD-12 e AUD-18 permanecem fora do escopo |
 | **Próxima decisão necessária** | Nenhuma adoção decorre desta comparação. Se a escolha de portão for reaberta, executar primeiro a curva q90/q95/q99/HAT e decidir explicitamente o domínio científico; não usar HAT como exclusão silenciosa |
+
+### 2026-07-30 — Decisão: adotar o HAT como portão e como datum da severidade
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Natureza da entrada** | **Registro de decisão**, não de resultado. A decisão foi tomada pelo pesquisador responsável; a execução do pipeline e a comparação de componentes estão **pendentes** na data deste registro. Nenhum número de "depois" existe ainda |
+| **Decisão** | Substituir o portão de nível `max(SWL) > MHWS` por `max(SWL) > HAT`, e medir a severidade integrada como excedência sobre o **HAT**, mantendo portão e datum no mesmo nível. Reexecutar a cadeia completa, incluindo a calibração de limiares do Step 2e, e regenerar figuras do artigo e produtos do site |
+| **Justificativa declarada** | Conhecimento prévio do domínio: não se espera perigo alto no setor macromareal do Norte, e certamente não superior ao do litoral de Santa Catarina. O portão HAT elimina a contribuição astronômica da magnitude, porque `maré ≤ HAT` por definição torna o termo astronômico do excesso sempre ≤ 0, deixando a severidade como sobrelevação descontada do déficit de maré |
+| **Ressalvas registradas no momento da decisão** | Levantadas e apresentadas antes da decisão ser reafirmada; ficam no registro para que a escolha seja auditável. **(1) A premissa já está satisfeita no índice.** Sob o método vigente a média do `Hazard_Index` por faixa é RS 0,826, SC/PR 0,585, SP/RJ 0,454, ES/BA-S 0,255, BA-N 0,177, NE 0,125, **N equatorial 0,167**, AP 0,288 — o Norte já está a um terço de SC. O defeito real está na **componente de severidade**, onde AP marca 0,429 contra 0,438 de SC/PR, praticamente empatados, e onde a decomposição de 2026-07-30 mostrou que 56% do excesso no AP e 58% no N equatorial são astronômicos. **(2) O portão HAT não é uma intervenção regional.** A perda de eventos é: RS −20,3%, SC/PR −44,4%, SP/RJ −52,6% (17 pontos zerados), ES/BA-S −93,1%, BA-N −99,6%, NE −99,2%, N equatorial −96,2%, AP −94,7%; 248 dos 808 pontos ficam sem evento. Como a normalização é Min-Max sobre o domínio, a escala do índice é redefinida inclusive no litoral tomado como referência de perigo alto. **(3) A ordem seguida difere da adotada em 2026-07-29**, quando a comparação de métodos precedeu a adoção e revelou que a componente de duração revertia a correção pretendida — achado que bloqueou a adoção até AUD-06. Aqui a adoção precede a comparação. **(4) O HAT é estatística de ordem extrema** sobre 33 anos, dependente do comprimento do registro, ao contrário do `A_M2 + A_S2`, que é analítico; o conjunto de eventos passa a depender da janela temporal e não é transferível a projeções. **(5) A recalibração do Step 2e muda de natureza**: o alvo é a base de eventos reportados de SC, e sob HAT o próprio SC perde 44% dos eventos detectáveis |
+| **Consequências falsificáveis a verificar na execução** | Se a decisão estiver correta, espera-se: (a) `ρ(\|lat\|, Hazard_Severity)` claramente positivo, com o AP deixando de empatar com SC/PR; (b) o gradiente S→N do índice preservado ou reforçado; (c) o ranking municipal estável no Sul e no Sudeste, apesar da perda de 44–53% dos eventos nessas faixas. **Se (c) falhar — isto é, se o ranking do Sul/Sudeste se mover de forma relevante —, a mudança terá corrigido o Norte às custas da região de maior confiança física, e a decisão deve ser reaberta** |
+| **Alterações implementadas nesta entrada** | Nenhuma além desta documentação. Pipeline, catálogo, índice, site e figuras permanecem no método MHWS |
+| **Próxima decisão necessária** | Executar a comparação de componentes MHWS × HAT **antes** de regenerar produtos publicados, e confrontar o resultado com as consequências falsificáveis acima. Definir o tratamento dos 248 pontos sem evento, que hoje seriam descartados pelo `dropna()` de `derive_native_hazard_index` e fariam os dois braços normalizar sobre populações diferentes |

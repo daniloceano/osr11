@@ -1,0 +1,206 @@
+{
+  "created_utc": "2026-07-30T18:22:46.331565+00:00",
+  "dataset": "CMEMS GLORYS12V1",
+  "product": "GLOBAL_MULTIYEAR_PHY_001_030",
+  "variable": "zos",
+  "source_files": "data/raw/glorys/glorys_zos_YYYY-MM.nc",
+  "source_file_count": 396,
+  "temporal_resolution": "daily mean (one value per day)",
+  "target_year": 2024,
+  "domain": {
+    "west": -52.0,
+    "east": -41.5,
+    "south": -4.5,
+    "north": 5.5
+  },
+  "processing": "2024 daily zos minus the 1993\u20132023 mean for the same day of year; no temporal interpolation",
+  "color_scale_policy": {
+    "type": "discrete and period-specific",
+    "negative_values": "#525252",
+    "zero_to_0.1_m": "#4E4B65",
+    "maximum_rule": "exact maximum within each animation domain and period",
+    "full_palette": [
+      "#525252",
+      "#4E4B65",
+      "#48519C",
+      "#3B7FBD",
+      "#D9E545",
+      "#E6AF40",
+      "#E68E42",
+      "#E46E44",
+      "#D23A66",
+      "#A4294F",
+      "#661631"
+    ]
+  },
+  "interpretation": "Tide-free dynamic sea-surface-height anomaly used as a surge proxy. It is not a pure meteorological residual and may include steric, circulation, and river-discharge variability on the Amazon shelf.",
+  "climatology_shape": {
+    "dayofyear": 366,
+    "latitude": 121,
+    "longitude": 127
+  },
+  "animations": [
+    {
+      "path": "outputs/exploratory_zos_surge_animation_2024/animations/zos_anomaly_marapa_january_2024_daily.mp4",
+      "start": "2024-01-01",
+      "end": "2024-01-31",
+      "frames": 31,
+      "fps": 4,
+      "size_bytes": 425903,
+      "color_scale": {
+        "type": "discrete",
+        "minimum_m": -0.05764060413404817,
+        "maximum_m": 0.23175362287269485,
+        "bounds_m": [
+          -0.05764060413404817,
+          0.0,
+          0.1,
+          0.11463929143029944,
+          0.12927858286059885,
+          0.14391787429089828,
+          0.1585571657211977,
+          0.17319645715149715,
+          0.18783574858179658,
+          0.20247504001209599,
+          0.21711433144239542,
+          0.23175362287269485
+        ],
+        "tick_labels": [
+          "<0",
+          "0\u20130,1",
+          "0,1\u20130,115",
+          "0,115\u20130,129",
+          "0,129\u20130,144",
+          "0,144\u20130,159",
+          "0,159\u20130,173",
+          "0,173\u20130,188",
+          "0,188\u20130,202",
+          "0,202\u20130,217",
+          "0,217\u20130,232"
+        ],
+        "colors": [
+          "#525252",
+          "#4E4B65",
+          "#48519C",
+          "#3B7FBD",
+          "#D9E545",
+          "#E6AF40",
+          "#E68E42",
+          "#E46E44",
+          "#D23A66",
+          "#A4294F",
+          "#661631"
+        ],
+        "maximum_rule": "exact maximum within animation domain and period"
+      }
+    },
+    {
+      "path": "outputs/exploratory_zos_surge_animation_2024/animations/zos_anomaly_marapa_july_2024_daily.mp4",
+      "start": "2024-07-01",
+      "end": "2024-07-31",
+      "frames": 31,
+      "fps": 4,
+      "size_bytes": 732099,
+      "color_scale": {
+        "type": "discrete",
+        "minimum_m": -0.06749512928147472,
+        "maximum_m": 0.23261995475378727,
+        "bounds_m": [
+          -0.06749512928147472,
+          0.0,
+          0.1,
+          0.11473555052819859,
+          0.12947110105639717,
+          0.14420665158459578,
+          0.15894220211279436,
+          0.17367775264099294,
+          0.18841330316919153,
+          0.2031488536973901,
+          0.2178844042255887,
+          0.23261995475378727
+        ],
+        "tick_labels": [
+          "<0",
+          "0\u20130,1",
+          "0,1\u20130,115",
+          "0,115\u20130,129",
+          "0,129\u20130,144",
+          "0,144\u20130,159",
+          "0,159\u20130,174",
+          "0,174\u20130,188",
+          "0,188\u20130,203",
+          "0,203\u20130,218",
+          "0,218\u20130,233"
+        ],
+        "colors": [
+          "#525252",
+          "#4E4B65",
+          "#48519C",
+          "#3B7FBD",
+          "#D9E545",
+          "#E6AF40",
+          "#E68E42",
+          "#E46E44",
+          "#D23A66",
+          "#A4294F",
+          "#661631"
+        ],
+        "maximum_rule": "exact maximum within animation domain and period"
+      }
+    },
+    {
+      "path": "outputs/exploratory_zos_surge_animation_2024/animations/zos_anomaly_marapa_year_2024_daily.mp4",
+      "start": "2024-01-01",
+      "end": "2024-12-31",
+      "frames": 366,
+      "fps": 12,
+      "size_bytes": 4529452,
+      "color_scale": {
+        "type": "discrete",
+        "minimum_m": -0.12309788455886225,
+        "maximum_m": 0.33541810818977896,
+        "bounds_m": [
+          -0.12309788455886225,
+          0.0,
+          0.1,
+          0.12615756757664212,
+          0.1523151351532842,
+          0.17847270272992632,
+          0.20463027030656844,
+          0.23078783788321053,
+          0.25694540545985267,
+          0.28310297303649473,
+          0.30926054061313685,
+          0.33541810818977896
+        ],
+        "tick_labels": [
+          "<0",
+          "0\u20130,1",
+          "0,1\u20130,126",
+          "0,126\u20130,152",
+          "0,152\u20130,178",
+          "0,178\u20130,205",
+          "0,205\u20130,231",
+          "0,231\u20130,257",
+          "0,257\u20130,283",
+          "0,283\u20130,309",
+          "0,309\u20130,335"
+        ],
+        "colors": [
+          "#525252",
+          "#4E4B65",
+          "#48519C",
+          "#3B7FBD",
+          "#D9E545",
+          "#E6AF40",
+          "#E68E42",
+          "#E46E44",
+          "#D23A66",
+          "#A4294F",
+          "#661631"
+        ],
+        "maximum_rule": "exact maximum within animation domain and period"
+      }
+    }
+  ]
+}
