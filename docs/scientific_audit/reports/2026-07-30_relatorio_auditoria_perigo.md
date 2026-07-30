@@ -1,9 +1,9 @@
 # Revisão da definição de evento composto e do índice de perigo costeiro
 
 **Relatório técnico-científico — OSR11**
-**Data:** 29 de julho de 2026
-**Escopo:** questões de auditoria AUD-17, AUD-01 e AUD-06
-**Situação:** as três encerradas; nove permanecem abertas
+**Data:** 30 de julho de 2026
+**Escopo:** questões de auditoria AUD-17, AUD-01, AUD-06 e AUD-04
+**Situação:** AUD-01, AUD-04 e AUD-06 encerradas; AUD-17 encerrada em seis de oito itens
 
 ---
 
@@ -364,7 +364,79 @@ posição independentemente do perigo atribuído.
 
 ---
 
-## 7. Correções documentais associadas
+## 7. A associação entre pontos de grade e municípios
+
+Cada município recebe o valor de perigo de um ponto da grade oceânica. A revisão
+identificou que a regra descrita na documentação — *"o ponto de maior contagem
+de eventos compostos"* — não se reproduzia: apenas 15,7 % a 24,6 % das
+atribuições correspondiam a ela, contra 59,3 % que correspondiam simplesmente ao
+ponto mais próximo.
+
+### 7.1 A origem da regra
+
+A autora da associação esclareceu que o procedimento foi conduzido por
+**inspeção visual em ambiente SIG, município a município**, arbitrando
+simultaneamente dois critérios: proximidade e atividade de eventos no ponto
+candidato. Não existe rotina computacional, e nenhuma pode ser recuperada.
+
+Isso explica exatamente o padrão observado: quem equilibra dois critérios a olho
+não coincide sistematicamente com nenhum deles isoladamente.
+
+### 7.2 As escolhas são sistemáticas
+
+Testamos se as decisões manuais eram arbitrárias. Nos 114 municípios em que a
+autora não selecionou o ponto mais próximo, **62 %** dos pontos escolhidos
+apresentam limiar local de altura de onda **maior** que o do ponto mais próximo
+(mediana 1,77 m contra 1,69 m). Esse é o comportamento esperado de quem evita
+deliberadamente pontos abrigados no interior de baías.
+
+Vários casos inicialmente classificados como erro — Caraguatatuba, Colares,
+Vigia — são municípios de enseada ou baía, nos quais selecionar um ponto
+oceânico mais distante é plausivelmente a decisão correta, e uma regra
+puramente geométrica erraria. A classificação de erro foi retirada.
+
+### 7.3 O que foi feito
+
+O problema não era a regra, e sim que o artefato **não estava sob controle de
+versão**: existia apenas dentro do arquivo entregue, que é excluído do
+versionamento. Sua perda implicaria a perda irrecuperável do valor de perigo dos
+280 municípios.
+
+A associação passou a ser tratada pelo que é — **um conjunto de dados de entrada
+produzido por julgamento de especialista** — e foi arquivada como tal, com
+proveniência declarando autoria, método, origem e limitações. O processamento
+passou a consumir o artefato arquivado e a verificá-lo contra o arquivo
+entregue, interrompendo a execução em caso de divergência. Nenhum valor de
+perigo foi alterado.
+
+Julgamento de especialista é entrada legítima em ciência — como uma linha de
+costa digitalizada ou uma classificação geomorfológica — desde que arquivado,
+descrito e com limitações declaradas. O que não era admissível era a
+documentação descrever uma regra determinística que nunca existiu.
+
+### 7.4 Propriedades a reportar
+
+| | |
+|---|---|
+| Municípios com ponto associado | 280 de 282 |
+| Pontos de grade distintos | **178** |
+| Máximo de municípios por ponto | **9** |
+| Distância município → ponto, mediana | 13,1 km |
+| Distância município → ponto, máxima | 89,2 km |
+| Atribuições acima de 30 km | 20 |
+
+Duas consequências decorrem e devem acompanhar qualquer resultado derivado. Os
+valores de perigo **não são espacialmente independentes** entre municípios
+vizinhos, já que 178 pontos servem 280 unidades. E os municípios do fundo da
+Baía de Guanabara **não possuem ponto de grade algum num raio de 30 km**: seu
+perigo refere-se necessariamente à plataforma aberta e não representa as
+condições no interior da baía. Testamos cinco regras alternativas de associação
+e todas retornam o mesmo valor nesses casos — trata-se de limitação de
+cobertura da grade, não da regra de atribuição.
+
+---
+
+## 8. Correções documentais associadas
 
 Paralelamente, foram corrigidas inconsistências factuais entre a documentação do
 projeto e o cálculo efetivamente executado, sem alteração de qualquer valor
@@ -382,7 +454,7 @@ manuscrito e a coluna correspondente publicada.
 
 ---
 
-## 8. Reprodutibilidade
+## 9. Reprodutibilidade
 
 O método anterior foi integralmente preservado, com seus produtos de perigo e de
 risco arquivados e documentados, de modo que qualquer resultado publicado antes

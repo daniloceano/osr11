@@ -892,6 +892,63 @@ et al. (2024). This is the only part of the chain that uses PCA.
 
 ---
 
+### 2026-07-29 — Compound detector redesigned; duration retired from the hazard index
+
+**[DECISION — the tide becomes a conditioning variable, and the index carries
+two components]** This supersedes the decision recorded on 2026-07-27 above,
+which promoted frequency, duration and intensity as three equally weighted
+components.
+
+Two independent problems were established by the scientific audit (records
+AUD-01 and AUD-06) and turned out to be inseparable.
+
+*Detection.* The level driver was `SSH_total = zos + tide`. Where the tide is
+macrotidal it carries 96–98 % of the variance of that sum, so a local q90 on it
+became the spring-tide envelope and exceedances recurred fortnightly by
+construction. A Rayleigh test of compound start dates against the 14.765-day
+spring-neap period found significant phase locking at 88.5 % of the 808 grid
+points and at 100 % of those north of 20° S, against 5 % in Rio Grande do Sul.
+The variance ratio var(tide)/var(SSH_total) correlates with that statistic at
+Spearman 0.837, confirming the mechanism.
+
+The detector now uses the **dynamic sea level alone** for the level driver, and
+the tide re-enters as a **conditioning variable**: an event additionally
+requires the still water level, referenced to local mean sea level, to exceed
+the local **mean high water springs** datum, computed as the sum of the M2 and
+S2 amplitudes from FES2022. The tide no longer decides whether an event
+occurred; it decides whether the water rose above the level the coast routinely
+experiences. No wave-setup term is included: waves already act as a driver and
+as half of the severity term, and a defensible setup parameterisation would
+require wave period and beach slope, neither available across the domain.
+
+*Index.* The duration component measured the number of days on which two
+percentile tests happened to agree — a statistical coincidence rather than a
+physical duration — over a domain-wide range of about one day imposed by the
+daily resolution of the sea-level field, and it anticorrelated with frequency
+(Spearman −0.550), so the two cancelled inside the equal-weight mean. It is
+replaced by the **integrated severity**: the compound severity summed over the
+days on which all detection criteria hold, so magnitude and persistence enter as
+one quantity. That quantity correlates with frequency at **+0.599**, i.e. the
+components now reinforce rather than cancel.
+
+    Hazard_Index_raw = [ norm(compound_count_total) + norm(mean_integrated_severity) ] / 2
+    Hazard_Index     = norm(Hazard_Index_raw)
+
+Duration and the peak-based intensity remain computed and published as
+diagnostics; they simply no longer enter the index.
+
+*Outcome.* The hazard field acquired a monotonic south-to-north gradient
+(Spearman with absolute latitude +0.584), consistent with the extratropical
+cyclone climatology of the South Atlantic. In the municipal risk ranking, the
+share of the top ten located north of 20° S fell from 70 % to 50 %. Neither
+change is defensible alone: applying the detector revision while retaining the
+duration raises that share to 90 %.
+
+*Preserved.* The superseded products are archived under
+`outputs/legacy_ssh_total_method/`, and the two methods are compared under
+`outputs/method_comparison_ssh_total_vs_mhws/`.
+
+
 ## References
 
 - Camus, P., Haigh, I. D., Nasr, A. A., Wahl, T., Darby, S. E., & Nicholls, R. J. (2021). Regional analysis of multivariate compound flooding potential: sensitivity analysis and spatial patterns. *Natural Hazards and Earth System Sciences*, 21, 2021–2042. https://doi.org/10.5194/nhess-21-2021-2021

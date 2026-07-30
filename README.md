@@ -340,10 +340,11 @@ Only one quantity is read from the shapefile by name, and DBF truncation means i
 can arrive under several spellings; the resolved alias is recorded in the metadata:
 - `SVI_Coast_2022` maps to `SVI_Coast_`
 
-`Hazard_Index` is calculated on the native grid from frequency, duration, and
-intensity and transferred by `grid_lat`/`grid_lon` **without renormalization**.
-`Risk_Hazard_raw` and the normalized `Risk_Hazard` are then derived from this
-hazard and SVI. The delivered `Haz_index`/`Risk_comp`/`Risk_harza` columns are
+`Hazard_Index` is calculated on the native grid from compound-event frequency
+and mean integrated severity, and transferred by `grid_lat`/`grid_lon`
+**without renormalization**. `Risk_Hazard_raw` and the normalized `Risk_Hazard`
+are then derived from that hazard together with the exposure and vulnerability
+components. The delivered `Haz_index`/`Risk_comp`/`Risk_harza` columns are
 not read at all — they were computed with a superseded definition. If
 `outputs/risk_index/risk_index.shp` is absent the export raises
 `FileNotFoundError`; there is no fallback to a previous export.

@@ -26,7 +26,7 @@
 >
 > As demais 15 questões estão com situação `aberto` e desfecho vazio.
 >
-> Relatório para coautores: [`reports/2026-07-29_relatorio_auditoria_perigo.md`](reports/2026-07-29_relatorio_auditoria_perigo.md).
+> Relatório para coautores: [`reports/2026-07-30_relatorio_auditoria_perigo.md`](reports/2026-07-30_relatorio_auditoria_perigo.md).
 
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).

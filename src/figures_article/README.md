@@ -62,8 +62,10 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
   - `outputs/risk_index/risk_index.dbf`
   - `outputs/risk_index/risk_index.prj`
   - `outputs/risk_index/risk_index.cpg` if available
-- Original ocean-point compound hazard metrics:
-  - preferred: `outputs/storm_catalog/compound/compound_metrics.csv`
+- Ocean-point compound hazard metrics:
+  - current: `outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv`
+  - superseded SSH_total product, archived for comparison:
+    `outputs/legacy_ssh_total_method/hazard/compound_metrics.csv`
   - fallback candidates:
     - `site/public/data/hazard_characterization_grid_metrics.json`
     - `site/public/data/storm_maps_grid_metrics.json`
@@ -74,24 +76,25 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 
 - `coastal_hazard_index_components.png`
   - A 2 × 2 panel showing mean annual compound-event frequency
-    (events yr⁻¹), mean overlap duration (days), mean compound intensity
-    (dimensionless), and the resulting 0--1 Hazard Index.
+    (events yr⁻¹), mean integrated severity (dimensionless), mean overlap
+    duration (days, a published diagnostic that is **not** an index component),
+    and the resulting 0--1 Hazard Index.
   - Panels A--C display the native-grid catalog values without the additional
-    cross-grid Min--Max scaling. The intensity is the dimensionless
-    event-level compound metric stored in the catalog: the excess of each
-    driver over its own local q90 detection threshold, rescaled by the
-    domain-wide Q05/Q95 of those excesses. Subtracting the local baseline
-    keeps the astronomical tide out of the severity score (superseded
-    absolute-peak variant retained as `*_abspeak`).
-  - For the Hazard calculation, the three components are still Min--Max
-    normalized independently across all 808 native ocean-grid points. Their
-    equal-weight mean is normalized again to 0--1.
+    cross-grid Min--Max scaling. The integrated severity sums, over the days on
+    which all detection criteria hold, the excess of each driver over its own
+    local reference — the local q90 for waves and the mean high water springs
+    datum for level — rescaled by the domain-wide Q05/Q95 of those daily
+    excesses. Magnitude and persistence therefore enter as a single quantity.
+  - For the Hazard calculation, the two components are Min--Max normalized
+    independently across all 808 native ocean-grid points. Their equal-weight
+    mean is normalized again to 0--1. The duration was retired from the index
+    in 2026-07-29; see the audit record AUD-06.
   - Every panel is projected onto Natural Earth coastline segments of at most
     5 km. Each segment receives the value at its nearest grid point in SIRGAS
     2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
   - Panel A: `Hazard_Index_mun` — municipal-renormalized
-    `Hazard_Index = norm_native[(norm_native(frequency) + norm_native(duration) + norm_native(intensity))/3]`
+    `Hazard_Index = norm_native[(norm_native(frequency) + norm_native(integrated severity))/2]`
   - Panel B: `Exposure_Index` — INFORM-style municipal population exposure
   - Panel C: `SVI_Coast_2022`
   - Panel D: current
@@ -134,15 +137,14 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 ## Coastal-Line Map — Values and Shared Implementation
 
 The coastal-line map displays panels A--C in the catalog's own units
-(events yr⁻¹, days, dimensionless) and panel D as the final composite index.
+(events yr⁻¹, dimensionless, days) and panel D as the final composite index.
 The cross-grid Min--Max normalization below is internal to the index
 construction and is **not** applied to the displayed component values:
 
 ```text
 Hazard_Frequency = norm_native(compound_count_total)
-Hazard_Duration = norm_native(mean_overlap_duration)
-Hazard_Intensity = norm_native(mean_compound_intensity_norm)
-Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3
+Hazard_Severity  = norm_native(mean_integrated_severity)
+Hazard_Index_raw = (Hazard_Frequency + Hazard_Severity) / 2
 Hazard_Index = norm_native(Hazard_Index_raw)
 ```
 
