@@ -368,8 +368,11 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         bold: true,
       },
       {
+        // The detection compares raw zos against the q90 of raw zos; both are
+        // shifted here by the same local mean, so the crossings are identical
+        // and the label must name the shifted frame it is drawn in.
         y: levelScale.yOf(point.thresholds.thr_zos_anomaly_m),
-        text: `q90 zos = ${format(point.thresholds.thr_zos_anomaly_m, 2)} m`,
+        text: `q90 zos′ = ${format(point.thresholds.thr_zos_anomaly_m, 2)} m`,
         color: INK.muted,
       },
       {
@@ -441,7 +444,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         </span>
         <Readout color={SERIES.hs} label="Hₛ" value={readoutDay === null ? null : series.hs[readoutDay]} />
         <Readout color={SERIES.swl} label="Still water level" value={readoutDay === null ? null : swl[readoutDay]} />
-        <Readout color={SERIES.zos} label="zos anomaly" value={readoutDay === null ? null : series.zos[readoutDay]} />
+        <Readout color={SERIES.zos} label="zos′ (detection variable)" value={readoutDay === null ? null : series.zos[readoutDay]} />
         <Readout color={SERIES.tide} label="Astronomical tide" value={readoutDay === null ? null : series.tide[readoutDay]} />
       </div>
 
@@ -719,7 +722,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-gray-600">
         <LegendItem color={SERIES.hs} label="Hₛ (upper panel)" />
         <LegendItem color={SERIES.swl} label="Still water level zos′ + tide" width={3} />
-        <LegendItem color={SERIES.zos} label="zos anomaly (zos − local mean)" />
+        <LegendItem color={SERIES.zos} label="zos′ = zos − local mean, the sea-level detection variable" />
         <LegendItem color={SERIES.tide} label="Astronomical tide (daily maximum)" />
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-4 rounded-sm bg-gray-900/10" />
