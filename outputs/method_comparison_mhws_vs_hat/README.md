@@ -211,7 +211,9 @@ Estes resultados não autorizam adotar HAT como método vigente.
 
 Em todos os mapas, valores exatamente iguais a zero são mostrados em cinza
 claro, separados visualmente da primeira classe positiva. Essa convenção é
-apenas cartográfica e não altera valores, normalização ou estatísticas.
+indicada na própria barra de cores por um bloco cinza `0.00`; os demais rótulos
+também usam duas casas decimais. A mudança é apenas cartográfica e não altera
+valores, normalização ou estatísticas.
 
 O instantâneo versionado do braço HAT está em `outputs/hat_method/`.
 

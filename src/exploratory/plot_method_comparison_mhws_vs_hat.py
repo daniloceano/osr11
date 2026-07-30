@@ -24,14 +24,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import ListedColormap
-from matplotlib.patches import Patch
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.patches import Rectangle
 
 from src.exploratory.plot_method_comparison_maps import (
     DIFF_BOUNDARIES,
     SEGMENT_LINEWIDTH,
     VALUE_BOUNDARIES,
-    _colorbar,
     _draw_segments,
     _setup_axis,
 )
@@ -87,6 +87,63 @@ def _draw_exact_zeros(
     return len(geometries)
 
 
+def _colorbar_with_zero(
+    figure: plt.Figure,
+    axis: plt.Axes,
+    *,
+    cmap: ListedColormap,
+    boundaries: np.ndarray,
+    label: str,
+    ticks: np.ndarray,
+) -> None:
+    """Draw a two-decimal colorbar with a dedicated exact-zero gray swatch."""
+    position = axis.get_position()
+    gap = position.width * 0.100
+    zero_width = position.width * 0.105
+    bar_width = position.width - zero_width - gap
+    y = position.y0 - 0.055
+    height = 0.016
+
+    zero_axis = figure.add_axes([position.x0, y, zero_width, height])
+    zero_axis.add_patch(
+        Rectangle(
+            (0.0, 0.0),
+            1.0,
+            1.0,
+            facecolor=ZERO_COLOR,
+            edgecolor="#737373",
+            linewidth=0.7,
+        )
+    )
+    zero_axis.set_xlim(0.0, 1.0)
+    zero_axis.set_ylim(0.0, 1.0)
+    zero_axis.set_xticks([0.5], labels=["0.00"])
+    zero_axis.set_yticks([])
+    zero_axis.tick_params(axis="x", labelsize=7.2, length=2.6)
+    for spine in zero_axis.spines.values():
+        spine.set_visible(False)
+
+    color_axis = figure.add_axes(
+        [position.x0 + zero_width + gap, y, bar_width, height]
+    )
+    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+    mappable = ScalarMappable(norm=norm, cmap=cmap)
+    mappable.set_array([])
+    bar = figure.colorbar(
+        mappable,
+        cax=color_axis,
+        orientation="horizontal",
+        boundaries=boundaries,
+        ticks=ticks,
+        spacing="uniform",
+        drawedges=True,
+    )
+    bar.ax.set_xticklabels([f"{value:.2f}" for value in ticks])
+    bar.set_label(label, fontsize=8.5, labelpad=2.0)
+    bar.ax.tick_params(labelsize=7.2, length=2.6)
+    bar.outline.set_linewidth(0.7)
+
+
 def _build(
     segments: gpd.GeoDataFrame,
     coastline: gpd.GeoDataFrame,
@@ -131,19 +188,7 @@ def _build(
         )
         _draw_context(axis, coastline)
         _draw_segments(axis, segments, column, cmap, boundaries)
-        if _draw_exact_zeros(axis, segments, column):
-            axis.legend(
-                handles=[
-                    Patch(
-                        facecolor=ZERO_COLOR,
-                        edgecolor="#AFAFAF",
-                        label="valor exatamente 0",
-                    )
-                ],
-                loc="lower left",
-                fontsize=7.2,
-                framealpha=0.94,
-            )
+        _draw_exact_zeros(axis, segments, column)
         values = pd.to_numeric(segments[column], errors="coerce").dropna()
         statistics[column] = {
             "min": round(float(values.min()), 4),
@@ -160,29 +205,32 @@ def _build(
     figure.subplots_adjust(
         left=0.045, right=0.985, top=0.88, bottom=0.16, wspace=0.10
     )
-    _colorbar(
+    value_ticks = np.append(VALUE_BOUNDARIES[1::2], VALUE_BOUNDARIES[-1])
+    difference_ticks = DIFF_BOUNDARIES[::2]
+    difference_ticks = difference_ticks[difference_ticks != 0.0]
+    _colorbar_with_zero(
         figure,
         axes[0],
         cmap=value_cmap,
         boundaries=VALUE_BOUNDARIES,
         label="componente normalizada (0–1)",
-        tick_format="%.2f",
+        ticks=value_ticks,
     )
-    _colorbar(
+    _colorbar_with_zero(
         figure,
         axes[1],
         cmap=value_cmap,
         boundaries=VALUE_BOUNDARIES,
         label="componente normalizada (0–1)",
-        tick_format="%.2f",
+        ticks=value_ticks,
     )
-    _colorbar(
+    _colorbar_with_zero(
         figure,
         axes[2],
         cmap=diff_cmap,
         boundaries=DIFF_BOUNDARIES,
         label="diferença (vermelho = HAT maior)",
-        tick_format="%.2f",
+        ticks=difference_ticks,
     )
     figure.text(
         0.5,
