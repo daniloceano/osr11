@@ -64,6 +64,22 @@ export interface TimeSeriesIndex {
   points: TimeSeriesIndexEntry[];
 }
 
+/** A candidate level datum, with what the same detector does under it. */
+export interface LevelDatum {
+  key: string;
+  label: string;
+  value_m: number;
+  source: string;
+  in_force: boolean;
+  n_events: number;
+  n_rejected: number;
+  n_event_days: number;
+  /** Share of accepted events the tide alone would have carried over. */
+  frac_tide_alone: number | null;
+  mean_meteo_term_m: number | null;
+  mean_astro_term_m: number | null;
+}
+
 export interface CompoundEvent {
   start_index: number;
   end_index: number;
@@ -88,6 +104,7 @@ export interface PointTimeSeries {
   thresholds: TimeSeriesThresholds;
   point_metrics: TimeSeriesPointMetrics;
   index_components: string[];
+  datums: LevelDatum[];
   selection_features: TimeSeriesSelectionFeatures;
   daily: {
     units: string;

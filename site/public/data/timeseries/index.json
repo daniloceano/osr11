@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-30T11:12:41.514863+00:00",
+  "generated_at": "2026-07-30T14:15:26.186997+00:00",
   "implementation": "src/site/export_timeseries_panel_data.py",
   "source_dataset": "data/unified/metocean_brazil_unified_waverys_grid.nc",
   "detection": "MHWS-conditioned compound detection (tide as conditioning variable)",
@@ -46,7 +46,7 @@
       "state": "SC",
       "latitude_band": "SC/PR",
       "file": "p01.json",
-      "file_size_kb": 171.8,
+      "file_size_kb": 172.9,
       "n_municipalities_served": 1,
       "n_events": 202,
       "selection_features": {
@@ -82,7 +82,7 @@
       "state": "RJ",
       "latitude_band": "SP/RJ",
       "file": "p02.json",
-      "file_size_kb": 180.8,
+      "file_size_kb": 182.0,
       "n_municipalities_served": 1,
       "n_events": 256,
       "selection_features": {
@@ -118,7 +118,7 @@
       "state": "RJ",
       "latitude_band": "SP/RJ",
       "file": "p03.json",
-      "file_size_kb": 164.2,
+      "file_size_kb": 165.4,
       "n_municipalities_served": 2,
       "n_events": 180,
       "selection_features": {
@@ -154,7 +154,7 @@
       "state": "BA",
       "latitude_band": "ES/BA-S",
       "file": "p04.json",
-      "file_size_kb": 136.5,
+      "file_size_kb": 137.7,
       "n_municipalities_served": 1,
       "n_events": 71,
       "selection_features": {
@@ -190,7 +190,7 @@
       "state": "BA",
       "latitude_band": "BA-N",
       "file": "p05.json",
-      "file_size_kb": 134.5,
+      "file_size_kb": 135.6,
       "n_municipalities_served": 1,
       "n_events": 43,
       "selection_features": {
@@ -226,7 +226,7 @@
       "state": "AL",
       "latitude_band": "BA-N",
       "file": "p06.json",
-      "file_size_kb": 129.8,
+      "file_size_kb": 130.9,
       "n_municipalities_served": 2,
       "n_events": 30,
       "selection_features": {
@@ -262,7 +262,7 @@
       "state": "CE",
       "latitude_band": "N_equatorial",
       "file": "p07.json",
-      "file_size_kb": 130.0,
+      "file_size_kb": 131.2,
       "n_municipalities_served": 1,
       "n_events": 12,
       "selection_features": {
@@ -298,7 +298,7 @@
       "state": "CE",
       "latitude_band": "N_equatorial",
       "file": "p08.json",
-      "file_size_kb": 129.1,
+      "file_size_kb": 130.3,
       "n_municipalities_served": 1,
       "n_events": 14,
       "selection_features": {
@@ -334,7 +334,7 @@
       "state": "MA",
       "latitude_band": "N_equatorial",
       "file": "p09.json",
-      "file_size_kb": 133.8,
+      "file_size_kb": 135.0,
       "n_municipalities_served": 2,
       "n_events": 46,
       "selection_features": {

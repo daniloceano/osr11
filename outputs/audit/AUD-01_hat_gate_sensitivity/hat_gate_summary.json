@@ -1,0 +1,39 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_hat_gate_sensitivity",
+  "question": "Does the MHWS level gate require the meteorological contribution, what survives an HAT gate, and is a HAT gate with an MHWS excess internally coherent?",
+  "hat_definition": "max of tide_daily_max over 1993-2025 (33 years)",
+  "n_points": 808,
+  "north_of_15S": {
+    "n_points": 449,
+    "mean_mhws_m": 1.4872,
+    "mean_hat_m": 2.058,
+    "mean_hat_minus_mhws_m": 0.5708,
+    "events_mhws_gate": 14582,
+    "events_hat_gate": 545,
+    "frac_tide_alone_mhws": 0.7299,
+    "frac_tide_alone_hat": 0.0,
+    "mhws_excess_meteo_m": 0.1016,
+    "mhws_excess_astro_m": 0.1079,
+    "hat_excess_meteo_m": 0.1337,
+    "hat_excess_astro_m": -0.0952
+  },
+  "south_of_25S": {
+    "n_points": 144,
+    "mean_mhws_m": 0.2146,
+    "mean_hat_m": 0.5494,
+    "mean_hat_minus_mhws_m": 0.3348,
+    "events_mhws_gate": 34965,
+    "events_hat_gate": 24196,
+    "frac_tide_alone_mhws": 0.7962,
+    "frac_tide_alone_hat": 0.0,
+    "mhws_excess_meteo_m": 0.3343,
+    "mhws_excess_astro_m": 0.0761,
+    "hat_excess_meteo_m": 0.3676,
+    "hat_excess_astro_m": -0.2131
+  },
+  "domain_totals": {
+    "events_mhws_gate": 79639,
+    "events_hat_gate": 37225,
+    "points_with_zero_events_under_hat": 248
+  }
+}

@@ -80,6 +80,18 @@ POINT_METRIC_FIELDS = (
 )
 INDEX_COMPONENTS = ("compound_count_total", "mean_integrated_severity")
 
+#: Candidate level datums drawn on the panel so the reader can see how the
+#: event condition would move. Only MHWS is in force; the others are the
+#: sensitivity candidates of AUD-01, evaluated here per point with the same
+#: detector so the drawn lines carry their consequence. ``None`` means the
+#: quantile is replaced by the maximum of the record, the HAT estimate.
+CANDIDATE_DATUMS = (
+    ("q90_tide", "q90 tide", 0.90),
+    ("q95_tide", "q95 tide", 0.95),
+    ("q99_tide", "q99 tide", 0.99),
+    ("hat", "HAT", None),
+)
+
 
 def _cm(values: np.ndarray) -> list[int | None]:
     """Whole centimetres, with ``None`` where the record is missing."""
@@ -159,6 +171,74 @@ def export_point(
             "match this point; expected exactly one"
         )
     published_row = published.iloc[0]
+    # The same detector re-run against each candidate datum. This changes
+    # nothing in the published catalogue: it is the sensitivity the reader is
+    # looking at, computed on the fly so the drawn line has a number attached.
+    tide_finite = tide[finite]
+    datums = [
+        {
+            "key": "mhws",
+            "label": "MHWS",
+            "value_m": round(float(mhws), 4),
+            "source": "A_M2 + A_S2, FES2022 harmonic constants",
+            "in_force": True,
+        }
+    ]
+    for key, label, quantile in CANDIDATE_DATUMS:
+        value = (
+            float(np.nanmax(tide_finite))
+            if quantile is None
+            else float(np.nanquantile(tide_finite, quantile))
+        )
+        datums.append(
+            {
+                "key": key,
+                "label": label,
+                "value_m": round(value, 4),
+                "source": (
+                    "max of tide_daily_max, 1993-2025 (HAT estimate)"
+                    if quantile is None
+                    else f"q{quantile:.2f} of tide_daily_max"
+                ),
+                "in_force": False,
+            }
+        )
+    for entry in datums:
+        candidate_events, candidate_context = compound_events_at_point(
+            hs=hs, zos=zos, tide=tide, finite=finite, mhws=entry["value_m"]
+        )
+        entry["n_events"] = len(candidate_events)
+        entry["n_rejected"] = int(candidate_context["n_rejected_by_mhws"])
+        if candidate_events:
+            full = np.concatenate(
+                [
+                    np.asarray(e["full_criterion_indices"], dtype=int)
+                    for e in candidate_events
+                ]
+            )
+            # Exact identity: SWL - datum = zos' + (tide - datum).
+            entry["mean_meteo_term_m"] = round(
+                float(np.mean(zos_anomaly[full])), 4
+            )
+            entry["mean_astro_term_m"] = round(
+                float(np.mean(tide[full] - entry["value_m"])), 4
+            )
+            entry["n_event_days"] = int(full.size)
+        else:
+            entry["mean_meteo_term_m"] = None
+            entry["mean_astro_term_m"] = None
+            entry["n_event_days"] = 0
+        # Tide-alone test: would the astronomy have cleared this datum anyway?
+        if candidate_events:
+            alone = sum(
+                1
+                for e in candidate_events
+                if float(np.nanmax(tide[np.asarray(e["overlap_indices"], dtype=int)]))
+                > entry["value_m"]
+            )
+            entry["frac_tide_alone"] = round(alone / len(candidate_events), 4)
+        else:
+            entry["frac_tide_alone"] = None
     if int(published_row["compound_count_total"]) != len(events):
         raise ValueError(
             f"{row['point_id']}: re-detection found {len(events)} events but the "
@@ -251,6 +331,7 @@ def export_point(
         },
         "point_metrics": point_metrics,
         "index_components": list(INDEX_COMPONENTS),
+        "datums": datums,
         "selection_features": {
             "surge_q99_over_swing": round(float(row["surge_q99_over_swing"]), 4),
             "mhws_m": round(float(row["mhws_m"]), 4),
