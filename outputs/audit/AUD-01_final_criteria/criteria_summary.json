@@ -1,0 +1,227 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_final_criteria",
+  "arms": {
+    "mhws": "outputs/legacy_mhws_method/hazard/compound_metrics_mhws.csv",
+    "hat_q90": "outputs/hat_method/compound_metrics_hat.csv",
+    "hat_final": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv"
+  },
+  "note": "The §14 criteria were fixed before execution and first measured on the q90/q90 comparison arm. The Step 2e recalibration changed the threshold pair, which changes the whole catalogue, so both sets of numbers are reported.",
+  "coverage": {
+    "mhws": {
+      "domain_events": 79639,
+      "grid_points_zero_events": 0,
+      "municipalities_zero_events": 0
+    },
+    "hat_q90": {
+      "domain_events": 37225,
+      "grid_points_zero_events": 248,
+      "municipalities_zero_events": 96
+    },
+    "hat_final": {
+      "domain_events": 16768,
+      "grid_points_zero_events": 208,
+      "municipalities_zero_events": 83
+    }
+  },
+  "criterion_a_severity_latitude": {
+    "mhws": {
+      "spearman_abs_latitude": 0.345399,
+      "mean_severity_by_band": {
+        "RS": 0.787474,
+        "SC/PR": 0.437827,
+        "SP/RJ": 0.38471,
+        "ES/BA-S": 0.285929,
+        "BA-N": 0.286806,
+        "NE": 0.19909,
+        "N_equatorial": 0.277174,
+        "AP": 0.429208
+      }
+    },
+    "hat_q90": {
+      "spearman_abs_latitude": 0.652947,
+      "mean_severity_by_band": {
+        "RS": 0.733814,
+        "SC/PR": 0.497237,
+        "SP/RJ": 0.427145,
+        "ES/BA-S": 0.216791,
+        "BA-N": 0.009198,
+        "NE": 0.008305,
+        "N_equatorial": 0.062919,
+        "AP": 0.112348
+      }
+    },
+    "hat_final": {
+      "spearman_abs_latitude": 0.698793,
+      "mean_severity_by_band": {
+        "RS": 0.701108,
+        "SC/PR": 0.485798,
+        "SP/RJ": 0.431971,
+        "ES/BA-S": 0.156102,
+        "BA-N": 0.039645,
+        "NE": 0.018825,
+        "N_equatorial": 0.064632,
+        "AP": 0.048047
+      }
+    }
+  },
+  "criterion_b_index_gradient": {
+    "mhws": {
+      "spearman_abs_latitude": 0.583543,
+      "mean_index_by_band": {
+        "RS": 0.826044,
+        "SC/PR": 0.584753,
+        "SP/RJ": 0.454498,
+        "ES/BA-S": 0.254768,
+        "BA-N": 0.177167,
+        "NE": 0.125155,
+        "N_equatorial": 0.167091,
+        "AP": 0.288023
+      }
+    },
+    "hat_q90": {
+      "spearman_abs_latitude": 0.658104,
+      "mean_index_by_band": {
+        "RS": 0.664344,
+        "SC/PR": 0.431693,
+        "SP/RJ": 0.327093,
+        "ES/BA-S": 0.116046,
+        "BA-N": 0.004778,
+        "NE": 0.004457,
+        "N_equatorial": 0.032868,
+        "AP": 0.059896
+      }
+    },
+    "hat_final": {
+      "spearman_abs_latitude": 0.710084,
+      "mean_index_by_band": {
+        "RS": 0.822211,
+        "SC/PR": 0.562636,
+        "SP/RJ": 0.395031,
+        "ES/BA-S": 0.097586,
+        "BA-N": 0.022159,
+        "NE": 0.011541,
+        "N_equatorial": 0.037818,
+        "AP": 0.032652
+      }
+    }
+  },
+  "criterion_c_municipal_stability": {
+    "n_municipalities": 280,
+    "n_municipalities_south_southeast": 99,
+    "vs_mhws": {
+      "hat_q90": {
+        "spearman_risk_domain": 0.699545,
+        "spearman_risk_south_southeast": 0.970464,
+        "top10_overlap_count": 4,
+        "pct_top10_north_of_20S": 0.0,
+        "median_abs_rank_change_south_southeast": 35.0
+      },
+      "hat_final": {
+        "spearman_risk_domain": 0.694929,
+        "spearman_risk_south_southeast": 0.955411,
+        "top10_overlap_count": 4,
+        "pct_top10_north_of_20S": 0.0,
+        "median_abs_rank_change_south_southeast": 36.0
+      }
+    },
+    "tracked_municipalities": {
+      "São José do Norte": {
+        "rank_mhws": 4,
+        "rank_hat_q90": 1,
+        "rank_hat_final": 1
+      },
+      "Bombinhas": {
+        "rank_mhws": 189,
+        "rank_hat_q90": 88,
+        "rank_hat_final": 92
+      },
+      "Bertioga": {
+        "rank_mhws": 20,
+        "rank_hat_q90": 9,
+        "rank_hat_final": 10
+      },
+      "São Sebastião": {
+        "rank_mhws": 13,
+        "rank_hat_q90": 5,
+        "rank_hat_final": 8
+      },
+      "Presidente Kennedy": {
+        "rank_mhws": 236,
+        "rank_hat_q90": 122,
+        "rank_hat_final": 112
+      },
+      "Itajaí": {
+        "rank_mhws": 230,
+        "rank_hat_q90": 126,
+        "rank_hat_final": 117
+      },
+      "Navegantes": {
+        "rank_mhws": 216,
+        "rank_hat_q90": 118,
+        "rank_hat_final": 107
+      }
+    },
+    "top10_final": [
+      {
+        "municipality_name": "São José do Norte",
+        "state": "RS",
+        "rank": 1,
+        "Risk_Hazard": 1.0
+      },
+      {
+        "municipality_name": "Magé",
+        "state": "RJ",
+        "rank": 2,
+        "Risk_Hazard": 0.944752
+      },
+      {
+        "municipality_name": "Tavares",
+        "state": "RS",
+        "rank": 3,
+        "Risk_Hazard": 0.938392
+      },
+      {
+        "municipality_name": "Maricá",
+        "state": "RJ",
+        "rank": 4,
+        "Risk_Hazard": 0.934247
+      },
+      {
+        "municipality_name": "Mostardas",
+        "state": "RS",
+        "rank": 5,
+        "Risk_Hazard": 0.916327
+      },
+      {
+        "municipality_name": "Duque de Caxias",
+        "state": "RJ",
+        "rank": 6,
+        "Risk_Hazard": 0.911194
+      },
+      {
+        "municipality_name": "Saquarema",
+        "state": "RJ",
+        "rank": 7,
+        "Risk_Hazard": 0.906462
+      },
+      {
+        "municipality_name": "São Sebastião",
+        "state": "SP",
+        "rank": 8,
+        "Risk_Hazard": 0.895275
+      },
+      {
+        "municipality_name": "Paraty",
+        "state": "RJ",
+        "rank": 9,
+        "Risk_Hazard": 0.888254
+      },
+      {
+        "municipality_name": "Bertioga",
+        "state": "SP",
+        "rank": 10,
+        "Risk_Hazard": 0.871934
+      }
+    ]
+  }
+}

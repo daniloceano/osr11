@@ -1,10 +1,10 @@
 {
   "generated_by": "src.site.export_coastal_hazard_data",
-  "generated_at": "2026-07-29T23:50:24.480429+00:00",
+  "generated_at": "2026-07-30T21:34:08.709738+00:00",
   "period": "1993-2025",
-  "source_file": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+  "source_file": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv",
   "native_hazard_index": {
-    "source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+    "source": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv",
     "implementation": "src/04_risk_integration/hazard_index.py",
     "grid_point_count": 808,
     "normalization_population": "all finite native ocean grid points",
@@ -25,99 +25,99 @@
     "numeric_stats": {
       "compound_count_total": {
         "count": 808,
-        "min": 9.0,
-        "max": 344.0,
-        "mean": 98.563119,
-        "median": 41.0
+        "min": 0.0,
+        "max": 98.0,
+        "mean": 20.752475,
+        "median": 1.0
       },
       "mean_integrated_severity": {
         "count": 808,
-        "min": 0.1332,
-        "max": 1.0232,
-        "mean": 0.471512,
-        "median": 0.4312
+        "min": 0.0,
+        "max": 0.9483,
+        "mean": 0.217492,
+        "median": 0.1011
       },
       "compound_count_annual_mean": {
         "count": 808,
-        "min": 0.27,
-        "max": 10.43,
-        "mean": 2.987525,
-        "median": 1.24
+        "min": 0.0,
+        "max": 2.97,
+        "mean": 0.6287,
+        "median": 0.03
       },
       "mean_overlap_duration": {
-        "count": 808,
-        "min": 1.2,
-        "max": 10.75,
-        "mean": 3.430248,
-        "median": 3.0
+        "count": 600,
+        "min": 1.0,
+        "max": 40.0,
+        "mean": 5.866367,
+        "median": 2.0
       },
       "mean_full_criterion_duration": {
-        "count": 808,
-        "min": 1.18,
-        "max": 3.04,
-        "mean": 1.896312,
-        "median": 1.84
+        "count": 600,
+        "min": 1.0,
+        "max": 3.0,
+        "mean": 1.351233,
+        "median": 1.32
       },
       "mean_compound_intensity_norm": {
-        "count": 808,
-        "min": 0.108,
-        "max": 0.618,
-        "mean": 0.286205,
-        "median": 0.26675
+        "count": 600,
+        "min": 0.0,
+        "max": 0.7297,
+        "mean": 0.232705,
+        "median": 0.18185
       },
       "thr_hs_abs": {
         "count": 808,
-        "min": 0.2,
-        "max": 3.08,
-        "mean": 2.005663,
-        "median": 2.065
+        "min": 0.14,
+        "max": 2.4,
+        "mean": 1.63955,
+        "median": 1.7
       },
       "thr_zos_abs": {
         "count": 808,
-        "min": 0.067141,
-        "max": 0.54469,
-        "mean": 0.25667,
-        "median": 0.251313
+        "min": 0.126957,
+        "max": 0.775673,
+        "mean": 0.365922,
+        "median": 0.33565
       },
-      "mhws_m": {
+      "hat_m": {
         "count": 808,
-        "min": 0.077377,
-        "max": 4.332241,
-        "mean": 1.040711,
-        "median": 0.969768
+        "min": 0.340699,
+        "max": 5.623373,
+        "mean": 1.488347,
+        "median": 1.403552
       },
       "Hazard_Frequency": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.267353,
-        "median": 0.095522
+        "mean": 0.21176,
+        "median": 0.010204
       },
       "Hazard_Severity": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.380126,
-        "median": 0.334831
+        "mean": 0.22935,
+        "median": 0.106612
       },
       "Hazard_Index_raw": {
         "count": 808,
-        "min": 0.010448,
-        "max": 0.922388,
-        "mean": 0.323739,
-        "median": 0.237275
+        "min": 0.0,
+        "max": 0.979592,
+        "mean": 0.220555,
+        "median": 0.065542
       },
       "Hazard_Index": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.343544,
-        "median": 0.24873
+        "mean": 0.22515,
+        "median": 0.066907
       }
     }
   },
-  "native_grid_point_count": 808,
-  "native_grid_points_used": 297,
+  "native_grid_point_count": 600,
+  "native_grid_points_used": 240,
   "coastal_projection": {
     "implementation": "src/04_risk_integration/coastal_projection.py",
     "method": "Natural Earth 10m coastline clipped to a 30-km buffer around the coastal-municipality union; linework split into segments no longer than 5 km in EPSG:5880; each segment assigned the values at its nearest native ocean grid point by projected midpoint distance",
@@ -130,8 +130,8 @@
     "maximum_segment_length_m": 5000.0,
     "clipped_line_count": 49,
     "segment_count": 6743,
-    "native_grid_point_count": 808,
-    "native_grid_points_used": 297,
+    "native_grid_point_count": 600,
+    "native_grid_points_used": 240,
     "transferred_fields": [
       "compound_count_annual_mean",
       "mean_overlap_duration",
@@ -143,64 +143,64 @@
     ],
     "nearest_distance_km": {
       "minimum": 0.248232,
-      "median": 18.704526,
-      "mean": 21.497406,
-      "p90": 36.590475,
-      "p99": 83.108735,
-      "maximum": 119.944668
+      "median": 22.431525,
+      "mean": 36.915329,
+      "p90": 64.725142,
+      "p99": 259.092879,
+      "maximum": 330.936722
     },
     "assigned_value_statistics": {
       "compound_count_annual_mean": {
         "count": 6743,
-        "min": 0.3,
-        "max": 9.79,
-        "mean": 3.081468,
-        "median": 1.49
+        "min": 0.03,
+        "max": 2.94,
+        "mean": 0.601093,
+        "median": 0.06
       },
       "mean_overlap_duration": {
         "count": 6743,
-        "min": 1.2,
-        "max": 9.88,
-        "mean": 3.547458,
-        "median": 3.32
+        "min": 1.0,
+        "max": 35.0,
+        "mean": 7.772794,
+        "median": 2.29
       },
       "mean_compound_intensity_norm": {
         "count": 6743,
-        "min": 0.1168,
-        "max": 0.6065,
-        "mean": 0.282439,
-        "median": 0.2768
+        "min": 0.0,
+        "max": 0.5439,
+        "mean": 0.165027,
+        "median": 0.1235
       },
       "Hazard_Index": {
         "count": 6743,
-        "min": 0.022987,
-        "max": 0.935323,
-        "mean": 0.350034,
-        "median": 0.292984
+        "min": 0.005208,
+        "max": 0.866218,
+        "mean": 0.213576,
+        "median": 0.074265
       },
       "Hazard_Frequency": {
         "count": 6743,
-        "min": 0.002985,
-        "max": 0.937313,
-        "mean": 0.276612,
-        "median": 0.119403
+        "min": 0.010204,
+        "max": 0.989796,
+        "mean": 0.202574,
+        "median": 0.020408
       },
       "Hazard_Severity": {
         "count": 6743,
-        "min": 0.035955,
-        "max": 0.934157,
-        "mean": 0.382703,
-        "median": 0.332135
+        "min": 0.0,
+        "max": 0.776758,
+        "mean": 0.215859,
+        "median": 0.122851
       },
       "Hazard_Index_raw": {
         "count": 6743,
-        "min": 0.03141,
-        "max": 0.863407,
-        "mean": 0.329658,
-        "median": 0.277632
+        "min": 0.005102,
+        "max": 0.84854,
+        "mean": 0.209217,
+        "median": 0.072749
       }
     },
-    "feature_count": 865,
+    "feature_count": 804,
     "feature_note": "Consecutive 5-km segments sharing the same nearest native grid point are merged into one polyline for transport. Geometry and values are unchanged; only the feature count is reduced."
   },
   "nearest_municipality": {
@@ -221,8 +221,8 @@
     "method": "Array position of the source native grid point inside grid_points of the Step 3.8 metric catalog, matched on latitude/longitude rounded to 4 decimals",
     "purpose": "lets the per-grid-point explorer draw any of the Step 3 metrics on the same coastline without duplicating the catalog",
     "catalog_grid_points": 808,
-    "linked_features": 865,
-    "distinct_grid_points": 297
+    "linked_features": 804,
+    "distinct_grid_points": 240
   },
   "palettes": {
     "sequential": [
@@ -315,11 +315,11 @@
       "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
       "description": "Mean annual number of compound wave/sea-level events at the nearest native ocean grid point, straight from the Step 3.2 catalog.",
       "statistics": {
-        "count": 865,
-        "min": 0.3,
-        "max": 9.79,
-        "mean": 3.118173,
-        "median": 1.55
+        "count": 804,
+        "min": 0.03,
+        "max": 2.94,
+        "mean": 0.673719,
+        "median": 0.06
       }
     },
     {
@@ -354,11 +354,11 @@
       "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
       "description": "Mean number of calendar days during which the wave and the sea-level episodes of a compound event overlap, straight from the Step 3.2 catalog.",
       "statistics": {
-        "count": 865,
-        "min": 1.2,
-        "max": 9.88,
-        "mean": 3.311561,
-        "median": 2.82
+        "count": 804,
+        "min": 1.0,
+        "max": 35.0,
+        "mean": 6.684789,
+        "median": 2.0
       }
     },
     {
@@ -395,11 +395,11 @@
       "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
       "description": "Event-level compound intensity stored in the catalog: how far each driver rose above its own local q90 detection threshold, rescaled by the domain-wide Q05/Q95 of those excesses and averaged with equal weights. Subtracting the local baseline keeps the astronomical tide out of the severity score. It is already a dimensionless compound intensity, so the map shows it unchanged — no extra Min-Max scaling is applied for display.",
       "statistics": {
-        "count": 865,
-        "min": 0.1168,
-        "max": 0.6065,
-        "mean": 0.276523,
-        "median": 0.2596
+        "count": 804,
+        "min": 0.0,
+        "max": 0.5439,
+        "mean": 0.178473,
+        "median": 0.1289
       }
     },
     {
@@ -436,35 +436,35 @@
       "display_values": "final Hazard Index after both Min-Max steps",
       "description": "Final composite Hazard Index: the three components are Min-Max normalized over the 808 native grid points, averaged with equal weights of 1/3, and the mean is Min-Max normalized again to span 0-1.",
       "statistics": {
-        "count": 865,
-        "min": 0.022987,
-        "max": 0.935323,
-        "mean": 0.342474,
-        "median": 0.282886
+        "count": 804,
+        "min": 0.005208,
+        "max": 0.866218,
+        "mean": 0.235362,
+        "median": 0.08553
       }
     }
   ],
   "detail_fields": {
     "Hazard_Frequency": {
-      "count": 865,
-      "min": 0.002985,
-      "max": 0.937313,
-      "mean": 0.280231,
-      "median": 0.125373
+      "count": 804,
+      "min": 0.010204,
+      "max": 0.989796,
+      "mean": 0.227015,
+      "median": 0.020408
     },
     "Hazard_Severity": {
-      "count": 865,
-      "min": 0.035955,
-      "max": 0.934157,
-      "mean": 0.365296,
-      "median": 0.314719
+      "count": 804,
+      "min": 0.0,
+      "max": 0.776758,
+      "mean": 0.234103,
+      "median": 0.143204
     },
     "Hazard_Index_raw": {
-      "count": 865,
-      "min": 0.03141,
-      "max": 0.863407,
-      "mean": 0.322764,
-      "median": 0.268423
+      "count": 804,
+      "min": 0.005102,
+      "max": 0.84854,
+      "mean": 0.230559,
+      "median": 0.083785
     }
   },
   "normalization_note": "The Min-Max normalization of the three components happens only inside the index construction on the native grid. The frequency, duration, and intensity layers of this map show the catalog values themselves.",
