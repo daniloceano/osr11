@@ -1,0 +1,672 @@
+{
+  "generated_by": "src.exploratory.compare_methods_mhws_vs_hat",
+  "status": "comparison only; HAT is not adopted",
+  "normalization": {
+    "policy": "Both arms contain the same 808 grid points. At a point with no accepted event, frequency=0 and integrated severity=0 before calling derive_native_hazard_index.",
+    "mhws_grid_points": 808,
+    "hat_grid_points": 808,
+    "implementation": "src/04_risk_integration/hazard_index.py",
+    "reference_percentiles_mhws": {
+      "low_pct": 5.0,
+      "high_pct": 95.0,
+      "peak_wave_low": 0.04,
+      "peak_wave_high": 1.49,
+      "peak_level_low": 0.032781,
+      "peak_level_high": 0.760672,
+      "daily_wave_low": 0.01,
+      "daily_wave_high": 1.29,
+      "daily_level_low": 0.025553,
+      "daily_level_high": 0.723133
+    },
+    "reference_percentiles_hat": {
+      "peak_wave_low": 0.04999995231628418,
+      "peak_wave_high": 1.6719998359680068,
+      "peak_level_low": 0.011523897210309686,
+      "peak_level_high": 0.428374416825031,
+      "daily_wave_low": 0.029999971389770508,
+      "daily_wave_high": 1.489999771118164,
+      "daily_level_low": 0.010177470354678477,
+      "daily_level_high": 0.404359883665189
+    }
+  },
+  "coverage": {
+    "grid_points_zero_events_mhws": 0,
+    "grid_points_zero_events_hat": 248,
+    "municipalities_zero_events_mhws": 0,
+    "municipalities_zero_events_hat": 96
+  },
+  "components": {
+    "Hazard_Frequency": {
+      "spearman_between_arms": 0.877477,
+      "spearman_abs_latitude_mhws": 0.641654,
+      "spearman_abs_latitude_hat": 0.64963,
+      "by_latitude_band": {
+        "AP": {
+          "n_points": 132,
+          "mean_mhws": 0.117006,
+          "mean_hat": 0.007444
+        },
+        "BA-N": {
+          "n_points": 65,
+          "mean_mhws": 0.057222,
+          "mean_hat": 0.000358
+        },
+        "ES/BA-S": {
+          "n_points": 57,
+          "mean_mhws": 0.199633,
+          "mean_hat": 0.0153
+        },
+        "NE": {
+          "n_points": 62,
+          "mean_mhws": 0.050072,
+          "mean_hat": 0.00061
+        },
+        "N_equatorial": {
+          "n_points": 192,
+          "mean_mhws": 0.048476,
+          "mean_hat": 0.002816
+        },
+        "RS": {
+          "n_points": 77,
+          "mean_mhws": 0.740027,
+          "mean_hat": 0.594873
+        },
+        "SC/PR": {
+          "n_points": 67,
+          "mean_mhws": 0.649588,
+          "mean_hat": 0.366149
+        },
+        "SP/RJ": {
+          "n_points": 156,
+          "mean_mhws": 0.465136,
+          "mean_hat": 0.227042
+        }
+      }
+    },
+    "Hazard_Severity": {
+      "spearman_between_arms": 0.703464,
+      "spearman_abs_latitude_mhws": 0.345399,
+      "spearman_abs_latitude_hat": 0.652947,
+      "by_latitude_band": {
+        "AP": {
+          "n_points": 132,
+          "mean_mhws": 0.429208,
+          "mean_hat": 0.112348
+        },
+        "BA-N": {
+          "n_points": 65,
+          "mean_mhws": 0.286806,
+          "mean_hat": 0.009198
+        },
+        "ES/BA-S": {
+          "n_points": 57,
+          "mean_mhws": 0.285929,
+          "mean_hat": 0.216791
+        },
+        "NE": {
+          "n_points": 62,
+          "mean_mhws": 0.19909,
+          "mean_hat": 0.008305
+        },
+        "N_equatorial": {
+          "n_points": 192,
+          "mean_mhws": 0.277174,
+          "mean_hat": 0.062919
+        },
+        "RS": {
+          "n_points": 77,
+          "mean_mhws": 0.787474,
+          "mean_hat": 0.733814
+        },
+        "SC/PR": {
+          "n_points": 67,
+          "mean_mhws": 0.437827,
+          "mean_hat": 0.497237
+        },
+        "SP/RJ": {
+          "n_points": 156,
+          "mean_mhws": 0.38471,
+          "mean_hat": 0.427145
+        }
+      }
+    },
+    "Hazard_Index": {
+      "spearman_between_arms": 0.894081,
+      "spearman_abs_latitude_mhws": 0.583543,
+      "spearman_abs_latitude_hat": 0.658104,
+      "by_latitude_band": {
+        "AP": {
+          "n_points": 132,
+          "mean_mhws": 0.288023,
+          "mean_hat": 0.059896
+        },
+        "BA-N": {
+          "n_points": 65,
+          "mean_mhws": 0.177167,
+          "mean_hat": 0.004778
+        },
+        "ES/BA-S": {
+          "n_points": 57,
+          "mean_mhws": 0.254768,
+          "mean_hat": 0.116046
+        },
+        "NE": {
+          "n_points": 62,
+          "mean_mhws": 0.125155,
+          "mean_hat": 0.004457
+        },
+        "N_equatorial": {
+          "n_points": 192,
+          "mean_mhws": 0.167091,
+          "mean_hat": 0.032868
+        },
+        "RS": {
+          "n_points": 77,
+          "mean_mhws": 0.826044,
+          "mean_hat": 0.664344
+        },
+        "SC/PR": {
+          "n_points": 67,
+          "mean_mhws": 0.584753,
+          "mean_hat": 0.431693
+        },
+        "SP/RJ": {
+          "n_points": 156,
+          "mean_mhws": 0.454498,
+          "mean_hat": 0.327093
+        }
+      }
+    },
+    "Hazard_Duration": {
+      "spearman_between_arms": 0.081057,
+      "spearman_abs_latitude_mhws": -0.792574,
+      "spearman_abs_latitude_hat": -0.193156,
+      "by_latitude_band": {
+        "AP": {
+          "n_points": 132,
+          "mean_mhws": 0.273409,
+          "mean_hat": 0.11665
+        },
+        "BA-N": {
+          "n_points": 65,
+          "mean_mhws": 0.236198,
+          "mean_hat": 0.011303
+        },
+        "ES/BA-S": {
+          "n_points": 57,
+          "mean_mhws": 0.127253,
+          "mean_hat": 0.042177
+        },
+        "NE": {
+          "n_points": 62,
+          "mean_mhws": 0.323239,
+          "mean_hat": 0.029954
+        },
+        "N_equatorial": {
+          "n_points": 192,
+          "mean_mhws": 0.430743,
+          "mean_hat": 0.237584
+        },
+        "RS": {
+          "n_points": 77,
+          "mean_mhws": 0.038621,
+          "mean_hat": 0.034325
+        },
+        "SC/PR": {
+          "n_points": 67,
+          "mean_mhws": 0.035899,
+          "mean_hat": 0.034712
+        },
+        "SP/RJ": {
+          "n_points": 156,
+          "mean_mhws": 0.140234,
+          "mean_hat": 0.042391
+        }
+      }
+    },
+    "Hazard_Peak_Intensity": {
+      "spearman_between_arms": 0.778483,
+      "spearman_abs_latitude_mhws": 0.474088,
+      "spearman_abs_latitude_hat": 0.633647,
+      "by_latitude_band": {
+        "AP": {
+          "n_points": 132,
+          "mean_mhws": 0.32555,
+          "mean_hat": 0.231572
+        },
+        "BA-N": {
+          "n_points": 65,
+          "mean_mhws": 0.218561,
+          "mean_hat": 0.025875
+        },
+        "ES/BA-S": {
+          "n_points": 57,
+          "mean_mhws": 0.262009,
+          "mean_hat": 0.361701
+        },
+        "NE": {
+          "n_points": 62,
+          "mean_mhws": 0.181818,
+          "mean_hat": 0.016469
+        },
+        "N_equatorial": {
+          "n_points": 192,
+          "mean_mhws": 0.239122,
+          "mean_hat": 0.154424
+        },
+        "RS": {
+          "n_points": 77,
+          "mean_mhws": 0.830909,
+          "mean_hat": 0.782703
+        },
+        "SC/PR": {
+          "n_points": 67,
+          "mean_mhws": 0.469318,
+          "mean_hat": 0.573914
+        },
+        "SP/RJ": {
+          "n_points": 156,
+          "mean_mhws": 0.3693,
+          "mean_hat": 0.475768
+        }
+      }
+    }
+  },
+  "within_arm_component_correlation": {
+    "spearman_frequency_severity_mhws": 0.599118,
+    "spearman_frequency_severity_hat": 0.958061
+  },
+  "municipal_risk": {
+    "n_municipalities": 280,
+    "spearman_between_arms": 0.699545,
+    "top10_overlap_count": 4,
+    "top10_overlap_municipalities": [
+      "Magé",
+      "Maricá",
+      "Saquarema",
+      "São José do Norte"
+    ],
+    "pct_top10_north_of_20S_mhws": 50.0,
+    "pct_top10_north_of_20S_hat": 0.0,
+    "top10_mhws": [
+      {
+        "municipality_name": "Apicum-Açu",
+        "state": "MA",
+        "rank_mhws": 1.0,
+        "Risk_Hazard_mhws": 1.0
+      },
+      {
+        "municipality_name": "Turiaçu",
+        "state": "MA",
+        "rank_mhws": 2.0,
+        "Risk_Hazard_mhws": 0.8837049695310023
+      },
+      {
+        "municipality_name": "Chaves",
+        "state": "PA",
+        "rank_mhws": 3.0,
+        "Risk_Hazard_mhws": 0.8782962069607748
+      },
+      {
+        "municipality_name": "São José do Norte",
+        "state": "RS",
+        "rank_mhws": 4.0,
+        "Risk_Hazard_mhws": 0.8671644724074848
+      },
+      {
+        "municipality_name": "Guaraqueçaba",
+        "state": "PR",
+        "rank_mhws": 5.0,
+        "Risk_Hazard_mhws": 0.8337955145945329
+      },
+      {
+        "municipality_name": "Magé",
+        "state": "RJ",
+        "rank_mhws": 6.0,
+        "Risk_Hazard_mhws": 0.8311769497275548
+      },
+      {
+        "municipality_name": "Maricá",
+        "state": "RJ",
+        "rank_mhws": 7.0,
+        "Risk_Hazard_mhws": 0.8226889414890534
+      },
+      {
+        "municipality_name": "Cururupu",
+        "state": "MA",
+        "rank_mhws": 8.0,
+        "Risk_Hazard_mhws": 0.8207158896578838
+      },
+      {
+        "municipality_name": "Icatu",
+        "state": "MA",
+        "rank_mhws": 9.0,
+        "Risk_Hazard_mhws": 0.8169661900236368
+      },
+      {
+        "municipality_name": "Saquarema",
+        "state": "RJ",
+        "rank_mhws": 10.0,
+        "Risk_Hazard_mhws": 0.814373963889131
+      }
+    ],
+    "top10_hat": [
+      {
+        "municipality_name": "São José do Norte",
+        "state": "RS",
+        "rank_hat": 1.0,
+        "Risk_Hazard_hat": 1.0
+      },
+      {
+        "municipality_name": "Magé",
+        "state": "RJ",
+        "rank_hat": 2.0,
+        "Risk_Hazard_hat": 0.9511252086537707
+      },
+      {
+        "municipality_name": "Tavares",
+        "state": "RS",
+        "rank_hat": 3.0,
+        "Risk_Hazard_hat": 0.936058372362695
+      },
+      {
+        "municipality_name": "Maricá",
+        "state": "RJ",
+        "rank_hat": 4.0,
+        "Risk_Hazard_hat": 0.9316358663313126
+      },
+      {
+        "municipality_name": "São Sebastião",
+        "state": "SP",
+        "rank_hat": 5.0,
+        "Risk_Hazard_hat": 0.9304173165985035
+      },
+      {
+        "municipality_name": "Duque de Caxias",
+        "state": "RJ",
+        "rank_hat": 6.0,
+        "Risk_Hazard_hat": 0.9164028789833953
+      },
+      {
+        "municipality_name": "Mostardas",
+        "state": "RS",
+        "rank_hat": 7.0,
+        "Risk_Hazard_hat": 0.9031910696318568
+      },
+      {
+        "municipality_name": "Saquarema",
+        "state": "RJ",
+        "rank_hat": 8.0,
+        "Risk_Hazard_hat": 0.9013739233058972
+      },
+      {
+        "municipality_name": "Bertioga",
+        "state": "SP",
+        "rank_hat": 9.0,
+        "Risk_Hazard_hat": 0.9001543928596512
+      },
+      {
+        "municipality_name": "Paraty",
+        "state": "RJ",
+        "rank_hat": 10.0,
+        "Risk_Hazard_hat": 0.8958254462782468
+      }
+    ],
+    "largest_rises_under_hat": [
+      {
+        "municipality_name": "Presidente Kennedy",
+        "state": "ES",
+        "rank_mhws": 236.0,
+        "rank_hat": 122.0,
+        "rank_change_hat_minus_mhws": 114.0
+      },
+      {
+        "municipality_name": "Campos dos Goytacazes",
+        "state": "RJ",
+        "rank_mhws": 262.0,
+        "rank_hat": 156.0,
+        "rank_change_hat_minus_mhws": 106.0
+      },
+      {
+        "municipality_name": "Linhares",
+        "state": "ES",
+        "rank_mhws": 271.0,
+        "rank_hat": 166.0,
+        "rank_change_hat_minus_mhws": 105.0
+      },
+      {
+        "municipality_name": "Terra de Areia",
+        "state": "RS",
+        "rank_mhws": 242.0,
+        "rank_hat": 138.0,
+        "rank_change_hat_minus_mhws": 104.0
+      },
+      {
+        "municipality_name": "Itajaí",
+        "state": "SC",
+        "rank_mhws": 230.0,
+        "rank_hat": 126.0,
+        "rank_change_hat_minus_mhws": 104.0
+      },
+      {
+        "municipality_name": "Osório",
+        "state": "RS",
+        "rank_mhws": 249.0,
+        "rank_hat": 147.0,
+        "rank_change_hat_minus_mhws": 102.0
+      },
+      {
+        "municipality_name": "Bombinhas",
+        "state": "SC",
+        "rank_mhws": 189.0,
+        "rank_hat": 88.0,
+        "rank_change_hat_minus_mhws": 101.0
+      },
+      {
+        "municipality_name": "Itapema",
+        "state": "SC",
+        "rank_mhws": 220.0,
+        "rank_hat": 119.0,
+        "rank_change_hat_minus_mhws": 101.0
+      },
+      {
+        "municipality_name": "Tijucas",
+        "state": "SC",
+        "rank_mhws": 184.0,
+        "rank_hat": 84.0,
+        "rank_change_hat_minus_mhws": 100.0
+      },
+      {
+        "municipality_name": "Porto Belo",
+        "state": "SC",
+        "rank_mhws": 190.0,
+        "rank_hat": 90.0,
+        "rank_change_hat_minus_mhws": 100.0
+      },
+      {
+        "municipality_name": "Navegantes",
+        "state": "SC",
+        "rank_mhws": 216.0,
+        "rank_hat": 118.0,
+        "rank_change_hat_minus_mhws": 98.0
+      },
+      {
+        "municipality_name": "Vitória",
+        "state": "ES",
+        "rank_mhws": 238.0,
+        "rank_hat": 141.0,
+        "rank_change_hat_minus_mhws": 97.0
+      },
+      {
+        "municipality_name": "Piúma",
+        "state": "ES",
+        "rank_mhws": 213.0,
+        "rank_hat": 117.0,
+        "rank_change_hat_minus_mhws": 96.0
+      },
+      {
+        "municipality_name": "Parnamirim",
+        "state": "RN",
+        "rank_mhws": 256.0,
+        "rank_hat": 160.0,
+        "rank_change_hat_minus_mhws": 96.0
+      },
+      {
+        "municipality_name": "Ceará-Mirim",
+        "state": "RN",
+        "rank_mhws": 259.0,
+        "rank_hat": 164.0,
+        "rank_change_hat_minus_mhws": 95.0
+      }
+    ],
+    "largest_falls_under_hat": [
+      {
+        "municipality_name": "Bacuri",
+        "state": "MA",
+        "rank_mhws": 31.0,
+        "rank_hat": 234.0,
+        "rank_change_hat_minus_mhws": -203.0
+      },
+      {
+        "municipality_name": "Cândido Mendes",
+        "state": "MA",
+        "rank_mhws": 69.0,
+        "rank_hat": 267.0,
+        "rank_change_hat_minus_mhws": -198.0
+      },
+      {
+        "municipality_name": "Godofredo Viana",
+        "state": "MA",
+        "rank_mhws": 82.0,
+        "rank_hat": 271.0,
+        "rank_change_hat_minus_mhws": -189.0
+      },
+      {
+        "municipality_name": "Turiaçu",
+        "state": "MA",
+        "rank_mhws": 2.0,
+        "rank_hat": 169.0,
+        "rank_change_hat_minus_mhws": -167.0
+      },
+      {
+        "municipality_name": "Apicum-Açu",
+        "state": "MA",
+        "rank_mhws": 1.0,
+        "rank_hat": 167.0,
+        "rank_change_hat_minus_mhws": -166.0
+      },
+      {
+        "municipality_name": "Vigia",
+        "state": "PA",
+        "rank_mhws": 15.0,
+        "rank_hat": 152.0,
+        "rank_change_hat_minus_mhws": -137.0
+      },
+      {
+        "municipality_name": "Colares",
+        "state": "PA",
+        "rank_mhws": 19.0,
+        "rank_hat": 153.0,
+        "rank_change_hat_minus_mhws": -134.0
+      },
+      {
+        "municipality_name": "Lauro de Freitas",
+        "state": "BA",
+        "rank_mhws": 135.0,
+        "rank_hat": 258.0,
+        "rank_change_hat_minus_mhws": -123.0
+      },
+      {
+        "municipality_name": "Brejo Grande",
+        "state": "SE",
+        "rank_mhws": 128.0,
+        "rank_hat": 250.0,
+        "rank_change_hat_minus_mhws": -122.0
+      },
+      {
+        "municipality_name": "Macapá",
+        "state": "AP",
+        "rank_mhws": 16.0,
+        "rank_hat": 134.0,
+        "rank_change_hat_minus_mhws": -118.0
+      },
+      {
+        "municipality_name": "Pacatuba",
+        "state": "SE",
+        "rank_mhws": 116.0,
+        "rank_hat": 224.0,
+        "rank_change_hat_minus_mhws": -108.0
+      },
+      {
+        "municipality_name": "Jandaíra",
+        "state": "BA",
+        "rank_mhws": 156.0,
+        "rank_hat": 263.0,
+        "rank_change_hat_minus_mhws": -107.0
+      },
+      {
+        "municipality_name": "Cajueiro da Praia",
+        "state": "PI",
+        "rank_mhws": 67.0,
+        "rank_hat": 174.0,
+        "rank_change_hat_minus_mhws": -107.0
+      },
+      {
+        "municipality_name": "Itacaré",
+        "state": "BA",
+        "rank_mhws": 154.0,
+        "rank_hat": 256.0,
+        "rank_change_hat_minus_mhws": -102.0
+      },
+      {
+        "municipality_name": "Goiana",
+        "state": "PE",
+        "rank_mhws": 95.0,
+        "rank_hat": 196.0,
+        "rank_change_hat_minus_mhws": -101.0
+      }
+    ]
+  },
+  "latitude_bands": [
+    {
+      "name": "RS",
+      "lower": -36.0,
+      "upper": -30.0
+    },
+    {
+      "name": "SC/PR",
+      "lower": -30.0,
+      "upper": -25.0
+    },
+    {
+      "name": "SP/RJ",
+      "lower": -25.0,
+      "upper": -20.0
+    },
+    {
+      "name": "ES/BA-S",
+      "lower": -20.0,
+      "upper": -15.0
+    },
+    {
+      "name": "BA-N",
+      "lower": -15.0,
+      "upper": -10.0
+    },
+    {
+      "name": "NE",
+      "lower": -10.0,
+      "upper": -5.0
+    },
+    {
+      "name": "N_equatorial",
+      "lower": -5.0,
+      "upper": 0.0
+    },
+    {
+      "name": "AP",
+      "lower": 0.0,
+      "upper": 7.0
+    }
+  ]
+}

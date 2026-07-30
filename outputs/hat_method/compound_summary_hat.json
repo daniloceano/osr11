@@ -1,0 +1,48 @@
+{
+  "generated_by": "src.compound_detection.detection_hat",
+  "method": "HAT-conditioned comparison arm; not adopted",
+  "definition": {
+    "hat": "max(tide_daily_max) over 1993-2025 at each point",
+    "gate": "max(SWL) over shared days > HAT",
+    "level_excess": "SWL - HAT",
+    "unchanged_detector": "compound_events_at_point from detection_mhws.py",
+    "zero_event_policy": "compound_count_total=0 and mean_integrated_severity=0; absence of accepted events is absence of event-derived hazard"
+  },
+  "parallelism": {
+    "workers": 8,
+    "phase_order": [
+      "parallel detection",
+      "global ordered Q05/Q95 barrier",
+      "parallel scoring"
+    ],
+    "serial_parallel_validation": {
+      "n_points": 30,
+      "comparison": "exact scalar equality and NumPy array_equal with identical dtype/shape (NaNs equal)",
+      "phase_1": "identical",
+      "phase_2": "identical"
+    }
+  },
+  "rescaling_reference_percentiles": {
+    "peak_wave_low": 0.04999995231628418,
+    "peak_wave_high": 1.6719998359680068,
+    "peak_level_low": 0.011523897210309686,
+    "peak_level_high": 0.428374416825031,
+    "daily_wave_low": 0.029999971389770508,
+    "daily_wave_high": 1.489999771118164,
+    "daily_level_low": 0.010177470354678477,
+    "daily_level_high": 0.404359883665189
+  },
+  "acceptance_test": {
+    "domain_events": 37225,
+    "events_north_of_15S": 545,
+    "events_south_of_25S": 24196,
+    "zero_event_points": 248,
+    "grid_points": 808
+  },
+  "thr_hs_fidelity": {
+    "reference": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+    "exact_points": 808,
+    "total_points": 808,
+    "maximum_absolute_difference_m": 0.0
+  }
+}
