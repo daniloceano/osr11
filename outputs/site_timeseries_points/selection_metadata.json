@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-30T11:10:45.487060+00:00",
+  "implementation": "src/site/select_timeseries_points.py",
+  "candidate_source": "data/external/municipal_grid_association/municipal_grid_association.csv",
+  "candidate_count": 178,
+  "feature_sources": {
+    "surge_q99_over_swing": "outputs/audit/AUD-01_surge_vs_tide_magnitude/surge_vs_tide_by_point.csv",
+    "mhws_m": "src/04_risk_integration/hazard_index.py",
+    "thr_hs_abs": "src/04_risk_integration/hazard_index.py",
+    "Hazard_Frequency": "src/04_risk_integration/hazard_index.py",
+    "Hazard_Severity": "src/04_risk_integration/hazard_index.py"
+  },
+  "features": [
+    "surge_q99_over_swing",
+    "mhws_m",
+    "thr_hs_abs",
+    "Hazard_Frequency",
+    "Hazard_Severity"
+  ],
+  "excluded_feature": {
+    "field": "rayleigh_R",
+    "reason": "Phase behaviour is the finding the chart is meant to reveal; selecting on it would make the panel circular."
+  },
+  "stratify_by": "surge_q99_over_swing",
+  "k": 9,
+  "random_state": 0,
+  "rule": "k equal-count strata of surge_q99_over_swing; within each stratum the point nearest the centroid of the z-scored feature space (medoid) is selected. Municipality names are labels attached after selection and never enter the criterion.",
+  "output": "outputs/site_timeseries_points/selected_points.csv"
+}

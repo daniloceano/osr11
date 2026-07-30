@@ -1,0 +1,366 @@
+{
+  "generated_at": "2026-07-30T11:12:41.514863+00:00",
+  "implementation": "src/site/export_timeseries_panel_data.py",
+  "source_dataset": "data/unified/metocean_brazil_unified_waverys_grid.nc",
+  "detection": "MHWS-conditioned compound detection (tide as conditioning variable)",
+  "definition": {
+    "wave_threshold": "local q0.90 of VHM0",
+    "level_threshold": "local q0.90 of zos (tide-free)",
+    "episode_max_gap_days": 1,
+    "condition": "max(SWL) over shared days > MHWS",
+    "swl": "(zos - mean(zos)) + tide_daily_max",
+    "mhws": "A_M2 + A_S2 from FES2022 harmonic constants",
+    "peak_intensity_diagnostic": "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - MHWS)]",
+    "integrated_severity_index_component": "sum over full-criterion days of 0.5 * [norm(Hs_d - thr_hs) + norm(SWL_d - MHWS)], daily excesses pooled domain-wide",
+    "duration_status": "computed and published as a diagnostic, no longer a hazard index component (AUD-06)",
+    "wave_setup": "not used; waves act as driver and intensity term only"
+  },
+  "period": {
+    "start": "1993-01-01",
+    "end": "2025-12-31",
+    "years": 33.0
+  },
+  "selection": {
+    "frozen_at": "outputs/site_timeseries_points/selected_points.csv",
+    "implementation": "src/site/select_timeseries_points.py",
+    "rule": "Medoids of equal-count strata of the surge-to-tide ratio in a z-scored physical feature space, over the grid points that serve at least one municipality. Municipality names are labels attached after selection."
+  },
+  "index_components": {
+    "compound_count_total": "Hazard_Frequency",
+    "mean_integrated_severity": "Hazard_Severity"
+  },
+  "retired_from_index": {
+    "fields": [
+      "mean_overlap_duration",
+      "mean_compound_intensity_norm"
+    ],
+    "retired_on": "2026-07-29",
+    "note": "Published as diagnostics only; removed from the hazard index by AUD-06."
+  },
+  "points": [
+    {
+      "point_id": "p01",
+      "lat": -29.0,
+      "lon": -49.4,
+      "label": "Balne\u00e1rio Arroio do Silva",
+      "state": "SC",
+      "latitude_band": "SC/PR",
+      "file": "p01.json",
+      "file_size_kb": 171.8,
+      "n_municipalities_served": 1,
+      "n_events": 202,
+      "selection_features": {
+        "surge_q99_over_swing": 1.096,
+        "mhws_m": 0.195,
+        "thr_hs_abs": 2.12,
+        "Hazard_Frequency": 0.5761,
+        "Hazard_Severity": 0.5247
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 2.12,
+        "thr_zos_abs_m": 0.3103,
+        "thr_zos_anomaly_m": 0.2179,
+        "zos_mean_m": 0.0924,
+        "mhws_m": 0.195
+      },
+      "point_metrics": {
+        "compound_count_total": 202.0,
+        "compound_count_annual_mean": 6.12,
+        "mean_overlap_duration": 1.5,
+        "mean_full_criterion_duration": 1.5,
+        "mean_compound_intensity_norm": 0.4006,
+        "mean_integrated_severity": 0.6002,
+        "n_candidate_events": 202.0,
+        "n_rejected_by_mhws": 0.0
+      }
+    },
+    {
+      "point_id": "p02",
+      "lat": -23.2,
+      "lon": -44.4,
+      "label": "Paraty",
+      "state": "RJ",
+      "latitude_band": "SP/RJ",
+      "file": "p02.json",
+      "file_size_kb": 180.8,
+      "n_municipalities_served": 1,
+      "n_events": 256,
+      "selection_features": {
+        "surge_q99_over_swing": 0.6148,
+        "mhws_m": 0.5126,
+        "thr_hs_abs": 1.88,
+        "Hazard_Frequency": 0.7373,
+        "Hazard_Severity": 0.4484
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.88,
+        "thr_zos_abs_m": 0.2389,
+        "thr_zos_anomaly_m": 0.1628,
+        "zos_mean_m": 0.0761,
+        "mhws_m": 0.5126
+      },
+      "point_metrics": {
+        "compound_count_total": 256.0,
+        "compound_count_annual_mean": 7.76,
+        "mean_overlap_duration": 2.03,
+        "mean_full_criterion_duration": 1.86,
+        "mean_compound_intensity_norm": 0.296,
+        "mean_integrated_severity": 0.5323,
+        "n_candidate_events": 302.0,
+        "n_rejected_by_mhws": 46.0
+      }
+    },
+    {
+      "point_id": "p03",
+      "lat": -22.4,
+      "lon": -41.6,
+      "label": "Maca\u00e9",
+      "state": "RJ",
+      "latitude_band": "SP/RJ",
+      "file": "p03.json",
+      "file_size_kb": 164.2,
+      "n_municipalities_served": 2,
+      "n_events": 180,
+      "selection_features": {
+        "surge_q99_over_swing": 0.4616,
+        "mhws_m": 0.5647,
+        "thr_hs_abs": 1.78,
+        "Hazard_Frequency": 0.5104,
+        "Hazard_Severity": 0.3167
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.78,
+        "thr_zos_abs_m": 0.2168,
+        "thr_zos_anomaly_m": 0.1424,
+        "zos_mean_m": 0.0744,
+        "mhws_m": 0.5647
+      },
+      "point_metrics": {
+        "compound_count_total": 180.0,
+        "compound_count_annual_mean": 5.46,
+        "mean_overlap_duration": 1.98,
+        "mean_full_criterion_duration": 1.75,
+        "mean_compound_intensity_norm": 0.2459,
+        "mean_integrated_severity": 0.4151,
+        "n_candidate_events": 239.0,
+        "n_rejected_by_mhws": 59.0
+      }
+    },
+    {
+      "point_id": "p04",
+      "lat": -16.2,
+      "lon": -38.8,
+      "label": "Santa Cruz Cabr\u00e1lia",
+      "state": "BA",
+      "latitude_band": "ES/BA-S",
+      "file": "p04.json",
+      "file_size_kb": 136.5,
+      "n_municipalities_served": 1,
+      "n_events": 71,
+      "selection_features": {
+        "surge_q99_over_swing": 0.1701,
+        "mhws_m": 0.9645,
+        "thr_hs_abs": 1.54,
+        "Hazard_Frequency": 0.1851,
+        "Hazard_Severity": 0.2606
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.54,
+        "thr_zos_abs_m": 0.2696,
+        "thr_zos_anomaly_m": 0.0943,
+        "zos_mean_m": 0.1753,
+        "mhws_m": 0.9645
+      },
+      "point_metrics": {
+        "compound_count_total": 71.0,
+        "compound_count_annual_mean": 2.15,
+        "mean_overlap_duration": 2.79,
+        "mean_full_criterion_duration": 2.0,
+        "mean_compound_intensity_norm": 0.2096,
+        "mean_integrated_severity": 0.3651,
+        "n_candidate_events": 145.0,
+        "n_rejected_by_mhws": 74.0
+      }
+    },
+    {
+      "point_id": "p05",
+      "lat": -11.6,
+      "lon": -37.4,
+      "label": "Janda\u00edra",
+      "state": "BA",
+      "latitude_band": "BA-N",
+      "file": "p05.json",
+      "file_size_kb": 134.5,
+      "n_municipalities_served": 1,
+      "n_events": 43,
+      "selection_features": {
+        "surge_q99_over_swing": 0.1107,
+        "mhws_m": 1.0726,
+        "thr_hs_abs": 1.84,
+        "Hazard_Frequency": 0.1015,
+        "Hazard_Severity": 0.318
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.84,
+        "thr_zos_abs_m": 0.2759,
+        "thr_zos_anomaly_m": 0.0727,
+        "zos_mean_m": 0.2033,
+        "mhws_m": 1.0726
+      },
+      "point_metrics": {
+        "compound_count_total": 43.0,
+        "compound_count_annual_mean": 1.3,
+        "mean_overlap_duration": 4.0,
+        "mean_full_criterion_duration": 2.21,
+        "mean_compound_intensity_norm": 0.2499,
+        "mean_integrated_severity": 0.4162,
+        "n_candidate_events": 78.0,
+        "n_rejected_by_mhws": 35.0
+      }
+    },
+    {
+      "point_id": "p06",
+      "lat": -10.4,
+      "lon": -36.2,
+      "label": "Pia\u00e7abu\u00e7u",
+      "state": "AL",
+      "latitude_band": "BA-N",
+      "file": "p06.json",
+      "file_size_kb": 129.8,
+      "n_municipalities_served": 2,
+      "n_events": 30,
+      "selection_features": {
+        "surge_q99_over_swing": 0.1175,
+        "mhws_m": 0.9862,
+        "thr_hs_abs": 1.9,
+        "Hazard_Frequency": 0.0627,
+        "Hazard_Severity": 0.2499
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.9,
+        "thr_zos_abs_m": 0.27,
+        "thr_zos_anomaly_m": 0.0717,
+        "zos_mean_m": 0.1983,
+        "mhws_m": 0.9862
+      },
+      "point_metrics": {
+        "compound_count_total": 30.0,
+        "compound_count_annual_mean": 0.91,
+        "mean_overlap_duration": 3.8,
+        "mean_full_criterion_duration": 2.1,
+        "mean_compound_intensity_norm": 0.2014,
+        "mean_integrated_severity": 0.3556,
+        "n_candidate_events": 71.0,
+        "n_rejected_by_mhws": 41.0
+      }
+    },
+    {
+      "point_id": "p07",
+      "lat": -2.8,
+      "lon": -40.2,
+      "label": "Acara\u00fa",
+      "state": "CE",
+      "latitude_band": "N_equatorial",
+      "file": "p07.json",
+      "file_size_kb": 130.0,
+      "n_municipalities_served": 1,
+      "n_events": 12,
+      "selection_features": {
+        "surge_q99_over_swing": 0.0709,
+        "mhws_m": 1.3807,
+        "thr_hs_abs": 1.58,
+        "Hazard_Frequency": 0.009,
+        "Hazard_Severity": 0.1684
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.58,
+        "thr_zos_abs_m": 0.214,
+        "thr_zos_anomaly_m": 0.0594,
+        "zos_mean_m": 0.1546,
+        "mhws_m": 1.3807
+      },
+      "point_metrics": {
+        "compound_count_total": 12.0,
+        "compound_count_annual_mean": 0.36,
+        "mean_overlap_duration": 3.83,
+        "mean_full_criterion_duration": 1.75,
+        "mean_compound_intensity_norm": 0.1915,
+        "mean_integrated_severity": 0.2831,
+        "n_candidate_events": 29.0,
+        "n_rejected_by_mhws": 17.0
+      }
+    },
+    {
+      "point_id": "p08",
+      "lat": -2.8,
+      "lon": -41.2,
+      "label": "Barroquinha",
+      "state": "CE",
+      "latitude_band": "N_equatorial",
+      "file": "p08.json",
+      "file_size_kb": 129.1,
+      "n_municipalities_served": 1,
+      "n_events": 14,
+      "selection_features": {
+        "surge_q99_over_swing": 0.074,
+        "mhws_m": 1.4475,
+        "thr_hs_abs": 1.45,
+        "Hazard_Frequency": 0.0149,
+        "Hazard_Severity": 0.2467
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.45,
+        "thr_zos_abs_m": 0.2345,
+        "thr_zos_anomaly_m": 0.0618,
+        "zos_mean_m": 0.1727,
+        "mhws_m": 1.4475
+      },
+      "point_metrics": {
+        "compound_count_total": 14.0,
+        "compound_count_annual_mean": 0.42,
+        "mean_overlap_duration": 6.86,
+        "mean_full_criterion_duration": 2.07,
+        "mean_compound_intensity_norm": 0.197,
+        "mean_integrated_severity": 0.3528,
+        "n_candidate_events": 35.0,
+        "n_rejected_by_mhws": 21.0
+      }
+    },
+    {
+      "point_id": "p09",
+      "lat": -1.8,
+      "lon": -44.4,
+      "label": "Porto Rico do Maranh\u00e3o",
+      "state": "MA",
+      "latitude_band": "N_equatorial",
+      "file": "p09.json",
+      "file_size_kb": 133.8,
+      "n_municipalities_served": 2,
+      "n_events": 46,
+      "selection_features": {
+        "surge_q99_over_swing": 0.0624,
+        "mhws_m": 2.1157,
+        "thr_hs_abs": 1.13,
+        "Hazard_Frequency": 0.1104,
+        "Hazard_Severity": 0.3725
+      },
+      "thresholds": {
+        "thr_hs_abs_m": 1.13,
+        "thr_zos_abs_m": 0.3088,
+        "thr_zos_anomaly_m": 0.0701,
+        "zos_mean_m": 0.2388,
+        "mhws_m": 2.1157
+      },
+      "point_metrics": {
+        "compound_count_total": 46.0,
+        "compound_count_annual_mean": 1.39,
+        "mean_overlap_duration": 5.78,
+        "mean_full_criterion_duration": 2.0,
+        "mean_compound_intensity_norm": 0.2862,
+        "mean_integrated_severity": 0.4647,
+        "n_candidate_events": 126.0,
+        "n_rejected_by_mhws": 80.0
+      }
+    }
+  ]
+}

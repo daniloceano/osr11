@@ -106,15 +106,34 @@ export interface CoastalHazardMetadata {
 
 export type { CoastalBasemap };
 
+/** A grid point whose daily record can be opened from the map. */
+export interface CoastalMarker {
+  id: string;
+  lat: number;
+  lon: number;
+  label: string;
+}
+
 interface Props {
   data: CoastalHazardGeoJson;
   metadata: CoastalHazardMetadata;
   basemap: CoastalBasemap;
+  /** Optional clickable points drawn over the coastal layer. */
+  markers?: CoastalMarker[];
+  selectedMarkerId?: string | null;
+  onMarkerSelect?: (id: string) => void;
 }
 
 /* ── Component ─────────────────────────────────────────────────────────── */
 
-export default function CoastalHazardMap({ data, metadata, basemap }: Props) {
+export default function CoastalHazardMap({
+  data,
+  metadata,
+  basemap,
+  markers,
+  selectedMarkerId = null,
+  onMarkerSelect,
+}: Props) {
   const layers = metadata.layers;
   const [selectedKey, setSelectedKey] = useState<string>(
     layers.find((layer) => layer.key === 'Hazard_Index')?.key ?? layers[0]?.key ?? '',
@@ -237,6 +256,39 @@ export default function CoastalHazardMap({ data, metadata, basemap }: Props) {
                       onMouseEnter={() => setHoveredIdx(index)}
                       style={{ cursor: 'pointer' }}
                     />
+                  );
+                })}
+
+                {/* Points whose daily record can be opened. Drawn last so they
+                    stay above the coastal layer, with a surface ring keeping
+                    them legible over any class colour. */}
+                {markers?.map((marker) => {
+                  const { x, y } = projection.project(marker.lon, marker.lat);
+                  const isSelected = marker.id === selectedMarkerId;
+                  return (
+                    <g
+                      key={marker.id}
+                      onClick={() => onMarkerSelect?.(marker.id)}
+                      style={{ cursor: 'pointer' }}
+                      role="button"
+                      aria-label={`Open the daily record at ${marker.label}`}
+                    >
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={isSelected ? 6.4 : 5}
+                        fill="#ffffff"
+                        opacity={0.9}
+                      />
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={isSelected ? 4.4 : 3}
+                        fill={isSelected ? MAP_COLORS.highlight : '#2a78d6'}
+                        stroke="#ffffff"
+                        strokeWidth={1.2}
+                      />
+                    </g>
                   );
                 })}
               </>
