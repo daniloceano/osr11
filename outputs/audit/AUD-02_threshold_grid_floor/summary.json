@@ -1,0 +1,163 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_02_threshold_grid_floor",
+  "question": "How far does the local Hs threshold floor rise across the 808 production grid points as the Step 2e percentile grid is extended to q95 and q99?",
+  "n_points": 808,
+  "percentiles": [
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "aud_02_reference": {
+    "published_thr_hs_min_m": 0.2,
+    "published_points_below_1m": 35,
+    "published_points_below_1_5m": 129,
+    "note": "AUD-02 §3 values, computed at q90 on the published compound_metrics.csv of the SSH_total method."
+  },
+  "by_percentile": [
+    {
+      "percentile": 0.5,
+      "n_points": 808,
+      "thr_hs_min_m": 0.07,
+      "thr_hs_p05_m": 0.7605,
+      "thr_hs_median_m": 1.465,
+      "thr_hs_max_m": 2.04,
+      "n_points_below_1m": 83,
+      "n_points_below_1.5m": 436,
+      "thr_zos_min_m": -0.0095,
+      "thr_zos_median_m": 0.1576
+    },
+    {
+      "percentile": 0.55,
+      "n_points": 808,
+      "thr_hs_min_m": 0.09,
+      "thr_hs_p05_m": 0.7935,
+      "thr_hs_median_m": 1.51,
+      "thr_hs_max_m": 2.12,
+      "n_points_below_1m": 78,
+      "n_points_below_1.5m": 384,
+      "thr_zos_min_m": -0.0012,
+      "thr_zos_median_m": 0.1641
+    },
+    {
+      "percentile": 0.6,
+      "n_points": 808,
+      "thr_hs_min_m": 0.1,
+      "thr_hs_p05_m": 0.83,
+      "thr_hs_median_m": 1.57,
+      "thr_hs_max_m": 2.21,
+      "n_points_below_1m": 71,
+      "n_points_below_1.5m": 342,
+      "thr_zos_min_m": 0.007,
+      "thr_zos_median_m": 0.1704
+    },
+    {
+      "percentile": 0.65,
+      "n_points": 808,
+      "thr_hs_min_m": 0.12,
+      "thr_hs_p05_m": 0.85,
+      "thr_hs_median_m": 1.63,
+      "thr_hs_max_m": 2.29,
+      "n_points_below_1m": 65,
+      "n_points_below_1.5m": 291,
+      "thr_zos_min_m": 0.0153,
+      "thr_zos_median_m": 0.1781
+    },
+    {
+      "percentile": 0.7,
+      "n_points": 808,
+      "thr_hs_min_m": 0.14,
+      "thr_hs_p05_m": 0.8735,
+      "thr_hs_median_m": 1.7,
+      "thr_hs_max_m": 2.4,
+      "n_points_below_1m": 56,
+      "n_points_below_1.5m": 256,
+      "thr_zos_min_m": 0.0244,
+      "thr_zos_median_m": 0.1899
+    },
+    {
+      "percentile": 0.75,
+      "n_points": 808,
+      "thr_hs_min_m": 0.16,
+      "thr_hs_p05_m": 0.9035,
+      "thr_hs_median_m": 1.76,
+      "thr_hs_max_m": 2.51,
+      "n_points_below_1m": 50,
+      "n_points_below_1.5m": 218,
+      "thr_zos_min_m": 0.0333,
+      "thr_zos_median_m": 0.2015
+    },
+    {
+      "percentile": 0.8,
+      "n_points": 808,
+      "thr_hs_min_m": 0.17,
+      "thr_hs_p05_m": 0.94,
+      "thr_hs_median_m": 1.84,
+      "thr_hs_max_m": 2.64,
+      "n_points_below_1m": 47,
+      "n_points_below_1.5m": 192,
+      "thr_zos_min_m": 0.0427,
+      "thr_zos_median_m": 0.2146
+    },
+    {
+      "percentile": 0.85,
+      "n_points": 808,
+      "thr_hs_min_m": 0.19,
+      "thr_hs_p05_m": 0.98,
+      "thr_hs_median_m": 1.93,
+      "thr_hs_max_m": 2.82,
+      "n_points_below_1m": 44,
+      "n_points_below_1.5m": 160,
+      "thr_zos_min_m": 0.0534,
+      "thr_zos_median_m": 0.2311
+    },
+    {
+      "percentile": 0.9,
+      "n_points": 808,
+      "thr_hs_min_m": 0.2,
+      "thr_hs_p05_m": 1.03,
+      "thr_hs_median_m": 2.065,
+      "thr_hs_max_m": 3.08,
+      "n_points_below_1m": 35,
+      "n_points_below_1.5m": 129,
+      "thr_zos_min_m": 0.0671,
+      "thr_zos_median_m": 0.2513
+    },
+    {
+      "percentile": 0.95,
+      "n_points": 808,
+      "thr_hs_min_m": 0.23,
+      "thr_hs_p05_m": 1.1105,
+      "thr_hs_median_m": 2.24,
+      "thr_hs_max_m": 3.534,
+      "n_points_below_1m": 31,
+      "n_points_below_1.5m": 90,
+      "thr_zos_min_m": 0.0906,
+      "thr_zos_median_m": 0.2808
+    },
+    {
+      "percentile": 0.99,
+      "n_points": 808,
+      "thr_hs_min_m": 0.27,
+      "thr_hs_p05_m": 1.28,
+      "thr_hs_median_m": 2.63,
+      "thr_hs_max_m": 4.51,
+      "n_points_below_1m": 21,
+      "n_points_below_1.5m": 61,
+      "thr_zos_min_m": 0.127,
+      "thr_zos_median_m": 0.3357
+    }
+  ],
+  "hat_m": {
+    "min": 0.3407,
+    "median": 1.4036,
+    "max": 5.6234
+  }
+}

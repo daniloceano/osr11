@@ -1,0 +1,42 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_01_step2e_score_surface",
+  "question": "Does the composite score have an interior optimum once the Step 2e grid is extended beyond q90, and what sample supports the selected pair?",
+  "grid": [
+    50,
+    55,
+    60,
+    65,
+    70,
+    75,
+    80,
+    85,
+    90,
+    95,
+    99
+  ],
+  "n_pairs": 121,
+  "P_positive_events": 147,
+  "spearman_score_vs_accepted_episodes": -0.998882,
+  "degeneracy_rule": "A pair is flagged degenerate when it accepts fewer compound episodes over the whole calibration domain than there are positive events to recall (n_accepted_episodes < P).",
+  "n_degenerate_pairs": 11,
+  "score_optimum": {
+    "pair": "q99/q99",
+    "n_accepted_episodes": 40,
+    "H": 5,
+    "R_pos": 0.034014,
+    "B": 0.007,
+    "F_soft": 36.4757,
+    "Score": -0.030625,
+    "degenerate": true
+  },
+  "incumbent_q90_q90": {
+    "n_accepted_episodes": 1224,
+    "H": 28,
+    "R_pos": 0.190476,
+    "B": 0.3092,
+    "F_soft": 1681.237,
+    "Score": -2.234953,
+    "degenerate": false
+  },
+  "figure": "figures/step2e_score_surface.png"
+}
