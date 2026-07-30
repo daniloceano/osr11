@@ -35,6 +35,8 @@ outputs/storm_catalog/
 outputs/risk_index/
 # Regeneratable NetCDF data under quicklook outputs (keep figures, drop data)
 outputs/monthly_quicklook_brazil_all/data/
+# Large regeneratable animations (keep README and metadata)
+outputs/exploratory_zos_surge_animation_2024/animations/
 
 # Logs
 logs/*.log
