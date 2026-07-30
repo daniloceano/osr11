@@ -201,13 +201,40 @@ Integration of the compound hazard with population exposure and social vulnerabi
 
 #### Sub-step 4.1 — Transfer of the hazard to municipalities
 
-Compound-event frequency (`compound_count_total`), mean overlap duration
-(`mean_overlap_duration`), and mean normalized compound intensity
-(`mean_compound_intensity_norm`) are combined first on the 808-point native
-ocean grid. The resulting normalized Hazard Index is then transferred to each
-municipality at the grid point selected by the external spatial-association
-workflow (the point with the highest compound-event count within the
-association). This is a cartographic transfer, not an exposure component.
+Compound-event frequency (`compound_count_total`) and mean integrated severity
+(`mean_integrated_severity`) are combined first on the 808-point native ocean
+grid. The resulting normalized Hazard Index is then transferred to each
+municipality at its associated grid point. This is a cartographic transfer, not
+an exposure component.
+
+**The association is an input dataset, not a derived one.** It was established
+by visual inspection in a GIS, municipality by municipality, weighing proximity
+to the municipality against compound-event activity at the candidate point.
+Both criteria were arbitrated together by eye; there is no script, and none can
+be recovered. The association is therefore archived as versioned data at
+`data/external/municipal_grid_association/`, with provenance, and the exporter
+reads it from there and verifies it against the delivered shapefile.
+
+Properties of the association, which should be reported with any result derived
+from it:
+
+| | |
+|---|---|
+| Municipalities with an associated point | 280 of 282 |
+| Distinct grid points used | **178** |
+| Maximum municipalities sharing one point | **9** |
+| Distance municipality → point, median | 13.1 km |
+| Distance municipality → point, maximum | 89.2 km |
+| Assignments beyond 30 km | 20 |
+
+Two consequences follow. Hazard values are **not spatially independent**
+between neighbouring municipalities, since 178 points serve 280 units. And
+municipalities at the head of Guanabara Bay (Magé, Guapimirim) have **no ocean
+grid point within 30 km at all**: their hazard necessarily refers to the open
+shelf and does not represent conditions inside the bay. That is a limitation of
+grid coverage rather than of the association — no assignment rule resolves it,
+as five candidate rules were tested and all return the same value there
+(see `docs/scientific_audit/issues/AUD-04_grid_to_municipality_transfer.md`).
 
 #### Sub-step 4.2 — Population exposure
 
@@ -244,9 +271,8 @@ Variables were standardized with `StandardScaler` and submitted to PCA. PC1 was 
 
 ```
 Hazard_Frequency = norm_native(compound_count_total)
-Hazard_Duration  = norm_native(mean_overlap_duration)
-Hazard_Intensity = norm_native(mean_compound_intensity_norm)
-Hazard_Index_raw = (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3
+Hazard_Severity  = norm_native(mean_integrated_severity)
+Hazard_Index_raw = (Hazard_Frequency + Hazard_Severity) / 2
 Hazard_Index     = norm_native(Hazard_Index_raw)
 Hazard_Index_mun = norm_municipal(Hazard_Index)
 
@@ -285,7 +311,8 @@ entirely coastal ones.
 
 **Products generated:**
 - `SVI_Coast_2022` — Social Vulnerability Index (external; audited, see below)
-- `Hazard_Frequency`, `Hazard_Duration`, `Hazard_Intensity` — native-grid normalized hazard components
+- `Hazard_Frequency`, `Hazard_Severity` — native-grid normalized hazard components
+- `mean_overlap_duration`, `mean_compound_intensity_norm` — diagnostics, published but no longer index components (see AUD-06)
 - `Hazard_Index_raw` — equal-weight mean of the three normalized components
 - `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`, transferred to municipalities
 - `Hazard_Index_mun` — `Hazard_Index` renormalized over the municipalities, so its amplitude matches SVI/100 in the equal-weight product

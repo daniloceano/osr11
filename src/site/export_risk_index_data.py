@@ -122,6 +122,82 @@ SUPPORT_FIELD_CANDIDATES: dict[str, tuple[str, ...]] = {
 }
 
 
+#: Versioned archive of the municipality-to-grid-point association. The
+#: association is expert judgement produced in a GIS and cannot be recomputed
+#: (see AUD-04); it is an input dataset. The delivered shapefile carries the
+#: same pairs but lives outside version control, so the archive is authoritative
+#: and the shapefile is checked against it.
+ASSOCIATION_ARCHIVE = (
+    ROOT / "data" / "external" / "municipal_grid_association"
+    / "municipal_grid_association.csv"
+)
+
+
+def _apply_archived_association(export: gpd.GeoDataFrame) -> dict[str, Any]:
+    """Take grid_lat/grid_lon from the versioned archive, verifying the shapefile.
+
+    Returns provenance describing which source was used and whether the two
+    agreed. Raises if they disagree: a silent divergence between the archive and
+    the delivered file would change every municipal hazard value without trace.
+    """
+    if not ASSOCIATION_ARCHIVE.exists():
+        return {
+            "source": "delivered shapefile only",
+            "archive_present": False,
+            "note": (
+                "The versioned association archive is absent; the association "
+                "was read from the delivered shapefile, which is not under "
+                "version control. Run "
+                "src.risk_integration.archive_municipal_grid_association."
+            ),
+        }
+
+    archive = pd.read_csv(
+        ASSOCIATION_ARCHIVE, dtype={"municipality_code": str}
+    ).set_index("municipality_code")
+    codes = export["municipality_code"].astype(str)
+    matched = codes.isin(archive.index)
+
+    disagreements = []
+    for position, (code, in_archive) in enumerate(zip(codes, matched)):
+        if not in_archive:
+            continue
+        for field in ("grid_lat", "grid_lon"):
+            delivered = pd.to_numeric(export[field].iloc[position], errors="coerce")
+            archived = float(archive.at[code, field])
+            if pd.notna(delivered) and not math.isclose(
+                float(delivered), archived, abs_tol=1e-6
+            ):
+                disagreements.append(
+                    f"{code} {field}: shapefile {delivered} vs archive {archived}"
+                )
+    if disagreements:
+        raise ValueError(
+            "The delivered shapefile and the versioned association archive "
+            "disagree, so the municipal hazard would change without trace. "
+            "Resolve before exporting:\n  " + "\n  ".join(disagreements[:10])
+        )
+
+    for field in ("grid_lat", "grid_lon"):
+        export.loc[matched.values, field] = [
+            float(archive.at[code, field]) for code in codes[matched]
+        ]
+
+    return {
+        "source": str(ASSOCIATION_ARCHIVE.relative_to(ROOT)),
+        "archive_present": True,
+        "municipalities_from_archive": int(matched.sum()),
+        "municipalities_not_in_archive": int((~matched).sum()),
+        "verified_against_delivered_shapefile": True,
+        "method": (
+            "Expert judgement: established by visual inspection in a GIS, "
+            "municipality by municipality, weighing proximity and compound-event "
+            "activity together. Not a reproducible derivation; archived as an "
+            "input dataset. See AUD-04."
+        ),
+    }
+
+
 def _source_components() -> dict[str, bool]:
     return {
         suffix: (SOURCE_DIR / f"risk_index{suffix}").exists()
@@ -513,6 +589,7 @@ def _derive_current_scope(
         )
 
     export = base_export.copy()
+    association_provenance = _apply_archived_association(export)
     svi_fraction = export["SVI_Coast_2022"].astype(float) / 100.0
 
     native_lookup = native_hazard.copy()
@@ -585,6 +662,7 @@ def _derive_current_scope(
             "native-grid Hazard Index to each municipality's pre-associated "
             "ocean point"
         ),
+        "association_provenance": association_provenance,
         "municipality_feature_count": int(len(export)),
         "matched_hazard_count": int(hazard.notna().sum()),
         "missing_hazard_count": int(hazard.isna().sum()),

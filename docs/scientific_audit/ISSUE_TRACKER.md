@@ -2,10 +2,12 @@
 
 **Última atualização:** 2026-07-29
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 15 de 18 · **em investigação:** 1 (AUD-17) · **resolvidas:** 2 (AUD-01, AUD-06) · **arquivadas:** 0
+**Questões abertas:** 14 de 18 · **em investigação:** 1 (AUD-17) · **resolvidas:** 3 (AUD-01, AUD-04, AUD-06) · **arquivadas:** 0
 
-> **Duas fragilidades científicas foram resolvidas** (AUD-01 e AUD-06, em
-> conjunto). AUD-17 teve seis de seus oito itens corrigidos (correção puramente
+> **Três questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
+> perigo); AUD-04 por reenquadramento — a associação município↔ponto é
+> julgamento de especialista, e foi arquivada como dado de entrada versionado
+> sem alterar nenhum valor. AUD-17 teve seis de seus oito itens corrigidos (correção puramente
 > documental, sem efeito em nenhum valor numérico publicado — ver seu registro,
 > §14).
 >
@@ -35,11 +37,11 @@ ver [`README.md`](README.md).
 
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
-| **P0 — bloqueia publicação** | 6 | 3 | 0 | 1 | **2** |
+| **P0 — bloqueia publicação** | 6 | 3 | 0 | 0 | **3** |
 | **P1 — resolver ou justificar** | 9 | 8 | 1 | 0 | 0 |
 | **P2 — recomendado** | 3 | 3 | 0 | 0 | 0 |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **14** | **1** | **1** | **2** |
+| **Total** | **18** | **14** | **1** | **0** | **3** |
 
 ---
 
@@ -50,7 +52,7 @@ ver [`README.md`](README.md).
 | **AUD-01** | Eventos compostos travados em fase com a sizígia ao norte de ~20°S | fragilidade-metodologica | perigo | 3.2 (orig. 2e) | dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | **06** | [AUD-01](issues/AUD-01_compound_detector_tidal_phase_locking.md) |
 | **AUD-02** | Limiares de "onda extrema" fisicamente vazios no Norte (0,20–1,05 m) | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
 | **AUD-03** | Incoerência de fase em `SSH_total` (zos 00Z + maré máx. diária) | fragilidade-metodologica | perigo | 2c → 3.1/3.2 | código, dados, interp., doc. | P1 | Não | `aberto` | — | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
-| **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `aguardando-decisao` | — | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
+| **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `limitacao-reconhecida` | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Instabilidade do ranking sob agregação alternativa do perigo (ρ = 0,384) | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |

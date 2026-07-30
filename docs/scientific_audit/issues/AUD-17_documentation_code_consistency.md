@@ -256,7 +256,7 @@ não é um problema de implementação.
 - [ ] #4 — existe `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada,
       seguindo as seções obrigatórias de `~/.claude/rules/scientific_notes_rules.md`;
       **ou** a referência foi removida do README. **Adiado deliberadamente** — ver §10.
-- [ ] #5 — remetido a AUD-04; fecha quando AUD-04 fechar.
+- [x] #5 — remetido a AUD-04, **fechado em 2026-07-30**: o `README.md` §4.1 passou a descrever o método real da associação (inspeção visual em SIG, arbitrando proximidade e atividade de eventos) em vez da regra determinística que nunca existiu.
 - [x] #6 — existe uma única lista "Products generated" no §4.4, correta.
       *(L286–294, verificado 2026-07-29)*
 - [x] #7 — todas as menções à contagem de municípios dizem 282, com a nota sobre

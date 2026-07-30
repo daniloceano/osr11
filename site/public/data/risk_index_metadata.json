@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-29T23:50:30.548543+00:00",
+  "generated_at": "2026-07-30T10:40:50.549077+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -787,6 +787,14 @@
   },
   "hazard_transfer": {
     "method": "Exact lookup by grid_lat/grid_lon rounded to 6 decimals from the native-grid Hazard Index to each municipality's pre-associated ocean point",
+    "association_provenance": {
+      "source": "data/external/municipal_grid_association/municipal_grid_association.csv",
+      "archive_present": true,
+      "municipalities_from_archive": 280,
+      "municipalities_not_in_archive": 2,
+      "verified_against_delivered_shapefile": true,
+      "method": "Expert judgement: established by visual inspection in a GIS, municipality by municipality, weighing proximity and compound-event activity together. Not a reproducible derivation; archived as an input dataset. See AUD-04."
+    },
     "municipality_feature_count": 282,
     "matched_hazard_count": 280,
     "missing_hazard_count": 2,

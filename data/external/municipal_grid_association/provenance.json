@@ -1,0 +1,29 @@
+{
+  "dataset": "Municipality-to-ocean-grid-point association (OSR11)",
+  "produced_by": "Karine Bastos Leal (INPE)",
+  "method": "Established by visual inspection in QGIS, municipality by municipality, selecting a nearby grid point with substantial compound-event activity. Both criteria — proximity and event activity — were weighed together by eye. There is no script: the association is expert judgement, and is archived here as an input dataset rather than as a reproducible derivation.",
+  "method_source": "Personal communication from the author, relayed 2026-07-30. Recorded in docs/scientific_audit/issues/AUD-04_grid_to_municipality_transfer.md, section 3.1.",
+  "extracted_from": "outputs/risk_index/risk_index.shp",
+  "extracted_from_sha256": "a82bf33f2f6c9e947bbf20093b5b61588c3e6664efe4ac1687ecc0ace0930847",
+  "extracted_on": "2026-07-30",
+  "extracted_by": "src/04_risk_integration/archive_municipal_grid_association.py",
+  "why_archived": "outputs/risk_index/ is excluded by .gitignore, so the association was not under version control. It cannot be recomputed if lost.",
+  "records": 280,
+  "municipalities_without_association": 5293,
+  "unique_grid_points": 178,
+  "max_municipalities_per_point": 9,
+  "distance_to_polygon_km": {
+    "median": 13.1125,
+    "q75": 19.1445,
+    "max": 89.167,
+    "n_above_30km": 20
+  },
+  "validation": {
+    "assignments_resolving_to_a_known_grid_point": 280,
+    "unresolved": []
+  },
+  "known_limitations": [
+    "Municipalities at the head of Guanabara Bay (Magé, Guapimirim) have no ocean grid point within 30 km; their assignment necessarily refers to the open shelf and does not represent conditions inside the bay. This is a limitation of grid coverage, not of the association: no assignment rule can resolve it.",
+    "178 grid points serve 280 municipalities, so hazard values are not spatially independent between neighbouring municipalities."
+  ]
+}

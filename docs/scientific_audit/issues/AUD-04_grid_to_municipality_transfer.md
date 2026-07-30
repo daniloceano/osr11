@@ -9,8 +9,8 @@
 | **Afeta** | código, dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — é a única lacuna de reprodutibilidade declarada em aberto no Step 4, e determina o valor de perigo de todos os 280 municípios |
-| **Status** | `aguardando-decisao` |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `limitacao-reconhecida` — a associação é julgamento de especialista, não derivação; arquivada como dado de entrada versionado, com o método descrito honestamente e as limitações declaradas. **Nenhum valor de perigo foi alterado** |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-13 |
 | **Relacionado a** | AUD-06, AUD-12, AUD-15, AUD-17 |
@@ -327,7 +327,23 @@ associação é posterior ao Step 3.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-30 | `2db841e` | `main` | registros de auditoria, `src/exploratory/audit_AUD_04_*` | Diagnóstico e comparação de cinco regras substitutas |
+| 2026-07-30 | *a registrar* | `main` | `data/external/municipal_grid_association/`, `src/04_risk_integration/archive_municipal_grid_association.py`, `src/site/export_risk_index_data.py`, `README.md` | Arquivamento da associação, migração do exportador para o artefato versionado, correção documental |
+
+## 14. Histórico de investigação *(continuação)*
+
+### 2026-07-30 — Reenquadramento e fechamento
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Estabelecido que a associação é manual (§3.1), ela precisa ser **substituída** por uma regra algorítmica, ou pode ser **mantida e arquivada** como dado de entrada? |
+| **Dados e métodos** | Teste de sistematicidade das escolhas manuais: nos 114 municípios em que a autora não escolheu o ponto mais próximo, comparação do limiar local de onda e da contagem de eventos entre o ponto escolhido e o mais próximo |
+| **Achados** | **As escolhas não são aleatórias.** Em **62 %** desses casos o ponto escolhido tem `thr_hs` **maior** que o do mais próximo (mediana 1,77 m contra 1,69 m), o que é a assinatura de quem evita deliberadamente pontos abrigados dentro de baías. Vários casos que a §3 classificava como "erro de atribuição" — Caraguatatuba, Colares, Vigia — são municípios de baía em que escolher o ponto oceânico mais distante é plausivelmente **a decisão correta**, e uma regra puramente geométrica erraria. O critério de contagem de eventos, por outro lado, não mostra tendência (45 %, indistinguível de acaso) |
+| **Interpretação** | O problema estava mal enquadrado nas versões anteriores deste registro. Não se trata de uma regra errada a ser substituída, e sim de **um dado produzido por julgamento de especialista que não estava sob controle de versão** — vivia apenas dentro de `outputs/risk_index/`, excluído pelo `.gitignore`. Julgamento de especialista é entrada legítima em ciência, desde que arquivada, descrita e com limitações declaradas; o que não era admissível era o artefato poder se perder e a documentação descrever uma regra determinística que nunca existiu. A caracterização de "erro de atribuição" para os casos de baía é **retirada** |
+| **Alterações implementadas** | (1) Associação extraída para `data/external/municipal_grid_association/`, com CSV versionado, distância por município e `provenance.json` declarando autoria, método, origem e limitações. (2) O exportador passou a **ler o artefato versionado** e a verificá-lo contra o shapefile entregue, levantando erro em caso de divergência. (3) `README.md` §4.1 reescrito: descreve o método real, publica as estatísticas da associação e declara as duas limitações. (4) Fórmula do índice no README atualizada para duas componentes |
+| **Validação realizada** | Produto municipal regenerado após a migração: **0 de 282 municípios com qualquer propriedade alterada**. A mudança é de proveniência, não de resultado |
+| **Incerteza remanescente** | (1) A tendência de 62 % é moderada, e não demonstra que cada escolha individual esteja correta — apenas que o conjunto não é aleatório. (2) A classificação de exposição da frente costeira por município (diagnóstico 3 da §8) continua não feita. (3) **Se AUD-12 excluir os pontos estuarinos**, alguns municípios perdem o ponto atribuído e será preciso uma regra para reassociar *esses casos*; as cinco variantes já implementadas em `outputs/audit/AUD-04_association_variants/` servirão a isso. (4) O caso de Santa Catarina **não é resolvido por esta questão**: lá o ponto atribuído já é o mais próximo, e só regras de extremo o alterariam, ao custo de viés otimista em todo o domínio |
+| **Próxima decisão necessária** | Nenhuma para esta questão |
 
 ## 14. Histórico de investigação
 
