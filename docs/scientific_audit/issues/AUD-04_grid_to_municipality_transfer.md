@@ -328,7 +328,7 @@ associação é posterior ao Step 3.
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
 | 2026-07-30 | `2db841e` | `main` | registros de auditoria, `src/exploratory/audit_AUD_04_*` | Diagnóstico e comparação de cinco regras substitutas |
-| 2026-07-30 | *a registrar* | `main` | `data/external/municipal_grid_association/`, `src/04_risk_integration/archive_municipal_grid_association.py`, `src/site/export_risk_index_data.py`, `README.md` | Arquivamento da associação, migração do exportador para o artefato versionado, correção documental |
+| 2026-07-30 | `d0919e8` | `main` | `data/external/municipal_grid_association/`, `src/04_risk_integration/archive_municipal_grid_association.py`, `src/site/export_risk_index_data.py`, `README.md` | Arquivamento da associação, migração do exportador para o artefato versionado, correção documental |
 
 ## 14. Histórico de investigação *(continuação)*
 
