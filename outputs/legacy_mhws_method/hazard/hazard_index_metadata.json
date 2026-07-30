@@ -1,0 +1,113 @@
+{
+  "source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
+  "implementation": "src/04_risk_integration/hazard_index.py",
+  "grid_point_count": 808,
+  "normalization_population": "all finite native ocean grid points",
+  "component_source_fields": {
+    "Hazard_Frequency": "compound_count_total",
+    "Hazard_Severity": "mean_integrated_severity"
+  },
+  "component_weights": {
+    "Hazard_Frequency": 0.5,
+    "Hazard_Severity": 0.5
+  },
+  "formula": "Hazard_Index_raw = [norm(compound_count_total) + norm(mean_integrated_severity)] / 2; Hazard_Index = norm(Hazard_Index_raw)",
+  "retired_component": {
+    "field": "mean_overlap_duration",
+    "retired_on": "2026-07-29",
+    "reason": "AUD-06: measured the coincidence of two percentile tests rather than a physical duration, was discretised into whole days over a domain-wide range of about one day, and anticorrelated with frequency (Spearman -0.550) so that the two cancelled inside the equal-weight mean. Retained as a published diagnostic."
+  },
+  "numeric_stats": {
+    "compound_count_total": {
+      "count": 808,
+      "min": 9.0,
+      "max": 344.0,
+      "mean": 98.563119,
+      "median": 41.0
+    },
+    "mean_integrated_severity": {
+      "count": 808,
+      "min": 0.1332,
+      "max": 1.0232,
+      "mean": 0.471512,
+      "median": 0.4312
+    },
+    "compound_count_annual_mean": {
+      "count": 808,
+      "min": 0.27,
+      "max": 10.43,
+      "mean": 2.987525,
+      "median": 1.24
+    },
+    "mean_overlap_duration": {
+      "count": 808,
+      "min": 1.2,
+      "max": 10.75,
+      "mean": 3.430248,
+      "median": 3.0
+    },
+    "mean_full_criterion_duration": {
+      "count": 808,
+      "min": 1.18,
+      "max": 3.04,
+      "mean": 1.896312,
+      "median": 1.84
+    },
+    "mean_compound_intensity_norm": {
+      "count": 808,
+      "min": 0.108,
+      "max": 0.618,
+      "mean": 0.286205,
+      "median": 0.26675
+    },
+    "thr_hs_abs": {
+      "count": 808,
+      "min": 0.2,
+      "max": 3.08,
+      "mean": 2.005663,
+      "median": 2.065
+    },
+    "thr_zos_abs": {
+      "count": 808,
+      "min": 0.067141,
+      "max": 0.54469,
+      "mean": 0.25667,
+      "median": 0.251313
+    },
+    "mhws_m": {
+      "count": 808,
+      "min": 0.077377,
+      "max": 4.332241,
+      "mean": 1.040711,
+      "median": 0.969768
+    },
+    "Hazard_Frequency": {
+      "count": 808,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.267353,
+      "median": 0.095522
+    },
+    "Hazard_Severity": {
+      "count": 808,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.380126,
+      "median": 0.334831
+    },
+    "Hazard_Index_raw": {
+      "count": 808,
+      "min": 0.010448,
+      "max": 0.922388,
+      "mean": 0.323739,
+      "median": 0.237275
+    },
+    "Hazard_Index": {
+      "count": 808,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.343544,
+      "median": 0.24873
+    }
+  }
+}

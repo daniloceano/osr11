@@ -1,0 +1,3 @@
+method,events_db,validated_period,thr_hs_pct,thr_ssh_pct,H,metric_primary,FAR
+CSI (Step 2d),Legacy (91 unique IDs / 105 rows),1998–2023,0.9,0.9,21.0,CSI=0.0155,0.983619344773791
+PU Composite (Step 2e),"Combined: expanded (56) + legacy (91) = 147 events, 27 municipalities",1998–2020,0.9,0.9,35.0,Score=-3.1593,N/A (PU framework)

@@ -1,0 +1,38 @@
+{
+  "generated_by": "src.storm_catalog_generation.compound_detection.detection_mhws",
+  "method": "MHWS-conditioned compound detection (tide as conditioning variable)",
+  "supersedes": "outputs/legacy_ssh_total_method/ (SSH_total detector)",
+  "definition": {
+    "wave_threshold": "local q0.90 of VHM0",
+    "level_threshold": "local q0.90 of zos (tide-free)",
+    "episode_max_gap_days": 1,
+    "condition": "max(SWL) over shared days > MHWS",
+    "swl": "(zos - mean(zos)) + tide_daily_max",
+    "mhws": "A_M2 + A_S2 from FES2022 harmonic constants",
+    "peak_intensity_diagnostic": "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - MHWS)]",
+    "integrated_severity_index_component": "sum over full-criterion days of 0.5 * [norm(Hs_d - thr_hs) + norm(SWL_d - MHWS)], daily excesses pooled domain-wide",
+    "duration_status": "computed and published as a diagnostic, no longer a hazard index component (AUD-06)",
+    "wave_setup": "not used; waves act as driver and intensity term only"
+  },
+  "period": {
+    "start": "1993-01-01",
+    "end": "2025-12-31",
+    "years": 33.0
+  },
+  "grid_point_count": 808,
+  "points_skipped": [],
+  "compound_event_total": 79639,
+  "candidates_rejected_by_mhws_condition": 30117,
+  "rescaling_reference_percentiles": {
+    "low_pct": 5.0,
+    "high_pct": 95.0,
+    "peak_wave_low": 0.04,
+    "peak_wave_high": 1.49,
+    "peak_level_low": 0.032781,
+    "peak_level_high": 0.760672,
+    "daily_wave_low": 0.01,
+    "daily_wave_high": 1.29,
+    "daily_level_low": 0.025553,
+    "daily_level_high": 0.723133
+  }
+}
