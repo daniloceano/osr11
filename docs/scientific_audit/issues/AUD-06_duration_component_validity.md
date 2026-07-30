@@ -271,7 +271,7 @@ Os catálogos **não** precisam ser reprocessados: `mean_overlap_duration`,
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| 2026-07-29 | *a registrar* | `main` | `src/04_risk_integration/hazard_index.py`, `src/03_storm_catalog_generation/02_compound_detection/detection_mhws.py`, `src/site/export_risk_index_data.py`, `src/site/export_coastal_hazard_data.py`, `src/figures_article/make_article_coastal_hazard_components_map.py`, `src/figures_article/make_article_hazard_vulnerability_risk_multiplot.py`, componentes do site em `site/` | Remoção da duração do índice; adoção da severidade integrada; regeneração de site e figuras |
+| 2026-07-29 | `a82d91b` | `main` | `src/04_risk_integration/hazard_index.py`, `src/03_storm_catalog_generation/02_compound_detection/detection_mhws.py`, `src/site/export_risk_index_data.py`, `src/site/export_coastal_hazard_data.py`, `src/figures_article/make_article_coastal_hazard_components_map.py`, `src/figures_article/make_article_hazard_vulnerability_risk_multiplot.py`, componentes do site em `site/` | Remoção da duração do índice; adoção da severidade integrada; regeneração de site e figuras |
 
 ## 14. Histórico de investigação *(continuação)*
 

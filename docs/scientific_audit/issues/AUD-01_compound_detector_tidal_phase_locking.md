@@ -278,7 +278,7 @@ documentação e figura suplementar nova.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| 2026-07-29 | `f235656` | `audit/AUD-01-mhws-detector` | **Novos:** `src/03_storm_catalog_generation/02_compound_detection/mhws_datum.py`, `.../detection_mhws.py`, `src/exploratory/compare_methods_ssh_total_vs_mhws.py`, `src/exploratory/audit_AUD_01_*.py` (6 diagnósticos), `outputs/legacy_ssh_total_method/`, `outputs/storm_catalog/compound_mhws/`, `outputs/method_comparison_ssh_total_vs_mhws/`, `outputs/audit/AUD-01_*/` | Implementação do método MHWS **em caminhos novos**. O código e as saídas do método legado **não foram alterados** |
+| 2026-07-29 | `f235656`, `a82d91b` | `main` | **Novos:** `src/03_storm_catalog_generation/02_compound_detection/mhws_datum.py`, `.../detection_mhws.py`, `src/exploratory/compare_methods_ssh_total_vs_mhws.py`, `src/exploratory/audit_AUD_01_*.py` (6 diagnósticos), `outputs/legacy_ssh_total_method/`, `outputs/storm_catalog/compound_mhws/`, `outputs/method_comparison_ssh_total_vs_mhws/`, `outputs/audit/AUD-01_*/` | Implementação do método MHWS **em caminhos novos**. O código e as saídas do método legado **não foram alterados** |
 
 > **Nota de segurança.** `outputs/storm_catalog/` e `outputs/risk_index/` estão
 > no `.gitignore`, portanto o `compound_metrics.csv` legado **não era
