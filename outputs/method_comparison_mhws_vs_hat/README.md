@@ -209,6 +209,10 @@ Estes resultados não autorizam adotar HAT como método vigente.
 | `figures/map_duration_diagnostic_mhws_vs_hat.png` | duração aposentada |
 | `figures/map_peak_intensity_diagnostic_mhws_vs_hat.png` | pico aposentado |
 
+Em todos os mapas, valores exatamente iguais a zero são mostrados em cinza
+claro, separados visualmente da primeira classe positiva. Essa convenção é
+apenas cartográfica e não altera valores, normalização ou estatísticas.
+
 O instantâneo versionado do braço HAT está em `outputs/hat_method/`.
 
 ---

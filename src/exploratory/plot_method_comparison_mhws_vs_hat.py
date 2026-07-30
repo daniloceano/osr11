@@ -25,9 +25,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
 
 from src.exploratory.plot_method_comparison_maps import (
     DIFF_BOUNDARIES,
+    SEGMENT_LINEWIDTH,
     VALUE_BOUNDARIES,
     _colorbar,
     _draw_segments,
@@ -61,6 +63,28 @@ COMPONENTS = (
         "peak_intensity_diagnostic",
     ),
 )
+
+ZERO_COLOR = "#D9D9D9"
+
+
+def _draw_exact_zeros(
+    axis: plt.Axes,
+    segments: gpd.GeoDataFrame,
+    field: str,
+) -> int:
+    """Overlay exact zeros in light gray without changing the numeric scale."""
+    values = pd.to_numeric(segments[field], errors="coerce").to_numpy(dtype=float)
+    geometries = segments.geometry[values == 0.0].tolist()
+    if geometries:
+        axis.add_geometries(
+            geometries,
+            crs=ccrs.PlateCarree(),
+            facecolor="none",
+            edgecolor=ZERO_COLOR,
+            linewidth=SEGMENT_LINEWIDTH,
+            zorder=9,
+        )
+    return len(geometries)
 
 
 def _build(
@@ -107,6 +131,19 @@ def _build(
         )
         _draw_context(axis, coastline)
         _draw_segments(axis, segments, column, cmap, boundaries)
+        if _draw_exact_zeros(axis, segments, column):
+            axis.legend(
+                handles=[
+                    Patch(
+                        facecolor=ZERO_COLOR,
+                        edgecolor="#AFAFAF",
+                        label="valor exatamente 0",
+                    )
+                ],
+                loc="lower left",
+                fontsize=7.2,
+                framealpha=0.94,
+            )
         values = pd.to_numeric(segments[column], errors="coerce").dropna()
         statistics[column] = {
             "min": round(float(values.min()), 4),
@@ -151,7 +188,8 @@ def _build(
         0.5,
         0.045,
         "Segmentos costeiros Natural Earth de até 5 km, associados ao ponto "
-        "nativo mais próximo. Valores consumidos sem renormalização.",
+        "nativo mais próximo. Valores consumidos sem renormalização; zeros "
+        "exatos aparecem em cinza claro.",
         ha="center",
         va="top",
         fontsize=7.6,
