@@ -138,8 +138,7 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
 
 DETAIL_FIELDS = (
     "Hazard_Frequency",
-    "Hazard_Duration",
-    "Hazard_Intensity",
+    "Hazard_Severity",
     "Hazard_Index_raw",
 )
 

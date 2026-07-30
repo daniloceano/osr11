@@ -1,93 +1,117 @@
 {
-  "generated_at": "2026-07-28T19:45:11.359088+00:00",
+  "generated_at": "2026-07-30T02:09:03.692647+00:00",
   "output": "outputs/article_figures/coastal_hazard_index_components.png",
-  "native_grid_source": "outputs/storm_catalog/compound/compound_metrics.csv",
+  "native_grid_source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
   "native_hazard_index": {
-    "source": "outputs/storm_catalog/compound/compound_metrics.csv",
+    "source": "outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv",
     "implementation": "src/04_risk_integration/hazard_index.py",
     "grid_point_count": 808,
     "normalization_population": "all finite native ocean grid points",
     "component_source_fields": {
       "Hazard_Frequency": "compound_count_total",
-      "Hazard_Duration": "mean_overlap_duration",
-      "Hazard_Intensity": "mean_compound_intensity_norm"
+      "Hazard_Severity": "mean_integrated_severity"
     },
     "component_weights": {
-      "Hazard_Frequency": 0.3333333333333333,
-      "Hazard_Duration": 0.3333333333333333,
-      "Hazard_Intensity": 0.3333333333333333
+      "Hazard_Frequency": 0.5,
+      "Hazard_Severity": 0.5
     },
-    "formula": "Hazard_Index_raw = [norm(compound_count_total) + norm(mean_overlap_duration) + norm(mean_compound_intensity_norm)] / 3; Hazard_Index = norm(Hazard_Index_raw)",
+    "formula": "Hazard_Index_raw = [norm(compound_count_total) + norm(mean_integrated_severity)] / 2; Hazard_Index = norm(Hazard_Index_raw)",
+    "retired_component": {
+      "field": "mean_overlap_duration",
+      "retired_on": "2026-07-29",
+      "reason": "AUD-06: measured the coincidence of two percentile tests rather than a physical duration, was discretised into whole days over a domain-wide range of about one day, and anticorrelated with frequency (Spearman -0.550) so that the two cancelled inside the equal-weight mean. Retained as a published diagnostic."
+    },
     "numeric_stats": {
       "compound_count_total": {
         "count": 808,
-        "min": 43.0,
-        "max": 322.0,
-        "mean": 118.850248,
-        "median": 90.0
+        "min": 9.0,
+        "max": 344.0,
+        "mean": 98.563119,
+        "median": 41.0
+      },
+      "mean_integrated_severity": {
+        "count": 808,
+        "min": 0.1332,
+        "max": 1.0232,
+        "mean": 0.471512,
+        "median": 0.4312
       },
       "compound_count_annual_mean": {
         "count": 808,
-        "min": 1.3,
-        "max": 9.76,
-        "mean": 3.602364,
-        "median": 2.73
-      },
-      "mean_compound_intensity_norm_abspeak": {
-        "count": 808,
-        "min": 0.0659,
-        "max": 0.6946,
-        "mean": 0.406997,
-        "median": 0.40685
+        "min": 0.27,
+        "max": 10.43,
+        "mean": 2.987525,
+        "median": 1.24
       },
       "mean_overlap_duration": {
         "count": 808,
-        "min": 1.26,
-        "max": 2.51,
-        "mean": 1.738255,
-        "median": 1.71
+        "min": 1.2,
+        "max": 10.75,
+        "mean": 3.430248,
+        "median": 3.0
+      },
+      "mean_full_criterion_duration": {
+        "count": 808,
+        "min": 1.18,
+        "max": 3.04,
+        "mean": 1.896312,
+        "median": 1.84
       },
       "mean_compound_intensity_norm": {
         "count": 808,
-        "min": 0.1691,
-        "max": 0.5096,
-        "mean": 0.324783,
-        "median": 0.3209
+        "min": 0.108,
+        "max": 0.618,
+        "mean": 0.286205,
+        "median": 0.26675
+      },
+      "thr_hs_abs": {
+        "count": 808,
+        "min": 0.2,
+        "max": 3.08,
+        "mean": 2.005663,
+        "median": 2.065
+      },
+      "thr_zos_abs": {
+        "count": 808,
+        "min": 0.067141,
+        "max": 0.54469,
+        "mean": 0.25667,
+        "median": 0.251313
+      },
+      "mhws_m": {
+        "count": 808,
+        "min": 0.077377,
+        "max": 4.332241,
+        "mean": 1.040711,
+        "median": 0.969768
       },
       "Hazard_Frequency": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.271865,
-        "median": 0.168459
+        "mean": 0.267353,
+        "median": 0.095522
       },
-      "Hazard_Duration": {
+      "Hazard_Severity": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.382604,
-        "median": 0.36
-      },
-      "Hazard_Intensity": {
-        "count": 808,
-        "min": 0.0,
-        "max": 1.0,
-        "mean": 0.457218,
-        "median": 0.445815
+        "mean": 0.380126,
+        "median": 0.334831
       },
       "Hazard_Index_raw": {
         "count": 808,
-        "min": 0.146836,
-        "max": 0.72782,
-        "mean": 0.370562,
-        "median": 0.345036
+        "min": 0.010448,
+        "max": 0.922388,
+        "mean": 0.323739,
+        "median": 0.237275
       },
       "Hazard_Index": {
         "count": 808,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.385082,
-        "median": 0.341147
+        "mean": 0.343544,
+        "median": 0.24873
       }
     }
   },
@@ -108,11 +132,10 @@
     "native_grid_points_used": 297,
     "transferred_fields": [
       "compound_count_annual_mean",
+      "mean_integrated_severity",
       "mean_overlap_duration",
-      "mean_compound_intensity_norm",
       "Hazard_Frequency",
-      "Hazard_Duration",
-      "Hazard_Intensity",
+      "Hazard_Severity",
       "Hazard_Index_raw",
       "Hazard_Index"
     ],
@@ -127,59 +150,52 @@
     "assigned_value_statistics": {
       "compound_count_annual_mean": {
         "count": 6743,
-        "min": 1.45,
-        "max": 9.09,
-        "mean": 3.724575,
-        "median": 2.88
+        "min": 0.3,
+        "max": 9.79,
+        "mean": 3.081468,
+        "median": 1.49
+      },
+      "mean_integrated_severity": {
+        "count": 6743,
+        "min": 0.1652,
+        "max": 0.9646,
+        "mean": 0.473806,
+        "median": 0.4288
       },
       "mean_overlap_duration": {
         "count": 6743,
-        "min": 1.26,
-        "max": 2.51,
-        "mean": 1.702707,
-        "median": 1.7
-      },
-      "mean_compound_intensity_norm": {
-        "count": 6743,
-        "min": 0.1691,
-        "max": 0.4856,
-        "mean": 0.33099,
-        "median": 0.3253
+        "min": 1.2,
+        "max": 9.88,
+        "mean": 3.547458,
+        "median": 3.32
       },
       "Hazard_Frequency": {
         "count": 6743,
-        "min": 0.017921,
-        "max": 0.921147,
-        "mean": 0.286299,
-        "median": 0.18638
+        "min": 0.002985,
+        "max": 0.937313,
+        "mean": 0.276612,
+        "median": 0.119403
       },
-      "Hazard_Duration": {
+      "Hazard_Severity": {
         "count": 6743,
-        "min": 0.0,
-        "max": 1.0,
-        "mean": 0.354165,
-        "median": 0.352
-      },
-      "Hazard_Intensity": {
-        "count": 6743,
-        "min": 0.0,
-        "max": 0.929515,
-        "mean": 0.475447,
-        "median": 0.458737
+        "min": 0.035955,
+        "max": 0.934157,
+        "mean": 0.382703,
+        "median": 0.332135
       },
       "Hazard_Index_raw": {
         "count": 6743,
-        "min": 0.148833,
-        "max": 0.628513,
-        "mean": 0.37197,
-        "median": 0.345004
+        "min": 0.03141,
+        "max": 0.863407,
+        "mean": 0.329658,
+        "median": 0.277632
       },
       "Hazard_Index": {
         "count": 6743,
-        "min": 0.003439,
-        "max": 0.829072,
-        "mean": 0.387506,
-        "median": 0.341091
+        "min": 0.022987,
+        "max": 0.935323,
+        "mean": 0.350034,
+        "median": 0.292984
       }
     }
   },
@@ -191,36 +207,36 @@
       "unit": "events per year",
       "statistics": {
         "count": 6743,
-        "min": 1.45,
-        "mean": 3.724575,
-        "median": 2.88,
-        "max": 9.09
+        "min": 0.3,
+        "mean": 3.081468,
+        "median": 1.49,
+        "max": 9.79
       }
     },
     {
       "panel": "B",
-      "title": "Mean overlap duration",
-      "field": "mean_overlap_duration",
-      "unit": "days",
+      "title": "Mean integrated severity",
+      "field": "mean_integrated_severity",
+      "unit": "dimensionless",
       "statistics": {
         "count": 6743,
-        "min": 1.26,
-        "mean": 1.702707,
-        "median": 1.7,
-        "max": 2.51
+        "min": 0.1652,
+        "mean": 0.473806,
+        "median": 0.4288,
+        "max": 0.9646
       }
     },
     {
       "panel": "C",
-      "title": "Mean compound intensity",
-      "field": "mean_compound_intensity_norm",
-      "unit": "dimensionless",
+      "title": "Mean overlap duration (diagnostic, not an index component)",
+      "field": "mean_overlap_duration",
+      "unit": "days",
       "statistics": {
         "count": 6743,
-        "min": 0.1691,
-        "mean": 0.33099,
-        "median": 0.3253,
-        "max": 0.4856
+        "min": 1.2,
+        "mean": 3.547458,
+        "median": 3.32,
+        "max": 9.88
       }
     },
     {
@@ -230,10 +246,10 @@
       "unit": "0-1 index",
       "statistics": {
         "count": 6743,
-        "min": 0.003439,
-        "mean": 0.387506,
-        "median": 0.341091,
-        "max": 0.829072
+        "min": 0.022987,
+        "mean": 0.350034,
+        "median": 0.292984,
+        "max": 0.935323
       }
     }
   ],
@@ -278,28 +294,62 @@
       "label": "Events yr$^{-1}$"
     },
     "B": {
+      "field": "mean_integrated_severity",
+      "unit": "dimensionless",
+      "type": "discrete",
+      "boundaries": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0
+      ],
+      "ticks": [
+        0.1,
+        0.3,
+        0.5,
+        0.7,
+        0.9
+      ],
+      "colors": [
+        "#fde7a9",
+        "#feb67c",
+        "#fb8560",
+        "#ea5661",
+        "#c43c75",
+        "#992d80",
+        "#6e1e81",
+        "#451077",
+        "#1a1042"
+      ],
+      "colormap": "matplotlib magma sampled from 0.95 to 0.12",
+      "display_values": "native-grid values without cross-grid Min-Max scaling",
+      "label": "Mean integrated severity (dimensionless)"
+    },
+    "C": {
       "field": "mean_overlap_duration",
       "unit": "days",
       "type": "discrete",
       "boundaries": [
-        1.2,
-        1.4,
-        1.5999999999999999,
-        1.7999999999999998,
-        1.9999999999999998,
-        2.1999999999999997,
-        2.3999999999999995,
-        2.5999999999999996
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0
       ],
       "ticks": [
-        1.2,
-        1.4,
-        1.5999999999999999,
-        1.7999999999999998,
-        1.9999999999999998,
-        2.1999999999999997,
-        2.3999999999999995,
-        2.5999999999999996
+        1.0,
+        3.0,
+        5.0,
+        7.0
       ],
       "colors": [
         "#fde7a9",
@@ -313,42 +363,6 @@
       "colormap": "matplotlib magma sampled from 0.95 to 0.12",
       "display_values": "native-grid values without cross-grid Min-Max scaling",
       "label": "Mean overlap duration (days)"
-    },
-    "C": {
-      "field": "mean_compound_intensity_norm",
-      "unit": "dimensionless",
-      "type": "discrete",
-      "boundaries": [
-        0.15,
-        0.2,
-        0.25,
-        0.3,
-        0.35,
-        0.4,
-        0.45,
-        0.5,
-        0.55
-      ],
-      "ticks": [
-        0.15,
-        0.25,
-        0.35,
-        0.45,
-        0.55
-      ],
-      "colors": [
-        "#fde7a9",
-        "#feae77",
-        "#f8765c",
-        "#dc4869",
-        "#ab337c",
-        "#7b2382",
-        "#4c117a",
-        "#1a1042"
-      ],
-      "colormap": "matplotlib magma sampled from 0.95 to 0.12",
-      "display_values": "native-grid values without cross-grid Min-Max scaling",
-      "label": "Mean compound intensity (dimensionless)"
     },
     "D": {
       "field": "Hazard_Index",

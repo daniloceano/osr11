@@ -101,22 +101,21 @@ METADATA_PATH = (
 OUTPUT_CRS = "EPSG:4326"
 CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
 FREQUENCY_BOUNDARIES = np.arange(1.0, 11.0, 1.0)
-DURATION_BOUNDARIES = np.arange(1.2, 2.61, 0.2)
-INTENSITY_BOUNDARIES = np.round(np.arange(0.15, 0.551, 0.05), 2)
+SEVERITY_BOUNDARIES = np.round(np.arange(0.1, 1.01, 0.1), 2)
+DURATION_BOUNDARIES = np.round(np.arange(1.0, 8.1, 1.0), 1)
 HAZARD_BOUNDARIES = np.linspace(0.0, 1.0, 9)
 FREQUENCY_TICKS = FREQUENCY_BOUNDARIES[[0, 2, 4, 6, 8, 9]]
-DURATION_TICKS = DURATION_BOUNDARIES
-INTENSITY_TICKS = INTENSITY_BOUNDARIES[::2]
+SEVERITY_TICKS = SEVERITY_BOUNDARIES[::2]
+DURATION_TICKS = DURATION_BOUNDARIES[::2]
 HAZARD_TICKS = HAZARD_BOUNDARIES[[0, 2, 4, 6, 8]]
 DISPLAY_COMPONENT_FIELDS = (
     "compound_count_annual_mean",
+    "mean_integrated_severity",
     "mean_overlap_duration",
-    "mean_compound_intensity_norm",
 )
 NORMALIZED_COMPONENT_FIELDS = (
     "Hazard_Frequency",
-    "Hazard_Duration",
-    "Hazard_Intensity",
+    "Hazard_Severity",
 )
 PANEL_SPECS = (
     {
@@ -131,25 +130,25 @@ PANEL_SPECS = (
         "palette": "component",
     },
     {
-        "field": "mean_overlap_duration",
+        "field": "mean_integrated_severity",
         "panel": "B",
-        "title": "Mean overlap duration",
-        "boundaries": DURATION_BOUNDARIES,
-        "ticks": DURATION_TICKS,
-        "colorbar_label": "Mean overlap duration (days)",
+        "title": "Mean integrated severity",
+        "boundaries": SEVERITY_BOUNDARIES,
+        "ticks": SEVERITY_TICKS,
+        "colorbar_label": "Mean integrated severity (dimensionless)",
         "tick_format": "%.1f",
-        "unit": "days",
+        "unit": "dimensionless",
         "palette": "component",
     },
     {
-        "field": "mean_compound_intensity_norm",
+        "field": "mean_overlap_duration",
         "panel": "C",
-        "title": "Mean compound intensity",
-        "boundaries": INTENSITY_BOUNDARIES,
-        "ticks": INTENSITY_TICKS,
-        "colorbar_label": "Mean compound intensity (dimensionless)",
-        "tick_format": "%.2f",
-        "unit": "dimensionless",
+        "title": "Mean overlap duration (diagnostic, not an index component)",
+        "boundaries": DURATION_BOUNDARIES,
+        "ticks": DURATION_TICKS,
+        "colorbar_label": "Mean overlap duration (days)",
+        "tick_format": "%.0f",
+        "unit": "days",
         "palette": "component",
     },
     {

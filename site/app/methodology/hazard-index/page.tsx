@@ -266,8 +266,7 @@ export default function HazardIndexMethodologyPage() {
           <Eq>{`norm_grid(x) = (x − min_grid(x)) / (max_grid(x) − min_grid(x))
 
 Hazard_Frequency = norm_grid(compound_count_total)
-Hazard_Duration  = norm_grid(mean_overlap_duration)
-Hazard_Intensity = norm_grid(mean_compound_intensity_norm)`}</Eq>
+Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
           <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
             <strong>This normalization is methodological.</strong> It exists only to make the three
             components commensurable inside the index. It is <em>not</em> what the component maps
@@ -282,7 +281,7 @@ Hazard_Intensity = norm_grid(mean_compound_intensity_norm)`}</Eq>
             The three normalized components are averaged with equal weights of 1/3:
           </p>
           <Eq>{`Hazard_Index_raw =
-    (Hazard_Frequency + Hazard_Duration + Hazard_Intensity) / 3`}</Eq>
+    (Hazard_Frequency + Hazard_Severity) / 2`}</Eq>
           <p className="text-sm leading-relaxed text-gray-700">
             Equal weights are an explicit modelling choice, made in the absence of impact-calibrated
             weights for the Brazilian coast. Because frequency is negatively correlated with the two

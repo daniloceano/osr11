@@ -106,8 +106,7 @@ const STAGE_BADGES: Record<RiskLayerMeta['stage'], { label: string; className: s
 const DETAIL_FIELDS: { key: string; label: string; decimals: number }[] = [
   { key: 'SVI_Coast_2022', label: 'SVI_Coast_2022 (0–100)', decimals: 1 },
   { key: 'Hazard_Frequency', label: 'Hazard_Frequency (0–1)', decimals: 3 },
-  { key: 'Hazard_Duration', label: 'Hazard_Duration (0–1)', decimals: 3 },
-  { key: 'Hazard_Intensity', label: 'Hazard_Intensity (0–1)', decimals: 3 },
+  { key: 'Hazard_Severity', label: 'Hazard_Severity (0–1)', decimals: 3 },
   { key: 'Hazard_Index_raw', label: 'Hazard_Index_raw (mean of the three)', decimals: 3 },
   { key: 'Hazard_Index', label: 'Hazard_Index (0–1)', decimals: 3 },
   { key: 'Hazard_Index_mun', label: 'Hazard_Index_mun (0–1)', decimals: 3 },

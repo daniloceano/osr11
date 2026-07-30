@@ -1,0 +1,61 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_06_duration_variants",
+  "detector": "MHWS (zos \u2229 Hs conditioned on SWL > MHWS)",
+  "threshold_pct": 0.9,
+  "variants": {
+    "reference_driver_overlap_days": "mean days with Hs and zos exceedance (current definition)",
+    "opt1_full_criterion_days": "mean days with Hs and zos exceedance AND SWL > MHWS",
+    "opt2_integrated_intensity": "mean sum over full-criterion days of 0.5*[norm(Hs excess) + norm(SWL excess)]",
+    "opt3_integrated_excess_m_days": "mean sum over full-criterion days of (SWL - MHWS), metre-days",
+    "opt4_p95_full_criterion_days": "95th percentile of the full-criterion day count"
+  },
+  "daily_excess_reference_percentiles": {
+    "wave_low": 0.01,
+    "wave_high": 1.29,
+    "level_low": 0.025553,
+    "level_high": 0.723133
+  },
+  "validation_against_production": {
+    "status": "ok",
+    "max_abs_count_difference": 0,
+    "max_abs_mean_duration_difference": 0.0,
+    "points_compared": 808
+  },
+  "statistics": {
+    "reference_driver_overlap_days": {
+      "min": 1.2047,
+      "max": 10.75,
+      "median": 3.0,
+      "spearman_vs_abs_latitude": -0.7926,
+      "spearman_vs_frequency": -0.7676
+    },
+    "opt1_full_criterion_days": {
+      "min": 1.1811,
+      "max": 3.0385,
+      "median": 1.8411,
+      "spearman_vs_abs_latitude": -0.5415,
+      "spearman_vs_frequency": -0.4871
+    },
+    "opt2_integrated_intensity": {
+      "min": 0.1332,
+      "max": 1.0232,
+      "median": 0.4312,
+      "spearman_vs_abs_latitude": 0.3453,
+      "spearman_vs_frequency": 0.5991
+    },
+    "opt3_integrated_excess_m_days": {
+      "min": 0.1406,
+      "max": 1.6913,
+      "median": 0.3421,
+      "spearman_vs_abs_latitude": -0.0808,
+      "spearman_vs_frequency": 0.3867
+    },
+    "opt4_p95_full_criterion_days": {
+      "min": 2.0,
+      "max": 9.5,
+      "median": 4.0,
+      "spearman_vs_abs_latitude": -0.6346,
+      "spearman_vs_frequency": -0.4449
+    }
+  }
+}

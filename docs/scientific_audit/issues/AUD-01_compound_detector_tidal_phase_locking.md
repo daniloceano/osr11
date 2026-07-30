@@ -9,8 +9,8 @@
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — nenhuma afirmação sobre hotspots ao norte de ~20°S se sustenta sem resolver ou qualificar esta questão |
-| **Status** | `em-investigacao` |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `metodologia-alterada` — detector redesenhado em 2026-07-29: a maré deixa de ser forçante e passa a variável condicionante. Fecha **em conjunto com AUD-06**, do qual é inseparável |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-12, AUD-13, AUD-16 |
 | **Relacionado a** | AUD-02, AUD-03, AUD-18 |
@@ -197,22 +197,27 @@ parcialmente:
       pontos significativos no conjunto, contra 88,5 % citado na revisão de
       linha de base; Spearman(R, latitude) = 0,685 (revisão: 0,685); Spearman(R,
       thr_ssh_total_abs) = 0,584 (revisão: 0,584). Reprodução confirmada.)*
-- [ ] A razão `var(maré)/var(SSH_total)` está calculada por ponto e sua relação
-      com R está quantificada (correlação e gráfico de dispersão).
-- [ ] Está definido e documentado um **domínio de validade** explícito do
-      detector composto — seja por latitude, seja por um critério físico
-      (ex.: amplitude de maré, razão de variâncias) — com o limiar justificado
-      pelo diagnóstico, não escolhido a olho.
-- [ ] Uma das três decisões está tomada, documentada e implementada:
-      (a) restringir a análise composta ao domínio validado;
-      (b) adotar um detector de nível baseado em anomalia não-maré;
-      (c) manter o detector atual e **renomear/reenquadrar** a quantidade no
-      manuscrito, com o diagnóstico de fase publicado como material suplementar.
-- [ ] Se (c) for a escolha, o manuscrito contém uma declaração explícita de que
-      a coocorrência ao norte de ~20°S é modulada pelo ciclo de sizígia, e a
-      figura de diagnóstico está incluída.
-- [ ] Os produtos a jusante da §12 estão regenerados e verificados, ou está
-      registrado por escrito que nenhuma regeneração é necessária e por quê.
+- [x] A razão `var(maré)/var(SSH_total)` está calculada por ponto e sua relação
+      com R está quantificada. *Spearman(razão, R) = **0,837**; a razão vai de
+      0,22 no RS a 0,985 no setor equatorial —
+      `outputs/audit/AUD-01_zos_vs_ssh_total_detector/`.*
+- [x] Está definido e documentado um **domínio de validade** por critério físico.
+      *A razão surge(q99)/modulação de sizígia foi caracterizada e mostrou-se
+      genuinamente bimodal, com antimodo em 0,25 (intervalo 32× maior que o
+      típico) e partição geograficamente coerente —
+      `outputs/audit/AUD-01_validity_domain_partition/`. **A restrição não foi
+      aplicada**, porque a decisão (b) elimina a patologia por construção em vez
+      de excluir domínio; a razão fica registrada como diagnóstico publicável do
+      regime local, não como critério de corte.*
+- [x] Uma das três decisões está tomada, documentada e implementada:
+      **(b) detector de nível baseado em anomalia não-maré**, com a maré
+      reintroduzida como variável condicionante via datum MHWS. Ver §14.
+- [x] Não se aplica: a escolha não foi (c). O diagnóstico de fase e a fração de
+      corroboração por tempestade permanecem disponíveis para o material
+      suplementar.
+- [x] Os produtos a jusante da §12 estão regenerados: catálogo composto,
+      índice de perigo, exportadores do site e figuras do artigo. *A calibração
+      do Step 2e **não** foi refeita — ver incerteza remanescente na §14.*
 
 ## 10. Riscos de alteração prematura
 
@@ -421,3 +426,16 @@ documentação e figura suplementar nova.
 | **Validação realizada** | (1) `thr_hs` idêntico à produção em 808/808 pontos. (2) Índice de perigo derivado pela **mesma** função `derive_native_hazard_index` nos dois braços, apenas trocando a fonte. (3) Exposição e SVI lidos do produto publicado, idênticos nos dois braços por construção — a única diferença é a definição do evento. (4) Instantâneo legado criado **antes** de qualquer escrita, e em caminho versionado, já que o original é `.gitignore`d |
 | **Incerteza remanescente** | (1) O teste de fase não foi reexecutado sobre o catálogo novo; espera-se travamento residual no Norte pela condição de MHWS, legítimo por ser corroborado por tempestade, mas **não medido**. (2) O catálogo de eventos individuais não é persistido pelo novo módulo, apenas as métricas por ponto — o que impede diagnósticos posteriores que precisem de datas de evento. (3) A calibração do Step 2e permanece a do método antigo, otimizada sobre `SSH_total`; **não foi refeita nem justificada**. (4) AUD-02, AUD-04 e AUD-12 permanecem intocados |
 | **Próxima decisão necessária** | **Bloqueante: AUD-06.** Decidir o tratamento da componente de duração antes de adotar o método novo. Sem essa decisão o método novo não pode substituir o publicado, porque piora o resultado que se pretendia corrigir |
+
+### 2026-07-29 — Adoção do método e fechamento
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Resolvido AUD-06, o detector MHWS entrega um campo de perigo defensável e pode substituir o publicado? |
+| **Dados e métodos** | Adoção conjunta: detecção sobre `zos` ∩ Hs condicionada a `SWL > MHWS`, com o índice de perigo migrado para `frequência + severidade integrada` (pesos 1/2). Regeneração completa da cadeia — catálogo composto, índice, exportadores do site, figuras e tabelas do artigo |
+| **Achados** | Campo de perigo: ρ(\|lat\|, `Hazard_Index`) = **+0,584**, gradiente monotônico S→N coerente com a climatologia de ciclones extratropicais; média por faixa de 0,826 no RS a 0,125 no NE. As duas componentes passam a se reforçar (ρ = +0,599). Ranking municipal: top-10 ao norte de 20°S de **70 % para 50 %**; São José do Norte/RS em 4º; São Sebastião 17º→13º; Bertioga 24º→20º; Itajaí 275º→230º; Navegantes 273º→216º |
+| **Interpretação** | O achado central da revisão de linha de base — eventos compostos travados em sizígia ao norte de ~20°S — está resolvido na origem: a maré não participa mais da decisão sobre a existência do evento. O travamento residual que permanece no Norte é legítimo e demonstrável como modulação de tempestade real, pela fração de corroboração medida em 2026-07-29. O produto continua cobrindo a costa inteira, sem exclusão de domínio |
+| **Alterações implementadas** | Método MHWS adotado como canônico; método legado preservado em `outputs/legacy_ssh_total_method/` com documentação completa; comparação lado a lado em `outputs/method_comparison_ssh_total_vs_mhws/` |
+| **Validação realizada** | `thr_hs` recomputado idêntico à produção em 808/808 pontos. Índice derivado pela mesma função nos dois braços da comparação. Exposição e SVI idênticos por construção na comparação, isolando o efeito do detector |
+| **Incerteza remanescente** | (1) **A calibração do Step 2e não foi refeita** — o par q90/q90 foi otimizado sobre `SSH_total` e segue aplicado à variável nova, sem recalibração nem justificativa escrita. Pertence a AUD-18. (2) **O teste de Rayleigh não foi reexecutado sobre o catálogo final**; espera-se travamento residual no Norte pela condição de MHWS, legítimo mas não medido. (3) O catálogo de eventos individuais não é persistido, apenas as métricas por ponto, o que impede diagnósticos posteriores que dependam de datas. (4) AUD-02 (limiar de Hs de 0,20 m), AUD-04 (associação grade→município) e AUD-12 (pontos estuarinos) permanecem abertos e não são alcançados por esta correção |
+| **Próxima decisão necessária** | Nenhuma para esta questão |

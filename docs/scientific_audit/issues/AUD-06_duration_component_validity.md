@@ -9,8 +9,8 @@
 | **Afeta** | código, interpretação, saídas |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — é a causa proximal da reprovação do litoral central de SC (AUD-05) |
-| **Status** | `aberto` |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `metodologia-alterada` — componente removida do índice em 2026-07-29 e substituída pela severidade integrada. **Dois critérios de aceitação da §9 permanecem não verificados**; ver §9 e §14 |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05 |
 | **Relacionado a** | AUD-07, AUD-11 |
@@ -200,21 +200,32 @@ diário) não tem resolução para expressá-lo.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] O erro de discretização da duração média está quantificado por ponto, e
-      está demonstrado se as diferenças entre pontos excedem ou não esse erro.
-- [ ] Pelo menos três definições alternativas da componente (`mean`, `p95`,
-      remoção) foram comparadas quanto a: mapa costeiro, ρ de Spearman com o
-      atual, e sobreposição de top-20 no ranking municipal de risco.
-- [ ] A contribuição da duração para a posição dos municípios de SC está
-      separada da contribuição do ponto de grade abrigado (AUD-04), com
-      percentuais.
-- [ ] A decisão está tomada e justificada: manter `mean` com peso 1/3, trocar a
-      estatística, alterar o peso, ou remover a componente. A justificativa é
-      física ou estatística, **não** a concordância com um resultado desejado.
-- [ ] Se a componente for mantida, o manuscrito reporta explicitamente sua
-      amplitude (1,26–2,51 d), sua participação de 6 % na variância e a
-      anticorrelação com a frequência.
-- [ ] Produtos a jusante regenerados (§12).
+- [ ] **NÃO VERIFICADO.** O erro de discretização da duração média está
+      quantificado por ponto, e está demonstrado se as diferenças entre pontos
+      excedem ou não esse erro. *Tornou-se secundário: a componente foi removida
+      do índice por razões independentes e mais fortes (ver desfecho), de modo
+      que a pergunta "o sinal é ruído?" deixou de condicionar a decisão. Fica
+      registrado como não executado, não como dispensável.*
+- [x] **PARCIAL.** Pelo menos três definições alternativas da componente foram
+      comparadas quanto a mapa costeiro e correlações. *Cinco variantes foram
+      comparadas (`mean` da sobreposição de 2 critérios, `mean` dos 3 critérios,
+      intensidade integrada, excesso integrado, `p95` dos 3 critérios), com mapas
+      costeiros e ρ contra latitude e contra frequência —
+      `outputs/audit/AUD-06_duration_variants/`. **Não** foram calculados o ρ de
+      cada variante com o índice vigente nem a sobreposição de top-20 por
+      variante.*
+- [ ] **NÃO VERIFICADO.** A contribuição da duração para a posição dos municípios
+      de SC está separada da contribuição do ponto de grade abrigado (AUD-04),
+      com percentuais. *Depende de AUD-04, que permanece `aberto`. Sabe-se que
+      Itajaí subiu de 275º para 230º e Navegantes de 273º para 216º com a
+      mudança, mas a atribuição entre as duas causas não foi feita.*
+- [x] A decisão está tomada e justificada: **componente removida do índice**,
+      substituída pela severidade integrada. A justificativa é estrutural —
+      significado da métrica, discretização e sinal da correlação com a
+      frequência — e não a concordância com um resultado desejado (ver §14).
+- [x] Não se aplica: a componente não foi mantida no índice. Permanece publicada
+      como diagnóstico, com a natureza dessa mudança declarada nos metadados.
+- [x] Produtos a jusante regenerados (§12), incluindo site e figuras do artigo.
 
 ## 10. Riscos de alteração prematura
 
@@ -260,7 +271,23 @@ Os catálogos **não** precisam ser reprocessados: `mean_overlap_duration`,
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-29 | *a registrar* | `main` | `src/04_risk_integration/hazard_index.py`, `src/03_storm_catalog_generation/02_compound_detection/detection_mhws.py`, `src/site/export_risk_index_data.py`, `src/site/export_coastal_hazard_data.py`, `src/figures_article/make_article_coastal_hazard_components_map.py`, `src/figures_article/make_article_hazard_vulnerability_risk_multiplot.py`, componentes do site em `site/` | Remoção da duração do índice; adoção da severidade integrada; regeneração de site e figuras |
+
+## 14. Histórico de investigação *(continuação)*
+
+### 2026-07-29 — Decisão, implementação e fechamento
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Qual definição deve ocupar a terceira posição do índice de perigo, dado que a duração implementada mede coincidência estatística e não duração física? |
+| **Dados e métodos** | Cinco variantes calculadas sobre os mesmos eventos do detector MHWS e comparadas por mapa costeiro e por duas correlações diagnósticas: contra a latitude absoluta (viés regional) e contra a frequência (sinal da interação dentro da média equiponderada). Ver `outputs/audit/AUD-06_duration_variants/`. A variante de referência reproduz a produção exatamente (0 de diferença em contagem e duração média nos 808 pontos), o que valida que as variantes saem dos mesmos eventos |
+| **Scripts executados** | `audit_AUD_06_duration_variants`, `plot_AUD_06_duration_variants_maps`, seguidos da cadeia de regeneração da §12 |
+| **Achados** | ρ contra frequência: atual **−0,77**; 3 critérios −0,49; p95 dos 3 critérios −0,44; **excesso integrado +0,39**; **intensidade integrada +0,60**. ρ contra \|latitude\|: atual −0,79; 3 critérios −0,54; p95 −0,63; excesso integrado −0,08; **intensidade integrada +0,35**. Apenas as duas formas integradas invertem o sinal da correlação com a frequência, isto é, deixam de cancelá-la. Observação do usuário incorporada: contar apenas dois dos três critérios é incoerente com a definição do evento, de modo que todas as variantes de contagem passaram a usar os três |
+| **Interpretação** | A intensidade integrada resolve simultaneamente as três patologias registradas na §2 e na §3: mede uma grandeza física (severidade acumulada, não coincidência de testes), é um integral contínuo e portanto não é limitada pela discretização diária, e correlaciona **positivamente** com a frequência, de modo que as componentes passam a se reforçar. A justificativa é estrutural e foi verificada antes de olhar o ranking. Ressalva registrada: a variante escolhida **funde** magnitude e persistência, então o índice deixa de ter intensidade e duração separadas — passa a `frequência + severidade integrada`, com pesos 1/2. A duração e a intensidade de pico permanecem publicadas como diagnósticos |
+| **Alterações implementadas** | `Hazard = [norm(compound_count_total) + norm(mean_integrated_severity)] / 2`, seguido de Min–Max. Fonte do índice migrada para o produto do detector MHWS. Site e figuras do artigo regenerados |
+| **Validação realizada** | Novo campo de perigo: ρ(frequência, severidade) = **+0,599** (era −0,550 entre frequência e duração) e ρ(\|lat\|, `Hazard_Index`) = **+0,584**, gradiente coerente com forçante sinótico. Ranking municipal: top-10 ao norte de 20°S cai de **70 % para 50 %**; São José do Norte/RS entra em 4º; São Sebastião sobe de 17º para 13º e Bertioga de 24º para 20º; Itajaí sobe de 275º para 230º e Navegantes de 273º para 216º |
+| **Incerteza remanescente** | (1) O erro de discretização por ponto **não foi quantificado** (critério 1 da §9). (2) A separação entre a contribuição da duração e a do ponto abrigado no caso de SC **não foi feita** (critério 3), por depender de AUD-04, ainda aberto. (3) Balneário Camboriú permanece em 279º de 280 — sua posição é governada por `SVI_Coast_2022` = 0,000 exato, artefato de Min–Max que pertence a AUD-09/AUD-11 e que nenhuma mudança no perigo alcança. (4) O ρ de cada variante contra o índice vigente e a sobreposição de top-20 por variante não foram calculados |
+| **Próxima decisão necessária** | Nenhuma para esta questão. As incertezas remanescentes pertencem a AUD-04, AUD-09 e AUD-11 |
 
 ## 14. Histórico de investigação
 

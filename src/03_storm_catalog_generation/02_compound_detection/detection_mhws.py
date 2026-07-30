@@ -216,11 +216,26 @@ def compound_events_at_point(
             continue
 
         peak_hs = float(np.nanmax(hs[np.asarray(sorted(hs_days), dtype=int)]))
+        # Days on which ALL THREE criteria hold at once. The event is defined by
+        # the joint occurrence of the two drivers plus the level condition, so
+        # any duration or time integral must be taken over the days where all
+        # three are satisfied; counting only the two drivers would be incoherent
+        # with the definition.
+        full_idx = overlap_idx[swl[overlap_idx] > mhws]
         events.append(
             {
                 "start_index": int(overlap[0]),
                 "end_index": int(overlap[-1]),
                 "overlap_duration_days": len(overlap),
+                "full_criterion_duration_days": int(full_idx.size),
+                # Day indices, exposed so alternative duration and time-integrated
+                # metrics can be derived without re-running the grouping.
+                "overlap_indices": overlap_idx,
+                "full_criterion_indices": full_idx,
+                # Daily excesses over the full-criterion days, the raw material of
+                # the integrated severity.
+                "daily_exc_wave": hs[full_idx] - thr_hs,
+                "daily_exc_level": swl[full_idx] - mhws,
                 "peak_hs": peak_hs,
                 "max_swl": max_swl,
                 "exc_wave": peak_hs - thr_hs,
@@ -247,16 +262,25 @@ def _point_metrics(
             "mean_overlap_duration": None,
             "p95_overlap_duration": None,
             "max_overlap_duration": None,
+            "mean_full_criterion_duration": None,
+            "p95_full_criterion_duration": None,
         }
     overlaps = [e["overlap_duration_days"] for e in events]
+    full = [e["full_criterion_duration_days"] for e in events]
     return {
         "compound_count_total": len(events),
         "compound_count_annual_mean": round(len(events) / n_years, 2)
         if n_years > 0
         else None,
+        # Duration fields are retained as diagnostics. They no longer feed the
+        # hazard index: see AUD-06, where the component was shown to amplify
+        # discretisation noise and to anticorrelate with frequency, so that the
+        # two cancelled inside the equal-weight mean.
         "mean_overlap_duration": round(float(np.mean(overlaps)), 2),
         "p95_overlap_duration": round(float(np.percentile(overlaps, 95)), 2),
         "max_overlap_duration": int(np.max(overlaps)),
+        "mean_full_criterion_duration": round(float(np.mean(full)), 2),
+        "p95_full_criterion_duration": round(float(np.percentile(full, 95)), 2),
     }
 
 
@@ -333,23 +357,38 @@ def main() -> None:
         per_point_events.append(events)
         rows.append({**record, **context, **_point_metrics(events, n_years)})
 
-    # Domain-pooled rescaling of both excesses, as in the previous method.
+    # Domain-pooled rescaling. Two reference sets are needed: the peak excesses
+    # for the diagnostic peak intensity, and the DAILY excesses for the
+    # integrated severity, which is the quantity the hazard index consumes.
     wave_excesses = [e["exc_wave"] for evs in per_point_events for e in evs]
     level_excesses = [e["exc_level"] for evs in per_point_events for e in evs]
     if not wave_excesses:
         raise RuntimeError("No compound events detected anywhere; refusing to write")
 
+    daily_wave = np.concatenate(
+        [e["daily_exc_wave"] for evs in per_point_events for e in evs if e["daily_exc_wave"].size]
+        or [np.array([0.0])]
+    )
+    daily_level = np.concatenate(
+        [e["daily_exc_level"] for evs in per_point_events for e in evs if e["daily_exc_level"].size]
+        or [np.array([0.0])]
+    )
+
     refs = {
-        "wave_low": float(np.percentile(wave_excesses, INTENSITY_REF_LOW_PCT)),
-        "wave_high": float(np.percentile(wave_excesses, INTENSITY_REF_HIGH_PCT)),
-        "level_low": float(np.percentile(level_excesses, INTENSITY_REF_LOW_PCT)),
-        "level_high": float(np.percentile(level_excesses, INTENSITY_REF_HIGH_PCT)),
+        "peak_wave_low": float(np.percentile(wave_excesses, INTENSITY_REF_LOW_PCT)),
+        "peak_wave_high": float(np.percentile(wave_excesses, INTENSITY_REF_HIGH_PCT)),
+        "peak_level_low": float(np.percentile(level_excesses, INTENSITY_REF_LOW_PCT)),
+        "peak_level_high": float(np.percentile(level_excesses, INTENSITY_REF_HIGH_PCT)),
+        "daily_wave_low": float(np.percentile(daily_wave, INTENSITY_REF_LOW_PCT)),
+        "daily_wave_high": float(np.percentile(daily_wave, INTENSITY_REF_HIGH_PCT)),
+        "daily_level_low": float(np.percentile(daily_level, INTENSITY_REF_LOW_PCT)),
+        "daily_level_high": float(np.percentile(daily_level, INTENSITY_REF_HIGH_PCT)),
     }
 
-    def _norm(value: float, low: float, high: float) -> float:
+    def _norm(values, low: float, high: float):
         if high <= low:
-            return 0.0
-        return float(np.clip((value - low) / (high - low), 0.0, 1.0))
+            return np.zeros_like(np.asarray(values, dtype=float))
+        return np.clip((np.asarray(values, dtype=float) - low) / (high - low), 0.0, 1.0)
 
     for row, events in zip(rows, per_point_events):
         if not events:
@@ -358,24 +397,46 @@ def main() -> None:
                     "mean_compound_intensity_norm": None,
                     "p95_compound_intensity_norm": None,
                     "max_compound_intensity_norm": None,
+                    "mean_integrated_severity": None,
+                    "p95_integrated_severity": None,
+                    "max_integrated_severity": None,
                 }
             )
             continue
-        intensities = [
-            0.5
-            * (
-                _norm(e["exc_wave"], refs["wave_low"], refs["wave_high"])
-                + _norm(e["exc_level"], refs["level_low"], refs["level_high"])
-            )
-            for e in events
-        ]
+
+        # Diagnostic: severity at the event peak, the definition carried over
+        # from the previous method.
+        peak_intensity = 0.5 * (
+            _norm([e["exc_wave"] for e in events], refs["peak_wave_low"], refs["peak_wave_high"])
+            + _norm([e["exc_level"] for e in events], refs["peak_level_low"], refs["peak_level_high"])
+        )
+
+        # Index component: severity integrated over the full-criterion days.
+        # Magnitude and persistence enter as a single quantity, so they can no
+        # longer cancel each other the way intensity and duration did.
+        integrated = np.array(
+            [
+                float(
+                    np.sum(
+                        0.5
+                        * (
+                            _norm(e["daily_exc_wave"], refs["daily_wave_low"], refs["daily_wave_high"])
+                            + _norm(e["daily_exc_level"], refs["daily_level_low"], refs["daily_level_high"])
+                        )
+                    )
+                )
+                for e in events
+            ]
+        )
+
         row.update(
             {
-                "mean_compound_intensity_norm": round(float(np.mean(intensities)), 4),
-                "p95_compound_intensity_norm": round(
-                    float(np.percentile(intensities, 95)), 4
-                ),
-                "max_compound_intensity_norm": round(float(np.max(intensities)), 4),
+                "mean_compound_intensity_norm": round(float(np.mean(peak_intensity)), 4),
+                "p95_compound_intensity_norm": round(float(np.percentile(peak_intensity, 95)), 4),
+                "max_compound_intensity_norm": round(float(np.max(peak_intensity)), 4),
+                "mean_integrated_severity": round(float(np.mean(integrated)), 4),
+                "p95_integrated_severity": round(float(np.percentile(integrated, 95)), 4),
+                "max_integrated_severity": round(float(np.max(integrated)), 4),
             }
         )
 
@@ -396,7 +457,15 @@ def main() -> None:
             "condition": "max(SWL) over shared days > MHWS",
             "swl": "(zos - mean(zos)) + tide_daily_max",
             "mhws": "A_M2 + A_S2 from FES2022 harmonic constants",
-            "intensity": "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - MHWS)]",
+            "peak_intensity_diagnostic": "0.5 * [norm(peak_Hs - thr_hs) + norm(max(SWL) - MHWS)]",
+            "integrated_severity_index_component": (
+                "sum over full-criterion days of 0.5 * [norm(Hs_d - thr_hs) + "
+                "norm(SWL_d - MHWS)], daily excesses pooled domain-wide"
+            ),
+            "duration_status": (
+                "computed and published as a diagnostic, no longer a hazard "
+                "index component (AUD-06)"
+            ),
             "wave_setup": "not used; waves act as driver and intensity term only",
         },
         "period": {
@@ -408,7 +477,7 @@ def main() -> None:
         "points_skipped": skipped,
         "compound_event_total": total_events,
         "candidates_rejected_by_mhws_condition": total_rejected,
-        "intensity_reference_percentiles": {
+        "rescaling_reference_percentiles": {
             "low_pct": INTENSITY_REF_LOW_PCT,
             "high_pct": INTENSITY_REF_HIGH_PCT,
             **{k: round(v, 6) for k, v in refs.items()},

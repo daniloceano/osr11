@@ -379,7 +379,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "dimensionless mean",
         "stage": "raw",
         "group": "Physical hazard",
-        "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Duration,Hazard_Intensity)",
+        "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Severity)",
         "description": (
             "The equal-weight mean of the three normalized components, before "
             "the final Min-Max step. It spans a narrow interval, which is "
@@ -417,26 +417,26 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         ),
     },
     {
-        "key": "Hazard_Duration",
+        "key": "Hazard_Severity",
         "label": "Normalized compound-event duration",
         "short_label": "Duration",
         "unit": "0–1",
         "stage": "component",
         "group": "Physical hazard",
-        "actual_field": "transferred:norm_native(mean_overlap_duration)",
+        "actual_field": "transferred:norm_native(mean_integrated_severity)",
         "description": (
             "Mean overlap duration, Min-Max normalized across the native "
             "ocean grid."
         ),
     },
     {
-        "key": "Hazard_Intensity",
+        "key": "mean_overlap_duration",
         "label": "Normalized compound-event intensity",
         "short_label": "Intensity",
         "unit": "0–1",
         "stage": "component",
         "group": "Physical hazard",
-        "actual_field": "transferred:norm_native(mean_compound_intensity_norm)",
+        "actual_field": "transferred:mean_overlap_duration (diagnostic, not an index component)",
         "description": (
             "Mean compound intensity, Min-Max normalized across the native "
             "ocean grid."
@@ -462,8 +462,7 @@ FIXED_BOUNDARIES: dict[str, list[float]] = {
     "Risk_Hazard": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
     "Hazard_Index": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
     "Hazard_Frequency": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
-    "Hazard_Duration": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
-    "Hazard_Intensity": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Hazard_Severity": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
     "SVI_Coast_2022": [0.0, 12.5, 25.0, 37.5, 50.0, 62.5, 75.0, 87.5, 100.0],
 }
 
@@ -529,8 +528,7 @@ def _derive_current_scope(
     )
     transfer_fields = (
         "Hazard_Frequency",
-        "Hazard_Duration",
-        "Hazard_Intensity",
+        "Hazard_Severity",
         "Hazard_Index_raw",
         "Hazard_Index",
     )
@@ -718,8 +716,7 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         for key in (
             "SVI_Coast_2022",
             "Hazard_Frequency",
-            "Hazard_Duration",
-            "Hazard_Intensity",
+            "Hazard_Severity",
             "Hazard_Index_raw",
             "Hazard_Index",
             "Hazard_Index_mun",
@@ -767,15 +764,12 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Hazard_Frequency": (
                     "transferred:norm_native(compound_count_total)"
                 ),
-                "Hazard_Duration": (
-                    "transferred:norm_native(mean_overlap_duration)"
+                "Hazard_Severity": (
+                    "transferred:norm_native(mean_integrated_severity)"
                 ),
-                "Hazard_Intensity": (
-                    "transferred:norm_native(mean_compound_intensity_norm)"
-                ),
+
                 "Hazard_Index_raw": (
-                    "transferred:mean(Hazard_Frequency,Hazard_Duration,"
-                    "Hazard_Intensity)"
+                    "transferred:mean(Hazard_Frequency,Hazard_Severity)"
                 ),
                 "Hazard_Index": (
                     "transferred:norm_native(Hazard_Index_raw)"
@@ -878,17 +872,20 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Min-Max normalization across the native grid of "
                 "compound_count_total."
             ),
-            "Hazard_Duration": (
+            "Hazard_Severity": (
                 "Min-Max normalization across the native grid of "
-                "mean_overlap_duration."
+                "mean_integrated_severity: the compound severity summed over "
+                "the days on which all detection criteria hold, so magnitude "
+                "and persistence enter as one quantity."
             ),
-            "Hazard_Intensity": (
-                "Min-Max normalization across the native grid of "
-                "mean_compound_intensity_norm."
+            "mean_overlap_duration": (
+                "Published diagnostic only. Retired from the hazard index in "
+                "2026-07-29 (AUD-06): it measured the coincidence of two "
+                "percentile tests, was discretised into whole days, and "
+                "anticorrelated with frequency."
             ),
             "Hazard_Index_raw": (
-                "Equal-weight mean of Hazard_Frequency, Hazard_Duration, "
-                "and Hazard_Intensity."
+                "Equal-weight mean of Hazard_Frequency and Hazard_Severity."
             ),
             "Hazard_Index": (
                 "Min-Max normalization to [0,1] of Hazard_Index_raw across "
