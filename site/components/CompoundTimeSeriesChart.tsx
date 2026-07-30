@@ -12,8 +12,13 @@
  * six spring-neap cycles, enough for the tide-dominated north and the
  * surge-dominated south to look plainly different.
  *
- * Wave height and sea level are never drawn against two y-axes in one frame;
- * they occupy stacked panels sharing the time axis.
+ * One panel per criterion, stacked on a shared time axis and never sharing a
+ * y-axis: the wave height against its q90; the still water level against the
+ * MHWS, with the tide that carries it; and the tide-free sea level `zos`
+ * against its q90. The last panel shows `zos` exactly as the detector reads
+ * it — in the model's own vertical reference, against the threshold value
+ * recorded in the catalogue — while the still water level keeps the local mean
+ * removed, which is what makes it comparable with the MHWS.
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -25,13 +30,23 @@ const WIDTH = 880;
 const MARGIN = { left: 52, right: 96, top: 10, bottom: 4 };
 const WAVE_HEIGHT = 104;
 const PANEL_GAP = 30;
-const LEVEL_HEIGHT = 158;
+const LEVEL_HEIGHT = 150;
+const ZOS_HEIGHT = 96;
 const AXIS_HEIGHT = 18;
 const DETAIL_HEIGHT =
-  MARGIN.top + WAVE_HEIGHT + PANEL_GAP + LEVEL_HEIGHT + AXIS_HEIGHT + MARGIN.bottom;
+  MARGIN.top +
+  WAVE_HEIGHT +
+  PANEL_GAP +
+  LEVEL_HEIGHT +
+  PANEL_GAP +
+  ZOS_HEIGHT +
+  AXIS_HEIGHT +
+  MARGIN.bottom;
 const PLOT_WIDTH = WIDTH - MARGIN.left - MARGIN.right;
 const WAVE_TOP = MARGIN.top;
 const LEVEL_TOP = MARGIN.top + WAVE_HEIGHT + PANEL_GAP;
+const ZOS_TOP = LEVEL_TOP + LEVEL_HEIGHT + PANEL_GAP;
+const PLOT_BOTTOM = ZOS_TOP + ZOS_HEIGHT;
 
 const OVERVIEW_HEIGHT = 84;
 const OVERVIEW_PLOT_TOP = 8;
@@ -182,6 +197,16 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
       }),
     [series],
   );
+  /* The payload stores the de-meaned series, because that is what the still
+   * water level is built from; adding the local mean back recovers `zos` in
+   * the reference the detector and the catalogue threshold use. */
+  const zosRaw = useMemo(
+    () =>
+      series.zos.map((value) =>
+        value === null ? null : value + point.thresholds.zos_mean_m,
+      ),
+    [series.zos, point.thresholds.zos_mean_m],
+  );
 
   /* The window opens on the most severe event, so the reader lands on the
    * phenomenon rather than on an arbitrary stretch of 1993. */
@@ -228,7 +253,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
     // on screen, even in a window where the level never approaches it.
     const values: number[] = [point.thresholds.mhws_m];
     for (let index = start; index < end; index += 1) {
-      for (const value of [series.zos[index], series.tide[index], swl[index]]) {
+      for (const value of [series.tide[index], swl[index]]) {
         if (value !== null && Number.isFinite(value)) values.push(value);
       }
     }
@@ -244,6 +269,27 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         LEVEL_TOP + LEVEL_HEIGHT - ((value - lower) / (upper - lower)) * LEVEL_HEIGHT,
     };
   }, [series, swl, start, end, point.thresholds.mhws_m]);
+
+  const zosScale = useMemo(() => {
+    // The q90 is forced into the range so the sea-level criterion is always
+    // visible, even across a quiet window.
+    const values: number[] = [point.thresholds.thr_zos_abs_m];
+    for (let index = start; index < end; index += 1) {
+      const value = zosRaw[index];
+      if (value !== null && Number.isFinite(value)) values.push(value);
+    }
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const pad = (max - min) * 0.12 || 0.05;
+    const lower = min - pad;
+    const upper = max + pad;
+    return {
+      lower,
+      upper,
+      yOf: (value: number) =>
+        ZOS_TOP + ZOS_HEIGHT - ((value - lower) / (upper - lower)) * ZOS_HEIGHT,
+    };
+  }, [zosRaw, start, end, point.thresholds.thr_zos_abs_m]);
 
   /* ── Events in view ─────────────────────────────────────────────────── */
 
@@ -340,6 +386,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
 
   const waveTicks = niceTicks(0, waveScale.top, 3);
   const levelTicks = niceTicks(levelScale.lower, levelScale.upper, 4);
+  const zosTicks = niceTicks(zosScale.lower, zosScale.upper, 3);
   const dayTicks = [0, 15, 30, 45, 60, 75, 89].map((offset) => start + offset);
 
   const waveLabels = deCollide(
@@ -368,14 +415,6 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         bold: true,
       },
       {
-        // The detection compares raw zos against the q90 of raw zos; both are
-        // shifted here by the same local mean, so the crossings are identical
-        // and the label must name the shifted frame it is drawn in.
-        y: levelScale.yOf(point.thresholds.thr_zos_anomaly_m),
-        text: `q90 zos′ = ${format(point.thresholds.thr_zos_anomaly_m, 2)} m`,
-        color: INK.muted,
-      },
-      {
         y: levelScale.yOf(lastFinite(swl, end - 1) ?? 0),
         text: 'zos′ + tide',
         color: SERIES.swl,
@@ -387,15 +426,28 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         color: SERIES.tide,
         bold: true,
       },
+    ],
+    LEVEL_TOP,
+    LEVEL_TOP + LEVEL_HEIGHT,
+  );
+  const zosLabels = deCollide(
+    [
       {
-        y: levelScale.yOf(lastFinite(series.zos, end - 1) ?? 0),
-        text: 'zos′',
+        // Both the series and the threshold are in the model's own vertical
+        // reference here: this is the comparison the detector performs.
+        y: zosScale.yOf(point.thresholds.thr_zos_abs_m),
+        text: `q90 zos = ${format(point.thresholds.thr_zos_abs_m, 2)} m`,
+        color: INK.muted,
+      },
+      {
+        y: zosScale.yOf(lastFinite(zosRaw, end - 1) ?? 0),
+        text: 'zos',
         color: SERIES.zos,
         bold: true,
       },
     ],
-    LEVEL_TOP,
-    LEVEL_TOP + LEVEL_HEIGHT,
+    ZOS_TOP,
+    ZOS_TOP + ZOS_HEIGHT,
   );
 
   return (
@@ -444,7 +496,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         </span>
         <Readout color={SERIES.hs} label="Hₛ" value={readoutDay === null ? null : series.hs[readoutDay]} />
         <Readout color={SERIES.swl} label="Still water level" value={readoutDay === null ? null : swl[readoutDay]} />
-        <Readout color={SERIES.zos} label="zos′ (detection variable)" value={readoutDay === null ? null : series.zos[readoutDay]} />
+        <Readout color={SERIES.zos} label="zos" value={readoutDay === null ? null : zosRaw[readoutDay]} />
         <Readout color={SERIES.tide} label="Astronomical tide" value={readoutDay === null ? null : series.tide[readoutDay]} />
       </div>
 
@@ -470,7 +522,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
                 x={x1}
                 y={WAVE_TOP}
                 width={Math.max(1.5, x2 - x1)}
-                height={LEVEL_TOP + LEVEL_HEIGHT - WAVE_TOP}
+                height={PLOT_BOTTOM - WAVE_TOP}
                 fill={INK.primary}
                 opacity={hoveredEvent === index ? 0.16 : 0.07}
                 pointerEvents="none"
@@ -552,19 +604,10 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         {/* The condition that defines an event: seeing it crossed is half the
             message, so it is labelled in place rather than left to the legend. */}
         <ReferenceLine y={levelScale.yOf(point.thresholds.mhws_m)} dash="6 3" emphasis />
-        <ReferenceLine y={levelScale.yOf(point.thresholds.thr_zos_anomaly_m)} dash="2 3" />
         <path
           d={linePath(series.tide.slice(0, end), (i) => xOf(i), levelScale.yOf)}
           fill="none"
           stroke={SERIES.tide}
-          strokeWidth={1.6}
-          strokeLinejoin="round"
-          clipPath="url(#level-clip)"
-        />
-        <path
-          d={linePath(series.zos.slice(0, end), (i) => xOf(i), levelScale.yOf)}
-          fill="none"
-          stroke={SERIES.zos}
           strokeWidth={1.6}
           strokeLinejoin="round"
           clipPath="url(#level-clip)"
@@ -578,16 +621,57 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
           clipPath="url(#level-clip)"
         />
 
+        {/* ── Sea-level panel: the detection variable, unshifted ─────── */}
+        {zosTicks.map((tick) => (
+          <g key={`zos-tick-${tick}`}>
+            <line
+              x1={MARGIN.left}
+              y1={zosScale.yOf(tick)}
+              x2={MARGIN.left + PLOT_WIDTH}
+              y2={zosScale.yOf(tick)}
+              stroke={GRID}
+              strokeWidth={1}
+            />
+            <text
+              x={MARGIN.left - 6}
+              y={zosScale.yOf(tick) + 3}
+              textAnchor="end"
+              fill={INK.muted}
+              style={{ fontSize: '9px' }}
+            >
+              {tick.toFixed(2)}
+            </text>
+          </g>
+        ))}
+        <text
+          x={MARGIN.left}
+          y={ZOS_TOP - 1}
+          fill={INK.secondary}
+          style={{ fontSize: '9.5px', fontWeight: 600 }}
+        >
+          Tide-free sea level zos (m, as detected — GLORYS reference)
+        </text>
+        <ReferenceLine y={zosScale.yOf(point.thresholds.thr_zos_abs_m)} dash="4 3" />
+        <path
+          d={linePath(zosRaw.slice(0, end), (i) => xOf(i), zosScale.yOf)}
+          fill="none"
+          stroke={SERIES.zos}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+          clipPath="url(#zos-clip)"
+        />
+
         {/* Direct labels at the right edge, so identity never rests on hue. */}
         <EdgeLabels labels={waveLabels} />
         <EdgeLabels labels={levelLabels} />
+        <EdgeLabels labels={zosLabels} />
 
         {/* ── Time axis ──────────────────────────────────────────────── */}
         {dayTicks.map((day) => (
           <text
             key={`day-${day}`}
             x={xOf(day)}
-            y={LEVEL_TOP + LEVEL_HEIGHT + 13}
+            y={PLOT_BOTTOM + 13}
             textAnchor="middle"
             fill={INK.muted}
             style={{ fontSize: '9px' }}
@@ -602,7 +686,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
             x1={xOf(readoutDay)}
             y1={WAVE_TOP}
             x2={xOf(readoutDay)}
-            y2={LEVEL_TOP + LEVEL_HEIGHT}
+            y2={PLOT_BOTTOM}
             stroke={INK.primary}
             strokeWidth={0.8}
             strokeDasharray="2 2"
@@ -622,7 +706,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
               x={x1}
               y={WAVE_TOP}
               width={Math.max(3, x2 - x1)}
-              height={LEVEL_TOP + LEVEL_HEIGHT - WAVE_TOP}
+              height={PLOT_BOTTOM - WAVE_TOP}
               fill="transparent"
               onMouseEnter={() => setHoveredEvent(index)}
               onMouseLeave={() => setHoveredEvent(null)}
@@ -634,6 +718,9 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         <defs>
           <clipPath id="wave-clip">
             <rect x={MARGIN.left} y={WAVE_TOP - 2} width={PLOT_WIDTH} height={WAVE_HEIGHT + 4} />
+          </clipPath>
+          <clipPath id="zos-clip">
+            <rect x={MARGIN.left} y={ZOS_TOP - 2} width={PLOT_WIDTH} height={ZOS_HEIGHT + 4} />
           </clipPath>
           <clipPath id="level-clip">
             <rect x={MARGIN.left} y={LEVEL_TOP - 2} width={PLOT_WIDTH} height={LEVEL_HEIGHT + 4} />
@@ -721,8 +808,8 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
       {/* ── Legend ───────────────────────────────────────────────────── */}
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-gray-600">
         <LegendItem color={SERIES.hs} label="Hₛ (upper panel)" />
-        <LegendItem color={SERIES.swl} label="Still water level zos′ + tide" width={3} />
-        <LegendItem color={SERIES.zos} label="zos′ = zos − local mean, the sea-level detection variable" />
+        <LegendItem color={SERIES.swl} label="Still water level zos′ + tide, zos′ = zos − local mean" width={3} />
+        <LegendItem color={SERIES.zos} label="zos, the sea-level detection variable (bottom panel)" />
         <LegendItem color={SERIES.tide} label="Astronomical tide (daily maximum)" />
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-4 rounded-sm bg-gray-900/10" />
