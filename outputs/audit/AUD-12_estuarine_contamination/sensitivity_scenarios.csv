@@ -1,0 +1,8 @@
+scenario,points_retained,points_removed,events_removed,events_removed_share,municipalities_with_risk,municipalities_orphaned,orphaned_names,spearman_rho_rank_vs_current,risk_top10_overlap,median_absolute_rank_shift,max_absolute_rank_shift
+current_domain,808,0,0,0.0,280,0,,1.0,10,0.0,0.0
+exclude_hs_max_below_0.5m,808,0,0,0.0,280,0,,1.0,10,0.0,0.0
+exclude_hs_q99_below_0.5m,800,8,29,0.0017294847328244275,277,3,Chaves; Colares; Vigia,1.0,10,1.0,3.0
+exclude_thr_hs_q70_below_0.5m,797,11,31,0.0018487595419847329,276,4,Chaves; Colares; Macapá; Vigia,1.0,10,1.0,4.0
+exclude_hs_q90_below_1.0m,773,35,125,0.007454675572519084,260,20,Alcântara; Apicum-Açu; Bacuri; Bacurituba; Bequimão; Cajapió; Chaves; Colares; Cândido Mendes; Macapá; Paço do Lumiar; Raposa; Salvaterra; Soure; São Caetano de Odivelas; São José de Ribamar; São João Batista; São Luís; Turiaçu; Vigia,0.9999999999999998,10,9.0,20.0
+exclude_named_estuarine_points,802,6,14,0.0008349236641221374,275,5,Chaves; Colares; Macapá; Salvaterra; Vigia,1.0,10,1.0,5.0
+exclude_north_of_2S_entirely,605,203,334,0.019918893129770993,247,33,Amapá; Apicum-Açu; Augusto Corrêa; Bacuri; Bragança; Calçoene; Carutapera; Cedral; Chaves; Colares; Cururupu; Curuçá; Cândido Mendes; Godofredo Viana; Guimarães; Luís Domingues; Macapá; Magalhães Barata; Maracanã; Marapanim,0.9999999999999998,10,14.0,32.0

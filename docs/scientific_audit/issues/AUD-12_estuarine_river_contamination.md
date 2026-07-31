@@ -9,14 +9,14 @@
 | **Afeta** | dados, interpretação, saídas |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Sim, salvo qualificação — dois municípios do top-10 de risco dependem desses pontos |
-| **Status** | `aberto` |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `resultado-validado-mantido` |
 | **Depende de** | AUD-01 |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-02, AUD-03, AUD-04, AUD-15 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.1(e), §5, §8 item 10 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 |
 
 ---
 
@@ -167,19 +167,43 @@ de exclusão** para águas interiores.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] Existe uma classificação versionada de validade oceânica dos 808 pontos,
+- [x] Existe uma classificação versionada de validade oceânica dos 808 pontos,
       com critério explícito e reproduzível.
-- [ ] A hipótese de contaminação por descarga está **testada** — não apenas
-      afirmada — pelo diagnóstico 1, com correlação reportada.
-- [ ] Está decidido e justificado: manter os pontos estuarinos, excluí-los, ou
-      marcá-los com ressalva no produto.
-- [ ] Se mantidos, Macapá e Chaves têm interpretação explícita no manuscrito,
-      declarando que seu perigo deriva de ponto estuarino e que o mecanismo
-      dominante ali é mareal/fluvial.
-- [ ] Se excluídos, os municípios órfãos foram reassociados (AUD-04) e o efeito
-      no ranking está reportado.
+      *`outputs/audit/AUD-12_estuarine_contamination/point_diagnostics.csv` —
+      808 linhas com máximo, q70, q90 e q99 de Hₛ, q99 de `zos`, HAT, elevação
+      do fundo (ETOPO 2022), fração de variância sazonal do `zos`, e acoplamento
+      com o oceano aberto (bruto e sem ciclo anual). Reprodutível pelo script
+      nomeado na §14. É a base quantitativa da classificação; **não** foi
+      convertida em máscara categórica, porque nenhum corte se justificou.*
+- [x] A hipótese de contaminação por descarga está **testada** — não apenas
+      afirmada — com correlação reportada. *Testada e **não sustentada**: ver
+      §14. A correlação de anomalia com o oceano aberto nos seis pontos
+      questionados é 0,758–0,929 (mediana 0,827), indistinguível dos outros 197
+      pontos ao norte de 2° S (mediana 0,833).*
+- [x] Está decidido e justificado: manter os pontos estuarinos, excluí-los, ou
+      marcá-los com ressalva no produto. **Decidido pelo pesquisador em
+      2026-07-31: manter todos os pontos, sem filtro e sem ressalva por
+      município.** Justificativa registrada na §14, entrada de decisão.
+- [x] ~~Se mantidos, Macapá e Chaves têm interpretação explícita no
+      manuscrito~~ — **critério dispensado deliberadamente pelo pesquisador em
+      2026-07-31**, e substituído. A razão está registrada na §14: dadas as
+      incertezas de escala espacial das fontes (GLORYS12, WAVERYS, ETOPO) e as
+      demais incertezas do encadeamento, vieses pontuais são esperados e não
+      justificam parágrafo dedicado a municípios individuais. Em lugar disso o
+      manuscrito trará (a) a declaração geral de incerteza de escala e (b) a
+      recomendação de trabalho futuro com modelagem de alta resolução em grade
+      não estruturada. **Este critério não foi satisfeito; foi retirado, com
+      justificativa e autoria registradas.**
+- [x] Se excluídos, os municípios órfãos foram reassociados (AUD-04) e o efeito
+      no ranking está reportado. *Não se aplica sob a recomendação de manter. O
+      efeito de cada exclusão candidata **está** reportado (§14), incluindo os
+      municípios que ficariam órfãos.*
 - [ ] A validade do WAVERYS nos pontos de `thr_hs` < 1 m está avaliada (comum com
-      AUD-02, diagnóstico 4).
+      AUD-02, diagnóstico 4). *Parcial: os percentis e o máximo de Hₛ estão
+      medidos em todos os 808 pontos, e nenhum tem `max(Hₛ) < 0,5 m`. Uma
+      avaliação da **validade do modelo de ondas** em si (fração de células
+      vizinhas válidas, comparação com o clima de ondas offshore) não foi feita
+      e permanece com AUD-02.*
 
 ## 10. Riscos de alteração prematura
 
@@ -220,10 +244,35 @@ Se apenas houver classificação e declaração: apenas produtos novos em
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(não commitado)* | `main` | `src/exploratory/audit_AUD_12_estuarine_contamination.py` (novo) | Diagnóstico. **Nenhum ponto excluído; nenhum valor numérico publicado alterado** |
+| 2026-07-31 | *(não commitado)* | `main` | este registro; `ISSUE_TRACKER.md` | Registro da decisão de manter sem filtro e do desfecho `resultado-validado-mantido` |
 
 ## 14. Histórico de investigação
 
-*Nenhuma investigação registrada. A contaminação permanece **hipótese
-fundamentada** — a revisão de linha de base identificou a localização dos pontos
-e os limiares anômalos, mas não testou o ciclo sazonal do `zos`.*
+### 2026-07-31 — Reavaliação sob o método vigente: o diagnóstico anterior não se transfere
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | O diagnóstico de 2026-07-29 foi feito sobre o detector `SSH_total` a q90/q90, sem portão HAT. O método mudou nos três pontos. Os pontos questionados ainda contribuem eventos, perigo e posição municipal? A contaminação por descarga se sustenta? Algum filtro de exclusão se justifica? |
+| **Dados e métodos** | `outputs/storm_catalog/compound_hat/compound_metrics_hat.csv` (808 pontos, método vigente), `outputs/legacy_ssh_total_method/hazard/compound_metrics.csv` (legado, para o antes/depois), `data/unified/metocean_brazil_unified_waverys_grid.nc` (séries brutas), `data/external/etopo2022/` (batimetria), `site/public/data/risk_index_municipalities.geojson` (associação e ranking). Teste de contaminação: como não há dado de vazão da ANA no repositório, a hipótese foi testada pelo **acoplamento com o oceano aberto** — correlação da série de `zos` do ponto com a de uma célula offshore na mesma latitude (2° a leste; para os pontos da costa norte, onde leste é terra, referência ao norte), calculada na série bruta e depois de remover o ciclo anual médio, isolando a banda sinótica onde vive a sobrelevação meteorológica. Cinco cenários de exclusão avaliados como sensibilidade, com o risco municipal reconstruído do zero em cada um |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_12_estuarine_contamination` |
+| **Novas saídas geradas** | `outputs/audit/AUD-12_estuarine_contamination/{point_diagnostics.csv, suspect_points.csv, low_wave_points.csv, municipal_dependence.csv, sensitivity_scenarios.csv, diagnosis_summary.json}` |
+| **Achados** | (a) **A reconstrução do risco municipal confere com o publicado**: ρ = 1,000, max\|Δ\| = 3,4e-06, 280/280 municípios — as comparações abaixo são confiáveis. (b) **O portão HAT esvaziou os pontos questionados.** Contagem de eventos, legado → vigente: Macapá (0,8; −50,2) **118 → 1** (66 de 67 candidatos rejeitados); Chaves (0,0; −50,4) **127 → 7** (50 de 57 rejeitados); Salvaterra (−0,8; −48,4) **86 → 0** (28 de 28 rejeitados); Vigia/Colares (−1,4; −48,6) **100 → 2**; (0,4; −50,0) **147 → 3**; (3,4; −50,8) **59 → 1**. (c) **O top-10 já não depende deles.** Macapá era 4º e agora é **172º**; Chaves era 8º e agora é **94º**; Salvaterra 192º, Vigia 185º, Colares 188º. Nenhum município servido por ponto estuarino está entre os 50 primeiros. (d) **A contaminação por descarga não se sustenta na banda sinótica.** Correlação de anomalia com o oceano aberto: 0,758 (Macapá), 0,834 (Chaves), 0,893 (Salvaterra), 0,929 (Vigia/Colares), 0,786, 0,819 — mediana **0,827**, contra **0,833** nos outros 197 pontos ao norte de 2° S. Os pontos questionados são estatisticamente indistinguíveis dos vizinhos. A fração de variância sazonal do `zos` é 0,09–0,23 neles, **abaixo** da mediana 0,237 dos vizinhos. (e) **O teste do mês de pico não discrimina** e foi descartado: a fração de pontos cujo `zos` médio culmina em abril–junho é 0,37 no Norte e **1,00 ao sul de 25° S**, onde o Amazonas não tem influência — o ciclo estérico do Atlântico Sul também culmina no outono austral. (f) **O filtro de `max(Hₛ) < 0,5 m` é vazio no produto atual**: o mínimo de `max(Hₛ)` no domínio é **0,54 m**; **zero** pontos, zero eventos, zero municípios. O valor de 0,5 m do registro original vinha do **limiar** q90 do método superseded, não do máximo. (g) Aplicado à estatística que de fato varia, o filtro custa mais do que corrige: `q99(Hₛ) < 0,5 m` remove 8 pontos, 29 eventos e **silencia Chaves, Colares e Vigia**; `thr_hs(q70) < 0,5 m` remove 11 pontos, 31 eventos e silencia também Macapá. Todos os pontos removidos **têm** eventos aceitos pelo portão HAT — seriam falsos negativos, não artefatos. (h) Nenhum cenário muda o ranking: ρ = 1,000 e top-10 10/10 em todos, inclusive excluindo o Norte inteiro (203 pontos), que só desloca a mediana em 14 posições ao deixar 33 municípios órfãos |
+| **Interpretação** | O problema que AUD-12 registrou foi **dissolvido pela mudança de método**, não por exclusão de pontos. O mecanismo era: `SSH_total` no q90 detectava a sizígia como extremo de nível, o que dava a esses pontos centenas de "eventos compostos" sem tempestade; o limiar de onda irrisório não filtrava nada. Com o nível segmentado em `zos` livre de maré e o portão exigindo `max(SWL) > HAT`, 95–100 % desses candidatos são rejeitados, e os municípios do estuário caíram do top-10 para a metade inferior do ranking. **Recomendação: não aplicar nenhum filtro.** O corte de 0,5 m não tem justificativa física (é vazio na estatística para a qual foi proposto), não tem estabilidade espacial verificável (não seleciona nada), e nas variantes em que morde ele remove pontos que carregam perigo detectado, silenciando quatro municípios sem alterar o ranking — ou seja, só custa cobertura. Excluir pontos com base no resultado que produzem também seria seleção, o que a §10 deste registro já advertia |
+| **Alterações implementadas** | Nenhuma. Nenhum ponto excluído, nenhum produto regenerado |
+| **Validação realizada** | (1) Reconstrução do risco municipal conferida contra o publicado (ρ = 1,000, max\|Δ\| = 3,4e-06, 280/280). (2) Bug de chave corrigido durante a sessão: o ponto da foz do Amazonas tem latitude −7,4e-13, que arredondava para a string `-0.0` e não casava com `0.0` do arquivo municipal, deixando Chaves espúriamente órfão; corrigido somando 0,0 para colapsar o zero negativo. (3) Denominador de comparação de ranking trocado pela reconstrução do próprio script, para que os deslocamentos não carreguem artefato de desempate |
+| **Incerteza remanescente** | (1) **Sem dado de vazão.** O teste de contaminação é indireto: mede acoplamento com o oceano aberto, não correlação com o hidrograma do Amazonas. A série da estação de Óbidos (ANA) tornaria o teste direto e exigiria nova aquisição com proveniência. (2) A referência offshore usa deslocamento fixo de 2° (ou norte, quando leste é terra), o que não é uma definição de "plataforma aberta" e tem linha de base fortemente latitudinal — a comparação só é válida **dentro** do setor norte, que é como foi usada. (3) A elevação do fundo do ETOPO no ponto de Macapá é **+9,1 m**, isto é, a célula de grade cai sobre o que o ETOPO resolve como terra no complexo de ilhas do estuário; o WAVERYS ali tem dado, mas a representatividade da célula é questionável. Não é motivo suficiente para excluir um ponto que hoje contribui **um** evento, mas fica registrado. (4) A validade do WAVERYS em si nesses pontos não foi avaliada — permanece com AUD-02 |
+| **Próxima decisão necessária** | Do pesquisador: registrar a decisão de **manter os pontos sem filtro**, e escrever a interpretação de Macapá e Chaves no manuscrito. Com essas duas, AUD-12 pode fechar como `resultado-validado-mantido` — o desfecho é que a preocupação foi testada e **superada pela mudança de método**, sem nova exclusão |
+
+
+### 2026-07-31 — Decisão do pesquisador: manter sem filtro; fechamento
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Decisão** | **Manter todos os 808 pontos, sem nenhum filtro de exclusão.** Nenhum ponto estuarino é removido, nenhum recebe ressalva individual no produto |
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31, sobre os diagnósticos da entrada anterior |
+| **Justificativa registrada** | Duas partes. A primeira é o diagnóstico: o portão HAT já esvaziou os pontos questionados (Macapá 118 → 1 evento, Chaves 127 → 7, Salvaterra 86 → 0), o top-10 deixou de depender deles (Macapá 4º → 172º, Chaves 8º → 94º), e a hipótese de contaminação por descarga não se sustentou (acoplamento sinótico com o oceano aberto 0,827 nos questionados contra 0,833 nos vizinhos). A segunda é de enquadramento, e é do pesquisador: **dadas as incertezas de escala espacial das fontes — GLORYS12 a 1/12°, WAVERYS a ~0,2°, ETOPO 2022 — e as demais incertezas acumuladas na cadeia, é esperado que o produto tenha vieses pontuais.** Isso é uma propriedade de um índice regional construído sobre reanálises globais, não um defeito a ser corrigido caso a caso. Aplicar um filtro para remover pontos incômodos seria seleção, e nesta base custaria cobertura sem alterar o ranking (ρ = 1,000 em todos os cenários testados) |
+| **Consequência para o manuscrito** | Não haverá parágrafo dedicado a Macapá ou Chaves. Em seu lugar: (a) a declaração geral de que a resolução das fontes limita a representatividade célula a célula, sobretudo em corpos d'água interiores e recortes costeiros estreitos; (b) a recomendação de **trabalho futuro com modelagem de alta resolução em grade não estruturada**, que é a via adequada para resolver estuário, canal e zona de arrebentação — e não um filtro sobre a grade atual |
+| **Critério retirado** | O item 4 da §9 exigia interpretação explícita de Macapá e Chaves no manuscrito. Foi **dispensado**, não satisfeito, pela justificativa acima. Fica registrado como retirada deliberada e não como critério cumprido |
+| **Critério que permanece aberto e migra** | A validade do WAVERYS nos pontos de `thr_hs` < 1 m (item 6 da §9) não foi avaliada. É comum com **AUD-02**, diagnóstico 4, e segue lá; não bloqueia esta questão, cujo objeto era a contaminação estuarina |
+| **Desfecho** | `resultado-validado-mantido`. A preocupação foi testada, não confirmada, e superada pela mudança de método (AUD-01) — sem nova exclusão. Nenhum ponto removido, nenhum produto regenerado, nenhum valor alterado |

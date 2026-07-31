@@ -141,11 +141,27 @@ All outputs go to `outputs/storm_catalog/`:
 
 ### 3.2–3.8 — Hazard Characterization Submodules
 
+> **`outputs/storm_catalog/` holds three generations of the method side by side,
+> and nothing was ever removed.** Rows struck through below are legacy. The
+> `compound/` directory is the trap: its `compound_catalog.json` was regenerated
+> on 2026-07-31 and is **current**, while the other two files in it are from
+> 2026-07-28 and describe the superseded `SSH_total` method. Never infer a
+> file's generation from its directory — check the modification date, or read
+> `outputs/storm_catalog/README.md`, which maps every file (that path is
+> gitignored, so this table is the version-controlled copy).
+>
+> Marked 2026-07-31 under AUD-17.
+
+
 | Path | Description |
 |------|-------------|
-| `compound/compound_catalog.json` | Compound event catalog |
-| `compound/compound_metrics.csv` | Per-grid compound summary |
-| `compound/compound_summary.json` | Domain-wide summary |
+| `compound_hat/compound_metrics_hat.csv` | **Per-grid compound summary — the source of the published Hazard Index.** Read by `src/04_risk_integration/hazard_index.py` |
+| `compound_hat/compound_summary_hat.json` | Domain-wide summary: definition, HAT gate, domain Q05/Q95, serial-vs-parallel validation |
+| `compound/compound_catalog.json` | Compound event catalog (current: regenerated 2026-07-31) |
+| ~~`compound/compound_metrics.csv`~~ | **LEGACY (2026-07-28).** `SSH_total` q90/q90 schema — `thr_ssh_total_abs`, no `mean_integrated_severity`, no `hat_m`. Superseded; preserved only because three exploratory before/after diagnostics read it by path |
+| ~~`compound/compound_summary.json`~~ | **LEGACY (2026-07-28).** Reports 96,031 compound events against the current 16,768 — different methods, not a counting error |
+| ~~`compound_mhws/*`~~ | **LEGACY (2026-07-30).** The intermediate MHWS-datum arm. Versioned snapshot in `outputs/legacy_mhws_method/` |
+| ~~`catalog_ssh_total_storms.json`~~ | **LEGACY (2026-04-15).** 324,929 `SSH_total` episodes. Read by nothing |
 | `duration_persistence/duration_persistence_metrics.json` | Per-grid duration stats |
 | `duration_persistence/duration_persistence_metrics.csv` | Duration flat table |
 | `seasonality/seasonality_metrics.json` | Monthly/seasonal climatology |

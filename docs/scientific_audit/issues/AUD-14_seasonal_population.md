@@ -9,14 +9,14 @@
 | **Afeta** | dados, interpretação, documentação |
 | **Prioridade** | P2 |
 | **Bloqueia publicação?** | Não — mas exige declaração explícita entre as limitações |
-| **Status** | `aberto` |
-| **Desfecho** | — |
+| **Status** | `aguardando-decisao` |
+| **Desfecho** | — *(proposto: `limitacao-reconhecida`)* |
 | **Depende de** | — |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-05, AUD-08 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.2, §8 item 14, §9.3 item 16 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 |
 
 ---
 
@@ -149,17 +149,37 @@ Indiretamente, todas as que exibem exposição ou risco.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] O `README.md` §4.2 e o manuscrito declaram explicitamente que a exposição é
-      população **residente** *de jure* de 2022 e que a população flutuante não
-      está representada — cumprindo a obrigação registrada na docstring.
-- [ ] A direção do viés está declarada: subestima os balneários do S/SE, que são
-      os de maior perigo.
-- [ ] O diagnóstico 1 foi executado, e a relação entre a sazonalidade do perigo e
-      a da população está reportada.
-- [ ] Existe pelo menos uma estimativa de sensibilidade (diagnóstico 4), ou está
-      registrado por que a variável de uso ocasional não pôde ser obtida.
-- [ ] Se um proxy for adotado, sua proveniência está registrada em
+- [x] O `README.md` §4.2 e o texto do manuscrito declaram explicitamente que a
+      exposição é população **residente** *de jure* de 2022 e que a população
+      flutuante não está representada — cumprindo a obrigação registrada na
+      docstring de `municipal_exposure.py`. *README §4.2, bloco de citação; e
+      §"Conceptual Framework", definição de exposição. Também no glossário do
+      site e na página de metodologia do índice.*
+- [x] A direção do viés está declarada: subestima os balneários do S/SE, que são
+      os de maior perigo. *Declarada nos dois lugares, nomeando Balneário
+      Camboriú, Bombinhas, Guarujá, Ubatuba e Cabo Frio, e dizendo que o risco
+      desses municípios é um **limite inferior**.*
+- [x] O diagnóstico 1 foi executado, e a relação entre a sazonalidade do perigo e
+      a da população está reportada. *Executado sobre o produto 3.4 regenerado
+      em 2026-07-31: os eventos compostos no Sul/Sudeste concentram-se em outono
+      e inverno austral (MAM+JJA: RS 84,6 %, SC/PR 84,3 %, SP/RJ 87,2 %), e o
+      verão — pico da população flutuante — responde por apenas 3,1–8,0 %. A
+      sazonalidade do perigo é **anticorrelacionada** com a da população, o que
+      **atenua** o viés anual. Ver §14.*
+- [x] Existe pelo menos uma estimativa de sensibilidade (diagnóstico 4), **ou**
+      está registrado por que a variável de uso ocasional não pôde ser obtida.
+      *Registrado, com a razão: a Grade Estatística do IBGE carrega apenas
+      `TOTAL` e `TOTAL_DOM`; a categoria de uso ocasional existe por setor
+      censitário no SIDRA e exigiria nova aquisição com proveniência própria.
+      O proxy alternativo proposto pela §8 (diagnóstico 2) **foi tentado e
+      rejeitado** — ver §14, achado (b).*
+- [x] Se um proxy for adotado, sua proveniência está registrada em
       `data/metadata/` e o fator de conversão está justificado.
+      *Não se aplica: **nenhum proxy foi adotado** e nenhum fator de conversão
+      foi aplicado. Nada foi inventado.*
+- [x] Existe texto de limitação pronto para o manuscrito.
+      *`README.md` → "Declared limitations for the manuscript", terceiro
+      parágrafo.*
 
 ## 10. Riscos de alteração prematura
 
@@ -201,9 +221,24 @@ python -m src.figures_article.make_article_top10_municipality_tables
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(não commitado)* | `main` | `src/exploratory/audit_AUD_14_seasonal_population.py` (novo), `README.md` (§4.2, §Conceptual Framework, limitações do manuscrito), `site/content/project.ts`, `site/content/methodology.ts` | Diagnóstico + declaração. **Nenhum proxy adotado; nenhum valor numérico publicado alterado** |
 
 ## 14. Histórico de investigação
 
-*Nenhuma investigação registrada. A limitação está reconhecida desde a
+*A limitação está reconhecida na docstring de `municipal_exposure.py` desde a
 implementação do módulo, sem quantificação.*
+
+### 2026-07-31 — A sazonalidade do perigo atenua o viés; o proxy proposto não funciona
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | A sazonalidade do perigo agrava ou atenua a invisibilidade da população flutuante? E é possível sinalizar os municípios de alta ocupação ocasional sem dado novo? |
+| **Dados e métodos** | (1) `outputs/storm_catalog/seasonality/seasonality_summary.csv`, o produto do Step 3.4 **regenerado em 2026-07-31** sobre os catálogos `zos` — os números antigos não valeriam. Share de eventos compostos aceitos por estação austral, agregado por faixa de latitude. (2) `outputs/exposure/municipal_exposure.csv`: razão residentes por domicílio ocupado dentro de 10 km, o proxy que a §8 propunha como diagnóstico 2. Nenhuma estimativa de população sazonal foi construída |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_14_seasonal_population` |
+| **Novas saídas geradas** | `outputs/audit/AUD-14_seasonal_population/{hazard_seasonality_by_region.csv, occasional_use_proxy.csv, diagnosis_summary.json}` |
+| **Achados** | (a) **O perigo é de outono e inverno, e o turismo é de verão.** Share de eventos compostos em DJF: RS 8,0 %, SC/PR 5,4 %, SP/RJ 3,1 %, ES/BA-S 0,7 %, N/NE 4,4 %. O grosso cai em MAM+JJA: 84,6 % no RS, 84,3 % em SC/PR, 87,2 % em SP/RJ. A exposição efetiva média anual está, portanto, muito mais perto da residente do que o pico de verão sugeriria — o viés existe mas é **atenuado**, não amplificado. (b) **O proxy do diagnóstico 2 não funciona, e a razão é definicional.** O IBGE conta domicílios **ocupados**, de modo que os de uso ocasional já estão fora do denominador tanto quanto do numerador; a razão mede tamanho de família, não estoque habitacional sobre população residente, e não pode detectar segunda residência. Os balneários nomeados confirmam: Balneário Camboriú 2,41, Cabo Frio 2,71, Ubatuba 2,73, Bombinhas 2,74, Guarujá 2,89, contra 2,71 do conjunto — em torno da média, não abaixo dela. Diagnóstico 2 fica registrado como **tentado e rejeitado** |
+| **Interpretação** | A limitação é da base e permanece, mas duas coisas mudaram em relação ao registro original. A primeira é que sua magnitude efetiva é menor do que se supunha, porque as ressacas do Atlântico Sul não coincidem com a alta temporada — isso é um argumento científico a favor da métrica residente, não uma desculpa. A segunda é que o caminho barato que o próprio registro propunha para sinalizar os balneários está fechado por definição da variável. Nenhuma estimativa sazonal foi inventada: inflar a exposição dos balneários moveria Balneário Camboriú e Itajaí para cima no ranking e "resolveria" AUD-05 por ajuste de parâmetro em vez de correção de mecanismo, exatamente o que a §10 deste registro adverte |
+| **Alterações implementadas** | Nenhuma na camada de exposição. Declaração da limitação com a direção do viés em `README.md` §4.2 e §"Conceptual Framework", no glossário do site, na página de metodologia do índice, e um parágrafo pronto para o manuscrito |
+| **Validação realizada** | O cruzamento entre exposição e produto municipal foi refeito **por código IBGE** depois que a primeira versão, unindo por nome, duplicou linhas — existem duas "Santa Rita" no conjunto, em MA e PB. Uma asserção no script agora falha se o merge duplicar |
+| **Incerteza remanescente** | (1) A sazonalidade turística real não foi medida — assumiu-se o padrão conhecido de alta temporada em DJF, sem dado de ocupação. (2) A contagem de domicílios de uso ocasional continua **não obtida**; sem ela não há estimativa de sensibilidade quantitativa, apenas o argumento de atenuação sazonal. (3) O argumento sazonal é de média anual: um evento de verão em um balneário lotado continua tendo exposição efetiva muito acima da registrada, e isso não é capturado por nenhum índice de média |
+| **Próxima decisão necessária** | Confirmar o fechamento como `limitacao-reconhecida`. Se o pesquisador quiser a estimativa de sensibilidade, ela exige uma aquisição SIDRA nova (domicílios de uso ocasional por município) com registro de proveniência — decisão de escopo, não técnica |

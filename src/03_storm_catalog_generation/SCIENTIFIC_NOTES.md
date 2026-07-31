@@ -225,7 +225,7 @@ Detailed interactive maps are available on the results website (`/results/hazard
 
 ## Next Steps
 
-1. **Step 4 — Exposure, vulnerability & risk integration**: Municipal-scale integration is **complete** (see the "Step 4" section below). The current Hazard Index is the normalized equal-weight combination of compound-event frequency, mean overlap duration, and mean normalized intensity on the 808-point native grid. It is transferred to municipalities, combined with SVI_Coast_2022, and the final `Risk_Hazard` is normalized to 0–1. Open follow-up: bring the external municipality–grid-point selection step into a versioned script in this repo.
+1. **Step 4 — Exposure, vulnerability & risk integration**: Municipal-scale integration is **complete** (see the "Step 4" section below). The current Hazard Index is the normalized equal-weight combination of **two** components — compound-event frequency and mean integrated severity — on the 808-point native grid; the mean overlap duration was retired as a component on 2026-07-29 (AUD-06) and the peak-based intensity superseded by the integrated form, both remaining as published diagnostics. The index is transferred to municipalities and combined with `Exposure_Index` and `SVI_Coast_2022` as a conjunctive geometric mean, and the final `Risk_Hazard` is normalized to 0–1. Open follow-up: bring the external municipality–grid-point selection step into a versioned script in this repo.
 2. **Validation against reported events**: Cross-reference compound catalog with the Leal et al. (2024) SC disaster database and the expanded S2ID registry.
 3. **Spatial clustering**: Group storm episodes across neighboring grid points into spatially coherent storm systems (track-like objects). Not yet implemented.
 4. **Bivariate / copula EVA**: Fit copulas to compound (Hₛ, SSH_total) pairs for joint return period estimation. The dependence analysis (Step 3.7) provides empirical input for copula selection.
@@ -600,9 +600,15 @@ from the co-author. The last generated products remain committed under
 2026-07-27 entry below (0.782047) is superseded: the value in the current
 product is **0.829072** (São Sebastião, SP), with a minimum of 0.003439.
 
-### 2026-07-27 — Multimetric Hazard Index promoted to the current workflow
+### 2026-07-27 — Multimetric Hazard Index promoted to the current workflow *(SUPERSEDED 2026-07-29)*
 
-**[DECISION — frequency, duration, and intensity enter the current hazard]**
+> **Superseded by the 2026-07-29 entry below**, which retired duration from the
+> index and replaced peak intensity with integrated severity. The index now
+> carries **two** components. This entry is preserved as the dated record of the
+> decision that was taken at the time, not as a description of the current
+> workflow.
+
+**[DECISION — frequency, duration, and intensity enter the hazard, as of 2026-07-27]**
 The count-only decision previously recorded in this section is superseded.
 Each component is Min–Max normalized across all 808 native ocean grid points,
 their arithmetic mean is retained as `Hazard_Index_raw`, and the mean is

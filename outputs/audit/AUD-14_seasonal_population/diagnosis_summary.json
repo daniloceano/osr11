@@ -1,0 +1,277 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_14_seasonal_population",
+  "sources": {
+    "seasonality": "outputs/storm_catalog/seasonality/seasonality_summary.csv",
+    "exposure": "outputs/exposure/municipal_exposure.csv",
+    "municipal_product": "site/public/data/risk_index_municipalities.geojson"
+  },
+  "hazard_seasonality": {
+    "note": "Share of accepted compound events falling in each austral season, by latitude band, from the Step 3.4 product regenerated on 2026-07-31.",
+    "summer_DJF_share_by_band": {
+      "ES/BA-S": 0.0072,
+      "N/NE (north of 12 S)": 0.0442,
+      "RS": 0.0804,
+      "SC/PR": 0.0539,
+      "SP/RJ": 0.0308
+    },
+    "by_band": [
+      {
+        "band": "ES/BA-S",
+        "compound_season_DJF": 0.0072,
+        "compound_season_MAM": 0.7452,
+        "compound_season_JJA": 0.2404,
+        "compound_season_SON": 0.0072,
+        "n_points": 135,
+        "compound_events": 416
+      },
+      {
+        "band": "N/NE (north of 12 S)",
+        "compound_season_DJF": 0.0442,
+        "compound_season_MAM": 0.6167,
+        "compound_season_JJA": 0.2187,
+        "compound_season_SON": 0.1204,
+        "n_points": 415,
+        "compound_events": 407
+      },
+      {
+        "band": "RS",
+        "compound_season_DJF": 0.0804,
+        "compound_season_MAM": 0.3755,
+        "compound_season_JJA": 0.4701,
+        "compound_season_SON": 0.074,
+        "n_points": 90,
+        "compound_events": 7888
+      },
+      {
+        "band": "SC/PR",
+        "compound_season_DJF": 0.0539,
+        "compound_season_MAM": 0.3732,
+        "compound_season_JJA": 0.4698,
+        "compound_season_SON": 0.1031,
+        "n_points": 54,
+        "compound_events": 3025
+      },
+      {
+        "band": "SP/RJ",
+        "compound_season_DJF": 0.0308,
+        "compound_season_MAM": 0.3623,
+        "compound_season_JJA": 0.5101,
+        "compound_season_SON": 0.0968,
+        "n_points": 114,
+        "compound_events": 5032
+      }
+    ]
+  },
+  "occasional_use_proxy": {
+    "note": "Residents per occupied household within 10 km. A low value flags a housing stock larger than the resident population, which is what a high share of occasional-use dwellings looks like. It is a flag, not an estimate of people.",
+    "national_ratio_over_the_set": 2.7051,
+    "verdict": "The proxy does not work, and the reason is definitional. IBGE counts *occupied* households, so dwellings of occasional use are already excluded from the denominator as well as from the numerator. The ratio therefore measures household size, not the size of the housing stock relative to the resident population, and it cannot detect second homes. The named resort municipalities confirm this: they sit at 2.41-2.89 residents per household against a set-wide 2.71, i.e. astride the average rather than below it, with only Balneario Camboriu clearly low. Diagnostic 2 of the issue record is recorded here as attempted and rejected; the occasional-use variable itself would have to come from a new SIDRA acquisition.",
+    "twenty_lowest": [
+      {
+        "municipality_name": "Santa Rita",
+        "state": "MA",
+        "pop_10km": 4,
+        "dom_10km": 2,
+        "residents_per_household_10km": 2.0,
+        "risk_rank": 279.0
+      },
+      {
+        "municipality_name": "Santa Vit\u00f3ria do Palmar",
+        "state": "RS",
+        "pop_10km": 2795,
+        "dom_10km": 1250,
+        "residents_per_household_10km": 2.236,
+        "risk_rank": 124.0
+      },
+      {
+        "municipality_name": "Balne\u00e1rio Cambori\u00fa",
+        "state": "SC",
+        "pop_10km": 136326,
+        "dom_10km": 56642,
+        "residents_per_household_10km": 2.407,
+        "risk_rank": 233.0
+      },
+      {
+        "municipality_name": "Tavares",
+        "state": "RS",
+        "pop_10km": 5151,
+        "dom_10km": 2129,
+        "residents_per_household_10km": 2.419,
+        "risk_rank": 3.0
+      },
+      {
+        "municipality_name": "Balne\u00e1rio Pinhal",
+        "state": "RS",
+        "pop_10km": 13408,
+        "dom_10km": 5526,
+        "residents_per_household_10km": 2.426,
+        "risk_rank": 27.0
+      },
+      {
+        "municipality_name": "Florian\u00f3polis",
+        "state": "SC",
+        "pop_10km": 536876,
+        "dom_10km": 219963,
+        "residents_per_household_10km": 2.441,
+        "risk_rank": 78.0
+      },
+      {
+        "municipality_name": "Campos dos Goytacazes",
+        "state": "RJ",
+        "pop_10km": 12174,
+        "dom_10km": 4935,
+        "residents_per_household_10km": 2.467,
+        "risk_rank": 159.0
+      },
+      {
+        "municipality_name": "Arroio do Sal",
+        "state": "RS",
+        "pop_10km": 11070,
+        "dom_10km": 4483,
+        "residents_per_household_10km": 2.469,
+        "risk_rank": 20.0
+      },
+      {
+        "municipality_name": "Palmares do Sul",
+        "state": "RS",
+        "pop_10km": 10953,
+        "dom_10km": 4435,
+        "residents_per_household_10km": 2.47,
+        "risk_rank": 17.0
+      },
+      {
+        "municipality_name": "Niter\u00f3i",
+        "state": "RJ",
+        "pop_10km": 480647,
+        "dom_10km": 194218,
+        "residents_per_household_10km": 2.475,
+        "risk_rank": 64.0
+      },
+      {
+        "municipality_name": "Rio de Janeiro",
+        "state": "RJ",
+        "pop_10km": 4374900,
+        "dom_10km": 1757947,
+        "residents_per_household_10km": 2.489,
+        "risk_rank": 52.0
+      },
+      {
+        "municipality_name": "Cidreira",
+        "state": "RS",
+        "pop_10km": 16913,
+        "dom_10km": 6792,
+        "residents_per_household_10km": 2.49,
+        "risk_rank": 40.0
+      },
+      {
+        "municipality_name": "S\u00e3o Jos\u00e9 do Norte",
+        "state": "RS",
+        "pop_10km": 24947,
+        "dom_10km": 9999,
+        "residents_per_household_10km": 2.495,
+        "risk_rank": 1.0
+      },
+      {
+        "municipality_name": "Santos",
+        "state": "SP",
+        "pop_10km": 418350,
+        "dom_10km": 167595,
+        "residents_per_household_10km": 2.496,
+        "risk_rank": 86.0
+      },
+      {
+        "municipality_name": "S\u00e3o Gon\u00e7alo",
+        "state": "RJ",
+        "pop_10km": 837612,
+        "dom_10km": 335005,
+        "residents_per_household_10km": 2.5,
+        "risk_rank": 15.0
+      },
+      {
+        "municipality_name": "Vit\u00f3ria",
+        "state": "ES",
+        "pop_10km": 322636,
+        "dom_10km": 128456,
+        "residents_per_household_10km": 2.512,
+        "risk_rank": 147.0
+      },
+      {
+        "municipality_name": "Salvador",
+        "state": "BA",
+        "pop_10km": 2403202,
+        "dom_10km": 954477,
+        "residents_per_household_10km": 2.518,
+        "risk_rank": 150.0
+      },
+      {
+        "municipality_name": "Torres",
+        "state": "RS",
+        "pop_10km": 40850,
+        "dom_10km": 16203,
+        "residents_per_household_10km": 2.521,
+        "risk_rank": 51.0
+      },
+      {
+        "municipality_name": "S\u00e3o Jo\u00e3o da Barra",
+        "state": "RJ",
+        "pop_10km": 30827,
+        "dom_10km": 12176,
+        "residents_per_household_10km": 2.532,
+        "risk_rank": 72.0
+      },
+      {
+        "municipality_name": "Ilha Comprida",
+        "state": "SP",
+        "pop_10km": 13414,
+        "dom_10km": 5297,
+        "residents_per_household_10km": 2.532,
+        "risk_rank": 68.0
+      }
+    ],
+    "named_resort_municipalities": [
+      {
+        "municipality_name": "Balne\u00e1rio Cambori\u00fa",
+        "state": "SC",
+        "pop_10km": 136326,
+        "dom_10km": 56642,
+        "residents_per_household_10km": 2.407,
+        "risk_rank": 233.0
+      },
+      {
+        "municipality_name": "Cabo Frio",
+        "state": "RJ",
+        "pop_10km": 220886,
+        "dom_10km": 81671,
+        "residents_per_household_10km": 2.705,
+        "risk_rank": 33.0
+      },
+      {
+        "municipality_name": "Ubatuba",
+        "state": "SP",
+        "pop_10km": 92676,
+        "dom_10km": 33953,
+        "residents_per_household_10km": 2.73,
+        "risk_rank": 21.0
+      },
+      {
+        "municipality_name": "Bombinhas",
+        "state": "SC",
+        "pop_10km": 24956,
+        "dom_10km": 9104,
+        "residents_per_household_10km": 2.741,
+        "risk_rank": 92.0
+      },
+      {
+        "municipality_name": "Guaruj\u00e1",
+        "state": "SP",
+        "pop_10km": 287487,
+        "dom_10km": 99506,
+        "residents_per_household_10km": 2.889,
+        "risk_rank": 11.0
+      }
+    ]
+  },
+  "not_estimated": {
+    "occasional_use_dwelling_count": "Not obtained. The IBGE Grade Estat\u00edstica 2022 carries TOTAL and TOTAL_DOM only; the occasional-use category exists at census-tract level in SIDRA and would require a separate acquisition with its own provenance record. No occupancy factor is applied, because any such factor would be an unverifiable assumption imposed on a layer that is currently sound, and inflating the resort municipalities would 'fix' the known validation failures by parameter adjustment rather than by correcting a mechanism."
+  }
+}

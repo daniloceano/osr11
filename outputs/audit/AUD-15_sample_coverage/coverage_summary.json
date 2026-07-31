@@ -1,0 +1,917 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_15_sample_coverage",
+  "sources": {
+    "municipal_product": "site/public/data/risk_index_municipalities.geojson",
+    "metadata": "site/public/data/risk_index_metadata.json",
+    "hazard_metrics": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv",
+    "association_archive": "data/external/municipal_grid_association/municipal_grid_association.csv"
+  },
+  "counts": {
+    "municipalities_delivered": 282,
+    "with_svi": 282,
+    "with_grid_association": 280,
+    "with_hazard_value": 280,
+    "with_risk_value": 280,
+    "absent_from_risk_map": 2,
+    "association_to_a_point_with_zero_accepted_events": 83,
+    "degenerate_exposure_pop10km_below_1000": 4,
+    "exposure_at_the_0.01_floor": 2
+  },
+  "absent_municipalities": [
+    {
+      "municipality_name": "Fernando de Noronha",
+      "state": "PE",
+      "reason": "no grid-point association in the delivered/archived file",
+      "svi": 39.219,
+      "pop_10km": 3161
+    },
+    {
+      "municipality_name": "I\u00e7ara",
+      "state": "SC",
+      "reason": "no grid-point association in the delivered/archived file",
+      "svi": 20.549,
+      "pop_10km": 9870
+    }
+  ],
+  "zero_event_point_municipalities": [
+    {
+      "municipality_name": "Acara\u00fa",
+      "state": "CE",
+      "grid_lat": -2.8,
+      "grid_lon": -40.2,
+      "n_candidate_events": 13,
+      "n_rejected_by_hat": 13,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 196
+    },
+    {
+      "municipality_name": "Aquiraz",
+      "state": "CE",
+      "grid_lat": -3.8,
+      "grid_lon": -38.2,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 218
+    },
+    {
+      "municipality_name": "Aracaju",
+      "state": "SE",
+      "grid_lat": -11.0,
+      "grid_lon": -37.0,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 269
+    },
+    {
+      "municipality_name": "Aracati",
+      "state": "CE",
+      "grid_lat": -4.4,
+      "grid_lon": -37.6,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 245
+    },
+    {
+      "municipality_name": "Areia Branca",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -37.0,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 253
+    },
+    {
+      "municipality_name": "Barra de Santo Ant\u00f4nio",
+      "state": "AL",
+      "grid_lat": -9.6,
+      "grid_lon": -35.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 217
+    },
+    {
+      "municipality_name": "Barra de S\u00e3o Miguel",
+      "state": "AL",
+      "grid_lat": -10.0,
+      "grid_lon": -35.8,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 262
+    },
+    {
+      "municipality_name": "Barra dos Coqueiros",
+      "state": "SE",
+      "grid_lat": -10.8,
+      "grid_lon": -36.8,
+      "n_candidate_events": 23,
+      "n_rejected_by_hat": 23,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 267
+    },
+    {
+      "municipality_name": "Barreiros",
+      "state": "PE",
+      "grid_lat": -8.8,
+      "grid_lon": -35.0,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 220
+    },
+    {
+      "municipality_name": "Barroquinha",
+      "state": "CE",
+      "grid_lat": -2.8,
+      "grid_lon": -41.2,
+      "n_candidate_events": 16,
+      "n_rejected_by_hat": 16,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 226
+    },
+    {
+      "municipality_name": "Beberibe",
+      "state": "CE",
+      "grid_lat": -4.2,
+      "grid_lon": -37.8,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 197
+    },
+    {
+      "municipality_name": "Brejo Grande",
+      "state": "SE",
+      "grid_lat": -10.6,
+      "grid_lon": -36.6,
+      "n_candidate_events": 27,
+      "n_rejected_by_hat": 27,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 257
+    },
+    {
+      "municipality_name": "Cabedelo",
+      "state": "PB",
+      "grid_lat": -7.0,
+      "grid_lon": -34.8,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 256
+    },
+    {
+      "municipality_name": "Cabo de Santo Agostinho",
+      "state": "PE",
+      "grid_lat": -8.4,
+      "grid_lon": -34.8,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 255
+    },
+    {
+      "municipality_name": "Cai\u00e7ara do Norte",
+      "state": "RN",
+      "grid_lat": -5.0,
+      "grid_lon": -36.2,
+      "n_candidate_events": 15,
+      "n_rejected_by_hat": 15,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 227
+    },
+    {
+      "municipality_name": "Cal\u00e7oene",
+      "state": "AP",
+      "grid_lat": 2.6,
+      "grid_lon": -50.8,
+      "n_candidate_events": 33,
+      "n_rejected_by_hat": 33,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 280
+    },
+    {
+      "municipality_name": "Camocim",
+      "state": "CE",
+      "grid_lat": -2.8,
+      "grid_lon": -40.8,
+      "n_candidate_events": 15,
+      "n_rejected_by_hat": 15,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 211
+    },
+    {
+      "municipality_name": "Carutapera",
+      "state": "MA",
+      "grid_lat": -1.0,
+      "grid_lon": -45.8,
+      "n_candidate_events": 23,
+      "n_rejected_by_hat": 23,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 191
+    },
+    {
+      "municipality_name": "Cascavel",
+      "state": "CE",
+      "grid_lat": -4.0,
+      "grid_lon": -38.0,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 260
+    },
+    {
+      "municipality_name": "Caucaia",
+      "state": "CE",
+      "grid_lat": -3.6,
+      "grid_lon": -38.6,
+      "n_candidate_events": 26,
+      "n_rejected_by_hat": 26,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 235
+    },
+    {
+      "municipality_name": "Conde",
+      "state": "BA",
+      "grid_lat": -12.0,
+      "grid_lon": -37.4,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 198
+    },
+    {
+      "municipality_name": "Coruripe",
+      "state": "AL",
+      "grid_lat": -10.2,
+      "grid_lon": -36.0,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 244
+    },
+    {
+      "municipality_name": "Cruz",
+      "state": "CE",
+      "grid_lat": -2.8,
+      "grid_lon": -40.4,
+      "n_candidate_events": 12,
+      "n_rejected_by_hat": 12,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 241
+    },
+    {
+      "municipality_name": "Entre Rios",
+      "state": "BA",
+      "grid_lat": -12.4,
+      "grid_lon": -37.8,
+      "n_candidate_events": 27,
+      "n_rejected_by_hat": 27,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 276
+    },
+    {
+      "municipality_name": "Esplanada",
+      "state": "BA",
+      "grid_lat": -12.2,
+      "grid_lon": -37.6,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 277
+    },
+    {
+      "municipality_name": "Est\u00e2ncia",
+      "state": "SE",
+      "grid_lat": -11.4,
+      "grid_lon": -37.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 232
+    },
+    {
+      "municipality_name": "Feliz Deserto",
+      "state": "AL",
+      "grid_lat": -10.4,
+      "grid_lon": -36.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 242
+    },
+    {
+      "municipality_name": "Fortaleza",
+      "state": "CE",
+      "grid_lat": -3.8,
+      "grid_lon": -38.2,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 270
+    },
+    {
+      "municipality_name": "Fortim",
+      "state": "CE",
+      "grid_lat": -4.4,
+      "grid_lon": -37.6,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 210
+    },
+    {
+      "municipality_name": "Galinhos",
+      "state": "RN",
+      "grid_lat": -5.0,
+      "grid_lon": -36.2,
+      "n_candidate_events": 15,
+      "n_rejected_by_hat": 15,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 252
+    },
+    {
+      "municipality_name": "Godofredo Viana",
+      "state": "MA",
+      "grid_lat": -1.2,
+      "grid_lon": -45.6,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 274
+    },
+    {
+      "municipality_name": "Grossos",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -37.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 223
+    },
+    {
+      "municipality_name": "Guamar\u00e9",
+      "state": "RN",
+      "grid_lat": -5.0,
+      "grid_lon": -36.2,
+      "n_candidate_events": 15,
+      "n_rejected_by_hat": 15,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 258
+    },
+    {
+      "municipality_name": "Icapu\u00ed",
+      "state": "CE",
+      "grid_lat": -4.6,
+      "grid_lon": -37.4,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 213
+    },
+    {
+      "municipality_name": "Igarassu",
+      "state": "PE",
+      "grid_lat": -7.8,
+      "grid_lon": -34.8,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 208
+    },
+    {
+      "municipality_name": "Ilha de Itamarac\u00e1",
+      "state": "PE",
+      "grid_lat": -7.8,
+      "grid_lon": -34.8,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 194
+    },
+    {
+      "municipality_name": "Ilh\u00e9us",
+      "state": "BA",
+      "grid_lat": -15.0,
+      "grid_lon": -38.8,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 250
+    },
+    {
+      "municipality_name": "Ipojuca",
+      "state": "PE",
+      "grid_lat": -8.8,
+      "grid_lon": -35.0,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 251
+    },
+    {
+      "municipality_name": "Itapipoca",
+      "state": "CE",
+      "grid_lat": -3.0,
+      "grid_lon": -39.4,
+      "n_candidate_events": 26,
+      "n_rejected_by_hat": 26,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 278
+    },
+    {
+      "municipality_name": "Itaporanga d'Ajuda",
+      "state": "SE",
+      "grid_lat": -11.2,
+      "grid_lon": -37.0,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 219
+    },
+    {
+      "municipality_name": "Jaboat\u00e3o dos Guararapes",
+      "state": "PE",
+      "grid_lat": -8.2,
+      "grid_lon": -34.8,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 240
+    },
+    {
+      "municipality_name": "Janda\u00edra",
+      "state": "BA",
+      "grid_lat": -11.6,
+      "grid_lon": -37.4,
+      "n_candidate_events": 26,
+      "n_rejected_by_hat": 26,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 266
+    },
+    {
+      "municipality_name": "Japaratinga",
+      "state": "AL",
+      "grid_lat": -9.2,
+      "grid_lon": -35.2,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 203
+    },
+    {
+      "municipality_name": "Jequi\u00e1 da Praia",
+      "state": "AL",
+      "grid_lat": -10.0,
+      "grid_lon": -35.8,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 247
+    },
+    {
+      "municipality_name": "Jijoca de Jericoacoara",
+      "state": "CE",
+      "grid_lat": -2.8,
+      "grid_lon": -40.6,
+      "n_candidate_events": 14,
+      "n_rejected_by_hat": 14,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 275
+    },
+    {
+      "municipality_name": "Lucena",
+      "state": "PB",
+      "grid_lat": -7.0,
+      "grid_lon": -34.8,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 201
+    },
+    {
+      "municipality_name": "Lu\u00eds Domingues",
+      "state": "MA",
+      "grid_lat": -1.0,
+      "grid_lon": -45.8,
+      "n_candidate_events": 23,
+      "n_rejected_by_hat": 23,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 199
+    },
+    {
+      "municipality_name": "Macau",
+      "state": "RN",
+      "grid_lat": -5.0,
+      "grid_lon": -36.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 259
+    },
+    {
+      "municipality_name": "Macei\u00f3",
+      "state": "AL",
+      "grid_lat": -9.6,
+      "grid_lon": -35.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 236
+    },
+    {
+      "municipality_name": "Maragogi",
+      "state": "AL",
+      "grid_lat": -9.0,
+      "grid_lon": -35.0,
+      "n_candidate_events": 17,
+      "n_rejected_by_hat": 17,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 195
+    },
+    {
+      "municipality_name": "Marechal Deodoro",
+      "state": "AL",
+      "grid_lat": -9.8,
+      "grid_lon": -35.8,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 221
+    },
+    {
+      "municipality_name": "Mata de S\u00e3o Jo\u00e3o",
+      "state": "BA",
+      "grid_lat": -12.6,
+      "grid_lon": -37.8,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 271
+    },
+    {
+      "municipality_name": "Maxaranguape",
+      "state": "RN",
+      "grid_lat": -5.4,
+      "grid_lon": -35.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 222
+    },
+    {
+      "municipality_name": "Olinda",
+      "state": "PE",
+      "grid_lat": -8.0,
+      "grid_lon": -34.8,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 249
+    },
+    {
+      "municipality_name": "Pacatuba",
+      "state": "SE",
+      "grid_lat": -10.6,
+      "grid_lon": -36.6,
+      "n_candidate_events": 27,
+      "n_rejected_by_hat": 27,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 237
+    },
+    {
+      "municipality_name": "Paracuru",
+      "state": "CE",
+      "grid_lat": -3.8,
+      "grid_lon": -38.2,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 209
+    },
+    {
+      "municipality_name": "Paraipaba",
+      "state": "CE",
+      "grid_lat": -3.2,
+      "grid_lon": -39.0,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 264
+    },
+    {
+      "municipality_name": "Paripueira",
+      "state": "AL",
+      "grid_lat": -9.6,
+      "grid_lon": -35.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 228
+    },
+    {
+      "municipality_name": "Passo de Camaragibe",
+      "state": "AL",
+      "grid_lat": -9.6,
+      "grid_lon": -35.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 268
+    },
+    {
+      "municipality_name": "Paulista",
+      "state": "PE",
+      "grid_lat": -8.0,
+      "grid_lon": -34.8,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 239
+    },
+    {
+      "municipality_name": "Pedra Grande",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -35.8,
+      "n_candidate_events": 15,
+      "n_rejected_by_hat": 15,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 238
+    },
+    {
+      "municipality_name": "Pia\u00e7abu\u00e7u",
+      "state": "AL",
+      "grid_lat": -10.4,
+      "grid_lon": -36.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 225
+    },
+    {
+      "municipality_name": "Pirambu",
+      "state": "SE",
+      "grid_lat": -10.8,
+      "grid_lon": -36.6,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 234
+    },
+    {
+      "municipality_name": "Porto de Pedras",
+      "state": "AL",
+      "grid_lat": -9.2,
+      "grid_lon": -35.2,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 214
+    },
+    {
+      "municipality_name": "Porto do Mangue",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -36.8,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 231
+    },
+    {
+      "municipality_name": "Recife",
+      "state": "PE",
+      "grid_lat": -8.2,
+      "grid_lon": -34.8,
+      "n_candidate_events": 21,
+      "n_rejected_by_hat": 21,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 263
+    },
+    {
+      "municipality_name": "Rio do Fogo",
+      "state": "RN",
+      "grid_lat": -5.4,
+      "grid_lon": -35.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 205
+    },
+    {
+      "municipality_name": "Roteiro",
+      "state": "AL",
+      "grid_lat": -10.0,
+      "grid_lon": -35.8,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 246
+    },
+    {
+      "municipality_name": "Salvaterra",
+      "state": "PA",
+      "grid_lat": -0.8,
+      "grid_lon": -48.4,
+      "n_candidate_events": 28,
+      "n_rejected_by_hat": 28,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 192
+    },
+    {
+      "municipality_name": "Santa Rita",
+      "state": "PB",
+      "grid_lat": -7.0,
+      "grid_lon": -34.8,
+      "n_candidate_events": 25,
+      "n_rejected_by_hat": 25,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 204
+    },
+    {
+      "municipality_name": "Sirinha\u00e9m",
+      "state": "PE",
+      "grid_lat": -8.8,
+      "grid_lon": -35.0,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 212
+    },
+    {
+      "municipality_name": "S\u00e3o Bento do Norte",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -36.0,
+      "n_candidate_events": 17,
+      "n_rejected_by_hat": 17,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 248
+    },
+    {
+      "municipality_name": "S\u00e3o Caetano de Odivelas",
+      "state": "PA",
+      "grid_lat": -0.6,
+      "grid_lon": -48.0,
+      "n_candidate_events": 32,
+      "n_rejected_by_hat": 32,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 207
+    },
+    {
+      "municipality_name": "S\u00e3o Gon\u00e7alo do Amarante",
+      "state": "CE",
+      "grid_lat": -3.8,
+      "grid_lon": -38.2,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 265
+    },
+    {
+      "municipality_name": "S\u00e3o Jos\u00e9 da Coroa Grande",
+      "state": "PE",
+      "grid_lat": -9.0,
+      "grid_lon": -35.0,
+      "n_candidate_events": 17,
+      "n_rejected_by_hat": 17,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 206
+    },
+    {
+      "municipality_name": "S\u00e3o Miguel do Gostoso",
+      "state": "RN",
+      "grid_lat": -5.0,
+      "grid_lon": -35.6,
+      "n_candidate_events": 11,
+      "n_rejected_by_hat": 11,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 230
+    },
+    {
+      "municipality_name": "S\u00e3o Miguel dos Milagres",
+      "state": "AL",
+      "grid_lat": -9.6,
+      "grid_lon": -35.6,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 224
+    },
+    {
+      "municipality_name": "Tamandar\u00e9",
+      "state": "PE",
+      "grid_lat": -8.8,
+      "grid_lon": -35.0,
+      "n_candidate_events": 20,
+      "n_rejected_by_hat": 20,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 229
+    },
+    {
+      "municipality_name": "Tibau",
+      "state": "RN",
+      "grid_lat": -4.8,
+      "grid_lon": -37.2,
+      "n_candidate_events": 22,
+      "n_rejected_by_hat": 22,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 254
+    },
+    {
+      "municipality_name": "Touros",
+      "state": "RN",
+      "grid_lat": -5.2,
+      "grid_lon": -35.4,
+      "n_candidate_events": 19,
+      "n_rejected_by_hat": 19,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 216
+    },
+    {
+      "municipality_name": "Trairi",
+      "state": "CE",
+      "grid_lat": -3.2,
+      "grid_lon": -39.2,
+      "n_candidate_events": 24,
+      "n_rejected_by_hat": 24,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 202
+    },
+    {
+      "municipality_name": "Una",
+      "state": "BA",
+      "grid_lat": -15.2,
+      "grid_lon": -38.8,
+      "n_candidate_events": 29,
+      "n_rejected_by_hat": 29,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 261
+    },
+    {
+      "municipality_name": "Viseu",
+      "state": "PA",
+      "grid_lat": -1.0,
+      "grid_lon": -46.0,
+      "n_candidate_events": 18,
+      "n_rejected_by_hat": 18,
+      "Hazard_Index_mun": 0.0,
+      "risk_rank": 193
+    }
+  ],
+  "degenerate_exposure_municipalities": [
+    {
+      "municipality_name": "Santa Rita",
+      "state": "MA",
+      "pop_municipality": 36789,
+      "pop_10km": 4,
+      "Exposure_Index": 0.01,
+      "risk_rank": 279
+    },
+    {
+      "municipality_name": "Cal\u00e7oene",
+      "state": "AP",
+      "pop_municipality": 10554,
+      "pop_10km": 101,
+      "Exposure_Index": 0.01,
+      "risk_rank": 280
+    },
+    {
+      "municipality_name": "Oiapoque",
+      "state": "AP",
+      "pop_municipality": 27264,
+      "pop_10km": 518,
+      "Exposure_Index": 0.0582,
+      "risk_rank": 272
+    },
+    {
+      "municipality_name": "Terra de Areia",
+      "state": "RS",
+      "pop_municipality": 10368,
+      "pop_10km": 765,
+      "Exposure_Index": 0.1277,
+      "risk_rank": 126
+    }
+  ],
+  "exclusion_sensitivity": {
+    "test": "recompute the risk over the municipalities that remain after dropping those with pop_10km below 1000",
+    "municipalities_retained": 276,
+    "spearman_rho_vs_published": 1.0,
+    "max_absolute_rank_shift": 0.0
+  },
+  "metadata_agreement": {
+    "metadata_municipality_feature_count": 282,
+    "metadata_matched_hazard_count": 280,
+    "metadata_missing_municipalities": [
+      "Fernando de Noronha",
+      "I\u00e7ara"
+    ],
+    "agrees_with_recount": true
+  }
+}

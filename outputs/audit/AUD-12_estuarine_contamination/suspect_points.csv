@@ -1,0 +1,7 @@
+grid_lat,grid_lon,questioned_for,reason_questioned,hs_max,hs_q70_thr,hs_q90,hs_q99,zos_q99_thr,hat_m,n_hs_episodes,n_zos_episodes,n_candidate_events,n_rejected_by_hat,compound_count_current,mean_integrated_severity,Hazard_Index_current,zos_peak_month,zos_seasonal_variance_fraction,zos_corr_with_offshore,zos_anomaly_corr_with_offshore,seafloor_elevation_m,municipalities_served_now,compound_count_legacy_ssh_total,municipal_risk_ranks_now
+0.8,-50.2,Macapa/AP,"Amazon estuary, north channel",2.07,0.44,0.51,0.63,0.5804,3.486,991,83,67,66,1,0.0247,0.0185,9,0.0959,0.6821,0.7578,9.1,Macapá,118,Macapá=172
+0.0,-50.4,Chaves/PA,Amazon mouth / north of Marajo,0.92,0.2,0.24,0.3,0.627,2.191,778,84,57,50,7,0.0719,0.0752,9,0.1038,0.7304,0.8342,-23.5,Chaves,127,Chaves=94
+-0.8,-48.4,Salvaterra/PA,Marajo bay,1.45,0.61,0.72,0.86,0.4706,3.195,752,51,28,28,0,0.0,0.0,3,0.2073,0.8338,0.8933,-22.2,Salvaterra,86,Salvaterra=192
+-1.4,-48.6,Vigia/PA and Colares/PA,Guajara bay,1.35,0.14,0.2,0.28,0.4986,3.064,757,56,29,27,2,0.0,0.0104,3,0.1838,0.894,0.9291,-1.1,Colares; Vigia,100,Vigia=185; Colares=188
+0.4,-50.0,(none),domain minimum of peak intensity in the old product,2.79,0.51,0.59,0.71,0.5736,3.331,1039,75,65,62,3,0.0927,0.0655,3,0.0924,0.7449,0.7863,-13.0,,147,
+3.4,-50.8,(none),domain maximum of overlap duration in the old product,2.93,1.62,2.0,2.46,0.3379,2.505,439,26,21,20,1,0.2015,0.1137,4,0.2307,0.7394,0.8193,-10.0,,59,

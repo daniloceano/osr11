@@ -40,6 +40,31 @@ Level variable (changed 2026-07-31 by AUD-01):
     The superseded definition, retained here for the record:
         SSH_total(d) = zos(d, 00:00 UTC) + tide_daily_max(d)
 
+Phase incoherence of SWL (declared limitation, AUD-03):
+    zos is one sample per day at 00:00 UTC; tide_daily_max is the largest tide
+    of that day, at an arbitrary hour. SWL is therefore not the water level at
+    any real instant. GLORYS12 carries no sub-daily sea level, so this cannot be
+    corrected with the available inputs; it is a property of the data.
+
+    Since the level threshold moved to tide-free zos, the mismatch no longer
+    touches detection: no tide is added before the q99 is taken. It survives in
+    the HAT gate and in the level term of the integrated severity.
+
+    Magnitude, bounded by linear interpolation between consecutive daily
+    samples (src/exploratory/audit_AUD_03_ssh_phase_coherence.py, 2026-07-31):
+
+        domain median            1.2 cm/day   (p95 3.2 cm)
+        macrotidal North         ~1 cm        17-19 % of local sd(zos), rho >= 0.9996
+        micro-tidal South        5-10 cm      50-66 % of local sd(zos), rho 0.93-0.98
+
+    The error is larger in the SOUTH, not in the North: day-to-day zos
+    variability there is three times larger, and HAT is low enough that SWL
+    crosses it on 3-9 % of days rather than 0.1-0.3 %. It behaves as noise, not
+    bias -- 89 922 currently-passing days would be lost and 91 274
+    currently-failing days gained at opposite ends of the interpolation
+    interval. Individual event attribution in the South therefore carries
+    day-level uncertainty even though the aggregate hazard field is stable.
+
 Threshold computation period:
     Local percentile thresholds are computed from the FULL metocean record
     (1993–2025), consistent with the corrected Step 2e implementation.

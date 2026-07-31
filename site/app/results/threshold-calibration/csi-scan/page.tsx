@@ -55,6 +55,25 @@ export default function CsiScanPage() {
               causal matching window, then selects the pair that maximises CSI.
             </p>
 
+            <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">
+                Diagnostic step — superseded, kept as a historical record
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-amber-900">
+                Nothing on this page feeds the published results. Step 2d is diagnostic: its pair
+                (Hₛ = q90, SSH_total = q90) is <strong>not</strong> the calibrated pair. The
+                production detector is calibrated in <strong>Step 2e</strong>, which was recalibrated
+                on 2026-07-30 and selects <strong>Hₛ = q70 and tide-free zos = q99</strong>, with the
+                astronomical tide acting as an acceptance gate, max(SWL) &gt; HAT, rather than as part
+                of a summed level variable. The SSH_total variable described throughout this page —
+                zos at 00:00 UTC plus the daily-maximum tide — was retired as a segmentation variable
+                on 2026-07-31: north of 20° S the tide carries 96–98 % of its variance, so a
+                percentile of it is set by tidal phase rather than by storm forcing. The earlier
+                agreement between 2d and 2e on q90/q90 is now understood as an artefact of both
+                sweeps stopping at q90.
+              </p>
+            </div>
+
             <div className="mt-6 flex flex-wrap gap-3">
               {[
                 { label: 'Threshold grid',  value: 'q50–q90, every 5 percentile points (9 × 9 = 81 pairs) · configurable via pct_step in analysis_config.py' },

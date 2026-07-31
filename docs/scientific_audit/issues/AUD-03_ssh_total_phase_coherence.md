@@ -9,14 +9,14 @@
 | **Afeta** | código, dados, interpretação, documentação |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Não isoladamente; exige declaração explícita da limitação no manuscrito |
-| **Status** | `aberto` |
-| **Desfecho** | — |
+| **Status** | `aguardando-decisao` |
+| **Desfecho** | — *(proposto: `limitacao-reconhecida`)* |
 | **Depende de** | — |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-01, AUD-02, AUD-12 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.1(b), §8 item 12 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 |
 
 ---
 
@@ -160,19 +160,46 @@ central: a formulação atual pode ser a única possível com o dado disponível
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] A magnitude do erro de fase está quantificada em centímetros e como fração
-      do desvio-padrão local de `SSH_total`, por faixa de latitude.
-- [ ] A correlação de posto entre a `SSH_total` atual e pelo menos uma
+> **Reformulados em 2026-07-31.** Os critérios originais falavam de `SSH_total`
+> como variável segmentada. Desde 2026-07-31 o limiar de nível é o q99 de `zos`
+> livre de maré, e a soma só reaparece no portão HAT e na severidade integrada.
+> O texto abaixo preserva a intenção de cada critério e a reexpressa sobre o
+> método vigente; a redação original está no histórico do git deste arquivo.
+
+- [x] A magnitude do erro de fase está quantificada em centímetros e como fração
+      do desvio-padrão local de `zos`, por faixa de latitude.
+      *Mediana do domínio 1,2 cm/dia (p95 3,2 cm); ≈1 cm no Norte macromareal
+      (17–19 % do desvio-padrão local) contra 5–10 cm no Sul micromareal
+      (50–66 %). Ver §14, entrada de 2026-07-31.*
+- [x] A correlação de posto entre a série de nível atual e pelo menos uma
       formulação coerente em fase está calculada por ponto; se ρ ≥ 0,99 na
       mediana, o efeito é declarado desprezível **com o número reportado**.
-- [ ] Existe pelo menos uma comparação com nível observado (maregrafo) em um
-      ponto do Sul e um do Norte, ou está registrado que o dado não está
-      disponível e por quê.
-- [ ] `README.md` §2c e
+      *Mediana do domínio ρ = 0,9997 — acima do limiar —, mas a mediana esconde
+      a estrutura latitudinal: ρ ≥ 0,9996 no Norte e ρ = 0,93–0,98 no Sul, com
+      247 dos 808 pontos abaixo de 0,99, todos ao sul de 21° S. O efeito é
+      declarado desprezível **no Norte** e **não desprezível no Sul**, contra a
+      expectativa da revisão de linha de base.*
+- [x] Existe pelo menos uma comparação com nível observado (maregrafo) em um
+      ponto do Sul e um do Norte, **ou** está registrado que o dado não está
+      disponível e por quê. *Registrado: não há série de nível observado no
+      repositório. `data/raw/` contém apenas GLORYS12, WAVERYS e IBGE, e
+      `data/reported events/` traz uma lista documental de eventos de SC sem
+      níveis de água. Uma comparação com maregrafo do GLOSS/IBGE ou da Marinha
+      exigiria nova aquisição com registro de proveniência próprio — fica como
+      incerteza remanescente e passo de validação em aberto.*
+- [x] `README.md` §2c e
       `src/03_storm_catalog_generation/config/analysis_config.py` declaram a
       incoerência de fase, sua magnitude medida e a justificativa da escolha.
-- [ ] A decisão está tomada: manter a definição atual com a limitação declarada,
-      ou substituí-la.
+      *README §2c: bloco de citação após a descrição do Step 2c.
+      `analysis_config.py`: seção "Phase incoherence of SWL" no docstring do
+      módulo.*
+- [x] A decisão está tomada: manter a definição atual com a limitação declarada,
+      ou substituí-la. *Manter. Não há alternativa: o `zos` do GLORYS12 é
+      diário e interpolá-lo para escala horária criaria variabilidade
+      sub-diária que o modelo não contém.*
+- [x] Existe texto de limitação pronto para o manuscrito.
+      *`README.md` → "Declared limitations for the manuscript", primeiro
+      parágrafo.*
 
 ## 10. Riscos de alteração prematura
 
@@ -210,9 +237,21 @@ python -m src.02_threshold_calibration.05_pu_composite_calibration.main
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(não commitado)* | `main` | `src/exploratory/audit_AUD_03_ssh_phase_coherence.py` (novo), `README.md` (§2c e limitações do manuscrito), `src/03_storm_catalog_generation/config/analysis_config.py` (docstring), `site/app/methodology/compound-detection/page.tsx` (item "Still-water-level timing" das Assumptions) | Diagnóstico novo + declaração da limitação. **Nenhum valor numérico publicado alterado** |
 
 ## 14. Histórico de investigação
 
-*Nenhuma investigação registrada. A revisão de linha de base identificou a
-incoerência por inspeção da definição, sem quantificá-la.*
+### 2026-07-31 — Quantificação do erro de fase; a limitação é maior no Sul, não no Norte
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Sob o método vigente — limiar de nível no q99 de `zos` livre de maré, maré atuando como portão `max(SWL) > HAT` — qual é a magnitude do erro de fase, e onde ele importa? |
+| **Dados e métodos** | `data/unified/metocean_brazil_unified_waverys_grid.nc`, 808 pontos, 12 053 dias. Como não existe `zos` sub-diário, o valor verdadeiro na hora da preamar foi **limitado**, não estimado: sob interpolação linear entre amostras diárias consecutivas, ele está entre `zos(d)` e `zos(d+1)`. Substituindo cada extremo obtêm-se `SWL_low` e `SWL_high`, e a largura desse intervalo é o erro de fase. Métricas: largura em cm e como fração de `sd(zos)` local; ρ de Spearman entre a `SWL` usada e a variante do ponto médio; e, no portão, quantos dias mudariam de decisão em cada extremo — por dia e por corrida de dias consecutivos acima do HAT |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_03_ssh_phase_coherence` |
+| **Novas saídas geradas** | `outputs/audit/AUD-03_ssh_phase_coherence/{phase_error_by_point.csv, band_summary.csv, diagnosis_summary.json}` |
+| **Achados** | (a) **O escopo da questão encolheu.** O limiar de nível não usa mais a soma: episódios são segmentados em `zos` livre de maré, sem maré antes do percentil. O erro de fase sobrevive apenas no portão HAT e no termo de nível da severidade integrada. (b) **Magnitude:** mediana do domínio **1,2 cm/dia**, p95 3,2 cm, máximo por ponto 16 cm. (c) **A estrutura latitudinal é o inverso da prevista pela revisão de linha de base.** O erro é ≈1 cm no Norte macromareal (AP, N eq., NE, ES/BA-S: 17–19 % do `sd(zos)` local, ρ ≥ 0,9996) e **5–10 cm no Sul micromareal** (RS 10,5 cm / 66 %, SC/PR 7,6 cm / 59 %, SP/RJ 5,2 cm / 50 %; ρ = 0,93–0,98). A razão é dupla: `sd(zos)` é três vezes maior no Sul (0,16 m contra 0,05 m), e o HAT ali é baixo (0,22 m contra 1,76 m no N eq.), de modo que a `SWL` o cruza em 3–9 % dos dias contra 0,1–0,3 % no Norte — muitos dias ficam perto da fronteira de decisão. (d) **Estabilidade do portão:** 49,0 % dos dias que hoje passam o portão mudariam de decisão no extremo desfavorável (13,7–19,3 % no Norte, 50–52 % no Sul). Agrupando dias consecutivos em corridas — proxy mais próximo da unidade que o portão de fato decide, já que basta um dia qualificado — a fração cai pouco, para 45,5 %: os desvios são fortemente correlacionados dentro de um evento. (e) **É ruído, não viés:** 89 922 dias hoje aprovados seriam perdidos e 91 274 hoje reprovados seriam ganhos — quase simétrico —, de modo que a contagem não é sistematicamente inflada nem deprimida |
+| **Interpretação** | A limitação é inerente à base e não tem correção possível: o `zos` do GLORYS12 é diário, e interpolá-lo para escala horária inventaria variabilidade sub-diária que o modelo não contém. O que mudou é **onde** ela vale e **quanto**. O reenquadramento do método (AUD-01) removeu o erro de fase do limiar de detecção, que era o lugar mais danoso, e o confinou ao portão e à severidade. O achado inesperado — o erro é ~10× maior no Sul — não invalida o Sul: como é aproximadamente simétrico, o campo agregado de perigo é estável (ρ = 0,93–0,98 na ordenação dos dias), mas a atribuição de **eventos individuais** no Sul carrega incerteza de nível diário. Isso é relevante para AUD-05, que valida casos costeiros conhecidos, quase todos em SC |
+| **Alterações implementadas** | Nenhuma no método. Declaração da limitação em `README.md` §2c, no docstring de `analysis_config.py`, nas Assumptions da página de metodologia do site, e um parágrafo pronto para o manuscrito em `README.md` → "Declared limitations for the manuscript" |
+| **Validação realizada** | O script reproduz `hat_m` e as coordenadas diretamente de `compound_metrics_hat.csv`, de modo que o portão avaliado é o mesmo do produto. A métrica por corridas foi acrescentada depois de a primeira versão usar um denominador errado (dias indeterminados sobre dias aprovados, que produzia razões acima de 1); a versão publicada usa contagens direcionadas explícitas |
+| **Incerteza remanescente** | (1) **Nenhuma comparação com nível observado.** Não há maregrafo no repositório; sem ele não é possível dizer se o `zos` do GLORYS12 acerta o nível costeiro observado, apenas se é internamente coerente. (2) O limite por interpolação linear é o **pior caso**, não o caso esperado — o valor verdadeiro está dentro do intervalo, e a variante do ponto médio preserva a ordenação com ρ = 0,93–0,98. (3) O efeito não foi medido **no nível de evento** do detector: isso exigiria reexecutar `detection_hat` com `SWL_low` e `SWL_high`, o que não foi feito. Os dias que o portão de fato avalia são os compartilhados por um episódio de onda e um de nível, um subconjunto mais extremo do que todos os dias acima do HAT, portanto provavelmente menos sujeito a inversão do que os 45–49 % reportados |
+| **Próxima decisão necessária** | Confirmar o fechamento como `limitacao-reconhecida`. A decisão científica — manter a definição — não tem alternativa com os dados disponíveis; o que resta é o aval do pesquisador sobre o texto da limitação e sobre deixar a comparação com maregrafo como trabalho futuro |

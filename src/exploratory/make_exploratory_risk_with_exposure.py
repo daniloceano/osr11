@@ -271,7 +271,10 @@ def main() -> None:
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "exposure_field": EXPOSURE_FIELD,
             "clip_floor": CLIP_FLOOR,
-            "published_formula": "R_current = norm_municipal((SVI/100) * Hazard_Index)",
+            "published_formula": (
+                "R_current = norm_municipal((clip(Hazard_Index_mun) * clip(Exposure_Index)"
+                " * clip(SVI/100)) ** (1/3))"
+            ),
             "candidate_formula": "R = norm_municipal((clip(A) * clip(E) * clip(V)) ** (1/3))",
             "figure": str(OUTPUT_FIGURE.relative_to(ROOT)),
         }

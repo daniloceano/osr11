@@ -465,7 +465,7 @@ export default function PuCalibrationPage() {
                 },
                 {
                   label: 'Step 3 receives: tab_TC5_optimal_pair_pu.csv → q70/q99.',
-                  text: 'The calibrated pair (thr_hs_pct=0.70, thr_zos_pct=0.99) is read by Step 3.2, where it defines the exceedance thresholds used to identify compound episodes over the full 1993–2025 series at all 808 coastal grid points of the national domain. The national catalogue built on it holds 16 768 events, with 208 of the 808 points recording none. Steps 3.1 and 3.3–3.8 still read the superseded q90/q90 catalogues and have not been regenerated.',
+                  text: 'The calibrated pair (thr_hs_pct=0.70, thr_zos_pct=0.99) is read by Step 3.2, where it defines the exceedance thresholds used to identify compound episodes over the full 1993–2025 series at all 808 coastal grid points of the national domain. The national catalogue built on it holds 16 768 events, with 208 of the 808 points recording none. The whole of Step 3 was regenerated on this pair on 2026-07-31, Steps 3.1 and 3.3–3.8 included; no published statistic still derives from the superseded q90/q90 SSH_total catalogues.',
                 },
               ].map((item, i) => (
                 <div key={i} className="rounded-xl border border-gray-200 bg-white p-5">

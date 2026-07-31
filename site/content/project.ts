@@ -69,19 +69,19 @@ export const specificObjectives: ProjectObjective[] = [
       'Identify compound wave–surge events based on temporal overlap of independent storms, quantifying co-occurrence statistics, peak time lags, and overlap durations.',
   },
   {
-    label: 'Exposure spatialization',
+    label: 'Population exposure',
     description:
-      'Operationalize exposure through spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. Frequency, mean overlap duration, and mean normalized intensity are combined on the native grid into the current normalized multimetric Hazard Index and then transferred to municipalities.',
+      'Operationalize exposure as the resident population within 10 km of the coastline, aggregated from the IBGE Grade Estatística 2022. Separately, compound-event frequency and mean integrated severity are combined with equal weights on the native grid into the normalized Hazard Index, which is then transferred to municipalities through the archived association.',
   },
   {
     label: 'Social vulnerability index',
     description:
-      'Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 281 coastal municipalities. Variables covering crowding, poverty, age vulnerability, race, literacy, and basic infrastructure are standardized with StandardScaler and submitted to PCA; PC1 (adjusted to increase with vulnerability) is normalized to 0–100.',
+      'Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 282 coastal municipalities. Variables covering crowding, poverty, age vulnerability, race, literacy, and basic infrastructure are standardized with StandardScaler and submitted to PCA; PC1 (adjusted to increase with vulnerability) is normalized to 0–100.',
   },
   {
     label: 'Coastal risk mapping',
     description:
-      'Generate compound coastal risk indices by combining SVI_Coast_2022 with the normalized frequency-duration-intensity Hazard_Index, identifying priority hotspots while preserving the former count-only and originally delivered products for audit.',
+      'Generate compound coastal risk indices as the conjunctive geometric mean of the normalized frequency-and-integrated-severity Hazard_Index, the population exposure, and SVI_Coast_2022, identifying priority hotspots while preserving the former count-only and originally delivered products for audit.',
   },
   {
     label: 'Physical interpretation',
@@ -108,11 +108,11 @@ export const conceptualFramework = {
     },
     {
       term: 'Exposure',
-      definition: 'The spatial association between oceanic compound-event metrics and Brazilian coastal municipalities. In the current risk scope, normalized frequency, mean overlap duration, and mean normalized intensity receive equal weights in a native-grid Hazard Index normalized to 0–1 before transfer to municipalities.'
+      definition: 'The people present where the hazard acts — the resident (de jure) population within 10 km of the coastline, from the IBGE Grade Estatística 2022, counted on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, and being de jure it does not capture the seasonal population of the resort municipalities (AUD-14).'
     },
     {
       term: 'Vulnerability',
-      definition: 'The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.'
+      definition: 'The social susceptibility of the resident population — income, education, race, age structure, housing tenure, crowding and basic sanitation — measured by SVI_Coast_2022. No physical susceptibility layer is implemented: geomorphology, terrain elevation, natural barriers, coastal defences and drainage capacity are absent from this product, so two stretches with the same income profile and the same hazard receive the same vulnerability regardless of the ground they stand on (AUD-10).'
     },
     {
       term: 'Risk',
@@ -222,26 +222,26 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-3',
     label: 'STEP 3 — Hazard Characterization',
-    description: 'Storm catalog generation and full hazard characterization suite across the complete Brazilian coast, over the full 1993–2025 record at 808 coastal grid points. Step 3.2 (compound detection) was regenerated on the calibrated q70/q99 pair with the HAT-gated detector; Steps 3.1 and 3.3–3.8 still read the superseded q90/q90 SSH_total catalogues and have not been regenerated.',
+    description: 'Storm catalog generation and full hazard characterization suite across the complete Brazilian coast, over the full 1993–2025 record at 808 coastal grid points. The whole step was regenerated on 2026-07-31 on the calibrated q70/q99 pair with the HAT-gated detector: Step 3.1 rebuilt the catalogues on tide-free zos in place of SSH_total, and Steps 3.3–3.8 were rerun from those catalogues. No published statistic still derives from SSH_total.',
     status: 'done',
     stepNumber: 3,
     tasks: [
-      '404,535 Hₛ + 324,929 SSH_total storm episodes generated ✓',
-      '~96k compound events detected across 808 coastal grid points ✓',
+      '707,453 Hₛ + 42,455 tide-free zos storm episodes generated ✓',
+      '16,768 compound events accepted across 808 coastal grid points (15,857 candidates rejected by the HAT gate; 208 points carry no accepted event) ✓',
       'Duration, seasonality, Mann–Kendall trends, POT–GPD EVA complete ✓',
-      'Hs–SSH dependence (τ, ρ, χ, χ̄) and site-export JSON complete ✓',
+      'Hₛ–zos dependence (τ, ρ, χ, χ̄) and site-export JSON complete ✓',
     ],
     subSteps: [
       {
         id: 'step-3-1',
         label: '3.1 — Storm Catalogs',
-        description: 'POT detection + episode clustering on the full 1993–2025 record. 808 coastal grid points, 404k Hₛ storms, 325k SSH_total storms.',
+        description: 'POT detection + episode clustering on the full 1993–2025 record at q70 (Hₛ) and q99 (tide-free zos). 808 coastal grid points, 707,453 Hₛ episodes, 42,455 zos episodes.',
         status: 'done',
       },
       {
         id: 'step-3-2',
         label: '3.2 — Compound Detection',
-        description: 'Temporal overlap of Hₛ/SSH_total storms → ~96k compound events. Union-find grouping, overlap duration, peak lag, normalized intensity.',
+        description: 'Temporal overlap of Hₛ and tide-free zos episodes, gated by max(SWL) > HAT → 16,768 accepted compound events. Union-find grouping, integrated severity over the HAT datum; overlap duration and peak intensity retained as diagnostics.',
         status: 'done',
       },
       {
@@ -253,7 +253,7 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-3-4',
         label: '3.4 — Monthly Seasonality',
-        description: 'Monthly counts, peak month, seasonal split (DJF/MAM/JJA/SON) for Hₛ, SSH_total, and compound events.',
+        description: 'Monthly counts, peak month, seasonal split (DJF/MAM/JJA/SON) for Hₛ, tide-free zos, and compound events.',
         status: 'done',
       },
       {
@@ -271,7 +271,7 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-3-7',
         label: '3.7 — Dependence Analysis',
-        description: "Hs–SSH_total statistical dependence from compound event pairs: Kendall's τ, Spearman's ρ, extremal dependence χ and χ̄.",
+        description: "Hₛ–zos statistical dependence from compound event pairs: Kendall's τ, Spearman's ρ, extremal dependence χ and χ̄.",
         status: 'done',
       },
       {
@@ -289,10 +289,8 @@ export const timelinePhases: TimelinePhase[] = [
     status: 'done',
     stepNumber: 4,
     tasks: [
-      'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (281 municipalities) ✓',
-      'Exposure operationalized through spatial join of oceanic hazard metrics to municipalities ✓',
-      'Current Hazard_Index = normalized equal-weight mean of native-grid frequency, duration, and intensity components ✓',
-      'Current Risk_Hazard_raw = (SVI/100) × Hazard_Index ✓',
+      'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (282 municipalities; PC1 explains 50.5 % of the variance) ✓',
+      'Current Hazard_Index = normalized equal-weight mean of native-grid compound-event frequency and mean integrated severity — two components since the duration term was retired ✓',
       'Exposure_Index from the IBGE Grade Estatística 2022: population within 10 km of the coastline ✓',
       'Risk_Hazard = norm[(Hazard_Index_mun · Exposure_Index · SVI/100)^(1/3)], geometric and conjunctive ✓',
       'Raw and normalized stages published side by side for every quantity ✓',

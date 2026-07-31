@@ -1,0 +1,120 @@
+{
+  "generated_by": "src.exploratory.audit_AUD_09_svi_directionality",
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "municipality_count": 282,
+  "reproduction_of_published_index": {
+    "pearson_r": 0.9999999999995468,
+    "max_abs_difference": 5.9312133444677784e-05,
+    "spearman_rho": 1.0,
+    "explained_variance_pc1": 0.5049597869913374,
+    "explained_variance_pc2": 0.1652362436984003,
+    "mean_correlation_before_global_flip": 0.46845547904739054,
+    "global_sign_was_flipped": false
+  },
+  "indicator_verdicts": {
+    "pop_house": "encoding confirmed; positive PC1 loading",
+    "pop_rent": "encoding confirmed; negative PC1 loading is empirical, not an encoding error",
+    "pop_poverty": "encoding confirmed; positive PC1 loading",
+    "pop_agevul": "encoding confirmed; negative PC1 loading is empirical, not an encoding error",
+    "pop_nonwhite": "encoding confirmed; positive PC1 loading",
+    "pop_illiterate": "encoding confirmed; positive PC1 loading",
+    "pop_nowater": "encoding confirmed; positive PC1 loading",
+    "pop_nosewage": "encoding confirmed; positive PC1 loading",
+    "pop_nogarbage": "encoding confirmed; positive PC1 loading",
+    "pop_nopaving": "encoding confirmed; positive PC1 loading"
+  },
+  "n_indicators_failing_reversal_test": 0,
+  "indicators_failing_reversal_test": [],
+  "n_indicators_with_negative_pc1_loading": 2,
+  "negative_loading_indicators": [
+    "pop_rent",
+    "pop_agevul"
+  ],
+  "alternative_index_comparisons": [
+    {
+      "variant": "additive_imposed_direction",
+      "pearson_r_with_published": 0.9442055472796711,
+      "spearman_rho_with_published": 0.9414070223494823,
+      "median_absolute_rank_shift": 16.0,
+      "max_absolute_rank_shift": 108.0,
+      "top10_overlap_with_published": 9
+    },
+    {
+      "variant": "pca_eight_indicators",
+      "pearson_r_with_published": 0.9950891467716514,
+      "spearman_rho_with_published": 0.99356803237174,
+      "median_absolute_rank_shift": 4.0,
+      "max_absolute_rank_shift": 37.0,
+      "top10_overlap_with_published": 10
+    },
+    {
+      "variant": "pca_sign_forced_inputs",
+      "pearson_r_with_published": 0.9999999999995468,
+      "spearman_rho_with_published": 1.0,
+      "median_absolute_rank_shift": 0.0,
+      "max_absolute_rank_shift": 0.0,
+      "top10_overlap_with_published": 10
+    },
+    {
+      "variant": "percentile_rank_rescale",
+      "pearson_r_with_published": 0.9924696010046556,
+      "spearman_rho_with_published": 1.0,
+      "median_absolute_rank_shift": 0.0,
+      "max_absolute_rank_shift": 0.0,
+      "top10_overlap_with_published": 10
+    }
+  ],
+  "risk_effect_of_alternatives": [
+    {
+      "svi_variant": "published",
+      "spearman_rho_risk_vs_published": 1.0,
+      "median_absolute_rank_shift": 0.0,
+      "max_absolute_rank_shift": 0.0,
+      "risk_top10_overlap": 10
+    },
+    {
+      "svi_variant": "additive_imposed_direction",
+      "spearman_rho_risk_vs_published": 0.9820019570220465,
+      "median_absolute_rank_shift": 6.0,
+      "max_absolute_rank_shift": 111.0,
+      "risk_top10_overlap": 6
+    },
+    {
+      "svi_variant": "pca_eight_indicators",
+      "spearman_rho_risk_vs_published": 0.9970212812481207,
+      "median_absolute_rank_shift": 3.0,
+      "max_absolute_rank_shift": 45.0,
+      "risk_top10_overlap": 10
+    },
+    {
+      "svi_variant": "pca_sign_forced_inputs",
+      "spearman_rho_risk_vs_published": 1.0,
+      "median_absolute_rank_shift": 0.0,
+      "max_absolute_rank_shift": 0.0,
+      "risk_top10_overlap": 10
+    },
+    {
+      "svi_variant": "percentile_rank_rescale",
+      "spearman_rho_risk_vs_published": 0.957510755421443,
+      "median_absolute_rank_shift": 11.0,
+      "max_absolute_rank_shift": 108.0,
+      "risk_top10_overlap": 9
+    }
+  ],
+  "redundancy": {
+    "mean_abs_offdiagonal_correlation_all_ten": 0.42418129643612273,
+    "mean_abs_offdiagonal_correlation_sanitation_block": 0.3768470994831213
+  },
+  "scale_artefacts": {
+    "n_exactly_zero": 1,
+    "n_exactly_hundred": 1,
+    "zero_municipality": [
+      "Balne\u00e1rio Cambori\u00fa"
+    ],
+    "hundred_municipality": [
+      "Chaves"
+    ]
+  },
+  "correlation_svi_with_poverty": 0.9396505963498323,
+  "correlation_svi_with_log_population": -0.4909047443928008
+}

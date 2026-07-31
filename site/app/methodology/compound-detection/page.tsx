@@ -103,7 +103,7 @@ const stormAttributes: { field: string; definition: string; formula: string; uni
   },
   {
     field: 'peak_value',
-    definition: 'Maximum value of the variable (Hₛ or SSH_total) reached within the episode.',
+    definition: 'Maximum value of the variable (Hₛ or tide-free zos) reached within the episode.',
     formula: 'max(values over episode days)',
     units: 'm',
   },
@@ -124,13 +124,13 @@ const stormAttributes: { field: string; definition: string; formula: string; uni
 const compoundAttributes: { field: string; definition: string; formula: string; units: string }[] = [
   {
     field: 'date_start / date_end',
-    definition: 'Bounds of the overlap window — the calendar days shared by the Hₛ and SSH_total episodes in the group. Falls back to the union bounds only if the overlap set is empty (not reachable under the ≥ 1-day rule).',
+    definition: 'Bounds of the overlap window — the calendar days shared by the Hₛ and zos episodes in the group. Falls back to the union bounds only if the overlap set is empty (not reachable under the ≥ 1-day rule).',
     formula: 'min / max of (Hₛ_days ∩ SSH_days)',
     units: 'date',
   },
   {
     field: 'overlap_duration_days',
-    definition: 'Number of calendar days on which both an Hₛ storm and an SSH_total storm are simultaneously active — the core measure of joint persistence. It counts the total shared days; when several episodes chain into one event these can be non-contiguous, so the event span (date_start→date_end) may exceed this count.',
+    definition: 'Number of calendar days on which both an Hₛ storm and a tide-free zos storm are simultaneously active. It counts the total shared days; when several episodes chain into one event these can be non-contiguous, so the event span (date_start→date_end) may exceed this count. Retired as a Hazard Index component on 2026-07-29 and now published as a diagnostic.',
     formula: '|Hₛ_days ∩ SSH_days|',
     units: 'days',
   },
@@ -142,31 +142,31 @@ const compoundAttributes: { field: string; definition: string; formula: string; 
   },
   {
     field: 'n_hs_storms / n_ssh_storms',
-    definition: 'How many individual Hₛ and SSH_total episodes were merged into this compound event (≥ 1 each; > 1 when several episodes chain through shared days).',
+    definition: 'How many individual Hₛ and zos episodes were merged into this compound event (≥ 1 each; > 1 when several episodes chain through shared days).',
     formula: 'group cardinality',
     units: 'count',
   },
   {
     field: 'peak_hs / peak_ssh_total',
-    definition: 'Largest peak value reached by any Hₛ / SSH_total episode in the group.',
+    definition: 'Largest peak value reached by any Hₛ / zos episode in the group.',
     formula: 'max over grouped episodes',
     units: 'm',
   },
   {
     field: 'peak_hs_date / peak_ssh_date',
-    definition: 'Dates of the governing Hₛ and SSH_total peaks (the peaks that define peak_hs and peak_ssh_total).',
+    definition: 'Dates of the governing Hₛ and zos peaks (the peaks that define peak_hs and peak_zos).',
     formula: 'argmax over grouped episodes',
     units: 'date',
   },
   {
     field: 'peak_lag_days',
-    definition: 'Lead/lag between the wave peak and the surge peak. Sign convention (matches the code): positive ⇒ Hₛ peaks AFTER SSH_total (wave lags surge); negative ⇒ Hₛ peaks first; zero ⇒ same day. Diagnoses the temporal structure of the compound forcing.',
+    definition: 'Lead/lag between the wave peak and the surge peak. Sign convention (matches the code): positive ⇒ Hₛ peaks AFTER zos (wave lags surge); negative ⇒ Hₛ peaks first; zero ⇒ same day. Diagnoses the temporal structure of the compound forcing.',
     formula: 'date(peak_hs) − date(peak_ssh_total)',
     units: 'days (signed)',
   },
   {
     field: 'hs_integrated_intensity / ssh_integrated_intensity',
-    definition: 'Sum of the integrated intensities of the contributing Hₛ / SSH_total episodes.',
+    definition: 'Sum of the integrated intensities of the contributing Hₛ / zos episodes.',
     formula: 'Σ integrated_intensity of grouped episodes',
     units: 'm·day',
   },
@@ -185,7 +185,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max overlap_duration',
-    definition: 'Distribution of joint persistence (overlap days) across the grid point’s compound events. The mean is the duration component of the Hazard_Index (Step 4).',
+    definition: 'Distribution of joint persistence (overlap days) across the grid point’s compound events. Published as a diagnostic; the mean was the duration component of the Hazard_Index until it was retired on 2026-07-29.',
     formula: 'mean, 95th pct, max of overlap_duration_days',
   },
   {
@@ -195,7 +195,7 @@ const gridMetrics: { field: string; definition: string; formula: string }[] = [
   },
   {
     field: 'mean / p95 / max compound_intensity_norm',
-    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. Since 2026-07-27 the intensity measures the excess over the local q90 threshold, not the absolute peak. The mean is the intensity component of the Hazard_Index (Step 4); the p95 and max remain diagnostic. The superseded absolute-peak variant is retained as *_abspeak for audit.',
+    definition: 'Distribution of normalized compound intensity (defined in “Normalized compound intensity”, below) across the grid point’s events. Since 2026-07-27 the intensity measures the excess over the local q90 threshold, not the absolute peak. Superseded as the index severity term by mean_integrated_severity and now published as a diagnostic alongside the p95 and max. The superseded absolute-peak variant is retained as *_abspeak for audit.',
     formula: 'mean, 95th pct, max of compound_intensity_norm',
   },
 ];
@@ -240,7 +240,7 @@ export default function CompoundDetectionPage() {
               This page follows the whole chain in order: how individual wave and sea-level storms are
               catalogued, how their temporal co-occurrence defines a <em>compound</em> event, how each grid
               point is characterized (duration, seasonality, trends, return levels, and wave–surge
-              dependence), and how frequency, duration, and intensity are finally combined into the
+              dependence), and how frequency and integrated severity are finally combined into the
               composite <strong>Hazard Index</strong> that feeds the municipal risk index. Every definition
               is given with its formula, units, and assumptions, and maps one-to-one onto the production
               code referenced at the end.
@@ -253,7 +253,7 @@ export default function CompoundDetectionPage() {
                 { label: 'Episode gap', value: '≤ 1 non-exceedance day bridges an episode' },
                 { label: 'Compound rule', value: 'Hₛ and zos episodes overlap by ≥ 1 calendar day AND max(SWL) over those days > HAT' },
                 { label: 'Grouping', value: 'Union-find on shared days (chains episodes into one event)' },
-                { label: 'Scale', value: '~404k Hₛ + ~325k SSH_total storms → ~96k compound events' },
+                { label: 'Scale', value: '707k Hₛ + 42k tide-free zos episodes → 16,768 accepted compound events' },
               ].map((m) => (
                 <div key={m.label} className="rounded-lg border border-gray-300/60 bg-gray-50 px-3 py-2">
                   <div className="text-xs text-gray-500">{m.label}</div>
@@ -280,9 +280,11 @@ export default function CompoundDetectionPage() {
             often, how long, how strong, and how seasonally and inter-annually variable the compound hazard
             is. The sections below follow the pipeline in order: from raw series, to single-variable storms,
             to compound events, to the per-grid-point characterization, and finally to the composite Hazard
-            Index and the municipal risk integration. The three questions that open the chain — <em>how
-            often</em>, <em>how long</em>, <em>how strong</em> — are exactly the three components that close
-            it.
+            Index and the municipal risk integration. Of the three questions that open the chain — <em>how
+            often</em>, <em>how long</em>, <em>how strong</em> — two close it: frequency, and a severity
+            integrated over the event, which absorbs <em>how long</em> and <em>how strong</em> into one
+            quantity. Duration on its own was retired as an index component on 2026-07-29 and is now
+            published as a diagnostic.
           </p>
         </Section>
 
@@ -324,22 +326,31 @@ export default function CompoundDetectionPage() {
         <Section eyebrow="Stage A · Step 3.1" title="Building the single-variable storm catalogs">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             The two drivers are <strong>significant wave height</strong> (Hₛ, from the WAVERYS wave
-            reanalysis) and <strong>total sea level</strong> (SSH_total). SSH_total is not observed directly;
-            it is built each day as the dynamic sea level from GLORYS12 plus the astronomical tide:
+            reanalysis) and <strong>tide-free dynamic sea level</strong> (<code className="rounded bg-gray-100 px-1 text-xs">zos</code>,
+            from GLORYS12 at 00:00 UTC). The astronomical tide is deliberately <em>not</em> added before
+            thresholding. The still-water level that the acceptance gate and the severity term use is
+            formed later:
           </p>
-          <Eq>{`SSH_total(t) = zos(t) |_00UTC  +  max_{0≤h<24} tide(t, h)     # FES2022 tide`}</Eq>
+          <Eq>{`SWL(t) = (zos(t)|_00UTC − mean zos)  +  max_{0≤h<24} tide(t, h)     # FES2022 tide
+gate   : max(SWL) over the days shared by a candidate  >  HAT
+HAT    = max(tide_daily_max) over 1993–2025, per grid point`}</Eq>
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            <strong>Why this composition?</strong> Coastal water level is the sum of a slow,
-            weather-driven component (storm surge / dynamic sea level, <code className="rounded bg-gray-100 px-1 text-xs">zos</code>)
-            and the deterministic astronomical tide. Combining them gives the level that actually meets the
-            coast. The <strong>daily-maximum</strong> tide is used so that a day flagged extreme corresponds
-            to the worst tidal phase of that day — a conservative, hazard-oriented choice. The trade-off:
-            <code className="rounded bg-gray-100 px-1 text-xs">zos</code> is sampled at 00:00 UTC while the
-            tide is the daily maximum, so the two do not share a timestamp and SSH_total slightly
-            <strong> overestimates</strong> the true instantaneous total level (see Assumptions).
+            <strong>Why the tide is a gate and not part of the threshold.</strong> Until 2026-07-31 the
+            level catalogue was segmented on SSH_total = zos + daily-maximum tide. That was retired: north
+            of 20° S the astronomical tide carries <strong>96–98 %</strong> of the variance of that sum, so a
+            local percentile of it is in practice the spring-tide envelope, and exceedances recur
+            fortnightly by construction with no storm involved. Segmenting on tide-free{' '}
+            <code className="rounded bg-gray-100 px-1 text-xs">zos</code> isolates the weather-driven
+            signal, and the tide re-enters as the physically meaningful question of whether the water
+            actually got high — <code className="rounded bg-gray-100 px-1 text-xs">max(SWL) &gt; HAT</code>.
+            <code className="rounded bg-gray-100 px-1 text-xs">zos</code> is de-meaned because it is
+            referenced to the geoid while HAT is a height above local mean sea level. The residual
+            trade-off: <code className="rounded bg-gray-100 px-1 text-xs">zos</code> is sampled at 00:00 UTC
+            while the tide is the daily maximum, so SWL is not realised at any single instant (see
+            Assumptions).
           </p>
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            Hₛ and SSH_total are then catalogued <strong>independently</strong> at every coastal grid point. A
+            Hₛ and <code className="rounded bg-gray-100 px-1 text-xs">zos</code> are then catalogued <strong>independently</strong> at every coastal grid point. A
             &quot;storm&quot; is a peaks-over-threshold (POT) episode — POT means we keep only the days that exceed a
             high threshold and group them into events — built in three deterministic steps.
           </p>
@@ -384,23 +395,28 @@ export default function CompoundDetectionPage() {
         {/* ── 2. Stage B: compound detection ─────────────────────── */}
         <Section eyebrow="Stage B · Step 3.2" title="Detecting compound events: the overlap rule" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            At each grid point, the Hₛ and SSH_total catalogs are compared day-by-day. A compound event is
-            a group of Hₛ and SSH_total episodes connected through shared calendar days.
+            At each grid point, the Hₛ and zos catalogs are compared day-by-day. A candidate compound event
+            is a group of Hₛ and zos episodes connected through shared calendar days; it becomes an accepted
+            event only if it also passes the HAT gate.
           </p>
           <div className="rounded-xl border border-gray-200 bg-white p-5">
             <p className="mb-2 text-sm font-semibold text-gray-900">Definition</p>
             <p className="text-sm leading-relaxed text-gray-700">
-              A compound event exists when an Hₛ episode and an SSH_total episode share{' '}
+              A <em>candidate</em> exists when an Hₛ episode and a zos episode share{' '}
               <strong>at least one calendar day</strong>. If several episodes chain together (e.g. one long
-              SSH_total storm overlapping two separate Hₛ storms), they are merged into a single compound
-              event by <strong>union-find</strong> grouping on the shared days. Episodes with no overlap
+              zos storm overlapping two separate Hₛ storms), they are merged into a single candidate
+              by <strong>union-find</strong> grouping on the shared days. The candidate is{' '}
+              <strong>accepted</strong> only where the still-water level reaches the local Highest
+              Astronomical Tide on at least one of those shared days. Episodes with no overlap
               are classified as <code className="rounded bg-gray-100 px-1 text-xs">Hs_only</code> or{' '}
-              <code className="rounded bg-gray-100 px-1 text-xs">SSH_total_only</code>.
+              <code className="rounded bg-gray-100 px-1 text-xs">zos_only</code>. Over the domain, 32,625
+              candidates yield <strong>16,768</strong> accepted events; 15,857 are rejected by the gate.
             </p>
-            <Eq>{`compound  ⇔  (Hₛ_days ∩ SSH_total_days) ≠ ∅      (≥ 1 shared calendar day)
+            <Eq>{`candidate ⇔  (Hₛ_days ∩ zos_days) ≠ ∅          (≥ 1 shared calendar day)
+accepted  ⇔  candidate  AND  max(SWL over shared days) > HAT
 
-union-find:  episodes sharing any day collapse into one compound event
-classes:     { Hs_only , SSH_total_only , compound }`}</Eq>
+union-find:  episodes sharing any day collapse into one candidate
+classes:     { Hs_only , zos_only , compound }`}</Eq>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -452,8 +468,8 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-amber-900">
               Until 2026-07-27 this metric used the <em>absolute</em> peaks. That variant was
-              superseded because SSH_total = zos + daily-maximum tide, so the absolute sea-level peak
-              is almost entirely set by the local tidal regime: regressing the mean SSH_total peak of a
+              superseded because the level variable was then SSH_total = zos + daily-maximum tide, so the
+              absolute sea-level peak was almost entirely set by the local tidal regime: regressing the mean SSH_total peak of a
               grid point on its own q90 threshold gives <strong>R² = 0.998</strong>, and in the
               macrotidal north <strong>91%</strong> of the peak is that baseline against 9% of storm
               excess. The sea-level term was therefore encoding the astronomical tide — a deterministic
@@ -480,8 +496,10 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
                 an amount near the upper end of the coast-wide observed range; near <strong>0.0</strong>
                 means both were only marginally above threshold. Because scaling is domain-wide, a high value at one
                 municipality is directly comparable to a high value at another. The per-grid-point mean of
-                this metric is one of the three equally weighted inputs to the current Hazard_Index; the
-                maps show it in its dimensionless catalog form, without further rescaling.
+                this metric was one of the three equally weighted inputs to the former Hazard_Index; the
+                index now uses the integrated severity instead, and this peak-based form is retained as a
+                published diagnostic. The maps show it in its dimensionless catalog form, without further
+                rescaling.
               </p>
             </div>
           </div>
@@ -499,7 +517,7 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
             <div>
               <p className="font-semibold text-gray-900">3.3 · Duration &amp; persistence — “how long, and how often?”</p>
               <p className="mt-1 leading-relaxed">
-                For Hₛ, SSH_total, and compound events separately, the catalog episodes are reduced to
+                For Hₛ, zos, and compound events separately, the catalog episodes are reduced to
                 distributional statistics: mean, 95th-percentile and maximum <strong>duration</strong> (days),
                 mean <strong>integrated intensity</strong> (the area above threshold, in m·day) and the mean
                 <strong> inter-event time</strong> — the typical gap between successive storms, a proxy for
@@ -532,8 +550,8 @@ compound_intensity_norm = 0.5 · (hs_norm + ssh_norm)`}</Eq>
               <Eq>{`S = Σ_{i<j} sign(x_j − x_i)          # Mann–Kendall statistic
 Sen slope = median{ (x_j − x_i) / (j − i) }`}</Eq>
               <p className="leading-relaxed">
-                Applied to <strong>8 annual series</strong> (storm counts for Hₛ / SSH_total / compound; mean
-                Hₛ and SSH_total peak; mean Hₛ and SSH_total duration; mean compound overlap duration), with
+                Applied to <strong>8 annual series</strong> (storm counts for Hₛ / zos / compound; mean
+                Hₛ and zos peak; mean Hₛ and zos duration; mean compound overlap duration), with
                 slope units of events·yr⁻¹, m·yr⁻¹ or days·yr⁻¹ per series. When a series shows significant
                 lag-1 autocorrelation, the <strong>modified MK</strong> variance of Hamed &amp; Rao (1998) is
                 used so the significance test is not over-confident.
@@ -553,7 +571,7 @@ Sen slope = median{ (x_j − x_i) / (j − i) }`}</Eq>
 u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
               <p className="leading-relaxed">
                 Return levels are reported for <strong>T = 2, 5, 10, 20, 50 years</strong>, in metres, for
-                both Hₛ and SSH_total. A grid point needs at least <strong>10 exceedances</strong> to be fit;
+                both Hₛ and zos. A grid point needs at least <strong>10 exceedances</strong> to be fit;
                 fewer and the GPD is left unfitted rather than forced.
               </p>
             </div>
@@ -651,18 +669,19 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
 
           <Stage
             step={3}
-            title="Combining the three components"
+            title="Combining the two components"
             question="How much should each one weigh?"
           >
             <p>
-              Equally. In the absence of impact-calibrated weights for the Brazilian coast, the three
-              rescaled components are averaged with weights of 1/3:
+              Equally. In the absence of impact-calibrated weights for the Brazilian coast, the two
+              rescaled components are averaged with weights of 1/2:
             </p>
             <Eq>{`Hazard_Index_raw = (Hazard_Frequency + Hazard_Severity) / 2`}</Eq>
             <p>
-              Frequency is negatively correlated with the two mean-event characteristics, so this
-              average is <strong>compensatory</strong>: many short mild events can score like few long
-              intense ones. That is a deliberate, stated property of the index, not an accident.
+              Frequency and integrated severity are positively correlated (Spearman +0.60), so unlike
+              the retired duration term they reinforce each other. The average is still{' '}
+              <strong>compensatory</strong>: many mild events can score like few severe ones. That is a
+              deliberate, stated property of the index, not an accident.
             </p>
           </Stage>
 
@@ -704,11 +723,13 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
           >
             <p>
               Step 4 joins each coastal municipality to its associated grid point and hands it the
-              Hazard Index <strong>already normalized on the grid</strong> — no renormalization after
-              the transfer. The integrated risk is then the product with the Social Vulnerability
-              Index, Min–Max normalized across municipalities:
+              Hazard Index normalized on the grid, rescaled over the municipalities as{' '}
+              <code className="rounded bg-gray-100 px-1 text-xs">Hazard_Index_mun</code>. The integrated
+              risk is the <strong>conjunctive geometric mean</strong> of that hazard, the population
+              exposure and the Social Vulnerability Index — each floored at 0.01 first — Min–Max
+              normalized across municipalities:
             </p>
-            <Eq>{`Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index
+            <Eq>{`Risk_Hazard_raw = (Hazard_Index_mun × Exposure_Index × SVI_Coast_2022/100)^(1/3)
 
 Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
             <p>
@@ -744,7 +765,7 @@ Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li><strong>Daily temporal resolution.</strong> Co-occurrence is resolved to the calendar day; sub-daily phasing of wave and surge peaks within a day is not resolvable, and peak_lag_days is therefore an integer-day quantity.</li>
               <li><strong>Local q90 thresholds.</strong> &quot;Extreme&quot; is relative to each grid point’s own climatology, not an absolute hazard level; comparisons across points are about <em>relative</em> exceedance.</li>
-              <li><strong>SSH_total timing.</strong> Total sea level is GLORYS12 zos at 00:00 UTC plus the FES2022 daily-maximum tide. Because the two are not sampled at the same instant, SSH_total <strong>overestimates</strong> the true instantaneous total level by up to the within-day surge variation; it also omits wave setup and river/runoff.</li>
+              <li><strong>Still-water-level timing.</strong> SWL is GLORYS12 zos at 00:00 UTC plus the FES2022 daily-maximum tide, so the two terms are not sampled at the same instant and SWL is not realised at any real moment. The tide-free zos threshold is unaffected — no tide is added before the percentile — but the HAT gate and the severity term are. Bounded from the daily record, the phase error is a median of <strong>1.2 cm</strong> per day domain-wide, but it is far from uniform: about 1 cm in the macrotidal north (17–19 % of the local zos standard deviation) against 5–10 cm in the micro-tidal south (50–66 %), where day-to-day zos variability is three times larger and HAT is low enough that SWL crosses it often. SWL also omits wave setup and river/runoff.</li>
               <li><strong>χ/χ̄ are screening diagnostics.</strong> Only ~12–16 pairs lie above the u = 0.95 tail per grid point, too few to firmly classify tail dependence; treat the χ/χ̄ maps as indicative, not definitive.</li>
             </ul>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
@@ -779,7 +800,7 @@ Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
                   ['Local q90 threshold + exceedance mask + episode clustering (gap ≤ 1)', '01_storm_catalogs/segmentation.py'],
                   ['Per-storm attributes (peak, duration, integrated intensity)', '01_storm_catalogs/metrics.py'],
                   ['Overlap rule, union-find grouping, compound attributes, intensity normalization', '02_compound_detection/detection.py'],
-                  ['EPISODE_MAX_GAP_DAYS = 1; threshold source (Step 2e); SSH_total definition', 'config/analysis_config.py'],
+                  ['EPISODE_MAX_GAP_DAYS = 1; threshold source (Step 2e); LEVEL_VAR = zos; HAT gate definition', 'config/analysis_config.py'],
                   ['Per-grid-point persistence aggregation (duration, inter-event time)', '03_duration_persistence/persistence.py'],
                   ['Monthly/seasonal climatology (peak month, DJF/MAM/JJA/SON)', '04_monthly_seasonality/seasonality.py'],
                   ['Mann–Kendall + Sen slope (8 series); modified MK (Hamed & Rao 1998)', '05_trends/trends.py'],

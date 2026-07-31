@@ -16,7 +16,7 @@
 | **Relacionado a** | AUD-04, AUD-08, AUD-09, AUD-10, AUD-11, AUD-15 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §2.2, §8 item 16, §9.1 item 6 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 |
 
 ---
 
@@ -272,6 +272,89 @@ não é um problema de implementação.
       descrição contradiz o código. **Parcial**: #1, #2, #3, #6, #7, #8 confirmados;
       #4, #5 e o item "extra" permanecem em aberto, portanto a questão **não** pode
       ser fechada nesta sessão.
+- [x] #9 *(nova, 2026-07-31)* — a documentação não afirma mais que os Steps 3.1 e
+      3.3–3.8 leem catálogos `SSH_total` superseded. Corrigido em `README.md`
+      (§Step 3, §Current Implementation Status), `site/content/methodology.ts` e
+      `site/content/project.ts`, contra `outputs/storm_catalog/logs/run_metadata.json`.
+- [x] #10 *(nova, 2026-07-31)* — nenhum texto de documentação, do site ou de
+      docstring descreve o Hazard Index com **três** componentes ou com a duração
+      como componente. Verificado por `grep` em `README.md`, `site/**`, `src/**`.
+- [x] #11 *(nova, 2026-07-31)* — nenhum texto descreve
+      `Risk_Hazard_raw = (SVI/100) × Hazard_Index`. Verificado por `grep`.
+- [x] #12 *(nova, 2026-07-31)* — as contagens de episódios, eventos e municípios
+      publicadas no site batem com os produtos atuais.
+- [x] #13 *(nova, 2026-07-31)* — a página do Step 2d declara que é diagnóstica e
+      superseded, em vez de apresentar o par q90/q90 como resultado corrente.
+- [ ] **Rechecagem obrigatória depois de AUD-09 e AUD-12** — ver §15.
+
+## 15. Checklist de rechecagem, a executar depois de AUD-09 e AUD-12
+
+> Criada em 2026-07-31. AUD-09 e AUD-12 estão em `aguardando-decisao`; ambas
+> podem ainda alterar produtos numéricos. Enquanto isso não se resolver, AUD-17
+> permanece `em-investigacao`, e **nenhum** item abaixo pode ser marcado.
+
+**Se AUD-09 mudar o SVI** (o cenário hoje considerado improvável — não há erro
+de codificação; o gatilho seria uma decisão de escopo sobre as âncoras de
+Min–Max, junto com AUD-11):
+
+- [ ] Tabela de cargas do PC1 em `README.md` §4.3 — recalcular todos os dez valores.
+- [ ] Variância explicada por PC1 e PC2 (hoje 50,5 % e 16,5 %).
+- [ ] r com `pop_poverty` (hoje +0,940) e ρ com log da população (hoje −0,491).
+- [ ] Municípios de SVI exatamente 0 e 100 (hoje Balneário Camboriú e Chaves/PA),
+      citados no README §4.3, nas limitações do manuscrito e em AUD-11.
+- [ ] Extremos de SVI citados em AUD-09 §3.4 e no relatório para coautores.
+- [ ] Regenerar `site/public/data/risk_index_municipalities.geojson` e
+      `risk_index_metadata.json`, e as figuras do artigo dependentes
+      (`hazard_vulnerability_risk_multiplot`, tabelas top-10,
+      `supplementary_integrated_risk_zooms`).
+- [ ] Reconferir todas as posições de ranking citadas em texto — em AUD-12 §14
+      (Macapá 172º, Chaves 94º, Salvaterra 192º, Vigia 185º, Colares 188º), em
+      AUD-15 §14 (faixa 191–280 dos 83 municípios de perigo nulo) e no README.
+- [ ] Reconferir o parágrafo AUD-09 das limitações do manuscrito, inteiro.
+
+**Se AUD-12 excluir pontos** (hoje **não** recomendado):
+
+- [ ] Contagem de pontos de grade: 808 aparece em `README.md`, em
+      `site/content/*.ts`, nas páginas de metodologia e em vários metadados.
+- [ ] Total de eventos compostos: **16 768**, e candidatos rejeitados pelo
+      portão: **15 857**.
+- [ ] Pontos sem evento aceito: **208** — e, por consequência, os **83**
+      municípios de `Hazard_Index_mun` = 0 de AUD-15, com sua faixa de posições.
+- [ ] Municípios com valor de risco: **280 de 282**; a lista de ausentes muda se
+      algum município ficar órfão.
+- [ ] Regenerar o índice de perigo nativo, a projeção costeira, o produto
+      municipal e todas as figuras do artigo.
+- [ ] Reconferir os números de AUD-03 §14, que são por ponto e mudam de
+      denominador se o domínio mudar.
+- [ ] Reconferir a recontagem de AUD-15 por inteiro.
+
+**Independente das duas** — pendências herdadas que continuam abertas:
+
+- [ ] #4 — `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada em
+      `README.md`. Adiado desde 2026-07-29 para não escrever duas vezes; o
+      método do Step 3 agora está estável, então o bloqueio é só o Step 4.
+- [ ] #5 — fecha com AUD-04.
+- [ ] "extra" — `pop_house` publicado pré-normalizado contra a definição do
+      manuscrito. Exige decidir qual dos dois lados muda.
+- [ ] Varredura exaustiva dos `README.md` de submódulo do Step 2 e do Step 3, que
+      nunca foi feita por inteiro (registrada como incerteza remanescente em
+      2026-07-29 e ainda válida).
+- [x] #14 *(nova, 2026-07-31)* — os diretórios de saída com esquema antigo estão
+      **marcados e documentados**. `outputs/storm_catalog/compound/` revelou-se
+      **misturado**, não legado: `compound_catalog.json` é corrente (regenerado
+      2026-07-31, 16 768 eventos, idêntico a `compound_hat/` — 808/808 pontos,
+      diferença máxima 0), enquanto `compound_metrics.csv` e
+      `compound_summary.json` são de 2026-07-28 e reportam 96 031 eventos.
+      Marcados com README em disco (`outputs/storm_catalog/README.md`,
+      `compound/README.md`, `compound_mhws/README.md`) e na cópia versionada em
+      `src/03_storm_catalog_generation/RUN.md`, já que `outputs/storm_catalog/`
+      é ignorado pelo Git. Nada foi renomeado nem removido: três diagnósticos
+      exploratórios de comparação antes/depois leem os arquivos legados por
+      caminho. Corrigido também `outputs/hat_method/README.md`, que ainda dizia
+      *"Não substitui o método MHWS vigente"*, e acrescentado
+      `outputs/current_method_hat/README.md`, que não existia.
+
+---
 
 ## 10. Riscos de alteração prematura
 
@@ -360,3 +443,33 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 | **Validação realizada** | (1) JSON publicado validado com `json.load` após a edição — íntegro. (2) Comparação campo a campo do `risk_index_municipalities.geojson` candidato (gerado, depois descartado) contra o commitado: 282/282 municípios com propriedades idênticas, mesma ordem, zero diferenças numéricas — confirma que a correção de metadados não teria alterado nenhum resultado científico mesmo se a regeneração completa tivesse sido mantida. (3) `grep -rn` pós-edição confirma que nenhuma das frases falsas originais (fórmula de duas componentes, "not used by any published field", "spatial join of oceanic hazard metrics", "281 coastal municipalities" fora do contexto correto) permanece em nenhum arquivo do repositório fora dos documentos imutáveis de auditoria |
 | **Incerteza remanescente** | (1) Deriva de simplificação geométrica entre ambientes (achado d) não foi investigada a fundo — não se sabe se é GEOS, Shapely, GDAL/pyogrio, ou uma diferença de plataforma; recomenda-se registrar a versão exata das bibliotecas geoespaciais no `environment.yml` se ainda não estiver fixada, mas isso é uma melhoria de reprodutibilidade de infraestrutura, não uma questão de auditoria científica. (2) A varredura por resíduos não foi exaustiva sobre todos os `README.md` de submódulo do Step 2/Step 3 (apenas os que citam `Risk_Hazard =` ou `Hazard_Index_mun` foram varridos); nenhuma ocorrência adicional foi encontrada nessa varredura direcionada, mas uma varredura completa de todo o repositório não foi realizada |
 | **Próxima decisão necessária** | #4 (`SCIENTIFIC_NOTES.md` na raiz) permanece deliberadamente adiado até que o método final do Step 3/4 esteja decidido (AUD-01 e relacionadas), para não escrever o documento duas vezes. #5 fecha junto com AUD-04. O item "extra" (`pop_house` pré-normalizado) exige decidir se a definição do manuscrito ou a coluna publicada deve mudar — não é uma correção puramente factual e não foi tocado. Nenhuma consulta ao usuário foi necessária nesta sessão: todas as seis correções aplicadas eram inequívocas pelo critério da §3 do procedimento |
+
+### 2026-07-31 — Cinco inconsistências novas (#9–#13), todas criadas pela mudança de método
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Depois da adoção do detector q70/q99 com portão HAT (AUD-01/AUD-06) e da regeneração do Step 3, que afirmações da documentação, do site e das docstrings ficaram falsas? |
+| **Dados e métodos** | Varredura dirigida por `grep` sobre `README.md`, `site/content/*.ts`, `site/app/**/*.tsx`, `src/**/*.py` e `src/**/*.md`, procurando as classes de resíduo listadas na instrução de sessão: q90/q90; `SSH_total` como variável segmentada; três componentes no Hazard Index; duração média como resultado principal; intensidade de pico no lugar da severidade integrada; contagens antigas de eventos ou pontos; Step 3 descrito como parcial; vulnerabilidade física declarada; contagens municipais antigas. Cada achado foi confrontado com a **fonte de verdade correspondente** — `outputs/storm_catalog/logs/run_metadata.json`, os cabeçalhos dos CSV do Step 3, `src/04_risk_integration/hazard_index.py` e `src/site/export_risk_index_data.py` — antes de qualquer edição |
+| **Scripts executados** | Nenhum novo. `grep`/`sed`; verificação cruzada dos limiares do Step 3.1 contra os do Step 3.2 em Python |
+| **Novas saídas geradas** | Nenhuma |
+| **Achados** | **#9 — Step 3 descrito como parcialmente superseded, e não está.** `README.md` §Step 3 marcava 3.1 e 3.3–3.8 como *(superseded inputs)* e afirmava que liam catálogos `SSH_total` a q90/q90; `site/content/methodology.ts` e `site/content/project.ts` repetiam a afirmação. É **falso** desde o commit `eee6142` (2026-07-31 02:50): `outputs/storm_catalog/logs/run_metadata.json` registra `level_var: "zos"`, `level_is_tide_free: true`, `thr_hs_pct: 0.7`, `thr_level_pct: 0.99`, e os CSV de 3.3–3.8 trazem colunas `zos_*` e não `ssh_total_*`. Verificação adicional: os limiares de nível de 3.1 e 3.2 **coincidem exatamente nos 808 pontos** (diferença máxima 0,0 m) e as contagens de episódios diferem no máximo em 1. **#10 — Hazard Index de três componentes.** Resíduo extenso: `site/content/{project,results,methodology}.ts`, `site/app/methodology/hazard-index/page.tsx` (título "The three components of the index", peso 1/3, "as três componentes devem compartilhar escala"), `site/app/methodology/compound-detection/page.tsx`, `site/app/results/risk-integration/page.tsx` e `src/03_storm_catalog_generation/SCIENTIFIC_NOTES.md`. Curiosamente a página do índice já tinha o bloco de equação com a fórmula de **duas** componentes, mas toda a prosa em volta ainda dizia três — meia correção anterior. **#11 — `Risk_Hazard_raw = (SVI/100) × Hazard_Index`** ainda em `site/content/methodology.ts`, `site/content/results.ts`, `site/app/methodology/compound-detection/page.tsx` e no metadado `published_formula` de `src/exploratory/make_exploratory_risk_with_exposure.py` — a mesma fórmula de duas componentes que #1 corrigira no README em 2026-07-29, sobrevivendo em quatro outros arquivos. **#12 — contagens antigas**: "404 535 Hₛ + 324 929 SSH_total", "~96k eventos compostos" e "281 municípios" em `site/content/*.ts` e em `src/03_storm_catalog_generation/{PIPELINE_SETUP,SCIENTIFIC_NOTES}.md`. Os valores atuais são 707 453, 42 455, 16 768 e 282. **#13 — a página do Step 2d não se declara superseded**: apresentava o par q90/q90 como resultado, sem nenhuma indicação de que é diagnóstico e de que a calibração de produção é do Step 2e. Também encontrado, e **não** corrigido: `outputs/storm_catalog/compound/` e `compound_mhws/` seguem na árvore corrente com o schema antigo, e o docstring de `src/site/export_risk_index_data.py` L89 ainda aponta `compound/compound_metrics.csv` como fonte do perigo, quando o código lê `compound_hat/compound_metrics_hat.csv` via `hazard_index.py` |
+| **Interpretação** | Mesma etiologia dos oito originais — resíduo de refatoração —, mas com uma diferença que vale registrar: **a regeneração do Step 3 criou a inconsistência #9 ao *melhorar* o produto**. A documentação era verdadeira quando foi escrita e passou a ser falsa por causa de um commit que corrigiu ciência. Isso é o argumento mais forte a favor de manter AUD-17 aberta enquanto AUD-09 e AUD-12 puderem mexer nos produtos, e é a razão da checklist da §15. Em todos os treze casos o código continua sendo a fonte confiável; nenhuma correção envolveu escolha metodológica |
+| **Alterações implementadas** | `README.md` (§Step 3 reescrito como completo, com a proveniência do rerun; §Current Implementation Status; §2c com a limitação de fase de AUD-03; §Conceptual Framework e tabela de fontes por AUD-10; §4.2 por AUD-14 e AUD-15; §4.3 reescrita com as cargas do PC1 por AUD-09; seção nova "Declared limitations for the manuscript"); `site/content/{project,results,methodology}.ts`; `site/app/methodology/hazard-index/page.tsx`; `site/app/methodology/compound-detection/page.tsx` (22 substituições: variável de nível, portão HAT, tabelas de métricas, fórmula de risco, Assumptions); `site/app/results/risk-integration/page.tsx`; `site/app/results/threshold-calibration/csi-scan/page.tsx` (banner de superseded); `src/03_storm_catalog_generation/{SCIENTIFIC_NOTES.md,config/analysis_config.py}`; `src/exploratory/make_exploratory_risk_with_exposure.py`. **Nenhum arquivo de `outputs/` alterado; nenhum valor numérico publicado mudou** |
+| **Validação realizada** | (1) Cada afirmação corrigida foi conferida contra a fonte de verdade antes da edição, nunca contra outra documentação. (2) Coincidência exata dos limiares de nível entre Step 3.1 e Step 3.2 verificada nos 808 pontos. (3) Contagem de `Hazard_Index_mun == 0` (83) e de exposição no piso (2) conferidas diretamente no GeoJSON publicado. (4) Verificação estrutural dos sete arquivos `.ts`/`.tsx` editados — contagem de crases, chaves, parênteses, colchetes e balanço de tags — comparada contra o estado pré-edição via `git stash`: **o delta de aberturas é igual ao delta de fechamentos em todos**, ou seja nenhuma edição desbalanceou marcação. (5) `grep` posterior confirma que nenhuma das frases falsas permanece fora dos documentos imutáveis de auditoria |
+| **Incerteza remanescente** | (1) **O build do site não foi executado.** Não há Node.js neste ambiente — `npm` não existe, `node_modules/` está ausente e nenhum ambiente conda o fornece. A verificação estrutural acima é um substituto, não um compilador: ela não detectaria erro de tipo TypeScript nem prop inválida. **O build precisa ser rodado antes do deploy.** (2) A varredura foi dirigida às classes de resíduo listadas na instrução; não foi exaustiva sobre todos os `README.md` de submódulo. (3) `PIPELINE_SETUP.md` e `SCIENTIFIC_NOTES.md` do Step 3 mantêm tabelas de tempo de execução e contagens antigas fora dos pontos corrigidos. (4) Os diretórios de saída legados não foram marcados nem movidos |
+| **Próxima decisão necessária** | Manter `em-investigacao`. Rodar o build do site num ambiente com Node. Executar a checklist da §15 quando AUD-09 e AUD-12 fecharem |
+
+### 2026-07-31 (cont.) — Marcação dos diretórios de saída com esquema antigo (#14)
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Quais diretórios de `outputs/` carregam esquema de método superseded, e é seguro renomeá-los ou removê-los? |
+| **Dados e métodos** | Inspeção de datas de modificação e de cabeçalhos de coluna em `outputs/storm_catalog/{compound,compound_mhws,compound_hat}/` e nos três `catalog_*.json`; conferência cruzada de `compound/compound_catalog.json` contra `compound_hat/compound_metrics_hat.csv` ponto a ponto; `git ls-files` e `.gitignore` para saber o que é versionado; `grep` dos consumidores de cada caminho |
+| **Scripts executados** | Nenhum novo. Verificação em Python e `cmp` |
+| **Novas saídas geradas** | `outputs/storm_catalog/README.md`, `outputs/storm_catalog/compound/README.md`, `outputs/storm_catalog/compound_mhws/README.md`, `outputs/current_method_hat/README.md` |
+| **Achados** | (a) **`compound/` não é um diretório legado — é misturado**, o que é pior. `compound_catalog.json` foi regenerado em 2026-07-31 e confere exatamente com o produto vigente (808/808 pontos casados, diferença máxima de `compound_count_total` = 0, soma 16 768 nos dois). Os outros dois arquivos são de 2026-07-28 e o sumário reporta **96 031** eventos. Quem abre os dois lado a lado vê 16 768 contra 96 031 sem nenhuma indicação de que são métodos diferentes. (b) `compound_mhws/` é legado inteiro, e `catalog_ssh_total_storms.json` (2026-04-15) também. (c) **`outputs/storm_catalog/` é ignorado pelo Git**, de modo que um README ali não é rastreável — a documentação durável precisava ir para um arquivo versionado. (d) `outputs/hat_method/README.md` terminava com *"Este é um braço comparativo. Não substitui o método MHWS vigente"*, falso desde 2026-07-31, e o instantâneo que ele descreve é do par **q90/q90** (37 225 eventos), não do par calibrado. (e) `outputs/current_method_hat/` — o instantâneo versionado do produto vigente — **não tinha README nenhum**, embora seja idêntico byte a byte ao caminho lido em tempo de execução |
+| **Interpretação** | Marcar, não apagar. Os arquivos legados são lidos por caminho por três diagnósticos exploratórios (`make_exploratory_hazard_index_comparison.py`, `make_exploratory_q90_hs_zos_fes_coastal_map.py`, `audit_AUD_01_validity_domain_partition.py`) e por cinco que leem o braço MHWS — e são justamente as comparações antes/depois que sustentam AUD-01, AUD-02 e AUD-06. Renomeá-los quebraria a reprodutibilidade da própria auditoria, que é o oposto do objetivo. A marcação por README preserva a rastreabilidade e remove a armadilha |
+| **Alterações implementadas** | Quatro README novos (acima); tabela de saídas de `src/03_storm_catalog_generation/RUN.md` reescrita com as linhas legadas tachadas e uma advertência sobre o diretório misturado; `outputs/hat_method/README.md` corrigido. **Nenhum arquivo de dados renomeado, movido ou removido; nenhum valor numérico alterado** |
+| **Validação realizada** | `cmp` confirma que `outputs/current_method_hat/` é idêntico byte a byte a `outputs/storm_catalog/compound_hat/` nos dois arquivos. O par de limiares de cada instantâneo foi lido do próprio `compound_summary_hat.json`: `hat_method` sem par registrado e 37 225 eventos; `current_method_hat` e `compound_hat` com 0,7/0,99 e 16 768 |
+| **Incerteza remanescente** | Os README de `outputs/storm_catalog/` **não são versionados** e desaparecem se o diretório for regenerado do zero. A cópia durável é a tabela de `RUN.md`; se o Step 3 for reexecutado, os README de disco precisam ser reescritos à mão, ou o passo de escrita deveria ser incorporado ao próprio pipeline — melhoria não implementada |
+| **Próxima decisão necessária** | Nenhuma. Correção factual sem escolha metodológica |
