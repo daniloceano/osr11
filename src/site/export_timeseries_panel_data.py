@@ -9,8 +9,19 @@ demand when the reader clicks a marker.
 Nothing here re-derives the method. The detection comes from
 ``compound_events_at_point``; the domain-pooled rescaling references that turn
 daily excesses into the integrated severity are read from the published
-``compound_summary_mhws.json`` rather than recomputed, so a severity shown on
+``compound_summary_hat.json`` rather than recomputed, so a severity shown on
 the site is the same number that entered the hazard index.
+
+Level datum
+-----------
+The panel draws a single level datum, HAT, because gate and datum are the same
+level under the current method: the level excess only has an interpretation as
+a distance from the condition that defines the event. The candidate-datum
+overlay that this exporter used to emit — q90/q95/q99 of the tide plus a
+sensitivity table — belonged to the AUD-01 investigation that led to the HAT
+adoption of 2026-07-30. That investigation is closed and its numbers live in
+``outputs/audit/AUD-01_datum_sensitivity/``; carrying alternatives on the
+published panel would suggest the datum is still open.
 
 Storage
 -------
@@ -30,8 +41,9 @@ Usage:
 Input:
     outputs/site_timeseries_points/selected_points.csv
     data/unified/metocean_brazil_unified_waverys_grid.nc
-    outputs/storm_catalog/compound_mhws/compound_summary_mhws.json
-    outputs/storm_catalog/compound_mhws/compound_metrics_mhws.csv
+    outputs/storm_catalog/compound_hat/compound_summary_hat.json
+    outputs/storm_catalog/compound_hat/compound_metrics_hat.csv
+    outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv
 
 Output:
     site/public/data/timeseries/index.json
@@ -50,8 +62,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from src.compound_detection.detection_mhws import compound_events_at_point
-from src.compound_detection.mhws_datum import mhws_at_points, still_water_level
+from src.compound_detection.compound_core import compound_events_at_point
+from src.compound_detection.detection_hat import load_threshold_pair
+from src.compound_detection.mhws_datum import still_water_level
 
 log = logging.getLogger(__name__)
 
@@ -60,9 +73,9 @@ SELECTED_POINTS = (
     ROOT / "outputs" / "site_timeseries_points" / "selected_points.csv"
 )
 UNIFIED = ROOT / "data" / "unified" / "metocean_brazil_unified_waverys_grid.nc"
-CATALOG_DIR = ROOT / "outputs" / "storm_catalog" / "compound_mhws"
-CATALOG_SUMMARY = CATALOG_DIR / "compound_summary_mhws.json"
-CATALOG_METRICS = CATALOG_DIR / "compound_metrics_mhws.csv"
+CATALOG_DIR = ROOT / "outputs" / "storm_catalog" / "compound_hat"
+CATALOG_SUMMARY = CATALOG_DIR / "compound_summary_hat.json"
+CATALOG_METRICS = CATALOG_DIR / "compound_metrics_hat.csv"
 OUTPUT_DIR = ROOT / "site" / "public" / "data" / "timeseries"
 OUTPUT_INDEX = OUTPUT_DIR / "index.json"
 
@@ -76,21 +89,14 @@ POINT_METRIC_FIELDS = (
     "mean_compound_intensity_norm",
     "mean_integrated_severity",
     "n_candidate_events",
-    "n_rejected_by_mhws",
+    "n_rejected_by_hat",
 )
 INDEX_COMPONENTS = ("compound_count_total", "mean_integrated_severity")
 
-#: Candidate level datums drawn on the panel so the reader can see how the
-#: event condition would move. Only MHWS is in force; the others are the
-#: sensitivity candidates of AUD-01, evaluated here per point with the same
-#: detector so the drawn lines carry their consequence. ``None`` means the
-#: quantile is replaced by the maximum of the record, the HAT estimate.
-CANDIDATE_DATUMS = (
-    ("q90_tide", "q90 tide", 0.90),
-    ("q95_tide", "q95 tide", 0.95),
-    ("q99_tide", "q99 tide", 0.99),
-    ("hat", "HAT", None),
-)
+#: HAT, estimated exactly as the production detector estimates it. It is the
+#: only level datum the panel draws.
+HAT_LABEL = "HAT"
+HAT_SOURCE = "max of tide_daily_max, 1993-2025"
 
 
 def _cm(values: np.ndarray) -> list[int | None]:
@@ -142,7 +148,8 @@ def export_point(
     *,
     ds: xr.Dataset,
     times: pd.DatetimeIndex,
-    mhws: float,
+    hs_pct: float,
+    zos_pct: float,
     refs: dict[str, float],
     metrics: pd.DataFrame,
 ) -> dict[str, Any]:
@@ -155,8 +162,13 @@ def export_point(
     tide = ds["tide_daily_max"].isel(**selector).values.astype(float)
     finite = np.isfinite(hs) & np.isfinite(zos) & np.isfinite(tide)
 
+    # HAT is estimated here exactly as the production detector estimates it,
+    # from the same series, so the line the panel draws is the gate that
+    # actually produced the shaded events.
+    hat = float(np.nanmax(tide[finite]))
     events, context = compound_events_at_point(
-        hs=hs, zos=zos, tide=tide, finite=finite, mhws=mhws
+        hs=hs, zos=zos, tide=tide, finite=finite, datum=hat,
+        hs_pct=hs_pct, zos_pct=zos_pct,
     )
     zos_anomaly = zos - context["zos_mean"]
     swl = still_water_level(zos, tide, zos_mean=context["zos_mean"])
@@ -171,74 +183,20 @@ def export_point(
             "match this point; expected exactly one"
         )
     published_row = published.iloc[0]
-    # The same detector re-run against each candidate datum. This changes
-    # nothing in the published catalogue: it is the sensitivity the reader is
-    # looking at, computed on the fly so the drawn line has a number attached.
-    tide_finite = tide[finite]
+    # One datum, drawn as one line. Gate and severity reference are the same
+    # level, so there is nothing else to show.
     datums = [
         {
-            "key": "mhws",
-            "label": "MHWS",
-            "value_m": round(float(mhws), 4),
-            "source": "A_M2 + A_S2, FES2022 harmonic constants",
+            "key": "hat",
+            "label": HAT_LABEL,
+            "value_m": round(hat, 4),
+            "source": HAT_SOURCE,
             "in_force": True,
+            "n_events": len(events),
+            "n_rejected": int(context["n_rejected_by_hat"]),
         }
     ]
-    for key, label, quantile in CANDIDATE_DATUMS:
-        value = (
-            float(np.nanmax(tide_finite))
-            if quantile is None
-            else float(np.nanquantile(tide_finite, quantile))
-        )
-        datums.append(
-            {
-                "key": key,
-                "label": label,
-                "value_m": round(value, 4),
-                "source": (
-                    "max of tide_daily_max, 1993-2025 (HAT estimate)"
-                    if quantile is None
-                    else f"q{quantile:.2f} of tide_daily_max"
-                ),
-                "in_force": False,
-            }
-        )
-    for entry in datums:
-        candidate_events, candidate_context = compound_events_at_point(
-            hs=hs, zos=zos, tide=tide, finite=finite, mhws=entry["value_m"]
-        )
-        entry["n_events"] = len(candidate_events)
-        entry["n_rejected"] = int(candidate_context["n_rejected_by_mhws"])
-        if candidate_events:
-            full = np.concatenate(
-                [
-                    np.asarray(e["full_criterion_indices"], dtype=int)
-                    for e in candidate_events
-                ]
-            )
-            # Exact identity: SWL - datum = zos' + (tide - datum).
-            entry["mean_meteo_term_m"] = round(
-                float(np.mean(zos_anomaly[full])), 4
-            )
-            entry["mean_astro_term_m"] = round(
-                float(np.mean(tide[full] - entry["value_m"])), 4
-            )
-            entry["n_event_days"] = int(full.size)
-        else:
-            entry["mean_meteo_term_m"] = None
-            entry["mean_astro_term_m"] = None
-            entry["n_event_days"] = 0
-        # Tide-alone test: would the astronomy have cleared this datum anyway?
-        if candidate_events:
-            alone = sum(
-                1
-                for e in candidate_events
-                if float(np.nanmax(tide[np.asarray(e["overlap_indices"], dtype=int)]))
-                > entry["value_m"]
-            )
-            entry["frac_tide_alone"] = round(alone / len(candidate_events), 4)
-        else:
-            entry["frac_tide_alone"] = None
+
     if int(published_row["compound_count_total"]) != len(events):
         raise ValueError(
             f"{row['point_id']}: re-detection found {len(events)} events but the "
@@ -327,14 +285,16 @@ def export_point(
                 float(context["thr_zos_abs"] - context["zos_mean"]), 4
             ),
             "zos_mean_m": round(float(context["zos_mean"]), 4),
-            "mhws_m": round(float(context["mhws_m"]), 4),
+            "hat_m": round(float(context["hat_m"]), 4),
+            "thr_hs_pct": hs_pct,
+            "thr_zos_pct": zos_pct,
         },
         "point_metrics": point_metrics,
         "index_components": list(INDEX_COMPONENTS),
         "datums": datums,
         "selection_features": {
             "surge_q99_over_swing": round(float(row["surge_q99_over_swing"]), 4),
-            "mhws_m": round(float(row["mhws_m"]), 4),
+            "hat_m": round(float(row["hat_m"]), 4),
             "thr_hs_abs": round(float(row["thr_hs_abs"]), 4),
             "Hazard_Frequency": round(float(row["Hazard_Frequency"]), 4),
             "Hazard_Severity": round(float(row["Hazard_Severity"]), 4),
@@ -362,22 +322,21 @@ def main() -> None:
     refs = summary["rescaling_reference_percentiles"]
     metrics = pd.read_csv(CATALOG_METRICS)
 
+    hs_pct, zos_pct = load_threshold_pair()
+    log.info("Threshold pair: Hs=q%.0f / zos=q%.0f", hs_pct * 100, zos_pct * 100)
+
     ds = xr.open_dataset(UNIFIED)
     times = pd.to_datetime(ds["time"].values)
-    mhws = mhws_at_points(
-        selected["grid_lat"].values, selected["grid_lon"].values
-    )
-    if not np.all(np.isfinite(mhws)):
-        raise ValueError("A selected point has no MHWS datum")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     index_entries = []
-    for position, (_, row) in enumerate(selected.iterrows()):
+    for _, row in selected.iterrows():
         payload = export_point(
             row,
             ds=ds,
             times=times,
-            mhws=float(mhws[position]),
+            hs_pct=hs_pct,
+            zos_pct=zos_pct,
             refs=refs,
             metrics=metrics,
         )

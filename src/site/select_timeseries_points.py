@@ -16,7 +16,7 @@ Method
 
    * ``surge_q99_over_swing`` — surge(q99) over the spring-neap swing, the
      regime discriminator (AUD-01);
-   * ``mhws_m`` — tidal magnitude;
+   * ``hat_m`` — tidal magnitude, the HAT datum of the current method;
    * ``thr_hs_abs`` — energy of the local wave climate;
    * ``Hazard_Frequency``, ``Hazard_Severity`` — the two components of the
      index, as normalized in ``src.risk_integration.hazard_index``.
@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -53,6 +54,8 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 from src.risk_integration.hazard_index import derive_native_hazard_index
+
+log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSOCIATION = (
@@ -77,7 +80,8 @@ OUTPUT_METADATA = OUTPUT_DIR / "selection_metadata.json"
 #: stratification variable.
 FEATURES = (
     "surge_q99_over_swing",
-    "mhws_m",
+    # Level datum of the current method. Was ``mhws_m`` until 2026-07-30.
+    "hat_m",
     "thr_hs_abs",
     "Hazard_Frequency",
     "Hazard_Severity",
@@ -142,7 +146,7 @@ def build_candidate_table() -> pd.DataFrame:
         [
             "grid_lat",
             "grid_lon",
-            "mhws_m",
+            "hat_m",
             "thr_hs_abs",
             "Hazard_Frequency",
             "Hazard_Severity",
@@ -163,6 +167,28 @@ def build_candidate_table() -> pd.DataFrame:
         raise ValueError(
             f"{int(missing.sum())} candidate point(s) lack selection features; "
             "the three sources are not aligned on the same grid"
+        )
+
+    # Points with no accepted compound event are excluded from the candidate
+    # set. They are legitimate members of the hazard grid — the zero-event
+    # policy keeps them at frequency 0 and severity 0 so that every arm
+    # normalises over the same 808 points — but a medoid landing on one would
+    # render a time-series panel with no shaded event at all. Under the HAT
+    # gate 208 of the 808 points are in that state, so this is not a corner
+    # case. The exclusion is applied AFTER the features are computed, so it
+    # removes candidates without altering any normalisation.
+    alive = pd.to_numeric(table["compound_count_total"], errors="coerce") > 0
+    n_dropped = int((~alive).sum())
+    if n_dropped:
+        log.info(
+            "Excluding %d of %d candidate points with zero accepted compound "
+            "events; a medoid there would render an empty panel",
+            n_dropped, len(table),
+        )
+    table = table.loc[alive].reset_index(drop=True)
+    if len(table) < 2:
+        raise ValueError(
+            "Fewer than two candidate points have accepted compound events"
         )
     return table
 
@@ -257,7 +283,7 @@ def main() -> None:
                     "nearest_municipality",
                     "state",
                     "surge_q99_over_swing",
-                    "mhws_m",
+                    "hat_m",
                     "thr_hs_abs",
                     "Hazard_Frequency",
                     "Hazard_Severity",
@@ -277,7 +303,7 @@ def main() -> None:
         "candidate_count": int(len(table)),
         "feature_sources": {
             "surge_q99_over_swing": str(SURGE_VS_TIDE.relative_to(ROOT)),
-            "mhws_m": "src/04_risk_integration/hazard_index.py",
+            "hat_m": "src/04_risk_integration/hazard_index.py",
             "thr_hs_abs": "src/04_risk_integration/hazard_index.py",
             "Hazard_Frequency": "src/04_risk_integration/hazard_index.py",
             "Hazard_Severity": "src/04_risk_integration/hazard_index.py",

@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-07-31T00:14:25.732214+00:00",
+  "generated_at": "2026-07-30T11:10:45.487060+00:00",
   "implementation": "src/site/select_timeseries_points.py",
   "candidate_source": "data/external/municipal_grid_association/municipal_grid_association.csv",
-  "candidate_count": 122,
+  "candidate_count": 178,
   "feature_sources": {
     "surge_q99_over_swing": "outputs/audit/AUD-01_surge_vs_tide_magnitude/surge_vs_tide_by_point.csv",
-    "hat_m": "src/04_risk_integration/hazard_index.py",
+    "mhws_m": "src/04_risk_integration/hazard_index.py",
     "thr_hs_abs": "src/04_risk_integration/hazard_index.py",
     "Hazard_Frequency": "src/04_risk_integration/hazard_index.py",
     "Hazard_Severity": "src/04_risk_integration/hazard_index.py"
   },
   "features": [
     "surge_q99_over_swing",
-    "hat_m",
+    "mhws_m",
     "thr_hs_abs",
     "Hazard_Frequency",
     "Hazard_Severity"
