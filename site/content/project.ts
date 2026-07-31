@@ -104,7 +104,7 @@ export const conceptualFramework = {
   components: [
     {
       term: 'Compound hazard',
-      definition: 'The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.'
+      definition: 'The simultaneous occurrence of a sea-level extreme (associated with storm surge and meteorological tides) and a local significant-wave-height exceedance, capable of amplifying coastal impacts beyond what isolated extremes would produce. Both criteria are local percentiles, so the wave term measures local rarity rather than absolute severity: its absolute value ranges from 0.14 m to 2.40 m along the coast, with a median of 0.90 m in Maranhão against 1.71 m in Rio Grande do Sul. No absolute floor is imposed, because the calibration does not determine the wave axis and an external anchor would require a wave setup formulation and beach-face slope, which this project does not hold (AUD-02).'
     },
     {
       term: 'Exposure',

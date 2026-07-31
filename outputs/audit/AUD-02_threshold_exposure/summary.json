@@ -1,0 +1,50 @@
+{
+  "sources": {
+    "points": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv",
+    "municipalities": "site/public/data/risk_index_municipalities.geojson"
+  },
+  "grid_points": 808,
+  "threshold_min_m": 0.14,
+  "threshold_median_m": 1.7,
+  "points_below_floor": {
+    "1m": 56,
+    "1.5m": 256,
+    "2m": 649
+  },
+  "low_threshold_points_still_active": {
+    "definition": "grid points with thr_hs_abs < 1.5 m",
+    "n_points": 256,
+    "n_without_accepted_event": 51,
+    "accepted_events": 2891,
+    "share_of_all_accepted_events": 0.17241173664122136
+  },
+  "ranking_exposure": {
+    "below_1m": {
+      "municipalities_published": 44,
+      "municipalities_with_positive_risk": 39,
+      "in_top10": 1,
+      "in_top20": 1,
+      "in_top50": 9
+    },
+    "below_1.5m": {
+      "municipalities_published": 161,
+      "municipalities_with_positive_risk": 125,
+      "in_top10": 6,
+      "in_top20": 8,
+      "in_top50": 24
+    },
+    "below_2m": {
+      "municipalities_published": 279,
+      "municipalities_with_positive_risk": 195,
+      "in_top10": 10,
+      "in_top20": 20,
+      "in_top50": 49
+    },
+    "top20_threshold": {
+      "min": 0.78,
+      "median": 1.595,
+      "max": 1.99
+    }
+  },
+  "note": "The HAT gate did not empty the low-threshold points: they still carry a sixth of all accepted compound events, and the municipalities they feed are no longer the northern ones -- those are at zero hazard regardless -- but the top of the published ranking itself."
+}

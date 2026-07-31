@@ -65,7 +65,7 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 **Definitions:**
 
-- **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
+- **Compound hazard:** The simultaneous occurrence of a sea-level extreme (associated with storm surge and meteorological tides) and a **local significant-wave-height exceedance**, capable of amplifying coastal impacts beyond what isolated extremes would produce. Both criteria are **local percentiles**, so the wave term measures local rarity rather than absolute severity — see the calibration-domain note in Sub-step 2e.
 
 - **Exposure:** The people present where the hazard acts — here, a weighted **resident** (*de jure*) population from cumulative 1, 2, 5 and 10 km coastline bands, counted by the IBGE Grade Estatística on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*; and being *de jure*, it does not see the seasonal population of the resort municipalities (AUD-14). (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
 
@@ -211,6 +211,19 @@ Each unmatched episode receives a confidence weight q_i based on:
 - **Context coherence** (C_i): Seasonal timing, neighboring detections, exposure status
 
 The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P, with default weights (0.60, 0.20, 0.20). Step 2e performs its own **independent threshold sweep** — it does NOT use thresholds from Step 2d. B_target_effective = 12 × 27 = 324 ep/yr.
+
+> **Calibration domain, and what the wave threshold is (AUD-02, AUD-18).** All
+> 147 municipality×date pairs are from **Santa Catarina**; the selected pair is
+> then applied unchanged across 27° of latitude, from 35°S to 7°N. The wave
+> criterion is a **local percentile of significant wave height**, not an absolute
+> one, so the quantity detected is a **local Hₛ exceedance** — a measure of local
+> rarity — and not an "extreme wave" in any absolute sense. Its absolute value
+> varies by an order of magnitude along the coast (0.14 m to 2.40 m; median 0.90 m
+> in Maranhão against 1.71 m in Rio Grande do Sul). The composite score does not
+> determine this axis: the six best-scoring pairs lie within 1 % of each other and
+> span q50–q80, while the level percentile q99 is selected in 14 of 14 sensitivity
+> variants. Per-sector and per-state tables are supplementary material
+> (`outputs/audit/AUD-02_threshold_exposure/`).
 
 **Theoretical basis:** Positive-unlabeled learning framework (Bekker and Davis, 2020); impact observation bias (Wyatt et al., 2023; Delforge et al., 2025).
 
@@ -802,7 +815,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The six paragraphs below are written to be transferable, essentially as they
+The seven paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -946,8 +959,8 @@ named at the end of each paragraph.
   physical and a methodological gradient, and no fixed-amplitude-gate
   counterfactual has been run to separate them. **Third**, because ρ(hazard, risk)
   = 0.893, the index propagates in full any weakness of the quantities that define
-  the hazard, including the wave-threshold transfer that remains an open audit
-  issue. The conjunctive geometric aggregation is no longer a near-neutral choice:
+  the hazard, including the local-percentile wave criterion described in the
+  paragraph below. The conjunctive geometric aggregation is no longer a near-neutral choice:
   an arithmetic mean gives ρ = 0.550 and retains 4 of the top 10. It is retained
   on the IPCC rationale stated before the method changed, not on the ranking it
   produces. Individual absences such as Recife are discussed in the audit record;
@@ -958,6 +971,37 @@ named at the end of each paragraph.
   it. Zero means no accepted compound event in 1993–2025, never impossibility of
   physical coastal risk.
   *(`src/exploratory/audit_AUD_13_component_contributions.py`)*
+
+- **The wave criterion measures local rarity, not absolute severity, and no
+  absolute floor is derivable here (AUD-02).** The wave threshold is the local
+  q70 of significant wave height, so its absolute value spans an order of
+  magnitude along the coast: 0.14 m at the lowest grid point, a median of
+  **0.90 m in Maranhão** and 0.905 m in Amapá against 1.71 m in Rio Grande do Sul.
+  A detected event is therefore a **local Hₛ exceedance**, and the term "extreme
+  wave" is not used for it anywhere in this repository. The exposure of the
+  published result must be read with that in mind: **161 of the 280 municipalities
+  carrying a risk value draw their hazard from a grid point whose wave threshold
+  is below 1.5 m, 44 from points below 1.0 m, 8 of the top 20 — including the
+  first, São José do Norte/RS at 1.20 m, where the regional median q90 is 2.48 m —
+  and all 20 of the top 20 from points below 2.0 m.** No absolute floor was
+  imposed, for two demonstrated reasons rather than by preference. The PU
+  composite score does not determine the wave axis: its six best pairs lie within
+  1 % of one another and span q50–q80, while the level percentile is selected
+  identically in every sensitivity variant. And an external anchor would have to
+  come from a setup/runup formulation driven by Hₛ, which requires beach-face
+  slope — the physical susceptibility layer this project has already recorded as
+  absent. Nor were sheltered points filtered out: coastline orientation shelters
+  points that lie in no bay at all, and WAVERYS at ~0.2° is a **large-scale driver
+  even at exposed points**, so "genuine shelter" and "doubtful cell" cannot be
+  separated by any rule this repository can state, and any filter would be
+  arbitration wearing the appearance of a criterion. Two consequences are named
+  rather than hidden: **Mangaratiba/RJ**, ranked 4th nationally, draws its hazard
+  from a point inside Sepetiba Bay with a 0.78 m threshold, and **Magé/RJ**,
+  ranked 3rd, from the inner Guanabara Bay. Replacing the percentile criterion
+  with a physically anchored one, via wave setup computed directly from Hₛ, is the
+  named route past this limitation and is future work.
+  *(`src/exploratory/audit_AUD_02_threshold_exposure.py`,
+  `src/exploratory/audit_AUD_02_threshold_grid_floor.py`)*
 
 ### Current Implementation Status
 

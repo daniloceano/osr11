@@ -89,6 +89,18 @@ A reprovação ocorre apenas no **índice integrado**.
 
 ### 3.3 Casos de plausibilidade duvidosa no topo
 
+> **Desatualizada em 2026-07-31 — não usar como está.** Os quatro casos abaixo
+> saíram do topo: Macapá está em **169º**, Chaves em **52º**, e Icatu, Turiaçu,
+> Apicum-Açu e Axixá deixaram o top-10 (Icatu 32º, Turiaçu 127º). Salvaterra e
+> Vigia estão em **risco zero**. O agrupamento duvidoso do topo passou a ser
+> outro, e nasce do desfecho de AUD-02: **as baías abrigadas do RJ** — Magé em
+> **3º** (fundo da Baía de Guanabara) e Mangaratiba em **4º** (Baía de Sepetiba,
+> `thr_hs` = **0,78 m**). Magé já constava desta lista pelo mecanismo de
+> associação (AUD-04); Mangaratiba é novo e tem as duas causas somadas. Toda a
+> §3 deste registro é anterior ao portão HAT e à remoção da cadeia de Min–Max,
+> e precisa ser remedida antes de qualquer julgamento — ver a nota de manutenção
+> no `ISSUE_TRACKER.md`.
+
 | Município | Posição | Problema |
 |---|---|---|
 | Magé, Duque de Caxias/RJ | 6º, 12º | Fundo da Baía de Guanabara, abrigada de swell — perigo 0,906 vem de ponto de plataforma aberta a 35 km (AUD-04) |

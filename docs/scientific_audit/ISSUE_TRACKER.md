@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 5 de 18 · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 8 (AUD-01, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
+**Questões abertas:** 4 de 18 (AUD-05, AUD-07, AUD-16, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 9 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
 
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
@@ -173,6 +173,56 @@
 > massa de 84 municípios em zero exato. Nenhum dos três pode ser julgado pelos
 > critérios que carrega.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-02 fechada como limitação reconhecida
+>
+> **AUD-02 fechada** como `limitacao-reconhecida`, por decisão do pesquisador.
+> Nenhum piso, nenhum filtro de ponto, nenhum reprocessamento de catálogo,
+> nenhum valor numérico alterado. Diagnóstico em
+> `src/exploratory/audit_AUD_02_threshold_exposure.py` →
+> `outputs/audit/AUD-02_threshold_exposure/`.
+>
+> **O alvo da questão mudou e não encolheu.** O portão HAT **não** esvaziou os
+> pontos de limiar baixo — os 256 abaixo de 1,5 m ainda carregam **17,2 %** de
+> todos os eventos aceitos. O que mudou é quem eles alimentam: os hotspots do
+> Norte que a §3 do registro nomeia estão em risco zero e saíram por outra via,
+> e quem depende de limiar baixo hoje é **o topo do ranking**.
+>
+> - **161 de 280** municípios publicados vêm de pontos com `thr_hs` < 1,5 m;
+>   **44** de pontos abaixo de 1,0 m.
+> - **8 dos 20 primeiros**, incluindo o **1º** — São José do Norte/RS, com
+>   **1,20 m**, onde o q90 mediano do RS é 2,48 m — e o **4º**, Mangaratiba/RJ,
+>   com **0,78 m**, ponto dentro da Baía de Sepetiba.
+> - **Todos os 20 primeiros** vêm de pontos abaixo de **2,0 m**.
+> - Por estado: mediana **0,90 m no MA** (24 de 33 municípios abaixo de 1,0 m)
+>   contra 1,71 m no RS.
+>
+> **Duas indisponibilidades demonstradas sustentam o desfecho.** O piso não é
+> derivável aqui: a calibração PU não determina o eixo da onda (seis melhores
+> pares dentro de 1 % do score, cobrindo q50–q80), e a âncora externa natural —
+> setup/runup a partir de Hₛ — exige declividade de face de praia, camada física
+> que **AUD-10 já fechou como ausente**. E os pontos abrigados não são
+> filtráveis: a orientação da linha de costa abriga pontos que não estão em baía
+> alguma, e o WAVERYS é driver de larga escala **mesmo nos pontos expostos**.
+>
+> **O desfecho exigiu três coisas, todas feitas:** renomear a quantidade para
+> *local Hₛ exceedance* onde o texto descreve o que o detector seleciona
+> (README §2e e glossário, `site/content/project.ts`, `site/components/Hero.tsx`);
+> publicar a tabela de limiares por setor e por estado como suplementar; e
+> **declarar com número** a exposição do topo do ranking. O título do projeto foi
+> mantido — descreve o fenômeno de interesse, não a quantidade detectada.
+>
+> **Trabalho futuro nomeado:** wave setup calculado diretamente de Hₛ substituiria
+> o percentil por um limiar de significado físico local e resolveria piso e
+> abrigo de uma vez. Depende da camada física de AUD-10.
+>
+> **Consequência para AUD-05:** o agrupamento duvidoso do topo deixou de ser o do
+> Norte e passou a ser **as baías abrigadas do RJ** — Magé 3º, Mangaratiba 4º. A
+> §3.3 de AUD-05 ainda lista Chaves, Macapá e os municípios do MA, todos hoje em
+> risco zero.
+>
+> **O build do site não foi executado** — não há Node.js neste ambiente. As
+> edições de `.ts`/`.tsx` passaram por verificação estrutural, não por compilação.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -182,11 +232,11 @@ ver [`README.md`](README.md).
 
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
-| **P0 — bloqueia publicação** | 6 | 3 | 0 | 0 | **3** |
+| **P0 — bloqueia publicação** | 6 | 2 | 0 | 0 | **4** |
 | **P1 — resolver ou justificar** | 9 | 1 | 4 | 0 | **4** |
 | **P2 — recomendado** | 3 | 1 | 1 | 0 | **1** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **5** | **5** | **0** | **8** |
+| **Total** | **18** | **4** | **5** | **0** | **9** |
 
 ---
 
@@ -195,7 +245,7 @@ ver [`README.md`](README.md).
 | ID | Título | Tipo | Componente | Etapa | Afeta | Prio | Bloqueia publicação? | Status | Desfecho | Depende de | Registro |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **AUD-01** | Eventos compostos travados em fase com a sizígia ao norte de ~20°S | fragilidade-metodologica | perigo | 3.2 (orig. 2e) | dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | **06** | [AUD-01](issues/AUD-01_compound_detector_tidal_phase_locking.md) |
-| **AUD-02** | Limiares de "onda extrema" fisicamente vazios no Norte (0,20–1,05 m) | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
+| **AUD-02** | Limiar de onda é percentil local: mede raridade, não severidade; **8 dos 20 primeiros abaixo de 1,5 m** | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | Sim — satisfeito por qualificação explícita | `resolvido` | `limitacao-reconhecida` | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
 | **AUD-03** | Incoerência de fase no nível somado (zos 00Z + maré máx. diária) | qualidade-dados | perigo | 2c → portão HAT / severidade | doc., interp. | P1 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
 | **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `limitacao-reconhecida` | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
@@ -233,11 +283,12 @@ AUD-01 ◄──► AUD-06   PAR INDISSOCIÁVEL (demonstrado em 2026-07-29):
 
 AUD-01 ──► AUD-12 (contaminação estuarina)
 AUD-01, AUD-02 ──► AUD-13 (comportamento do índice)
-                   AUD-13 fechou em 2026-07-31 SEM que AUD-02 fechasse: a
-                   dependência foi resolvida por DECLARAÇÃO, não por remoção.
-                   Com rho(perigo, risco) = 0,893, o indice propaga integralmente
-                   qualquer fragilidade do limiar de onda. Se AUD-02 mudar o
-                   detector, AUD-13 tem de ser remedida (§3-bis inteira).
+                   As tres fecharam em 2026-07-31. A dependencia AUD-02 -> AUD-13
+                   foi resolvida por DECLARACAO, nao por remocao: com
+                   rho(perigo, risco) = 0,893 o indice propaga integralmente o
+                   criterio percentilico de onda, que agora e uma limitacao
+                   declarada. Se um piso fisico for adotado no futuro (rota do
+                   wave setup), AUD-13 tem de ser remedida por inteiro (§3-bis).
 AUD-11 ──► AUD-16 (definição de hotspot)
 
 Acrescentadas em 2026-07-31:

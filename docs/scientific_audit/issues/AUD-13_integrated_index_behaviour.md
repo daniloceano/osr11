@@ -444,8 +444,11 @@ automaticamente satisfeito**: é anulado, e a anulação precisa da razão.
       direção; 208 dos 808 pontos sem evento aceito.*
 - [x] **E.** Está declarado que a dominância do perigo (ρ = 0,893; sem o perigo
       ρ = +0,092) **propaga** as limitações das questões que governam o perigo,
-      nomeadamente **AUD-02, que permanece aberta**. *Parágrafo de limitação do
-      manuscrito e §14 abaixo.*
+      nomeadamente AUD-02. *Parágrafo de limitação do manuscrito e §14 abaixo.*
+      **Atualizado em 2026-07-31:** AUD-02 fechou como `limitacao-reconhecida` no
+      mesmo dia. O que o índice propaga é, portanto, uma **limitação declarada** —
+      o limiar de onda mede raridade local, não severidade absoluta — e não uma
+      questão pendente. A propagação em si não muda.*
 - [x] **F.** Está declarado que parte da anticorrelação perigo–vulnerabilidade é
       **produzida pela geografia do portão**, e não apenas pelo clima de
       tempestades. *§14 e parágrafo de limitação. É a ressalva que um revisor
@@ -527,4 +530,4 @@ Nenhum, se a resolução for documental. Se a fórmula mudar, cadeia de AUD-11 �
 | **Ressalva registrada, e aceita** | O argumento (iii) sustenta a decisão **e** delimita o que o produto tem licença para afirmar. Se a ocupação está abaixo do HAT, então **o limiar de dano local está abaixo do portão**, e o zero de Recife é uma propriedade do limiar escolhido, não a ausência de perigo costeiro. As duas leituras são simultaneamente verdadeiras. O produto já registra a causa corretamente — o GeoJSON publica `risk_zero_cause = hazard_zero_no_accepted_event_1993_2025` —, e o manuscrito deve usar essa formulação, nunca "risco zero" sem qualificação |
 | **Referências incorporadas** | Gregório, M. N.; Araújo, T. C. M.; Mendonça, F. J. B.; Gonçalves, R. M.; Mendonça, R. L. (2017). Mudanças posicionais da linha de costa nas praias do Pina e de Boa Viagem, Recife, PE, Brasil. *Tropical Oceanography*, 45(1). DOI 10.5914/tropocean.v45i1.15200 · Rocha, J. I. C. (2018). Alterações nas dunas da Praia de Boa Viagem — Recife (PE) originadas por Ação Antrópica. *Investigaciones Geográficas*, 56, 138–152. DOI 10.5354/0719-5370.2018.48066 |
 | **Fonte não verificada** | O pesquisador indicou um terceiro trabalho (`pdfs.semanticscholar.org/efc3/1cb024a9b588cba0b2826a3213c29b711375.pdf`). **Não foi lido**: o ambiente desta sessão não tem extrator de PDF instalado. Nenhuma afirmação deste registro se apoia nele; se for citado no manuscrito, precisa ser conferido |
-| **O que o desfecho NÃO cobre** | (1) A rotulagem dos 84 zeros nos mapas — **AUD-15**. (2) A validade do limiar de onda, que o índice propaga integralmente — **AUD-02, aberta**. (3) A declaração de domínio de validade do detector — **AUD-18, aberta**. Fechar AUD-13 não fecha nenhuma das três, e o parágrafo de limitação diz isso |
+| **O que o desfecho NÃO cobre** | (1) A rotulagem dos 84 zeros nos mapas — **AUD-15**. (2) A validade do limiar de onda, que o índice propaga integralmente — **AUD-02**, fechada horas depois como `limitacao-reconhecida`; a propagação passa a ser de uma limitação declarada. (3) A declaração de domínio de validade do detector — **AUD-18, aberta**. Fechar AUD-13 não fecha nenhuma das três, e o parágrafo de limitação diz isso |

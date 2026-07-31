@@ -9,16 +9,36 @@
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — um "evento de onda extrema" com Hs = 0,20 m não é defensável sob nenhum enquadramento |
-| **Status** | `aberto` — **agravado em 2026-07-30**: o par recalibrado do Step 2e baixa o percentil de onda de q90 para q70, e com ele o piso de `thr_hs`. Ver §14, entrada de 2026-07-30 |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `limitacao-reconhecida` — o piso não é derivável dentro do pipeline atual, e o abrigo não é separável de célula duvidosa por nenhuma regra enunciável aqui. A quantidade passa a ser nomeada e publicada pelo que é. Ver §14, entrada de 2026-07-31 |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-13 |
 | **Relacionado a** | AUD-01, AUD-18 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §1 (preocupação 2), §3.1, §8 item 2, §9.1 item 2 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-30 (recalibração do Step 2e; a questão **piorou**) |
+| **Última atualização** | 2026-07-31 (fechamento como limitação reconhecida) |
 
 ---
+
+> ### Nota de leitura — o alvo da questão mudou, e não encolheu
+>
+> A §3 descreve o problema como sendo dos **hotspots do Norte** — Vigia 0,20 m,
+> Chaves 0,24 m, Macapá 0,51 m. Esses municípios estão hoje em **risco zero**,
+> por perigo nulo sob o portão HAT, e saíram do produto por outra via.
+>
+> O portão **não** esvaziou os pontos de limiar baixo: os 256 pontos abaixo de
+> 1,5 m ainda carregam **17,2 % de todos os eventos aceitos**. O que mudou é
+> quem eles alimentam. Medido em 2026-07-31:
+>
+> - **161 dos 280** municípios publicados vêm de pontos com `thr_hs` < 1,5 m;
+>   **44** de pontos abaixo de 1,0 m;
+> - **8 dos 20 primeiros**, incluindo o **1º** (São José do Norte/RS, 1,20 m) e o
+>   **4º** (Mangaratiba/RJ, 0,78 m);
+> - **todos os 20 primeiros** vêm de pontos abaixo de **2,0 m**.
+>
+> O dano deixou de estar na cauda descartada e passou a estar no **resultado
+> publicado**. É por isso que o desfecho exige renomear a quantidade, e não
+> apenas declarar uma ressalva regional.
 
 ## 1. Problema
 
@@ -165,21 +185,50 @@ Mesmas de AUD-01, além de
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] Existe um mapa costeiro versionado de `thr_hs_abs` e uma lista explícita
-      dos pontos com limiar abaixo do piso adotado, com classificação de cada um
-      (abrigado real / estuarino / célula duvidosa).
-- [ ] O efeito de pelo menos duas alternativas de limiar (piso absoluto e
-      percentil mais alto) sobre `compound_count_total`, sobre `Hazard_Index` e
-      sobre o ranking municipal de risco está quantificado (ρ de Spearman e
-      sobreposição de top-20).
-- [ ] A escolha final de limiar está **justificada por um critério explícito** —
-      físico ou estatístico — e não por conveniência do resultado.
-- [ ] Nenhum ponto que contribua para um município publicado tem
-      `thr_hs_abs` abaixo do piso adotado, **ou** está documentado por que a
-      exceção é aceitável.
-- [ ] `README.md` §2e declara o domínio de calibração (Santa Catarina) e o
-      alcance da extrapolação.
-- [ ] Produtos a jusante regenerados e verificados (§12).
+### 9.1 Critérios de 2026-07-29 — situação de cada um
+
+Os critérios originais pressupunham que **um piso seria adotado**. Como o
+desfecho é não adotar nenhum, três deles ficam sem objeto. Um critério cujo
+pressuposto caiu não é automaticamente satisfeito: é anulado, com a razão.
+
+| # | Critério original | Situação em 2026-07-31 |
+|---|---|---|
+| 1 | Mapa versionado de `thr_hs_abs` + lista dos pontos abaixo do piso, **classificados** em abrigado real / estuarino / célula duvidosa | **PARCIAL, e a classificação é ANULADA.** A tabulação existe e está versionada (§9.2 A). A **classificação não é operacionalizável**: a orientação da linha de costa abriga pontos que não estão em baía alguma, de modo que "abrigo real" e "célula duvidosa" não se separam por nenhuma regra enunciável neste repositório — e uma classificação não enunciável seria arbitragem disfarçada de critério. Mesma conclusão a que AUD-12 chegou por outro caminho |
+| 2 | Efeito de duas alternativas de limiar sobre contagem, perigo e ranking | **PARCIAL.** O eixo do percentil foi varrido e reportado (`audit_AUD_02_threshold_grid_floor`, §14 de 2026-07-30): nem em q99 o mínimo chega a 0,3 m. O efeito de um **piso absoluto** sobre o ranking **não foi medido** — e deixa de ser exigível, porque nenhum piso é adotado. Fica registrado como não medido, não como dispensável |
+| 3 | Escolha final justificada por critério explícito, não por conveniência do resultado | **[x] SATISFEITO.** O critério declarado é negativo e verificável: a calibração PU **demonstravelmente não determina** o eixo da onda (seis melhores pares dentro de 1 % do score, cobrindo q50–q80; `q_zos` = q99 selecionado em 14 de 14 variantes), e a âncora externa natural — setup/runup a partir de Hₛ — exige declividade de face de praia, camada física que **AUD-10 já fechou como ausente**. A escolha foi feita **antes** de olhar o ranking resultante |
+| 4 | Nenhum ponto abaixo do piso alimenta município publicado | **SEM OBJETO.** Não há piso. Reconduzido ao critério C da §9.2, que exige o oposto: **declarar** quantos alimentam, e onde |
+| 5 | `README.md` §2e declara o domínio de calibração e o alcance da extrapolação | **[x] SATISFEITO.** §2e passou a declarar que os 147 pares são **integralmente de Santa Catarina** e que o par é aplicado a 27° de latitude. Compartilhado com AUD-18 |
+| 6 | Produtos a jusante regenerados e verificados | **SEM OBJETO.** Nenhum valor numérico muda; o desfecho é de nomenclatura e declaração |
+
+### 9.2 Critérios vigentes (2026-07-31)
+
+- [x] **A.** Existe tabela versionada e reproduzível de `thr_hs_abs` por setor e
+      **por estado**, publicável como material suplementar.
+      *`outputs/audit/AUD-02_threshold_exposure/{thresholds_by_latitude_band.csv,
+      thresholds_by_state.csv, municipal_threshold_exposure.csv}`. A tabela por
+      estado é a que responde à pergunta do leitor — MA mediana **0,90 m** com 24
+      de 33 municípios abaixo de 1,0 m; PA mínimo **0,14 m**; RS mediana 1,71 m.*
+- [x] **B.** A quantidade **não é mais chamada de "onda extrema"** onde o texto
+      descreve o que o detector seleciona. *`README.md` §2e e glossário,
+      `site/content/project.ts`, `site/components/Hero.tsx`: passa a
+      "local significant-wave-height exceedance", com a definição operacional
+      explícita. O título do projeto foi mantido — descreve o fenômeno de
+      interesse, não a quantidade detectada — e agora vem acompanhado da
+      qualificação.*
+- [x] **C.** A exposição do **resultado publicado** aos limiares baixos está
+      declarada, com número. *161 de 280 municípios abaixo de 1,5 m, 44 abaixo de
+      1,0 m, 8 dos 20 primeiros e **todos os 20 primeiros abaixo de 2,0 m**.
+      README, parágrafo de limitação. É o número que um revisor calcula sozinho.*
+- [x] **D.** Está declarado que os pontos abrigados — em baía ou por orientação
+      da linha de costa — são limitação do WAVERYS como **driver de larga
+      escala**, e não pontos a filtrar. *Parágrafo de limitação; casos nomeados:
+      Mangaratiba/RJ (4º, 0,78 m, Baía de Sepetiba) e Magé/RJ (3º, fundo da Baía
+      de Guanabara).*
+- [x] **E.** O caminho de superação está registrado como **trabalho futuro
+      nomeado**, não como pendência vaga. *Formulação direta de setup/runup a
+      partir de Hₛ, que exige a camada física de AUD-10.*
+- [ ] **F.** *(remetido, não pendente aqui)* A declaração do **domínio de
+      validade** do detector. Pertence a **AUD-18**, que permanece aberta.
 
 ## 10. Riscos de alteração prematura
 
@@ -218,6 +267,7 @@ sucessivos.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
+| 2026-07-31 | *(a commitar)* | `main` | **Novos:** `src/exploratory/audit_AUD_02_threshold_exposure.py`, `outputs/audit/AUD-02_threshold_exposure/`. **Alterados:** este registro (§9, §13, §14 e nota de leitura), `README.md` (§2e, glossário, parágrafo de limitação), `site/content/project.ts`, `site/components/Hero.tsx`, `docs/scientific_audit/ISSUE_TRACKER.md`, AUD-13 (critério E) | Diagnóstico + renomeação + declaração. **Nenhum valor numérico publicado alterado; nenhum ponto filtrado; nenhum catálogo reprocessado** |
 | 2026-07-30 | `7eb8cc8` e seguintes | `main` | **Novos:** `src/exploratory/audit_AUD_02_threshold_grid_floor.py`, `outputs/audit/AUD-02_threshold_grid_floor/`. **Alterados indiretamente:** o par de limiares em `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` e, por consequência, `thr_hs_abs` em todo o catálogo | Diagnóstico do piso de `thr_hs` em toda a grade de percentis, e efeito colateral da recalibração de AUD-01 sobre esta questão. Nenhuma alteração foi feita **para** AUD-02; a questão permanece aberta e agravada |
 
 ## 14. Histórico de investigação
@@ -262,3 +312,30 @@ sucessivos.
 | **Alterações implementadas** | Nenhuma **para** AUD-02. O script é read-only e não aplica piso algum. A mudança de `thr_hs` no catálogo é consequência da adoção de AUD-01, apresentada ao pesquisador responsável **antes** da execução, com estes números, e por ele autorizada |
 | **Incerteza remanescente** | (1) A ancoragem de um piso absoluto continua sem critério definido — mesma lacuna de §7.4. (2) Os critérios de resolução de §9 permanecem **todos** não atendidos, e agora sobre uma população maior de pontos problemáticos. (3) Como AUD-02 bloqueia publicação e a distância até o piso defensável **aumentou**, a questão passa a ser mais urgente, não menos |
 | **Próxima decisão necessária** | Decidir o tratamento do limiar de onda de forma independente da calibração PU, já que esta não o determina. As opções continuam sendo as de §7 e §11: piso físico absoluto com ancoragem declarada; restrição de domínio pela partição de AUD-01 (antimodo em 0,257, que remove 97 % dos pontos com `thr_hs` < 1,0 m); ou renomear a quantidade para "excedência local de Hs" em todo o manuscrito, figuras e site |
+
+### 2026-07-31 — O alvo mudou: o dano saiu da cauda e entrou no topo do ranking
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | O portão HAT esvaziou os pontos de limiar baixo? Se não, que parte do produto publicado ainda depende deles? |
+| **Dados e métodos** | `outputs/storm_catalog/compound_hat/compound_metrics_hat.csv` (808 pontos) cruzado com `site/public/data/risk_index_municipalities.geojson` (280 com risco), por coordenada de grade arredondada a 3 casas — junção **total**, 0 sem par. Tabulação de `thr_hs_abs` por faixa de latitude e por estado, e contagem da exposição do ranking |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_02_threshold_exposure` |
+| **Novas saídas geradas** | `outputs/audit/AUD-02_threshold_exposure/{thresholds_by_latitude_band.csv, thresholds_by_state.csv, municipal_threshold_exposure.csv, summary.json}` |
+| **Achados** | (a) **O portão não esvaziou nada**: os 256 pontos com `thr_hs` < 1,5 m seguem carregando **2 891 de 16 768** eventos aceitos — **17,2 %** —, e só 51 deles ficaram sem evento. (b) **Os municípios afetados trocaram de região.** Os hotspots do Norte que a §3 nomeia — Vigia, Chaves, Macapá — estão em risco zero por perigo nulo, e saíram por outra via. Quem depende de limiar baixo hoje é o **topo do ranking**: **161 de 280** municípios vêm de pontos abaixo de 1,5 m, **44** abaixo de 1,0 m, **8 dos 20 primeiros** — entre eles o **1º, São José do Norte/RS, com `thr_hs` = 1,20 m**, onde o q90 mediano do RS é 2,48 m — e **todos os 20 primeiros** abaixo de 2,0 m. (c) Por estado, a mediana vai de **0,90 m no MA** (24 de 33 municípios abaixo de 1,0 m) e 0,905 m no AP a 1,71 m no RS. (d) Caso extremo no Sudeste: **Mangaratiba/RJ, 4º do país, `thr_hs` = 0,78 m**, ponto dentro da Baía de Sepetiba; com Magé/RJ em 3º, no fundo da Baía de Guanabara, forma-se um agrupamento novo — **baías abrigadas do RJ no topo** — que é o sucessor direto do problema dos hotspots do Norte |
+| **Interpretação** | A recalibração para q70 rebaixou o piso em todo o domínio, e o portão HAT removeu do produto justamente os municípios que a §3 usava como ilustração. O resultado é que a questão **piorou de lugar**: antes contaminava municípios que o revisor descartaria de qualquer forma; agora sustenta o resultado principal. Isso muda o desfecho aceitável — uma ressalva regional não basta, porque o problema não é regional |
+| **Alterações implementadas** | Nenhuma em código de produção. Script diagnóstico novo, read-only |
+| **Validação realizada** | A junção município↔ponto levanta erro se algum município ficar sem par; executou com 0 sem par. Uma versão anterior desta análise, feita sem arredondamento da chave, deixou 278 de 280 sem par e produziu contagens falsas — o script agora falha em vez de reportar silenciosamente |
+| **Incerteza remanescente** | O efeito de um piso absoluto sobre o ranking continua **não medido**. Sob o desfecho adotado deixa de ser exigível, mas se um piso for considerado no futuro, é o primeiro diagnóstico a rodar |
+| **Próxima decisão necessária** | Do pesquisador: das três opções da §11, qual adotar |
+
+### 2026-07-31 — DECISÃO: fechar como `limitacao-reconhecida`
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31, sobre os achados acima |
+| **Decisão** | **Nenhum piso, nenhum filtro de ponto, nenhum reprocessamento.** A quantidade é declarada pelo que é — excedência local de Hₛ — e a limitação é reconhecida no manuscrito |
+| **Fundamentação — por que o piso não é derivável aqui** | Não é escolha de conveniência, é uma indisponibilidade demonstrada em duas camadas. **Primeira:** a calibração PU não determina o eixo da onda — os seis melhores pares ficam dentro de 1 % do score cobrindo de q50 a q80, enquanto `q_zos` = q99 é selecionado em 14 de 14 variantes de sensibilidade. O escore simplesmente não tem informação sobre o limiar de onda. **Segunda:** a âncora teria de vir de fora, e a âncora natural é uma formulação de **setup/runup a partir de Hₛ**, que exige declividade de face de praia — precisamente a camada de suscetibilidade física que **AUD-10 já fechou como `limitacao-reconhecida`**. O piso não é derivável dentro deste pipeline porque depende de uma camada que o projeto já reconheceu não ter |
+| **Fundamentação — por que os pontos abrigados não são filtráveis** | O §8.5 pedia separar "abrigo real" de "célula inválida". Essa separação **não é operacionalizável**: a orientação da linha de costa produz abrigo de ondulação em pontos que não estão em baía nenhuma, e o WAVERYS a ~0,2° é um **driver de larga escala mesmo nos pontos não abrigados**. Sem uma regra enunciável, qualquer filtro seria arbitragem com aparência de critério — a mesma conclusão a que **AUD-12** chegou por outro caminho, e pela mesma razão |
+| **Trabalho futuro nomeado** | Uma formulação direta de wave setup/runup a partir de Hₛ substituiria o limiar percentílico por um limiar com significado físico local, e resolveria simultaneamente o piso e o abrigo. Depende da camada física de AUD-10. Registrado como direção, não como promessa |
+| **O que o desfecho exige, e foi feito** | (1) Renomear a quantidade onde o texto descreve o que o detector seleciona; (2) publicar a tabela de `thr_hs` por setor e por estado como suplementar; (3) **declarar com número** a exposição do topo do ranking. Ver §9.2 |
+| **O que o desfecho NÃO cobre** | (1) O **domínio de validade** do detector — **AUD-18**, aberta. (2) A reprovação dos casos costeiros conhecidos e o agrupamento novo das baías do RJ — **AUD-05**, aberta, e sua §3.3 ainda lista os hotspots do Norte como problema. (3) **AUD-13** fechou declarando que o índice propaga AUD-02 integralmente (ρ = 0,893); a declaração foi atualizada para "limitação declarada" em vez de "questão aberta" |
