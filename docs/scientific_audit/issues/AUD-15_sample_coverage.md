@@ -225,6 +225,17 @@ explique a ausência.
       *Remover os quatro municípios de exposição degenerada deixa a ordenação
       publicada intacta: ρ = 1,000, deslocamento máximo de posto 0. Eles não
       ancoram nenhuma normalização.*
+- [ ] **Critério novo (2026-07-31, de AUD-07).** A fronteira zero/não-zero é
+      **amostralmente instável** e isso precisa estar declarado junto com a
+      categoria de risco zero. O bootstrap sobre os 33 anos de registro
+      (`outputs/audit/AUD-07_aggregation_sensitivity/`) mostra que, além dos 84
+      sempre nulos, **94 municípios caem a risco exatamente zero em alguns
+      sorteios** — Guimarães/MA, Alcântara/MA, Raposa/MA e Icatu/MA em **34 %**
+      deles, apesar de ocuparem as posições 21, 22, 28 e 32. Apenas **102 dos
+      280** são robustamente não nulos. A causa é que 94 dos 196 municípios com
+      risco positivo têm menos de dez eventos aceitos e 90 têm menos de cinco.
+      Rotular "risco zero" como categoria própria sem dizer que a fronteira se
+      move é meia declaração. Critério **não verificado**.
 - [ ] **Critério novo (2026-07-31).** Os **83 municípios cujo ponto de perigo não
       aceitou nenhum evento composto** — `Hazard_Index_mun` exatamente 0,
       posições 191 a 280 — estão declarados no produto, no site e no manuscrito,

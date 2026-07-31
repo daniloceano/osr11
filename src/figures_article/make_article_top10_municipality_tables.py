@@ -68,8 +68,12 @@ TABLE_SPECS: dict[str, dict[str, str]] = {
         "value_label": "Risk index",
         "stem": "top10_municipalities_by_integrated_risk",
         "caption": (
-            "Top 10 Brazilian coastal municipalities by normalized "
-            "integrated compound-risk index."
+            "Top 10 Brazilian coastal municipalities by the integrated "
+            "compound-risk index. Ranks 1--3 are stable across a bootstrap over "
+            "the 33 years of record, but the 90\\% intervals of ranks 4--11 "
+            "overlap, so the ordering within that band is not resolved; see the "
+            "rank-uncertainty and aggregation-sensitivity tables "
+            "(AUD-07 supplementary)."
         ),
         "latex_label": "tab:top10-municipal-integrated-risk",
     },

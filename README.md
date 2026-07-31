@@ -815,7 +815,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The seven paragraphs below are written to be transferable, essentially as they
+The eight paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -1002,6 +1002,39 @@ named at the end of each paragraph.
   named route past this limitation and is future work.
   *(`src/exploratory/audit_AUD_02_threshold_exposure.py`,
   `src/exploratory/audit_AUD_02_threshold_grid_floor.py`)*
+
+- **The ranking is interpretable at the top and not below it (AUD-07).** Two
+  robustness questions have to be separated. The **aggregation** is stable:
+  scoring the hazard on frequency alone gives ρ = 0.940 against the published
+  ranking and on severity alone 0.974, and sweeping the weight between the two
+  components from 0 to 1 never drops ρ below **0.94**, so the equal 50/50 split is
+  practically indifferent rather than an unjustified convention. What does move
+  the result is the functional form: a compensatory arithmetic mean gives
+  ρ = 0.551 and a percentile-rank version 0.638. The conjunctive geometric form is
+  retained on the IPCC rationale stated before the method changed. The **rank**,
+  by contrast, is only partly resolved. Resampling municipalities — the usual
+  design — now measures exactly nothing, because fixed goalposts make each value
+  independent of sample membership; the uncertainty that exists is in the hazard
+  estimate, and a bootstrap over the 33 years of record (1000 draws, 90 %
+  intervals) puts the median interval width at **4.5 rank positions inside the top
+  10 and 7 for ranks 11–20**, with the first three positions degenerate, against
+  **45 positions for ranks 101–196**. Eight municipalities have intervals covering
+  rank 10, so ranks 4–11 are not distinguishable and "top ten" is a presentational
+  cut, not a statistical class. Below roughly rank 20 the ordering should be read
+  as priority bands, not as a ranking. One driver of that deserves naming: because
+  the severity term is a **conditional mean that does not scale with rarity**,
+  while frequency is anchored at 99 events, a single moderate event yields
+  severity ≈ 0.28 against frequency 0.010, and the resulting hazard of 0.146
+  combined with a high vulnerability places **Guimarães/MA at rank 21 on the
+  strength of one event in 33 years**. Ninety-four of the 196 municipalities with
+  positive risk rest on fewer than ten accepted events and ninety on fewer than
+  five; in the bootstrap, 94 of them fall to exactly zero risk in some draws — 34 %
+  of draws for Guimarães, Alcântara, Raposa and Icatu — so only **102 of the 280
+  are robustly non-zero** and the zero/non-zero boundary is itself sampling-
+  dependent. The bootstrap treats years as exchangeable and therefore ignores
+  trend and interannual autocorrelation, which makes these intervals a floor on
+  the uncertainty rather than a full estimate.
+  *(`src/exploratory/audit_AUD_07_aggregation_sensitivity.py`)*
 
 ### Current Implementation Status
 

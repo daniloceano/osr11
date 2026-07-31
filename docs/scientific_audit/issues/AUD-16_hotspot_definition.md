@@ -50,6 +50,31 @@ Consequências:
 
 ## 3. Evidência original
 
+> **Desatualizada em 2026-07-31 — não usar como está.** Toda esta seção é do
+> produto anterior, em que o risco ocupava 0–1 por Min–Max. Hoje ocupa
+> **0–0,566**, as classes de `FIXED_BOUNDARIES["Risk_Hazard"]` **já foram
+> alteradas** no código para `[0, 1e-6, 0,1 … 0,6]`, e a premissa central da
+> §3.1 — "distribuição unimodal, nenhuma quebra natural" — **caiu**: existe hoje
+> uma massa de **84 municípios em zero exato**, que é uma quebra natural
+> genuína.
+>
+> Duas evidências novas, ambas de 2026-07-31, precisam entrar antes de qualquer
+> definição de hotspot:
+>
+> - **De AUD-07** — o bootstrap sobre os 33 anos dá intervalo de 90 % com
+>   largura mediana de 4,5 posições no top-10, mas **8 municípios têm intervalo
+>   cobrindo a posição 10**: o corte de top-10 não separa nada. E a fronteira
+>   zero/não-zero é instável — 94 municípios caem a zero em alguns sorteios,
+>   restando **102 dos 280 robustamente não nulos**. Qualquer definição por
+>   percentil ou por corte muda de significado sob essa instabilidade.
+> - **De AUD-13** — o índice é conduzido pelo perigo (84,7 % da variância de
+>   log), de modo que um "hotspot" definido sobre o risco é, na prática, um
+>   hotspot de perigo.
+>
+> O diagnóstico §8.3 (Getis-Ord Gi\*) também precisa ser reavaliado: com 84
+> empates exatos em zero, a autocorrelação espacial mede em parte a geografia da
+> censura pelo portão HAT, não agrupamento de risco.
+
 ### 3.1 Distribuição nas classes publicadas
 
 `FIXED_BOUNDARIES["Risk_Hazard"]` = `[0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]`:

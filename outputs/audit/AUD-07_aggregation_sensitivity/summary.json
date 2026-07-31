@@ -1,0 +1,39 @@
+{
+  "sources": {
+    "municipalities": "site/public/data/risk_index_municipalities.geojson",
+    "event_catalogue": "outputs/storm_catalog/compound/compound_catalog.json"
+  },
+  "municipalities": 280,
+  "years": [
+    1993,
+    2025
+  ],
+  "municipality_bootstrap": {
+    "draws": 200,
+    "max_relative_rank_shift_observed": 0.0,
+    "mean_relative_rank_shift": 0.0,
+    "interpretation": "Risk values are independent of sample membership under fixed goalposts, so the municipality bootstrap the record specifies measures nothing. Any residual shift is re-indexing, not value perturbation."
+  },
+  "year_bootstrap": {
+    "draws": 1000,
+    "ci_level_percent": 90.0,
+    "median_ci_width_all": 54.0,
+    "median_ci_width_top20": 6.0,
+    "max_ci_high_within_top10": 14.0,
+    "n_municipalities_whose_ci_covers_rank_10": 8,
+    "n_always_zero": 84,
+    "n_sometimes_zero": 94
+  },
+  "variant_spearman_vs_published": {
+    "published (geometric H,E,V)": 1.0,
+    "arithmetic mean H,E,V": 0.5505064110003859,
+    "hazard = frequency only": 0.939582847591893,
+    "hazard = severity only": 0.9738786531829315,
+    "components by percentile rank": 0.6383882816545371,
+    "drop hazard (E x V)": -0.22322196610055955,
+    "drop exposure (H x V)": 0.9141730652256284,
+    "drop vulnerability (H x E)": 0.9232922735508521,
+    "hazard alone": 0.892585102411419
+  },
+  "note": "The bootstrap over municipalities specified in AUD-07 section 8.2 lost its rationale when AUD-11 removed sample anchoring. The uncertainty that remains is in the hazard estimate, and is measured here by resampling the 33 years of record."
+}

@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 4 de 18 (AUD-05, AUD-07, AUD-16, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 9 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
+**Questões abertas:** 3 de 18 (AUD-05, AUD-16, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 10 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
 
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
@@ -223,6 +223,50 @@
 > **O build do site não foi executado** — não há Node.js neste ambiente. As
 > edições de `.ts`/`.tsx` passaram por verificação estrutural, não por compilação.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-07 fechada; o bootstrap teve de ser redesenhado
+>
+> **AUD-07 fechada** como `resultado-validado-mantido`. Nenhum valor numérico
+> alterado — só a legenda da tabela de top-10 do artigo. Diagnóstico em
+> `src/exploratory/audit_AUD_07_aggregation_sensitivity.py` →
+> `outputs/audit/AUD-07_aggregation_sensitivity/`.
+>
+> - **A instabilidade que motivou o P0 evaporou.** "Só frequência" foi de
+>   ρ = **0,384 para 0,940**; "só severidade" 0,974. E a varredura de peso
+>   frequência↔severidade dá **ρ ≥ 0,94 em toda a faixa** — a ponderação igual é
+>   praticamente indiferente, não uma convenção injustificada.
+> - **A instabilidade remanescente está na forma funcional**, não nas
+>   componentes: média aritmética 0,551, componentes por posto percentílico
+>   0,638. São as únicas variantes que movem o resultado.
+> - **O bootstrap do §8.2 tornou-se degenerado e teve de ser trocado.**
+>   Reamostrar municípios mede **exatamente 0,0** de deslocamento de posto em 200
+>   sorteios: com âncoras fixas (AUD-11) o valor de um município não depende da
+>   amostra. Substituído por bootstrap sobre os **33 anos de registro**, com
+>   validação de que o sorteio-identidade reproduz o produto publicado.
+> - **O topo é firme, o meio não é interpretável.** Posições 1, 2 e 3
+>   degeneradas; largura mediana do IC de 90 % de **4,5** posições no top-10 e
+>   **45** na faixa 101–196. **Oito municípios têm intervalo cobrindo a posição
+>   10** — "top-10" é corte de apresentação, não classe estatística.
+> - **Achado novo, não previsto por nenhum critério: eventos únicos.** **94 dos
+>   196** municípios com risco positivo têm menos de dez eventos aceitos e **90**
+>   têm menos de cinco. O primeiro deles é o **21º** — Guimarães/MA, com **um
+>   evento em 33 anos**. A causa é a assimetria entre as componentes: a
+>   frequência é ancorada em 99 eventos (um evento vale 0,010) enquanto a
+>   severidade é uma **média condicional que não escala com raridade** (um dia
+>   moderado devolve 0,283). No bootstrap, 94 municípios caem a zero em alguns
+>   sorteios — 34 % para Guimarães, Alcântara, Raposa e Icatu —, restando apenas
+>   **102 dos 280 robustamente não nulos**.
+>
+> **Decisão do pesquisador: declarar, não corrigir.** A correção da assimetria
+> não é óbvia, e escolhê-la depois de ver quais municípios ela remove seria
+> seleção de resultado; além disso reabriria AUD-13 e obrigaria a regenerar toda
+> a cadeia municipal. Fica como trabalho futuro, com o diagnóstico versionado.
+>
+> **Anotado em AUD-15 e AUD-16**, que herdam a instabilidade da fronteira
+> zero/não-zero. A §3 de AUD-16 foi marcada como desatualizada: a premissa
+> "distribuição unimodal sem quebra natural" caiu — os 84 zeros exatos **são**
+> uma quebra natural, e as classes cartográficas já haviam sido alteradas no
+> código.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -232,11 +276,11 @@ ver [`README.md`](README.md).
 
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
-| **P0 — bloqueia publicação** | 6 | 2 | 0 | 0 | **4** |
+| **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
 | **P1 — resolver ou justificar** | 9 | 1 | 4 | 0 | **4** |
 | **P2 — recomendado** | 3 | 1 | 1 | 0 | **1** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **4** | **5** | **0** | **9** |
+| **Total** | **18** | **3** | **5** | **0** | **10** |
 
 ---
 
@@ -250,7 +294,7 @@ ver [`README.md`](README.md).
 | **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `limitacao-reconhecida` | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
-| **AUD-07** | Instabilidade do ranking sob agregação alternativa do perigo (ρ = 0,384) | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
+| **AUD-07** | Ranking robusto no topo e à ponderação; **não interpretável abaixo da posição ~20** — 94 municípios com < 10 eventos | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | Sim — satisfeito por publicação da sensibilidade e dos ICs | `resolvido` | `resultado-validado-mantido` | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
 | **AUD-08** | Exposição: saturação do termo relativo e MAUP; **população efetiva implementada** | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
 | **AUD-09** | SVI: duas cargas negativas do PC1 — **sem erro de codificação**; CDF implementada | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
 | **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
@@ -385,6 +429,9 @@ Nenhum achado da revisão de linha de base foi descartado.
 | O portão HAT é monotônico em latitude — HAT médio de 0,49 m a 2,61 m do RS ao AP — e produz o gradiente de perigo por um mecanismo de maré independente do clima de tempestades | AUD-13 §3-bis.8 | 2026-07-31 |
 | A correlação marginal entre vulnerabilidade e risco é negativa (−0,372) com parcial +0,790: supressão induzida pela anticorrelação perigo–vulnerabilidade | AUD-13 §3-bis.3 e §3-bis.4 | 2026-07-31 |
 | A escolha entre média geométrica e aritmética deixou de ser quase neutra (ρ 0,934) e passou a determinar o resultado (ρ 0,550) | AUD-13 §3-bis.5; consequência para AUD-07 | 2026-07-31 |
+| O bootstrap por município perdeu o objeto: com âncoras fixas, reamostrar municípios desloca postos em exatamente 0,0 | AUD-07 §3-bis.1 | 2026-07-31 |
+| 94 dos 196 municípios com risco positivo têm menos de dez eventos aceitos; o 21º do país tem **um**. A severidade é média condicional e não escala com raridade | AUD-07 §3-bis.4 | 2026-07-31 |
+| A fronteira zero/não-zero é amostralmente instável: só 102 dos 280 municípios são robustamente não nulos | AUD-07 §3-bis.4; anotado em AUD-15 e AUD-16 | 2026-07-31 |
 
 ---
 

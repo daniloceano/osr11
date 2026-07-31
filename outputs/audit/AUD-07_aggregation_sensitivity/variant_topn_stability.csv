@@ -1,0 +1,10 @@
+variant,top5,top10,top20,top50
+"published (geometric H,E,V)",5,10,20,50
+"arithmetic mean H,E,V",1,4,8,31
+hazard = frequency only,4,8,19,40
+hazard = severity only,3,4,11,38
+components by percentile rank,1,2,5,30
+drop hazard (E x V),0,0,0,9
+drop exposure (H x V),3,4,11,34
+drop vulnerability (H x E),1,3,11,30
+hazard alone,1,2,9,28
