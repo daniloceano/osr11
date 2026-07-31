@@ -91,6 +91,7 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
     5 km. Each segment receives the value at its nearest grid point in SIRGAS
     2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
+  - Uses a 2 × 2 layout for the four municipal risk components.
   - Panel A: `Hazard_Index_mun` — the fixed-anchor `Hazard_Index` transferred
     without municipal renormalization.
   - Panel B: `Exposure_Index` — geometric mean of the fixed-goalpost absolute
