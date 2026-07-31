@@ -202,17 +202,18 @@ export const timelinePhases: TimelinePhase[] = [
       {
         id: 'step-2e',
         label: '2e — PU Composite Calibration',
-        description: 'Independent threshold sweep using a PU composite score (R_pos, annual burden, soft unmatched penalty) against the combined positive-event set: expanded (56 events, 14 cities) + legacy (91 events, 22 cities) = 147 unique (municipality, date) pairs across 27 municipalities, 1998–2020. B_target_effective = 12 × 27 = 324 ep/yr. Confirms q90/q90 as the final calibrated threshold pair.',
+        description: 'Threshold sweep using a PU composite score (R_pos, two-sided rate deviation, soft unmatched penalty) against the combined positive-event set: expanded (56 events, 14 cities) + legacy (91 events, 22 cities) = 147 unique (municipality, date) pairs across 27 municipalities, 1998–2020. Expected rate anchor = 2.0 detections/municipality/yr. Recalibrated 2026-07-30 on the production detector over 121 pairs; selects q70/q99.',
         status: 'done',
         tasks: [
           'Load combined positive-event set: expanded (56) + legacy (91) = 147 events, 27 municipalities ✓',
           'Export event provenance table (source flags, near-match detection) ✓',
-          'Layer 1: event hit/miss scan — 81 pairs × combined set ✓',
-          'Layer 2: collect unmatched episode metadata (peak Hₛ, SSH_total, dates) ✓',
+          'Layer 1: event hit/miss scan — 121 pairs × combined set, production detector ✓',
+          'Layer 2: collect unmatched episode metadata (peak Hₛ, peak tide-free zos, peak SWL, HAT, dates) ✓',
           'Build episode audit table: compute Eᵢ, Iᵢ, Cᵢ, qᵢ per episode ✓',
-          'Compute PU composite scores for all 81 pairs (B_target_effective = 12 × 27 = 324 ep/yr) ✓',
-          'Optimal pair: q90/q90 — confirmed by combined-database PU sweep ✓',
-          'Sensitivity analysis: weights, alphas, B_target — all confirm q90/q90 ✓',
+          'Compute PU composite scores for all 121 pairs (w = 0.30/0.60/0.10, α = 0.20/0.50/0.30) ✓',
+          'Detection census: 11 of 121 pairs degenerate; selected pair accepts 484 episodes over 12 points ✓',
+          'Selected pair: q70/q99 — H=28, M=119, U=831, Score=−0.318 ✓',
+          'Sensitivity analysis: weights, alphas, expected rate, gap days — q99 on level in 14 of 14; wave percentile undetermined ✓',
           'City/database source audit figure (TC5-A2) ✓',
         ],
       },
@@ -221,7 +222,7 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-3',
     label: 'STEP 3 — Hazard Characterization',
-    description: 'Storm catalog generation and full hazard characterization suite across the complete Brazilian coast. Applies PU-optimal q90/q90 thresholds to the full 1993–2025 record; 808 coastal grid points.',
+    description: 'Storm catalog generation and full hazard characterization suite across the complete Brazilian coast, over the full 1993–2025 record at 808 coastal grid points. Step 3.2 (compound detection) was regenerated on the calibrated q70/q99 pair with the HAT-gated detector; Steps 3.1 and 3.3–3.8 still read the superseded q90/q90 SSH_total catalogues and have not been regenerated.',
     status: 'done',
     stepNumber: 3,
     tasks: [

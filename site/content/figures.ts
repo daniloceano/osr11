@@ -277,7 +277,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_A2_city_source_audit.png',
     title: 'Municipality Audit Map — Combined Positive-Event Set (SC Coast)',
     caption:
-      'Georeferenced map (Santa Catarina coast, cartopy/Natural Earth) of the 27 unique municipalities in the combined 147-event positive set. Open circles mark the matched WAVERYS/GLORYS12 grid points; thin lines connect municipality centroids to grid points. Municipalities marked ★ have near-match events across constituent databases (within ±3 days; confirmed at Florianópolis). The combined positive set is the analysis object for Step 2e. Total: 147 events, 27 municipalities, B_target_effective = 12 × 27 = 324 ep/yr. Database provenance details are available in tab_TC5_positive_event_union_audit.csv.',
+      'Georeferenced map (Santa Catarina coast, cartopy/Natural Earth) of the 27 unique municipalities in the combined 147-event positive set. Open circles mark the matched WAVERYS/GLORYS12 grid points; thin lines connect municipality centroids to grid points. Municipalities marked ★ have near-match events across constituent databases (within ±3 days; confirmed at Florianópolis). The combined positive set is the analysis object for Step 2e. Total: 147 events, 27 municipalities, against an expected-rate anchor of 2.0 detections/municipality/yr. Database provenance details are available in tab_TC5_positive_event_union_audit.csv.',
     group: 'City Audit',
     part: 'Step 2e',
   },

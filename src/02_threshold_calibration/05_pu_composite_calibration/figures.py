@@ -6,13 +6,13 @@ between the Step 2d (CSI) and Step 2e (PU) optimal threshold pairs.
 
 Figure inventory
 ----------------
-fig_TC5_H1_score_heatmap.png        — Composite Score(θ) across 9×9 threshold grid
-fig_TC5_H2_recall_heatmap.png       — R_pos(θ) across 9×9 threshold grid
-fig_TC5_H3_burden_heatmap.png       — B(θ) across 9×9 threshold grid
-fig_TC5_H4_fsoft_heatmap.png        — F_soft(θ)/P across 9×9 threshold grid
+fig_TC5_H1_score_heatmap.png        — Composite Score(θ) across the 11×11 threshold grid
+fig_TC5_H2_recall_heatmap.png       — R_pos(θ) across the 11×11 threshold grid
+fig_TC5_H3_burden_heatmap.png       — B(θ), two-sided rate deviation, across the 11×11 grid
+fig_TC5_H4_fsoft_heatmap.png        — F_soft(θ)/P across the 11×11 threshold grid
 fig_TC5_S1_csi_vs_pu.png            — CSI optimal pair vs PU optimal pair comparison
 fig_TC5_S2_sensitivity_weights.png  — Weight sensitivity: optimal pair stability
-fig_TC5_S3_sensitivity_b_target.png — B_target sensitivity: Score vs B_target
+fig_TC5_S3_sensitivity_b_target.png — Expected-rate sensitivity: Score vs r*
 fig_TC5_S4_sensitivity_gap_days.png — Gap days sensitivity: Score vs EPISODE_MAX_GAP_DAYS
 fig_TC5_A1_qi_distribution.png      — Distribution of q_i values across all episodes
 fig_TC5_A2_city_source_audit.png    — Municipality audit map on SC coast (cartopy)
@@ -32,6 +32,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
+
+from src.pu_composite_calibration.config.analysis_config import CFG
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ _METRIC_CMAP = "YlGn_r"   # same convention for recall (maximize)
 _BURDEN_CMAP = "YlOrRd"   # forward yellow→red: low burden=yellow (light/good), high=dark red (bad)
 
 
-# ── Internal helper: 9×9 pivot for heatmaps ──────────────────────────────────
+# ── Internal helper: pivot for heatmaps ──────────────────────────────────────
 
 def _pivot(df: pd.DataFrame, value_col: str) -> tuple[pd.DataFrame, list[float], list[float]]:
     """Pivot a metrics DataFrame into a matrix for heatmap plotting.
@@ -66,7 +68,7 @@ def _pivot(df: pd.DataFrame, value_col: str) -> tuple[pd.DataFrame, list[float],
     ssh_labels : list of str
     """
     pivot = df.pivot(index="thr_hs_pct", columns="thr_ssh_pct", values=value_col)
-    # Sort ascending (q50 at top → q90 at bottom)
+    # Sort ascending (q50 at top → q99 at bottom)
     pivot = pivot.sort_index(ascending=True)
     hs_labels  = [f"q{round(v*100):.0f}" for v in pivot.index]
     ssh_labels = [f"q{round(v*100):.0f}" for v in pivot.columns]
@@ -99,7 +101,7 @@ def plot_metric_heatmap(
     vmin: float | None = None,
     vmax: float | None = None,
 ) -> None:
-    """Plot a 9×9 heatmap for one metric across the threshold grid.
+    """Plot a heatmap for one metric across the threshold grid.
 
     Parameters
     ----------
@@ -200,11 +202,22 @@ def plot_burden_heatmap(
     optimal: dict,
     output_path: Path,
 ) -> None:
-    """Annual burden B(θ) heatmap."""
+    """Two-sided rate deviation B(θ) heatmap.
+
+    Since 2026-07-30 B is a two-sided deviation from an expected detection
+    rate, not a one-sided budget ratio. The title states the formula actually
+    plotted; the previous wording described the superseded one-sided form,
+    which was minimised at zero detections and is precisely what left the
+    composite score without an interior optimum.
+    """
     plot_metric_heatmap(
         df=df_scores,
         metric="B",
-        title="Annual Burden B(θ) = min(1, (H+U)/(Y·B_target))\n(lower = fewer detections)",
+        title=(
+            "Rate Deviation B(θ) = min(1, |log₁₀(rate / r*)|),  "
+            f"r* = {CFG['b_target_per_municipality']:g} ep/muni/yr\n"
+            "(lower = closer to the expected rate; two-sided)"
+        ),
         cmap=_BURDEN_CMAP,
         output_path=output_path,
         optimal=optimal,
@@ -310,7 +323,7 @@ def plot_sensitivity_weights(
 
     for i, (col, label, ax) in enumerate(zip(
         ["thr_hs_pct", "thr_ssh_pct"],
-        ["Hₛ threshold percentile", "SSH threshold percentile"],
+        ["Hₛ threshold percentile", "Tide-free zos threshold percentile"],
         axes,
     )):
         vals = df_sens[col] * 100
@@ -407,7 +420,7 @@ def plot_sensitivity_b_target(
 
     X-axis: b_target_per_muni (episodes/year/municipality)
     Left Y: composite Score
-    Right Y: optimal Hₛ and SSH threshold percentiles
+    Right Y: optimal Hₛ and tide-free zos threshold percentiles
 
     Backward-compatible: resolves column names from current and legacy schemas.
     Raises KeyError with diagnostics if required columns are absent.
@@ -426,15 +439,15 @@ def plot_sensitivity_b_target(
     # Annotate x-axis label with total if n_municipalities is available
     if "n_municipalities" in df_sens.columns:
         n_munis = int(df_sens["n_municipalities"].iloc[0])
-        xlabel = f"Annual burden target per municipality (ep/yr/muni)\n[n={n_munis} municipalities; total = value × {n_munis}]"
+        xlabel = f"Expected detection rate r* per municipality (ep/yr/muni)\n[n={n_munis} municipalities; domain total = r* × {n_munis}]"
     else:
-        xlabel = "Annual burden target per municipality (ep/yr/muni)"
+        xlabel = "Expected detection rate r* per municipality (ep/yr/muni)"
 
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(x_vals, df_sens["Score"], "o-", color="#2ca02c", label="Composite Score")
     ax.set_xlabel(xlabel, fontsize=10)
     ax.set_ylabel("Composite Score", fontsize=11)
-    ax.set_title("Composite Score vs. Per-Municipality Annual Burden Target", fontsize=12)
+    ax.set_title("Composite Score vs. Expected Detection Rate r*", fontsize=12)
     ax.grid(alpha=0.3)
 
     # Convert to integer percentile if using legacy fractional columns
@@ -443,7 +456,7 @@ def plot_sensitivity_b_target(
 
     ax2 = ax.twinx()
     ax2.plot(x_vals, hs_vals,  "s--", color="#d62728", alpha=0.7, label="Hₛ threshold (q%)")
-    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="SSH threshold (q%)")
+    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="Tide-free zos threshold (q%)")
     ax2.set_ylabel("Optimal threshold percentile (%)", fontsize=10)
     ax2.set_ylim(40, 100)
 
@@ -467,7 +480,7 @@ def plot_sensitivity_gap_days(
 
     X-axis: gap_days (integer days)
     Left Y: composite Score
-    Right Y: optimal Hₛ and SSH threshold percentiles
+    Right Y: optimal Hₛ and tide-free zos threshold percentiles
 
     Analogous to fig_TC5_S3 (B_target sensitivity) but for episode gap tolerance.
     """
@@ -493,7 +506,7 @@ def plot_sensitivity_gap_days(
 
     ax2 = ax.twinx()
     ax2.plot(x_vals, hs_vals,  "s--", color="#d62728", alpha=0.7, label="Hₛ threshold (q%)")
-    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="SSH threshold (q%)")
+    ax2.plot(x_vals, ssh_vals, "^--", color="#ff7f0e", alpha=0.7, label="Tide-free zos threshold (q%)")
     ax2.set_ylabel("Optimal threshold percentile (%)", fontsize=10)
     ax2.set_ylim(40, 100)
 

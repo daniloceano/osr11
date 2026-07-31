@@ -109,8 +109,13 @@ export default function StormMapsPage() {
                   <strong className="text-gray-800">Threshold calibration.</strong>{' '}
                   Peaks-over-threshold with q90 (90th percentile) for both Hₛ and SSH_total,
                   independently calibrated at each coastal grid point over the full 1993–2025 record.
-                  The q90/q90 pair was selected via the PU composite calibration (Step 2e),
-                  confirmed by CSI diagnostic scan (Step 2d).
+                  <strong className="text-amber-800"> These maps are superseded.</strong> The q90/q90
+                  pair shown here was the calibration current until 2026-07-30; Step 2e has since been
+                  recalibrated on the production detector over an extended grid and selects q70 on Hₛ
+                  and q99 on tide-free zos. The detection variable also changed: audit AUD-01 replaced
+                  SSH_total with tide-free zos plus an explicit HAT gate. The Step 3.1 catalogues
+                  behind these maps have not been regenerated, so what is displayed is the earlier
+                  method, retained as a record.
                 </p>
                 <p>
                   <strong className="text-gray-800">Storm clustering.</strong>{' '}

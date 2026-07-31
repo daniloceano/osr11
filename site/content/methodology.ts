@@ -17,8 +17,10 @@ export const methodologySteps: MethodStep[] = [
       'Umbrella step that empirically establishes the compound event detection framework. '
       + 'Five sub-steps — all complete: 2a (Exploratory Data Analysis), 2b (Preliminary Compound Analysis), '
       + '2c (Tidal Sensitivity), 2d (CSI Grid Scan, diagnostic), and 2e (PU Composite Calibration, final). '
-      + 'Steps 2d and 2e both independently select Hₛ=q90 / SSH_total=q90. '
-      + 'B_target_effective = 12 × 27 = 324 ep/yr (combined positive-event set: 147 events, 27 municipalities).',
+      + 'Step 2e, recalibrated on 2026-07-30 over an extended 121-pair grid scoring the production '
+      + 'detector, selects Hₛ=q70 / tide-free zos=q99. Its earlier agreement with Step 2d on q90/q90 '
+      + 'is now understood as an artefact of both sweeps stopping at q90. '
+      + 'Expected rate anchor = 2.0 detections/municipality/yr (combined positive-event set: 147 events, 27 municipalities).',
     status: 'done',
     stepNumber: 2,
     subSteps: [
@@ -47,14 +49,14 @@ export const methodologySteps: MethodStep[] = [
         id: 'step-2d',
         label: '2d — CSI Grid Scan (Diagnostic)',
         description:
-          '81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Percentile thresholds computed from the full metocean record (1993–2025); validation scan restricted to 1998–2020. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1261, CSI=0.0155, FAR=0.984). High FAR indicates Civil Defense under-reporting. This step is diagnostic; Step 2e is the final calibration.',
+          '81 threshold pairs (q50–q90 × q50–q90) evaluated with causal window [D-2, D-1, D, D+1 00Z]. Percentile thresholds computed from the full metocean record (1993–2025); validation scan restricted to 1998–2020. Optimal pair: Hₛ=q90, SSH_total=q90 (H=21, M=70, F=1261, CSI=0.0155, FAR=0.984) — on the boundary of the scanned range. High FAR indicates Civil Defense under-reporting. This step is diagnostic and has not been re-run since the detector changed; its result is a historical record, not the calibrated pair.',
         status: 'done',
       },
       {
         id: 'step-2e',
         label: '2e — PU Composite Calibration (Final)',
         description:
-          'Independent threshold sweep using a positive-unlabeled (PU) composite score against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020). Thresholds from full metocean record; validation scan restricted to event-database period. Score balances positive recall (w1=0.60), operational burden (w2=0.20), and soft unmatched penalty (w3=0.20). Independently confirms q90/q90 (H=35, R_pos=0.238, B=0.428, Score=-3.159). Robust across all 4 sensitivity dimensions: weights, alpha, B_target, and episode gap tolerance.',
+          'Threshold sweep using a positive-unlabeled (PU) composite score against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020), over an 11×11 grid of 121 pairs (q50–q90 plus q95 and q99). Thresholds from full metocean record; validation scan restricted to event-database period. Score balances positive recall (w1=0.30), two-sided deviation from an expected rate of 2.0 detections/municipality/yr (w2=0.60), and soft unmatched penalty (w3=0.10); confidence weights α_E=0.20, α_I=0.50, α_C=0.30. Selected pair q70/q99 (H=28, M=119, U=831, R_pos=0.191, B=0.148, F_soft=420.4, Score=−0.318). Across the 14 sensitivity variants the level percentile q99 is selected in 14 of 14; the wave percentile is not determined by the score, spanning q50–q80 among pairs within 1 % of the optimum.',
         status: 'done',
       },
     ],
@@ -63,10 +65,12 @@ export const methodologySteps: MethodStep[] = [
     id: 'step-3',
     label: 'STEP 3 — Hazard Characterization',
     description:
-      'The central analysis block. Generates independent storm catalogs for Hₛ and SSH_total '
-      + 'at each coastal grid point (q90/q90 from Step 2e), then runs the full hazard '
+      'The central analysis block. Generates independent storm catalogs for Hₛ and sea level '
+      + 'at each coastal grid point, then runs the full hazard '
       + 'characterization suite: compound detection, duration/persistence, seasonality, '
-      + 'Mann–Kendall trend analysis, POT–GPD extreme value analysis, and Hs–SSH dependence (τ, ρ, χ, χ̄).',
+      + 'Mann–Kendall trend analysis, POT–GPD extreme value analysis, and Hs–SSH dependence (τ, ρ, χ, χ̄). '
+      + 'Step 3.2 (compound detection) has been regenerated on the q70/q99 pair with the HAT-gated '
+      + 'detector; Steps 3.1 and 3.3–3.8 still read the superseded q90/q90 SSH_total catalogues.',
     status: 'done',
     stepNumber: 3,
     isCurrent: false,
@@ -193,24 +197,30 @@ components are combined by geometric mean, which is conjunctive — risk require
 people exposed to it, and a susceptibility.
 
 The framework separates two distinct stages. In the calibration stage (Step 2), candidate
-Hₛ and SSH_total thresholds are selected by matching joint exceedances to reported coastal
+Hₛ and sea-level thresholds are selected by matching joint exceedances to reported coastal
 disasters within an asymmetric causal/antecedent window [D-2, D-1, D, D+1 00Z] around each
 event date — a matching tolerance that accounts for antecedent forcing and the 00:00 UTC daily
 snapshot convention, not a property of the compound events themselves. This window is used only
 to relate model exceedances to disaster records during threshold selection. The thresholds
-(Hₛ=q90, SSH_total=q90) are empirically established by Step 2e (PU Composite Calibration),
+(Hₛ=q70, tide-free zos=q99) are empirically established by Step 2e (PU Composite Calibration),
 which applies a positive-unlabeled framework against a combined positive-event set (147 events,
 27 municipalities) to address systematic under-reporting in the Civil Defense disaster database.
 
 In the detection stage (Step 3), the calibrated thresholds are applied to the full metocean
-record (1993–2025). Hₛ and SSH_total (= GLORYS12 SSH + FES2022 astronomical tide, daily maximum)
-are catalogued as independent storm episodes at each grid point, and a compound event is defined
-as an Hₛ episode and an SSH_total episode that overlap by at least one calendar day at the same
-grid point (grouped by union-find). The overlap rule — not the calibration matching window —
-governs the compound catalog. Reported coastal disaster records supported threshold selection
-and calibration; they are not a separate downstream validation product. The CSI grid scan
-(Step 2d) served as a diagnostic exploration and confirmed that classical verification metrics
-are not suitable under database incompleteness (FAR=0.984). This approach follows Zscheischler
+record (1993–2025). Hₛ and tide-free sea level (GLORYS12 zos at 00:00 UTC) are catalogued as
+independent storm episodes at each grid point, and a compound event is defined as an Hₛ episode
+and a zos episode that overlap by at least one calendar day at the same grid point (grouped by
+union-find), subject to a level gate: the still-water level, SWL = (zos − local mean of zos) +
+daily-maximum FES2022 tide, must reach the local Highest Astronomical Tide on at least one day
+of the overlap. Audit AUD-01 established why the threshold cannot be applied to SSH_total
+directly — a percentile of zos + tide is dominated by tidal phase, so it selects on the lunar
+cycle rather than on storm forcing. HAT serves as both the gate and the datum from which
+severity is measured, so that the excess is interpretable as distance above the condition that
+defines an event. The overlap rule — not the calibration matching window — governs the compound
+catalog. Reported coastal disaster records supported threshold selection and calibration; they
+are not a separate downstream validation product. The CSI grid scan (Step 2d) served as a
+diagnostic exploration and confirmed that classical verification metrics are not suitable under
+database incompleteness (FAR=0.984). This approach follows Zscheischler
 et al. (2020) and Bekker and Davis (2020), consistent with the physical understanding that wave
 generation and surge propagation are driven by the same atmospheric systems at the regional scale.
 

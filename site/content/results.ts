@@ -9,7 +9,7 @@ export const resultCards: ResultCard[] = [
     description:
       'Umbrella step that empirically establishes the compound event detection framework. All five sub-steps completed: (2a) Exploratory Data Analysis validates the pipeline and municipality–grid associations; (2b) Preliminary Compound Analysis inspects q90 exceedances for all 91 events; (2c) Tidal Sensitivity adds FES2022 tide to form SSH_total; (2d) CSI Grid Scan (diagnostic) identifies optimal pair q90/q90 using the 91-event legacy database; (2e) PU Composite Calibration (final), recalibrated on 2026-07-30 to score the production detector over an extended 11×11 grid, selects q70/q99. The earlier agreement of 2d and 2e on q90/q90 is now understood as an artefact of the grid stopping at q90: extending it showed the old composite score had no interior optimum.',
     rationale:
-      'Before detecting compound events at scale, thresholds must be calibrated against observed coastal disasters. This two-stage approach (Step 2d diagnostic + Step 2e final) distinguishes between methodological choices and provides independent confirmation of the q90/q90 threshold pair, accounting for systematic under-reporting in the Civil Defense database.',
+      'Before detecting compound events at scale, thresholds must be calibrated against observed coastal disasters. This two-stage approach (Step 2d diagnostic + Step 2e final) separates the exploratory verification framework from the final calibration, which uses a positive-unlabeled score to account for systematic under-reporting in the Civil Defense database. The calibrated pair is q70/q99, set by Step 2e on 2026-07-30.',
     outputs: [
       '2a: Spatial maximum maps, time series, municipality–grid association, per-sector boxplots',
       '2a: Seasonal cycles, compound quick-look at empirical q90, marginal distributions',
@@ -20,7 +20,7 @@ export const resultCards: ResultCard[] = [
       '2d: CSI, POD, FAR for all 81 threshold pairs (q50–q90 × q50–q90)',
       '2d: Optimal pair q90/q90 (H=21, M=70, F=1261, CSI=0.0155, diagnostic)',
       '2d: Per-municipality hit/miss/FA heatmaps, capture lag distribution',
-      '2e: PU composite score (R_pos, burden, soft penalty) for 81 pairs using combined 147-event set',
+      '2e: PU composite score (R_pos, two-sided rate deviation, soft penalty) for 121 pairs using combined 147-event set',
       '2e (recalibrated 2026-07-30): selected pair q70/q99 (H=28 of 147, R_pos=0.191, B=0.148, F_soft=420.4, Score=-0.318) — same recall as q90/q90 with 62% fewer unmatched detections',
       '2e: Sensitivity analyses (weights, alpha, expected rate, gap_days) — the level percentile q99 is selected in 14 of 14 variants; the wave percentile is the poorly determined axis, spanning q50–q80 within 1% of the best score',
       '2e: Confidence weight distribution and unmatched episode audit',

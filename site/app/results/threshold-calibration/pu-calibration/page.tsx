@@ -42,7 +42,7 @@ export default function PuCalibrationPage() {
               <StatusBadge status="done" />
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Step 2e · Final calibration</span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">Combined: expanded (56) + legacy (91) = 147 events · 27 municipalities · 1998–2020</span>
-              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">PU composite score · 81 pairs · B_target = 12 × 27 = 324 ep/yr</span>
+              <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">PU composite score · 121 pairs · expected rate 2.0 ep/municipality/yr</span>
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
@@ -62,11 +62,11 @@ export default function PuCalibrationPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               {[
                 { label: 'Positive-event set',  value: 'Combined: expanded (56 events, 14 cities) + legacy (91 events, 22 cities) = 147 unique (municipality, date) pairs, 27 municipalities' },
-                { label: 'Threshold grid',     value: 'q50–q90 × q50–q90, every 5 pct points — 81 pairs (same sweep as Step 2d)' },
+                { label: 'Threshold grid',     value: '11 × 11 levels (q50…q90 every 5 pct points, plus q95 and q99) — 121 pairs' },
                 { label: 'Match window',       value: '[D-2, D-1, D, D+1 00Z] — inherited from Step 2d' },
-                { label: 'Score formula',      value: 'Score = w₁·R_pos − w₂·B − w₃·F_soft/P  (w₁=0.60, w₂=0.20, w₃=0.20)' },
-                { label: 'B_target',           value: '12 ep/yr/muni × 27 municipalities (union) = 324 ep/yr effective domain budget' },
-                { label: 'Confidence weights', value: 'qᵢ = α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ  (α_E=0.60, α_I=0.30, α_C=0.10)' },
+                { label: 'Score formula',      value: 'Score = w₁·R_pos − w₂·B − w₃·F_soft/P  (w₁=0.30, w₂=0.60, w₃=0.10)' },
+                { label: 'Expected rate',      value: '2.0 detections/municipality/yr — two-sided anchor, B = min(1, |log₁₀(rate / 2.0)|)' },
+                { label: 'Confidence weights', value: 'qᵢ = α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ  (α_E=0.20, α_I=0.50, α_C=0.30)' },
               ].map((m) => (
                 <div key={m.label} className="rounded-lg border border-gray-300/60 bg-gray-50 px-3 py-2">
                   <div className="text-xs text-gray-500">{m.label}</div>
@@ -143,15 +143,15 @@ export default function PuCalibrationPage() {
                   formula: 'H / P',
                   range: '0–1 (higher = better)',
                   color: 'border-blue-200 bg-blue-50',
-                  text: 'Fraction of the combined positive-event set (147 events: expanded 56 + legacy 91) captured at each threshold pair. P = evaluable events with valid grid associations (~143; 4 expanded cities lack grid points). Analogous to POD. Weighted with w₁=0.60 as the primary objective.',
+                  text: 'Fraction of the combined positive-event set (147 events: expanded 56 + legacy 91) captured at each threshold pair. P = evaluable events with valid grid associations (~143; 4 expanded cities lack grid points). Analogous to POD. Weighted with w₁=0.30.',
                 },
                 {
                   name: 'B',
-                  full: 'Normalised Annual Burden',
-                  formula: 'min(1, (H+U) / (Y · B_target))',
+                  full: 'Two-Sided Rate Deviation',
+                  formula: 'min(1, |log₁₀(rate / 2.0)|)',
                   range: '0–1 (lower = better)',
                   color: 'border-amber-100 bg-amber-50',
-                  text: 'Ratio of total annual detections (hits + unmatched) to the operational budget (B_target_effective = 12 × 27 = 324 ep/yr, using the full union of 27 municipalities). Penalises thresholds that fire too frequently for operational use. B=1 when the detector saturates the budget; B=0 is unachievable.',
+                  text: 'Distance, in orders of magnitude, between the realised detection rate — (H+U) / (Y · 27 municipalities) — and an expected rate of 2.0 events/municipality/year. Two-sided: it penalises detecting far too few events as much as far too many. The previous one-sided form, min(1, rate/target), was minimised at zero detections and therefore pushed in the same direction as the soft penalty; that is what left the score with no interior optimum. Weighted with w₂=0.60, the largest weight, because the expected rate is the best-anchored quantity available.',
                 },
                 {
                   name: 'F_soft',
@@ -180,11 +180,17 @@ export default function PuCalibrationPage() {
                 Score(θ) = w₁ · R_pos(θ) − w₂ · B(θ) − w₃ · F_soft(θ) / P
               </code>
               <p className="text-xs text-blue-700 leading-relaxed">
-                Higher is better. The score is typically negative when the burden and soft penalty terms
-                dominate recall. With B_target_effective = 324 ep/yr (12 × 27 municipalities), the burden
-                budget is larger than the previous 168 ep/yr, which reduces B and makes the score less
-                negative. The optimisation selects the threshold pair with the <em>least negative</em> score.
-                Normalising F_soft by P places it on the same scale as R_pos for interpretable weighting.
+                Higher is better; the optimisation selects the pair with the <em>least negative</em> score.
+                The score is negative because the soft penalty term dominates recall. Normalising F_soft by
+                P places it on the same scale as R_pos.
+                <br /><br />
+                <strong>Where the expected rate of 2.0 comes from.</strong> Leal et al. (2024) record 72
+                declared coastal disasters in Santa Catarina over 1998–2023, or 2.77 per year statewide.
+                The combined positive set gives 147 events over 22.4 years and 27 municipalities, a rate of
+                0.243 per municipality per year. Both are <em>lower bounds</em>: they count what was
+                reported, and under-reporting is the premise of this whole step. The anchor of 2.0 assumes
+                roughly eightfold under-reporting. That assumption is declared, not measured, and it is
+                swept from 0.5 to 6.0 in the sensitivity analysis below.
               </p>
             </div>
           </div>
@@ -205,23 +211,23 @@ export default function PuCalibrationPage() {
                 {
                   symbol: 'Eᵢ',
                   label: 'External evidence',
-                  weight: 'α_E = 0.60',
+                  weight: 'α_E = 0.20',
                   color: 'border-emerald-200 bg-emerald-50',
-                  desc: 'Binary indicator: does the legacy database (Leal et al. 2024) contain any reported event within a 5-day window of this episode at the same municipality? If yes, Eᵢ=1 (corroborated by an independent source). Weighted most heavily because independent documentary evidence is the strongest signal.',
+                  desc: 'Binary indicator: does the legacy database (Leal et al. 2024) contain any reported event within a 5-day window of this episode at the same municipality? If yes, Eᵢ=1. Its weight was cut from 0.60 to 0.20 because Eᵢ=1 in only 154 of 436 352 scanned episodes (0.04 %) — and in none of the 831 unmatched episodes at the selected pair. At α_E=0.60 the term capped qᵢ at 0.40 by construction for essentially every episode, which measured how sparse the register is, not how implausible a detection is.',
                 },
                 {
                   symbol: 'Iᵢ',
                   label: 'Physical intensity',
-                  weight: 'α_I = 0.30',
+                  weight: 'α_I = 0.50',
                   color: 'border-blue-200 bg-blue-50',
-                  desc: 'Continuous indicator: the mean of the normalised Hₛ and SSH_total exceedances within the episode relative to the detection threshold. Episodes where both hazard variables far exceed their thresholds receive high Iᵢ. Captures genuine extreme conditions that are more likely to have caused real impacts.',
+                  desc: 'Continuous indicator: the mean of the normalised Hₛ and tide-free zos exceedances within the episode relative to the detection threshold. Episodes where both hazard variables far exceed their thresholds receive high Iᵢ. Now the dominant term: it is measured for every episode, whereas Eᵢ is measured for almost none.',
                 },
                 {
                   symbol: 'Cᵢ',
                   label: 'Context coherence',
-                  weight: 'α_C = 0.10',
+                  weight: 'α_C = 0.30',
                   color: 'border-violet-200 bg-violet-50',
-                  desc: 'Composite indicator combining: (1) active season flag (Apr–Oct = 1); (2) spatial coherence (concurrent exceedance at neighbouring municipalities); (3) exposure flag (northern sector municipalities with higher exposure and partial model coverage). Rewards contextually plausible episodes.',
+                  desc: 'Composite indicator combining: (1) active season flag (Apr–Oct = 1); (2) spatial coherence (concurrent exceedance at neighbouring municipalities); (3) exposure flag (northern sector municipalities with higher exposure and partial model coverage). Raised from 0.10 to 0.30: seasonality and the spatial footprint of coastal disasters are themselves documented in Leal et al. (2024), so context is corroborated knowledge rather than a weak prior.',
                 },
               ].map((c) => (
                 <div key={c.symbol} className={`rounded-xl border p-5 ${c.color}`}>
@@ -241,10 +247,11 @@ export default function PuCalibrationPage() {
                 qᵢ = clip( α_E · Eᵢ + α_I · Iᵢ + α_C · Cᵢ ,  0,  1 )
               </code>
               <p className="text-xs text-gray-600 leading-relaxed">
-                The three components are linearly weighted and clipped to [0, 1]. An episode corroborated
-                by the legacy database (Eᵢ=1) already reaches qᵢ ≥ 0.60, regardless of intensity or
-                context. Episodes with no external corroboration, weak forcing, and out-of-season timing
-                receive qᵢ close to 0 and contribute their full (1 − qᵢ) ≈ 1 to the soft penalty.
+                The three components are linearly weighted and clipped to [0, 1]. Under the rebalanced
+                alphas an episode corroborated by the legacy database (Eᵢ=1) starts at qᵢ ≥ 0.20 and must
+                also be intense or contextually coherent to score highly — external evidence is now a
+                bonus, not a ceiling. At the selected pair the 831 unmatched episodes have a mean qᵢ of
+                0.494 and a maximum penalty (1 − qᵢ) of 0.858, so no episode is dismissed outright.
               </p>
             </div>
           </div>
@@ -273,14 +280,14 @@ export default function PuCalibrationPage() {
                 {
                   step: '3',
                   title: 'Layer 1 — event hit/miss scan',
-                  text: 'For each of the 81 threshold pairs and each of the combined 147 events (143 evaluable with valid grid associations): check whether Hₛ and SSH_total simultaneously exceed their local percentile thresholds at any timestep within the causal window [D-2, D+1 00Z]. Record H (hit) or M (miss). Events at Biguaçu, Imbituba, Joinville, Laguna (4 expanded-only cities without grid points) are structural misses excluded from the hit/miss scan.',
+                  text: 'For each of the 121 threshold pairs and each of the combined 147 events (143 evaluable with valid grid associations): run the production detector — Hₛ and tide-free zos simultaneously above their local percentile thresholds, with the episode additionally gated on SWL reaching the local HAT — at any timestep within the causal window [D-2, D+1 00Z]. Record H (hit) or M (miss). Events at Biguaçu, Imbituba, Joinville, Laguna (4 expanded-only cities without grid points) are structural misses excluded from the hit/miss scan.',
                   tag: 'Layer 1',
                   tagColor: 'text-orange-700 bg-orange-50 border-orange-200',
                 },
                 {
                   step: '4',
                   title: 'Layer 2 — unmatched episode collection with full metadata',
-                  text: 'Unlike Step 2d which only counts false alarms, Layer 2 collects full metadata for every unmatched compound episode: peak Hₛ, peak SSH_total, episode dates, municipality, and grid point. This metadata is required to compute the qᵢ confidence weights in the next step. Episodes matched to any event window are discarded here.',
+                  text: 'Unlike Step 2d which only counts false alarms, Layer 2 collects full metadata for every unmatched compound episode: peak Hₛ, peak tide-free zos, peak SWL, the local HAT, episode dates, municipality, and grid point. This metadata is required to compute the qᵢ confidence weights in the next step. Episodes matched to any event window are discarded here.',
                   tag: 'Layer 2',
                   tagColor: 'text-red-700 bg-red-50 border-red-200',
                 },
@@ -293,8 +300,8 @@ export default function PuCalibrationPage() {
                 },
                 {
                   step: '6',
-                  title: 'Compute PU composite scores for all 81 pairs',
-                  text: 'For each threshold pair: aggregate R_pos, B, and F_soft = Σ(1 − qᵢ) from the episode audit table; compute Score = w₁·R_pos − w₂·B − w₃·F_soft/P. Scores are saved in tab_TC5_pu_metrics_full.csv.',
+                  title: 'Compute PU composite scores for all 121 pairs',
+                  text: 'For each threshold pair: aggregate R_pos, B, and F_soft = Σ(1 − qᵢ) from the episode audit table; compute Score = w₁·R_pos − w₂·B − w₃·F_soft/P. Scores are saved in tab_TC5_pu_metrics_full.csv. A parallel census (tab_TC5_detection_census.csv) records how many compound episodes each pair actually accepts, flagging as degenerate any pair that accepts fewer episodes across the whole calibration domain than there are positive events to recall. 11 of the 121 pairs are degenerate; the selected pair is not.',
                   tag: 'Scoring',
                   tagColor: 'text-blue-700 bg-blue-50 border-blue-200',
                 },
@@ -308,7 +315,7 @@ export default function PuCalibrationPage() {
                 {
                   step: '8',
                   title: 'Sensitivity analysis — weights, alphas, B_target',
-                  text: 'Three sensitivity experiments test robustness: (i) alternative weight triplets (w₁, w₂, w₃); (ii) alternative confidence weight triplets (α_E, α_I, α_C); (iii) alternative per-municipality B_target values (6, 12, 18, 24 ep/yr/muni). Each experiment re-runs the composite score under the alternative parameters and reports the optimal pair. Results confirm stability across all tested configurations.',
+                  text: 'Four sensitivity experiments test robustness: (i) alternative weight triplets (w₁, w₂, w₃); (ii) alternative confidence weight triplets (α_E, α_I, α_C); (iii) alternative expected rates (0.5, 1.0, 2.0, 3.0, 6.0 ep/municipality/yr); (iv) episode gap tolerance (0–3 days). Each experiment re-runs the composite score and reports its optimal pair. The level percentile q99 is selected in 14 of 14 variants; the wave percentile is not stable, which is reported rather than smoothed over.',
                   tag: 'Sensitivity',
                   tagColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
                 },
@@ -343,14 +350,14 @@ export default function PuCalibrationPage() {
               <div className="rounded-xl border-2 border-emerald-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">PU-optimal threshold pair</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div><span className="text-gray-500">Hₛ threshold</span><br /><span className="font-bold text-2xl text-gray-900">q90</span></div>
-                  <div><span className="text-gray-500">SSH_total threshold</span><br /><span className="font-bold text-2xl text-gray-900">q90</span></div>
-                  <div><span className="text-gray-500">Positive set P</span><br /><span className="font-bold text-gray-800">147 events (56 expanded + 91 legacy)</span></div>
-                  <div><span className="text-gray-500">Evaluable (grid-mapped)</span><br /><span className="font-bold text-gray-800">~143 (4 expanded cities unmapped)</span></div>
-                  <div><span className="text-gray-500">B_target_effective</span><br /><span className="font-bold text-gray-800">12 × 27 = 324 ep/yr</span></div>
-                  <div><span className="text-gray-500">N_union_cities</span><br /><span className="font-bold text-gray-800">27 municipalities</span></div>
-                  <div><span className="text-gray-500">Result</span><br /><span className="font-bold text-gray-800">q70/q99</span></div>
-                  <div><span className="text-gray-500">Near-matches</span><br /><span className="font-bold text-gray-800">2 (±3 d, Florianópolis)</span></div>
+                  <div><span className="text-gray-500">Hₛ threshold</span><br /><span className="font-bold text-2xl text-gray-900">q70</span></div>
+                  <div><span className="text-gray-500">Tide-free zos threshold</span><br /><span className="font-bold text-2xl text-gray-900">q99</span></div>
+                  <div><span className="text-gray-500">Recall R_pos</span><br /><span className="font-bold text-gray-800">0.1905 — H=28 / P=147</span></div>
+                  <div><span className="text-gray-500">Unmatched episodes U</span><br /><span className="font-bold text-gray-800">831</span></div>
+                  <div><span className="text-gray-500">Rate deviation B</span><br /><span className="font-bold text-gray-800">0.1482 (1.42 vs 2.0 ep/muni/yr)</span></div>
+                  <div><span className="text-gray-500">Soft penalty F_soft</span><br /><span className="font-bold text-gray-800">420.42</span></div>
+                  <div><span className="text-gray-500">Score</span><br /><span className="font-bold text-gray-800">−0.3178 (best of 121)</span></div>
+                  <div><span className="text-gray-500">Accepted episodes</span><br /><span className="font-bold text-gray-800">484 over 12 points — not degenerate</span></div>
                 </div>
               </div>
 
@@ -446,11 +453,11 @@ export default function PuCalibrationPage() {
               {[
                 {
                   label: 'The calibrated pair is q70/q99, selected on 2026-07-30 over a 121-pair grid, scoring the production detector.',
-                  text: 'Step 2d (CSI, 91 legacy events) and Step 2e (PU composite, combined 147-event set: 56 expanded + 91 legacy, 27 municipalities) both select q90/q90. The result is robust to the events database used, the calibration objective, and all sensitivity parameters tested. B_target_effective = 12 × 27 = 324 ep/yr using the union of both database city sets.',
+                  text: 'The pair is selected by the PU composite over the combined 147-event set (56 expanded + 91 legacy, 27 municipalities), scoring the production detector — tide-free zos with an HAT gate — across all 121 pairs. It supersedes the q90/q90 pair reported before 2026-07-30, which had been obtained by scoring a detector built on SSH_total over a grid that stopped at q90. The level percentile is well determined (q99 in 14 of 14 sensitivity variants); the wave percentile is not (six pairs within 1 % of the optimum, spanning q50–q80).',
                 },
                 {
                   label: 'The threshold is defined locally, not domain-wide.',
-                  text: 'Thresholds are percentiles of the local climatological series at each municipality\'s nearest coastal grid point, computed from the validated period (approximately 1998–2020). The q90 label does not correspond to a single fixed Hₛ or SSH_total value — it means the top 10% of local conditions at each location.',
+                  text: 'Thresholds are percentiles of the local climatological series at each municipality\'s nearest coastal grid point, computed from the validated period (approximately 1998–2020). The labels do not correspond to fixed metres: q70 means the top 30 % of local wave conditions and q99 the top 1 % of local tide-free sea level, wherever that point is. Over the calibration domain the q70 Hₛ threshold has a median of 1.60 m, against 2.01 m at the superseded q90.',
                 },
                 {
                   label: 'The high unmatched count reflects under-reporting, not detector failure.',
@@ -458,7 +465,7 @@ export default function PuCalibrationPage() {
                 },
                 {
                   label: 'Step 3 receives: tab_TC5_optimal_pair_pu.csv → q70/q99.',
-                  text: 'The optimal threshold pair (hs_percentile=90, ssh_percentile=90) is passed to Step 3 (Storm Catalog Generation), where it defines the exceedance thresholds used to identify independent compound storm episodes in the full 1993–2025 series at all coastal grid points across the five SC coastal sectors.',
+                  text: 'The calibrated pair (thr_hs_pct=0.70, thr_zos_pct=0.99) is read by Step 3.2, where it defines the exceedance thresholds used to identify compound episodes over the full 1993–2025 series at all 808 coastal grid points of the national domain. The national catalogue built on it holds 16 768 events, with 208 of the 808 points recording none. Steps 3.1 and 3.3–3.8 still read the superseded q90/q90 catalogues and have not been regenerated.',
                 },
               ].map((item, i) => (
                 <div key={i} className="rounded-xl border border-gray-200 bg-white p-5">
