@@ -396,7 +396,11 @@ def _add_colorbar(
         cax=colorbar_axis,
         orientation="horizontal",
         boundaries=boundaries,
-        ticks=ticks,
+        ticks=(
+            [float((boundaries[0] + boundaries[1]) / 2), *boundaries[2:]]
+            if zero_is_gray
+            else ticks
+        ),
         spacing="uniform",
         drawedges=True,
     )
@@ -406,11 +410,12 @@ def _add_colorbar(
     if zero_is_gray:
         labels = [label.get_text() for label in colorbar.ax.get_xticklabels()]
         if labels:
-            labels[0] = "No accepted event"
+            labels[0] = "No accepted\nevent"
             colorbar.ax.set_xticklabels(labels)
+            colorbar.ax.get_xticklabels()[0].set_fontsize(7)
     tick_labels = colorbar.ax.get_xticklabels()
     if tick_labels:
-        tick_labels[0].set_horizontalalignment("left")
+        tick_labels[0].set_horizontalalignment("center")
         tick_labels[-1].set_horizontalalignment("right")
     colorbar.outline.set_linewidth(0.7)
 

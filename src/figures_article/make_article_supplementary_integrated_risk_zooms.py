@@ -199,6 +199,7 @@ def _setup_axis(
     extent: tuple[float, float, float, float],
     title: str,
     panel_label: str,
+    draw_left_labels: bool = True,
 ) -> None:
     crs = ccrs.PlateCarree()
     land, _, _ = _natural_earth_context()
@@ -238,6 +239,7 @@ def _setup_axis(
     grid.ylocator = FixedLocator(latitudes)
     grid.top_labels = False
     grid.right_labels = False
+    grid.left_labels = draw_left_labels
     grid.xlabel_style = {"size": 9, "color": "#374151"}
     grid.ylabel_style = {"size": 9, "color": "#374151"}
 
