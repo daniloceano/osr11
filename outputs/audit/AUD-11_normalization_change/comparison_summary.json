@@ -1,0 +1,159 @@
+{
+  "municipalities_delivered": 282,
+  "municipalities_with_risk": 280,
+  "spearman_risk_before_after": 0.9466225742388084,
+  "median_absolute_rank_change": 20.0,
+  "maximum_absolute_rank_change": 83,
+  "top10_overlap": 5,
+  "top10_before": [
+    {
+      "municipality_code": "4318507",
+      "municipality_name": "São José do Norte",
+      "state": "RS",
+      "Risk_Hazard_before": 1.0
+    },
+    {
+      "municipality_code": "3302502",
+      "municipality_name": "Magé",
+      "state": "RJ",
+      "Risk_Hazard_before": 0.944752
+    },
+    {
+      "municipality_code": "4321352",
+      "municipality_name": "Tavares",
+      "state": "RS",
+      "Risk_Hazard_before": 0.938392
+    },
+    {
+      "municipality_code": "3302700",
+      "municipality_name": "Maricá",
+      "state": "RJ",
+      "Risk_Hazard_before": 0.934247
+    },
+    {
+      "municipality_code": "4312500",
+      "municipality_name": "Mostardas",
+      "state": "RS",
+      "Risk_Hazard_before": 0.916327
+    },
+    {
+      "municipality_code": "3301702",
+      "municipality_name": "Duque de Caxias",
+      "state": "RJ",
+      "Risk_Hazard_before": 0.911194
+    },
+    {
+      "municipality_code": "3305505",
+      "municipality_name": "Saquarema",
+      "state": "RJ",
+      "Risk_Hazard_before": 0.906462
+    },
+    {
+      "municipality_code": "3550704",
+      "municipality_name": "São Sebastião",
+      "state": "SP",
+      "Risk_Hazard_before": 0.895275
+    },
+    {
+      "municipality_code": "3303807",
+      "municipality_name": "Paraty",
+      "state": "RJ",
+      "Risk_Hazard_before": 0.888254
+    },
+    {
+      "municipality_code": "3506359",
+      "municipality_name": "Bertioga",
+      "state": "SP",
+      "Risk_Hazard_before": 0.871935
+    }
+  ],
+  "top10_after": [
+    {
+      "municipality_code": "4318507",
+      "municipality_name": "São José do Norte",
+      "state": "RS",
+      "Risk_Hazard_after": 0.566342
+    },
+    {
+      "municipality_code": "4109500",
+      "municipality_name": "Guaraqueçaba",
+      "state": "PR",
+      "Risk_Hazard_after": 0.505445
+    },
+    {
+      "municipality_code": "3302502",
+      "municipality_name": "Magé",
+      "state": "RJ",
+      "Risk_Hazard_after": 0.468027
+    },
+    {
+      "municipality_code": "3302601",
+      "municipality_name": "Mangaratiba",
+      "state": "RJ",
+      "Risk_Hazard_after": 0.444282
+    },
+    {
+      "municipality_code": "3303807",
+      "municipality_name": "Paraty",
+      "state": "RJ",
+      "Risk_Hazard_after": 0.440631
+    },
+    {
+      "municipality_code": "3518701",
+      "municipality_name": "Guarujá",
+      "state": "SP",
+      "Risk_Hazard_after": 0.438005
+    },
+    {
+      "municipality_code": "4202073",
+      "municipality_name": "Balneário Gaivota",
+      "state": "SC",
+      "Risk_Hazard_after": 0.434647
+    },
+    {
+      "municipality_code": "3550704",
+      "municipality_name": "São Sebastião",
+      "state": "SP",
+      "Risk_Hazard_after": 0.432443
+    },
+    {
+      "municipality_code": "3305505",
+      "municipality_name": "Saquarema",
+      "state": "RJ",
+      "Risk_Hazard_after": 0.430434
+    },
+    {
+      "municipality_code": "4212254",
+      "municipality_name": "Passo de Torres",
+      "state": "SC",
+      "Risk_Hazard_after": 0.429505
+    }
+  ],
+  "risk_range_before": [
+    0.0,
+    1.0
+  ],
+  "risk_range_after": [
+    0.0,
+    0.566342
+  ],
+  "exact_zero_count_after": 84,
+  "zero_cause_counts": {
+    "hazard_zero_no_accepted_event_1993_2025": 82,
+    "hazard_zero_and_exposure_below_absolute_goalpost": 1,
+    "exposure_zero_below_absolute_goalpost": 1
+  },
+  "coverage_status_counts": {
+    "associated_with_hazard": 197,
+    "associated_no_accepted_event_1993_2025": 83,
+    "no_hazard_association": 2
+  },
+  "exposure_formula_comparison": {
+    "pearson": 0.9951816124876338,
+    "spearman": 0.9905478971559414,
+    "top10_overlap": 8,
+    "maximum_rank_displacement": 43,
+    "old_formula": "0.5*pop_1km+0.3*pop_5km+0.2*pop_10km (comparison only)",
+    "new_formula": "0.4*pop_1km+0.3*pop_2km+0.2*pop_5km+0.1*pop_10km"
+  }
+}

@@ -9,7 +9,7 @@
 | **Afeta** | código, interpretação, saídas, documentação |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Sim, salvo qualificação explícita — o índice não pode ser lido como risco absoluto e isso não está declarado |
-| **Status** | `aberto` |
+| **Status** | `em-investigacao` |
 | **Desfecho** | — |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-16 |
@@ -274,3 +274,61 @@ metadados e legendas.
 
 *Nenhuma investigação registrada além do diagnóstico de linha de base de
 2026-07-29.*
+
+
+### 2026-07-31 — DECISÃO: remover a cadeia de Min–Max e o piso de 0,01
+
+> Esta é a entrada canônica da decisão. AUD-09 (escala do SVI), AUD-15 (piso) e
+> AUD-08 (banda de exposição) a referenciam em vez de duplicá-la.
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31, sobre a simulação registrada abaixo |
+| **Decisão** | **Substituir toda normalização ancorada na amostra por escalas de âncora fixa, e remover o piso de 0,01.** O objeto de AUD-11 deixa de existir: nenhum valor publicado passará a depender de qual município ou qual ponto está no conjunto |
+| **Pergunta que orientou** | Não era "remover a normalização" — uma média geométrica exige fatores não negativos e comparáveis, então alguma escala é obrigatória. Era **remover a ancoragem amostral**: o fato de o valor de um município depender do mínimo e do máximo observados em outros |
+
+#### O que muda, camada por camada
+
+| Camada | Hoje | Passa a ser | Por quê |
+|---|---|---|---|
+| **Exposição** | `Exposure_absolute` com balizas fixas 10²–10⁶ hab sobre `pop_10km`; `Exposure_relative` = `pop_10km`/`pop_municipality` | **fórmula mantida**, mas aplicada à **população efetiva** `pop_ef = w₁·pop_1km + w₅·pop_5km + w₁₀·pop_10km` | Já estava livre de ancoragem amostral; o que mudou foi o **suporte espacial**, decidido em AUD-08 §14 em 2026-07-31: média ponderada das bandas com decaimento por distância. Nenhum município fica com exposição zero |
+| **Perigo — frequência** | Min–Max sobre os 808 pontos | `min(compound_count_total / 99, 1)` | 99 eventos em 33 anos = **3 eventos/ano**, baliza fixa e fisicamente legível. Zero natural preservado (208 pontos sem evento). **Nenhum ponto satura**: o máximo observado é 98 |
+| **Perigo — severidade** | Min–Max sobre os 808 pontos | `min(mean_integrated_severity / 1.0, 1)` | Já é adimensional e não negativa. A baliza 1,0 equivale a **um dia de critério pleno no excesso diário máximo do domínio** — unidade interpretável. Máximo observado 0,948, **ninguém satura**. Na prática a componente passa a ser usada como está |
+| **Perigo — composição** | Min–Max da média | **média simples, sem segundo Min–Max** | O segundo Min–Max era pura reancoragem |
+| **Vulnerabilidade (SVI)** | Min–Max 0–100 do PC1 | **Φ(PC1 / sd(PC1))**, CDF normal | PC1 **não** tem escala natural: média 0, sd 2,247, faixa −5,06 a +5,75, **48 % negativo**. Não pode entrar cru numa média geométrica. A CDF normal é limitada em (0,1), **não produz âncora exata** (faixa observada 0,0122–0,9948) e é ancorada em média/desvio, não em dois municípios individuais. É **monótona**, logo ρ = **1,0000** com o SVI atual: a ordenação não muda, só a escala deixa de depender de Balneário Camboriú e Chaves |
+| **Piso `CLIP_FLOOR = 0,01`** | aplicado aos três fatores | **removido** | Com zero natural no perigo, a média geométrica passa a ser genuinamente conjuntiva: perigo nulo ⇒ risco nulo |
+| **Min–Max final do risco** | `norm_municipal(Risk_Hazard_raw)` | **removido** | Reancoraria tudo de novo. O risco passa a ocupar **0 – 0,59** em vez de 0 – 1 |
+
+#### Consequências medidas
+
+Simulação com exposição mantida em 10 km, para isolar o efeito da normalização:
+
+| | valor |
+|---|---|
+| ρ de Spearman com o ranking publicado | **0,954** |
+| Deslocamento mediano de posto | 21 posições (máximo 82) |
+| Top-10 preservado | 8 de 10 |
+| Municípios com risco **exatamente zero** | **84** (83 por perigo nulo + Santa Rita/MA por exposição) |
+| Faixa do risco | 0,000 – 0,586 |
+
+**Não é mudança cosmética.** Exige regenerar todos os produtos municipais e as figuras do artigo.
+
+#### O que a decisão resolve e o que não resolve
+
+Resolve: nenhum município recebe 0 ou 100 exatos por artefato de escala; remover
+um município do conjunto deixa de mover os valores dos demais; a média
+geométrica passa a ser de fato conjuntiva.
+
+**Não resolve**, e precisa ficar declarado no manuscrito: o índice continua
+**relativo a balizas escolhidas**, não uma medida absoluta de dano esperado. A
+baliza de 3 eventos/ano é uma escolha justificada por não saturar nenhum ponto
+deste domínio — não é uma constante física. Trocou-se uma âncora amostral por
+uma âncora **explícita e estável**, o que é o ganho; não se obteve uma escala
+absoluta.
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Scripts executados** | Simulação em sessão, não versionada. Deve ser convertida em implementação — ver o prompt de implementação entregue ao pesquisador em 2026-07-31 |
+| **Alterações implementadas** | **Nenhuma no código.** Por instrução do pesquisador, esta sessão apenas documenta; a implementação será feita em sessão própria |
+| **Incerteza remanescente** | (1) A baliza de frequência (99 eventos / 33 anos) não foi comparada com nenhuma referência externa da literatura — foi escolhida por não saturar. (2) O efeito sobre a definição de hotspot (AUD-16) não foi avaliado: com 84 municípios em zero exato, qualquer corte por percentil muda de significado. (3) Os 83 municípios de perigo nulo passam a **empatar** em zero, e a ordenação interna deles desaparece |
+| **Próxima decisão necessária** | Nenhuma de estrutura. A banda de distância foi decidida em AUD-08 §14 (2026-07-31): média ponderada de 1/5/10 km com pesos decrescentes. Falta apenas **confirmar os pesos exatos** — recomendação: pesos de anel 1,00 / 0,50 / 0,20, equivalentes a w = 0,50 / 0,30 / 0,20 |

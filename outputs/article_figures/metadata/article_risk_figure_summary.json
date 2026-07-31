@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31T02:19:09.026960+00:00",
+  "generated_at": "2026-07-31T17:00:19.895253+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -16,14 +16,14 @@
     "field_aliases": {
       "layers": {
         "SVI_Coast_2022": "SVI_Coast_",
-        "Hazard_Frequency": "transferred:norm_native(compound_count_total)",
-        "Hazard_Severity": "transferred:norm_native(mean_integrated_severity)",
+        "Hazard_Frequency": "transferred:min(compound_count_total/99,1)",
+        "Hazard_Severity": "transferred:min(fillna(mean_integrated_severity,0)/1,1)",
         "Hazard_Index_raw": "transferred:mean(Hazard_Frequency,Hazard_Severity)",
-        "Hazard_Index": "transferred:norm_native(Hazard_Index_raw)",
-        "Hazard_Index_mun": "derived:norm_municipal(Hazard_Index)",
-        "Exposure_Index": "derived:geomean(goalposts(log10(pop_10km),1e2,1e6),pop_10km/pop_municipality)",
-        "Risk_Hazard_raw": "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)",
-        "Risk_Hazard": "derived:norm_municipal(Risk_Hazard_raw)"
+        "Hazard_Index": "transferred:Hazard_Index",
+        "Hazard_Index_mun": "transferred:Hazard_Index",
+        "Exposure_Index": "derived:geomean(goalposts(log10(pop_eff),1e2,1e6),pop_eff/pop_municipality)",
+        "Risk_Hazard_raw": "derived:(Hazard_Index_mun*Exposure_Index*Vulnerability_CDF_PC1)^(1/3)",
+        "Risk_Hazard": "derived:Risk_Hazard_raw (no final normalization)"
       },
       "support": {
         "municipality_code": "CD_MUN",
@@ -60,77 +60,77 @@
       "Hazard_Frequency": {
         "count": 280,
         "min": 0.0,
-        "max": 0.979592,
-        "mean": 0.204883,
-        "median": 0.010204
+        "max": 0.969697,
+        "mean": 0.202814,
+        "median": 0.010101
       },
       "Hazard_Severity": {
         "count": 280,
         "min": 0.0,
-        "max": 0.756195,
-        "mean": 0.209029,
-        "median": 0.124802
+        "max": 0.7171,
+        "mean": 0.198223,
+        "median": 0.11835
       },
       "Hazard_Index_raw": {
         "count": 280,
         "min": 0.0,
-        "max": 0.820704,
-        "mean": 0.206956,
-        "median": 0.071879
+        "max": 0.798648,
+        "mean": 0.200518,
+        "median": 0.068376
       },
       "Hazard_Index": {
         "count": 280,
         "min": 0.0,
-        "max": 0.837802,
-        "mean": 0.211268,
-        "median": 0.073377
+        "max": 0.798648,
+        "mean": 0.200518,
+        "median": 0.068376
       },
       "Hazard_Index_mun": {
         "count": 280,
         "min": 0.0,
-        "max": 1.0,
-        "mean": 0.252169,
-        "median": 0.087583
+        "max": 0.798648,
+        "mean": 0.200518,
+        "median": 0.068376
       },
       "Exposure_Index": {
         "count": 282,
-        "min": 0.01,
-        "max": 1.0,
-        "mean": 0.670599,
-        "median": 0.709466
+        "min": 0.0,
+        "max": 0.834946,
+        "mean": 0.43349,
+        "median": 0.448696
       },
       "Risk_Hazard_raw": {
         "count": 280,
-        "min": 0.041835,
-        "max": 0.657828,
-        "mean": 0.31236,
-        "median": 0.297536
+        "min": 0.0,
+        "max": 0.566342,
+        "mean": 0.195208,
+        "median": 0.222789
       },
       "Risk_Hazard": {
         "count": 280,
         "min": 0.0,
-        "max": 1.0,
-        "mean": 0.439169,
-        "median": 0.415105
+        "max": 0.566342,
+        "mean": 0.195208,
+        "median": 0.222789
       }
     },
     "integrated_risk_normalization": {
-      "method": "Min-Max",
+      "method": "none",
       "population": "Brazilian coastal municipalities with finite SVI_Coast_2022, Hazard_Index and Exposure_Index",
       "input_field": "Risk_Hazard_raw",
       "input_stats": {
         "count": 280,
-        "min": 0.041835,
-        "max": 0.657828,
-        "mean": 0.31236,
-        "median": 0.297536
+        "min": 0.0,
+        "max": 0.566342,
+        "mean": 0.195208,
+        "median": 0.222789
       },
       "output_field": "Risk_Hazard",
       "output_range": [
         0.0,
         1.0
       ],
-      "formula": "(Risk_Hazard_raw - min(Risk_Hazard_raw)) / (max(Risk_Hazard_raw) - min(Risk_Hazard_raw))"
+      "formula": "Risk_Hazard = Risk_Hazard_raw"
     },
     "simplification": {
       "enabled": true,
@@ -152,7 +152,7 @@
       "Hazard_Frequency": 0.5,
       "Hazard_Severity": 0.5
     },
-    "formula": "Hazard_Index_raw = [norm(compound_count_total) + norm(mean_integrated_severity)] / 2; Hazard_Index = norm(Hazard_Index_raw)",
+    "formula": "Hazard_Frequency=min(compound_count_total/99,1); Hazard_Severity=min(fillna(mean_integrated_severity,0)/1,1); Hazard_Index=(Hazard_Frequency+Hazard_Severity)/2",
     "feature_count": 808,
     "stats": {
       "compound_count_total": {
@@ -221,30 +221,30 @@
       "Hazard_Frequency": {
         "count": 808,
         "min": 0.0,
-        "max": 1.0,
-        "mean": 0.21176,
-        "median": 0.010204
+        "max": 0.989899,
+        "mean": 0.209621,
+        "median": 0.010101
       },
       "Hazard_Severity": {
         "count": 808,
         "min": 0.0,
-        "max": 1.0,
-        "mean": 0.22935,
-        "median": 0.106612
+        "max": 0.9483,
+        "mean": 0.217492,
+        "median": 0.1011
       },
       "Hazard_Index_raw": {
         "count": 808,
         "min": 0.0,
-        "max": 0.979592,
-        "mean": 0.220555,
-        "median": 0.065542
+        "max": 0.948897,
+        "mean": 0.213557,
+        "median": 0.062551
       },
       "Hazard_Index": {
         "count": 808,
         "min": 0.0,
-        "max": 1.0,
-        "mean": 0.22515,
-        "median": 0.066907
+        "max": 0.948897,
+        "mean": 0.213557,
+        "median": 0.062551
       }
     }
   },

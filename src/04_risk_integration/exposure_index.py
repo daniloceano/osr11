@@ -68,9 +68,44 @@ import pandas as pd
 GOALPOST_MIN_INHABITANTS = 1.0e2
 GOALPOST_MAX_INHABITANTS = 1.0e6
 
-#: Floor applied before any product, so that a unit sitting at the bottom of a
-#: Min--Max scale does not zero the whole index as a scaling artefact.
-CLIP_FLOOR = 0.01
+#: Weights applied to cumulative distance bands. The equivalent weights by
+#: ring are 1.0, 0.6, 0.3 and 0.1 for 0--1, 1--2, 2--5 and 5--10 km.
+EFFECTIVE_POPULATION_WEIGHTS = {
+    "pop_1km": 0.4,
+    "pop_2km": 0.3,
+    "pop_5km": 0.2,
+    "pop_10km": 0.1,
+}
+
+
+def effective_population(frame: pd.DataFrame) -> pd.Series:
+    """Calculate ``pop_eff``, an effective/weighted, not literal, population.
+
+    The inputs are cumulative and nested. Weighting their common numerator
+    once is algebraically identical to weighting each municipal share.
+    """
+    missing = sorted(set(EFFECTIVE_POPULATION_WEIGHTS).difference(frame.columns))
+    if missing:
+        raise ValueError(f"Missing cumulative exposure bands: {', '.join(missing)}")
+    bands = frame[list(EFFECTIVE_POPULATION_WEIGHTS)].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    if bands.isna().any().any():
+        raise ValueError("Cumulative exposure bands contain missing values")
+    nested = (
+        (bands["pop_1km"] <= bands["pop_2km"])
+        & (bands["pop_2km"] <= bands["pop_5km"])
+        & (bands["pop_5km"] <= bands["pop_10km"])
+    )
+    if not nested.all():
+        raise ValueError("Exposure bands are not cumulative/nested")
+    result = sum(
+        bands[field] * weight
+        for field, weight in EFFECTIVE_POPULATION_WEIGHTS.items()
+    )
+    if (result > bands["pop_10km"] + 1e-9).any():
+        raise ValueError("Effective population exceeds the 10 km band")
+    return result
 
 
 def _series(values: pd.Series | np.ndarray) -> pd.Series:
@@ -157,8 +192,7 @@ def exposure_inform(
     absolute = exposure_absolute(population, goalpost_min, goalpost_max)
     relative = exposure_relative(population, municipal_population)
     if combine == "geometric":
-        floor = lambda series: series.clip(lower=CLIP_FLOOR, upper=1.0)  # noqa: E731
-        return (floor(absolute) * floor(relative)) ** 0.5
+        return (absolute * relative) ** 0.5
     if combine == "arithmetic":
         return (absolute + relative) / 2.0
     raise ValueError(f"combine must be 'geometric' or 'arithmetic'; got {combine!r}")

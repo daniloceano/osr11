@@ -9,14 +9,14 @@
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Sim, salvo qualificação explícita — as cargas do PC1 precisam ser publicadas e a inversão discutida |
-| **Status** | `aberto` |
+| **Status** | `em-investigacao` |
 | **Desfecho** | — |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-11 |
 | **Relacionado a** | AUD-10, AUD-13 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.3, §8 item 7, §9.2 item 11 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 |
 
 ---
 
@@ -214,22 +214,40 @@ que cada indicador contribua na direção certa.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] As cargas do PC1 por indicador, os sinais e a variância explicada estão
-      publicados no manuscrito ou no material suplementar.
-- [ ] O manuscrito discute explicitamente que `pop_rent` e `pop_agevul` entram
+- [x] As cargas do PC1 por indicador, os sinais e a variância explicada estão
+      publicados. *`README.md` §4.3, tabela completa das dez cargas; PC1 50,5 %,
+      PC2 16,5 %. Tabela auditável em
+      `outputs/audit/AUD-09_svi_directionality/pc_loadings.csv` e
+      `indicator_directionality.csv`.*
+- [x] Está discutido explicitamente que `pop_rent` e `pop_agevul` entram
       com sinal oposto à sua interpretação conceitual, e por quê.
-- [ ] O manuscrito declara que o `SVI_Coast_2022` é dominado por privação
-      material (r = 0,944 com pobreza) e **não** contém suscetibilidade física
-      (ver AUD-10).
-- [ ] Existe comparação quantificada entre o PC1 e ao menos um índice
+      *`README.md` §4.3, bloco de citação; e §14 abaixo. Os dois são cargas
+      negativas legítimas do PCA, **não** erros de codificação: os dez
+      indicadores passaram no teste de reversão.*
+- [x] Está declarado que o `SVI_Coast_2022` é dominado por privação
+      material (r = +0,940 com pobreza) e **não** contém suscetibilidade física
+      (ver AUD-10). *`README.md` §4.3 e o parágrafo AUD-09 das limitações do
+      manuscrito.*
+- [x] Existe comparação quantificada entre o PC1 e ao menos um índice
       alternativo com direcionalidade imposta, com o efeito no ranking de risco
-      medido.
-- [ ] A redundância entre indicadores está quantificada e discutida.
+      medido. *Quatro alternativas medidas — ver §14. A que impõe direção por
+      soma aditiva dá ρ = 0,941 com o publicado e muda o top-10 de risco de
+      10/10 para 6/10.*
+- [x] A redundância entre indicadores está quantificada e discutida.
+      *|r| médio fora da diagonal entre os dez: **0,424**; dentro do bloco de
+      saneamento: **0,377**. Declarado em `README.md` → limitações.*
 - [ ] Nenhum município recebe SVI exatamente 0 ou 100 por artefato de Min–Max,
       **ou** está demonstrado que o piso de 0,01 neutraliza completamente o efeito
-      no produto final (requer AUD-11).
+      no produto final (**requer AUD-11**). *Os dois extremos exatos persistem
+      (Balneário Camboriú = 0, Chaves/PA = 100) e estão declarados como artefato
+      de escala. A alternativa por posto percentílico foi medida (ρ = 1,000 com
+      o SVI publicado por construção, mas ρ = 0,958 no risco final, deslocamento
+      máximo de 108 posições), portanto **não é neutra** e a escolha depende de
+      AUD-11. Critério **não verificado**.*
 - [ ] Existe comparação com o SVI-Coast de referência (Lima et al. 2024), ou está
-      registrado por que não foi possível.
+      registrado por que não foi possível. **Não realizada.** O índice de
+      referência é do censo de 2010 e não está no repositório; obtê-lo exige
+      acesso ao material suplementar do artigo. Critério **não verificado**.
 
 ## 10. Riscos de alteração prematura
 
@@ -274,7 +292,7 @@ Se apenas as cargas forem publicadas: nenhum produto muda.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(não commitado)* | `main` | `src/exploratory/audit_AUD_09_svi_directionality.py` (novo), `README.md` (§4.3 reescrita com as cargas; limitações do manuscrito), `site/content/*.ts` e páginas do site (enquadramento social, contagem 281→282) | Diagnóstico + documentação. **O SVI não foi alterado; nenhum valor numérico publicado mudou** |
 
 ## 14. Histórico de investigação
 
@@ -282,3 +300,30 @@ Se apenas as cargas forem publicadas: nenhum produto muda.
 `src/04_risk_integration/external_svi/README.md` e não é repetida aqui. Os
 diagnósticos de direcionalidade da §3 vêm da revisão de linha de base de
 2026-07-29.*
+
+### 2026-07-31 — Auditoria de direcionalidade: nenhum indicador está invertido
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Há indicador codificado na direção errada? Se não, as cargas negativas do PC1 são defensáveis? Distinguir as quatro coisas que a palavra "invertido" confunde: (1) coluna codificada ao contrário; (2) carga negativa legítima do PCA; (3) inversão arbitrária do sinal global do componente; (4) diferença entre pobreza e suscetibilidade costeira |
+| **Dados e métodos** | Os dez indicadores das propriedades de `site/public/data/risk_index_municipalities.geojson` (282 municípios) — o GeoJSON os carrega, logo nada depende do script externo do Colab. Reprodução do pipeline entregue: `StandardScaler` → PCA → PC1 → inversão global do sinal se a correlação média com as entradas for negativa → Min–Max 0–100. Cada coluna foi rastreada até sua consulta ao SIDRA em `src/04_risk_integration/external_svi/build_svi_coast_2022.py` e submetida a um **teste de reversão**: uma coluna invertida (`x` publicado onde `1−x` era pretendido) não pode ser detectada por correlação, porque a reversão inverte exatamente o sinal sob suspeita; ela é detectada lendo o valor em municípios cuja posição real não está em disputa. Âncoras: Balneário Camboriú (menor privação do conjunto) e Chaves/PA (maior) |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_09_svi_directionality` |
+| **Novas saídas geradas** | `outputs/audit/AUD-09_svi_directionality/{indicator_directionality.csv, pc_loadings.csv, alternative_indices.csv, largest_rank_changes.csv, diagnosis_summary.json}` |
+| **Achados** | (a) **Reprodução exata**: r = 1,000000 com o publicado, max\|Δ\| = 5,9e-05 (arredondamento do GeoJSON), ρ = 1,000. PC1 explica **50,5 %**, PC2 **16,5 %**. (b) **A inversão global do sinal NÃO disparou**: a correlação média de PC1 com as entradas saiu **+0,468**, positiva, de modo que o `if corr_media < 0` do script externo nunca executou. O caso (3) não se aplica. (c) **Nenhum dos dez indicadores falha no teste de reversão.** `pop_rent` = 1 − (próprio de morador / total) vale 0,503 em Balneário Camboriú e 0,098 em Chaves — coerente com a realidade, ao passo que uma coluna invertida daria 90 % de domicílios não próprios no estuário amazônico, o que é falso. `pop_agevul` fica em 0,19–0,41, a faixa correta para 0–9 mais 60+; invertida estaria em 0,59–0,81. Verificações pontuais confirmam os demais: `pop_illiterate` 1,4 % em Florianópolis contra 19,1 % em Chaves; `pop_nonwhite` 21 % em Balneário Camboriú contra 84 % em Salvador; `pop_nowater` 0,9 % em Santos contra 96 % em Santo Amaro do Maranhão. **O caso (1) não se aplica: não há erro a corrigir e o SVI não foi recalculado.** (d) As duas cargas negativas são o caso (2), e têm explicação física: não-propriedade é traço de afluência urbana no Brasil (aluguel e segunda residência concentram-se nos balneários ricos do Sul, ocupação própria autoconstruída domina o litoral pobre), e `pop_agevul` soma duas caudas etárias que se movem em sentidos opostos com a renda, de modo que a soma é quase plana ao longo do gradiente. (e) **Impor direção por inversão de sinal antes do PCA é um no-op matemático**: refletir uma entrada apenas reflete sua carga e devolve componente idêntico — ρ = 1,000, deslocamento máximo de posto 0. (f) O caso (4) é real e é o achado que resta: r = +0,940 com pobreza, ρ = −0,491 com log da população — é um eixo de **privação material**, não de suscetibilidade costeira |
+| **Interpretação** | Não houve erro. A questão migra de "corrigir um indicador invertido" para "nomear e interpretar o índice pelo que ele é". As alternativas foram medidas em vez de assumidas: índice aditivo com direção imposta ρ = 0,941 (top-10 de risco 6/10, deslocamento máximo 111 posições); PCA sem `pop_rent` e `pop_agevul` ρ = 0,994 (top-10 10/10); reescala por posto percentílico ρ = 0,958 no risco (deslocamento máximo 108). Nenhuma delas foi adotada: o SVI é a camada mais reprodutível do trabalho, foi produzida por coautora externa, e alterá-la para satisfazer uma expectativa conceitual seria impor teoria contra o dado. **O sinal do PC1 não foi escolhido para reproduzir o ranking anterior — ele nem chegou a ser invertido.** |
+| **Alterações implementadas** | Nenhuma no SVI nem em qualquer produto numérico. `README.md` §4.3 reescrita para publicar as dez cargas, a variância explicada, o fato de a inversão global não ter disparado, e a natureza do índice; parágrafo de limitação para o manuscrito; enquadramento social corrigido no site |
+| **Validação realizada** | A reprodução independente do índice a partir das dez colunas publicadas confirma o pipeline entregue a 5,9e-05. O efeito de cada alternativa foi propagado até o `Risk_Hazard` reconstruído com a mesma fórmula do exportador (piso 0,01, média geométrica, Min–Max municipal) |
+| **Incerteza remanescente** | (1) **Sem comparação com o SVI-Coast de Lima et al. (2024)** — o índice de referência é do censo de 2010 e não está no repositório. (2) As âncoras exatas de Min–Max (0 e 100) persistem e interagem com AUD-11; a alternativa por posto percentílico **não é neutra** no risco final (ρ = 0,958), portanto a escolha não pode ser feita dentro de AUD-09. (3) A redundância está quantificada mas não tratada: quatro dos dez indicadores medem saneamento, o que é contagem múltipla parcial de uma mesma dimensão latente. (4) `pop_house` continua publicado pré-normalizado, divergindo da definição do manuscrito — pendência de AUD-17, não desta questão |
+| **Próxima decisão necessária** | Duas, ambas do pesquisador: (a) tentar ou dispensar a comparação com Lima et al. (2024); (b) decidir, junto com AUD-11, se as âncoras exatas de Min–Max são aceitáveis. Enquanto as duas estiverem abertas a questão **não pode** fechar |
+
+
+### 2026-07-31 — DECISÃO: escala do SVI passa a ser a CDF normal do PC1
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31 |
+| **Decisão** | Substituir o Min–Max 0–100 do PC1 por **Φ(PC1 / sd(PC1))**, a CDF normal padrão do componente padronizado. Registro canônico da decisão, com a tabela completa das camadas afetadas: **AUD-11 §14**, entrada de 2026-07-31 |
+| **Por que resolve o critério pendente** | O critério 6 da §9 exigia que nenhum município recebesse 0 ou 100 exatos por artefato de Min–Max. A CDF entrega faixa observada **0,0122–0,9948**, sem âncora exata, e a escala deixa de depender de Balneário Camboriú e de Chaves. Sendo **monótona**, ρ = **1,0000** com o SVI publicado: **a ordenação dos 282 municípios não muda** e a auditoria de direcionalidade desta questão permanece integralmente válida — as cargas do PC1, a variância explicada e os sinais são os mesmos |
+| **O que NÃO muda** | O PCA, as dez variáveis, as cargas, o sinal do componente. **O SVI não é recalculado**, apenas reescalado. Nenhuma conclusão da entrada de 2026-07-31 sobre direcionalidade é afetada |
+| **Documentação exigida** | O pesquisador pediu que a mudança fique **muito bem documentada**. O mínimo: (a) `README.md` §4.3 explicando por que o PC1 não tem escala natural (média 0, sd 2,247, faixa −5,06 a +5,75, 48 % negativo) e por que a CDF foi escolhida em vez de Min–Max ou posto percentílico; (b) docstring do módulo que implementar; (c) `risk_index_metadata.json` com a fórmula e a razão; (d) página do site correspondente; (e) parágrafo no manuscrito |
+| **Critério que continua aberto** | A comparação com o SVI-Coast de Lima et al. (2024) permanece não realizada. AUD-09 **não fecha** por causa dela |

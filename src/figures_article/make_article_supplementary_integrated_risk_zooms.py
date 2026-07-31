@@ -85,7 +85,7 @@ SOUTH_SOUTHEAST_EXTENT = (-54.8, -39.8, -34.5, -20.2)
 NORTH_NORTHEAST_EXTENT = (-52.8, -40.0, -4.3, 1.8)
 CONTEXT_EXTENT = (-56.0, -38.0, -35.5, 3.0)
 
-RISK_BOUNDARIES = np.linspace(0.0, 1.0, 9)
+RISK_BOUNDARIES = np.array([0.0, 1e-6, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 
 LAND_COLOR = "#ddddda"
 OCEAN_COLOR = "#e9f3f7"
@@ -331,7 +331,9 @@ def _plot_region(
         zorder=2,
     )
     valid = regional[regional[RISK_KEY].notna()].copy()
-    valid.plot(
+    positive = valid[valid[RISK_KEY] > 0]
+    zeros = valid[valid[RISK_KEY].eq(0)]
+    positive.plot(
         ax=axis,
         column=RISK_KEY,
         cmap=cmap,
@@ -340,6 +342,14 @@ def _plot_region(
         linewidth=0.32,
         zorder=3,
     )
+    if not zeros.empty:
+        zeros.plot(
+            ax=axis,
+            color="#9ca3af",
+            edgecolor=MUNICIPAL_BOUNDARY_COLOR,
+            linewidth=0.32,
+            zorder=3.1,
+        )
     _draw_context(axis, coastline)
     axis.set_extent(extent, crs=ccrs.PlateCarree())
     return {
@@ -411,7 +421,7 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
 def main() -> None:
     municipalities, coastline = _read_inputs()
     cmap = ListedColormap(
-        RISK_COLORS,
+        ["#9ca3af", *RISK_COLORS[:6]],
         name="composite_score_inverted_green_to_red_integrated_risk",
     )
     norm = BoundaryNorm(RISK_BOUNDARIES, cmap.N, clip=True)
@@ -464,12 +474,15 @@ def main() -> None:
         cax=colorbar_axis,
         orientation="horizontal",
         boundaries=RISK_BOUNDARIES,
-        ticks=RISK_BOUNDARIES,
+        ticks=[RISK_BOUNDARIES[1] / 2, *RISK_BOUNDARIES[2:]],
         spacing="uniform",
         drawedges=True,
     )
     colorbar.set_label("Integrated risk index (0–1)", fontsize=10)
     colorbar.ax.tick_params(labelsize=9, length=3)
+    colorbar.ax.set_xticklabels(
+        ["No accepted event", *[f"{value:g}" for value in RISK_BOUNDARIES[2:]]]
+    )
     colorbar.outline.set_linewidth(0.75)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

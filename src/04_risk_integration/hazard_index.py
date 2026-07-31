@@ -1,9 +1,8 @@
 """Canonical calculation of the native-grid Hazard Index.
 
 The physical hazard combines two equally weighted components: compound-event
-frequency and mean integrated severity. Each is Min--Max normalized over the
-full native ocean grid; their mean is then Min--Max normalized over the same
-domain to obtain the final 0--1 Hazard Index.
+frequency and mean integrated severity. Both use fixed, sample-independent
+anchors; their mean is the final 0--1 Hazard Index, without another Min--Max.
 
 Why two components and not three
 --------------------------------
@@ -32,7 +31,6 @@ discretisation.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +54,8 @@ COMPONENT_SOURCE_FIELDS = {
     "Hazard_Frequency": "compound_count_total",
     "Hazard_Severity": "mean_integrated_severity",
 }
+FREQUENCY_ANCHOR_EVENTS = 99.0
+SEVERITY_ANCHOR = 1.0
 #: Carried through unchanged for display and audit; none takes part in the
 #: index. ``mean_overlap_duration`` and ``mean_full_criterion_duration`` are the
 #: duration diagnostics retired from the index by AUD-06;
@@ -74,21 +74,6 @@ PASSTHROUGH_SOURCE_FIELDS = (
     "hat_m",
     "mhws_m",
 )
-
-
-def _minmax(series: pd.Series) -> pd.Series:
-    """Min--Max normalize finite values while preserving missing values."""
-    values = pd.to_numeric(series, errors="coerce")
-    finite = values[np.isfinite(values)]
-    if finite.empty:
-        raise ValueError(f"No finite values are available for {series.name!r}")
-    lower = float(finite.min())
-    upper = float(finite.max())
-    if math.isclose(lower, upper):
-        result = pd.Series(np.nan, index=values.index, dtype=float)
-        result.loc[finite.index] = 0.0
-        return result
-    return (values - lower) / (upper - lower)
 
 
 def numeric_stats(series: pd.Series) -> dict[str, float | int | None]:
@@ -151,13 +136,16 @@ def derive_native_hazard_index(
     ].copy()
     for field in result.columns:
         result[field] = pd.to_numeric(result[field], errors="coerce")
-    for output_field, source_field in COMPONENT_SOURCE_FIELDS.items():
-        result[output_field] = _minmax(result[source_field])
-
-    result["Hazard_Index_raw"] = result[
-        list(COMPONENT_SOURCE_FIELDS)
-    ].mean(axis=1, skipna=False)
-    result["Hazard_Index"] = _minmax(result["Hazard_Index_raw"])
+    counts = result["compound_count_total"].fillna(0.0)
+    severity = result["mean_integrated_severity"].fillna(0.0)
+    if (counts < 0).any() or (severity < 0).any():
+        raise ValueError("Hazard source components must be non-negative")
+    result["Hazard_Frequency"] = (counts / FREQUENCY_ANCHOR_EVENTS).clip(0.0, 1.0)
+    result["Hazard_Severity"] = (severity / SEVERITY_ANCHOR).clip(0.0, 1.0)
+    result["Hazard_Index"] = (
+        result["Hazard_Frequency"] + result["Hazard_Severity"]
+    ) / 2.0
+    result["Hazard_Index_raw"] = result["Hazard_Index"]
     result = result.dropna(
         subset=[
             "grid_lat",
@@ -180,17 +168,23 @@ def derive_native_hazard_index(
         "source": source_label,
         "implementation": "src/04_risk_integration/hazard_index.py",
         "grid_point_count": int(len(result)),
-        "normalization_population": "all finite native ocean grid points",
+        "normalization_population": "fixed anchors, independent of sample extrema",
         "component_source_fields": COMPONENT_SOURCE_FIELDS,
         "component_weights": {
             "Hazard_Frequency": 0.5,
             "Hazard_Severity": 0.5,
         },
         "formula": (
-            "Hazard_Index_raw = [norm(compound_count_total) + "
-            "norm(mean_integrated_severity)] / 2; "
-            "Hazard_Index = norm(Hazard_Index_raw)"
+            "Hazard_Frequency=min(compound_count_total/99,1); "
+            "Hazard_Severity=min(fillna(mean_integrated_severity,0)/1,1); "
+            "Hazard_Index=(Hazard_Frequency+Hazard_Severity)/2"
         ),
+        "fixed_anchors": {
+            "frequency_events": FREQUENCY_ANCHOR_EVENTS,
+            "frequency_rationale": "3 accepted events/year over 33 years (1993-2025)",
+            "severity": SEVERITY_ANCHOR,
+            "severity_rationale": "one full-criterion day at the domain maximum daily excess",
+        },
         "retired_component": {
             "field": "mean_overlap_duration",
             "retired_on": "2026-07-29",

@@ -111,16 +111,16 @@ const componentRows = [
     unit: 'events (the maps show compound_count_annual_mean, in events yr⁻¹)',
   },
   {
-    field: 'mean_overlap_duration',
+    field: 'mean_integrated_severity',
     meaning:
-      'Mean number of calendar days during which the wave episode and the sea-level episode of a compound event overlap.',
-    unit: 'days',
+      'Mean, over the compound events at the point, of the severity integrated across the days that meet the full criterion: on each such day, 0.5·(wave excess above the local q70 threshold + level excess of SWL above the local HAT), each rescaled by the domain-wide Q05/Q95 of those daily excesses. Being a time integral it carries magnitude and persistence in a single quantity, so it is not bounded by the daily discretisation of the sea-level field.',
+    unit: 'dimensionless',
   },
   {
-    field: 'mean_compound_intensity_norm',
+    field: 'mean_overlap_duration · mean_compound_intensity_norm',
     meaning:
-      'Mean of the event-level compound intensity 0.5·(hs_norm + ssh_norm). Each driver contributes how far it rose above its own local q90 detection threshold, rescaled by the domain-wide Q05/Q95 of those excesses. Subtracting the local baseline keeps the astronomical tide out of the severity score; the superseded absolute-peak variant is retained as *_abspeak for audit.',
-    unit: 'dimensionless',
+      'Diagnostics only — these are computed and published but no longer enter the index. Duration was retired because it measured the coincidence of two percentile tests rather than a physical duration, was discretised into whole days over a domain-wide range of about one day, and anticorrelated with frequency (Spearman −0.550) so the two cancelled inside the equal-weight mean. Peak intensity was superseded by the integrated form but is retained so the two can be compared.',
+    unit: 'days · dimensionless',
   },
 ];
 
@@ -190,15 +190,22 @@ export default function HazardIndexMethodologyPage() {
         {/* ── 2. Compound event detection ────────────────────────── */}
         <Section step={2} eyebrow="Input" title="Detection of compound events" tint="gray">
           <p className="mb-4 text-sm leading-relaxed text-gray-700">
-            At each grid point, significant wave height (Hₛ, WAVERYS) and total sea level
-            (SSH_total = GLORYS12 zos + FES2022 daily-maximum tide) are catalogued independently as
-            peaks-over-threshold episodes using the q70/q99 thresholds calibrated in Step 2e (recalibrated 2026-07-30 on the production detector).
-            A <strong>compound event</strong> is an Hₛ episode and an SSH_total episode that
-            overlap by at least one calendar day at the same point.
+            At each grid point, significant wave height (Hₛ, WAVERYS) and <strong>tide-free</strong>{' '}
+            sea level (GLORYS12 <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">zos</code>)
+            are catalogued independently as peaks-over-threshold episodes using the q70/q99
+            thresholds calibrated in Step 2e (recalibrated 2026-07-30 on the production detector).
+            A candidate <strong>compound event</strong> is an Hₛ episode and a{' '}
+            <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">zos</code> episode that
+            overlap by at least one calendar day at the same point. The astronomical tide re-enters
+            not as part of any detection threshold but as an acceptance{' '}
+            <strong>gate</strong>: a candidate becomes an event only where the still-water level
+            reaches the local Highest Astronomical Tide, max(SWL) &gt; HAT, with
+            SWL = (zos − mean zos) + tide_daily_max.
           </p>
           <p className="mb-4 text-sm leading-relaxed text-gray-700">
-            Each compound event carries an overlap duration and a normalized intensity; aggregating
-            them per grid point produces the catalog metrics that the index consumes.
+            Each accepted event carries an integrated severity measured over the HAT datum;
+            aggregating per grid point produces the catalog metrics that the index consumes.
+            Overlap duration and peak intensity are still computed and published, as diagnostics.
           </p>
           <Link
             href="/methodology/compound-detection"
@@ -210,12 +217,13 @@ export default function HazardIndexMethodologyPage() {
         </Section>
 
         {/* ── 3. Components ──────────────────────────────────────── */}
-        <Section step={3} eyebrow="Components" title="The three components of the index">
+        <Section step={3} eyebrow="Components" title="The two components of the index">
           <p className="mb-4 text-sm leading-relaxed text-gray-700">
-            The hazard is not reduced to how often events happen. Three catalog metrics enter the
-            index, describing <strong>how often</strong>, <strong>how long</strong>, and{' '}
-            <strong>how strong</strong> compound events are. All three are physical inputs to the
-            current index — none of them is a diagnostic-only field.
+            The hazard is not reduced to how often events happen. Two catalog metrics enter the
+            index, describing <strong>how often</strong> compound events occur and{' '}
+            <strong>how severe</strong> they are when integrated over their duration. A third
+            component, mean overlap duration, was retired on 2026-07-29; it and the peak-based
+            intensity remain published as diagnostics but are not inputs to the index.
           </p>
           <FieldTable rows={componentRows} />
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -244,10 +252,14 @@ export default function HazardIndexMethodologyPage() {
           </p>
           <ul className="mb-4 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-700">
             <li>frequency in <strong>events yr⁻¹</strong>;</li>
-            <li>overlap duration in <strong>days</strong>;</li>
             <li>
-              compound intensity as the <strong>dimensionless</strong> catalog metric (the excess over
-              the local threshold, already rescaled at event level).
+              mean integrated severity as the <strong>dimensionless</strong> catalog metric (daily
+              excesses over the local wave threshold and over HAT, rescaled domain-wide and summed
+              across the full-criterion days of each event).
+            </li>
+            <li>
+              the retired diagnostics — overlap duration in <strong>days</strong> and peak intensity
+              as a <strong>dimensionless</strong> score — where a panel shows them.
             </li>
           </ul>
           <p className="text-sm leading-relaxed text-gray-700">
@@ -260,15 +272,12 @@ export default function HazardIndexMethodologyPage() {
         {/* ── 5. Normalization ───────────────────────────────────── */}
         <Section step={5} eyebrow="Construction" title="Normalization used to build the index">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            To be combined, the three components must share a scale. Each one is Min–Max normalized
-            over the 808 native grid points:
+            The two components use fixed anchors independent of the observed sample:
           </p>
-          <Eq>{`norm_grid(x) = (x − min_grid(x)) / (max_grid(x) − min_grid(x))
-
-Hazard_Frequency = norm_grid(compound_count_total)
-Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
+          <Eq>{`Hazard_Frequency = min(compound_count_total / 99, 1)
+Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)`}</Eq>
           <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-            <strong>This normalization is methodological.</strong> It exists only to make the three
+            <strong>This normalization is methodological.</strong> It exists only to make the two
             components commensurable inside the index. It is <em>not</em> what the component maps
             display (see step 4), and it is performed on the native ocean grid — never separately
             within municipalities.
@@ -278,26 +287,26 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
         {/* ── 6. Aggregation ─────────────────────────────────────── */}
         <Section step={6} eyebrow="Construction" title="Equal-weight aggregation" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            The three normalized components are averaged with equal weights of 1/3:
+            The two normalized components are averaged with equal weights of 1/2:
           </p>
           <Eq>{`Hazard_Index_raw =
     (Hazard_Frequency + Hazard_Severity) / 2`}</Eq>
           <p className="text-sm leading-relaxed text-gray-700">
             Equal weights are an explicit modelling choice, made in the absence of impact-calibrated
-            weights for the Brazilian coast. Because frequency is negatively correlated with the two
-            mean-event characteristics, the average is <strong>compensatory</strong>: a point with
-            many short, mild events can reach the same score as a point with few long, intense
-            events.
+            weights for the Brazilian coast. The average is still <strong>compensatory</strong> —
+            a point with many mild events can reach the same score as a point with few severe ones —
+            but unlike the retired duration term, frequency and integrated severity are{' '}
+            <em>positively</em> correlated (Spearman +0.60, against −0.55 for the pair that was
+            replaced), so the two components now reinforce each other instead of cancelling.
           </p>
         </Section>
 
         {/* ── 7. Final normalization ─────────────────────────────── */}
         <Section step={7} eyebrow="Construction" title="Final normalization of the Hazard Index">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            The mean is Min–Max normalized once more, again over the 808 native grid points, so the
-            published index occupies the full 0–1 range:
+            The mean is the final index; no second Min–Max is applied:
           </p>
-          <Eq>{`Hazard_Index = norm_grid(Hazard_Index_raw) ∈ [0, 1]`}</Eq>
+          <Eq>{`Hazard_Index = Hazard_Index_raw ∈ [0, 1]`}</Eq>
           <p className="text-sm leading-relaxed text-gray-700">
             Since <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_raw</code>{' '}
             spans roughly 0.18–0.66 on the grid, this second step is what turns the composite into a
@@ -349,22 +358,24 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
             Hazard Index value stays directly comparable with the coastal map and with the native
             grid. The risk product uses a separate field,{' '}
             <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_mun</code>,
-            which is that same field rescaled over the municipalities: across them the native scale
-            reaches only 0.829, which would silently down-weight the hazard inside a product.
+            which is the same transferred field without municipal rescaling.
           </p>
         </Section>
 
         {/* ── 10. SVI integration ────────────────────────────────── */}
         <Section step={10} eyebrow="Risk" title="Exposure, vulnerability and the integrated risk" tint="gray">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
-            Risk has three components. The hazard says where compound extremes are frequent, long
-            and intense; <strong>exposure</strong> says how many people are there; and the Social
+            Risk has three components. The hazard says where compound extremes are frequent and
+            severe; <strong>exposure</strong> says how many people are there; and the Social
             Vulnerability Index (SVI_Coast_2022, 0–100 from PCA on ten IBGE 2022 Census variables)
-            says who would cope badly. Exposure is the resident population within 10 km of the
-            coastline, from the IBGE Grade Estatística 2022:
+            says who would cope badly. The vulnerability term is <strong>social only</strong>: no
+            physical susceptibility layer — geomorphology, terrain elevation, natural barriers,
+            coastal defences, drainage — exists in this product. Exposure is the resident population
+            within 10 km of the coastline, from the IBGE Grade Estatística 2022:
           </p>
-          <Eq>{`Exposure_absolute = clip[(log₁₀(pop_10km) − 2) / (6 − 2), 0, 1]
-Exposure_relative = pop_10km / pop_municipality
+          <Eq>{`pop_eff = 0.4·pop_1km + 0.3·pop_2km + 0.2·pop_5km + 0.1·pop_10km
+Exposure_absolute = clip[(log₁₀(pop_eff) − 2) / (6 − 2), 0, 1]
+Exposure_relative = pop_eff / pop_municipality
 Exposure_Index    = √(Exposure_absolute × Exposure_relative)`}</Eq>
           <p className="mb-3 mt-3 text-sm leading-relaxed text-gray-700">
             The goalposts of 10² and 10⁶ inhabitants are <strong>fixed, not taken from the
@@ -374,19 +385,15 @@ Exposure_Index    = √(Exposure_absolute × Exposure_relative)`}</Eq>
             municipalities, the share favours the small entirely-coastal ones. Both choices follow
             the treatment INFORM gives its physical-exposure indicators.
           </p>
-          <Eq>{`Risk_Hazard_raw = (Hazard_Index_mun × Exposure_Index × SVI_Coast_2022/100)^(1/3)
-
-Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
+          <Eq>{`V = Φ(PC1 / sd(PC1, ddof=0))
+Risk_Hazard = (Hazard_Index_mun × Exposure_Index × V)^(1/3)`}</Eq>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">
             The <strong>geometric</strong> mean is conjunctive: a component near zero pulls the
             whole index down. That is the property the IPCC risk framework implies — without a
             hazard, or with nobody exposed, there is no potential for adverse consequences — and it
             is what an arithmetic mean would discard, letting a large population compensate for the
-            absence of a physical driver. Each component is floored at 0.01 first, so that a
-            municipality sitting at the bottom of a Min–Max scale is not handed zero risk as a
-            scaling artefact. The final Min–Max is the only normalization performed in the
-            municipal domain, and it applies to the risk product — never to the Hazard Index
-            itself.
+            absence of a physical driver. No floor or final Min–Max is applied. Exact hazard zero
+            means no accepted compound event in 1993–2025, not impossibility of physical risk.
           </p>
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
             <strong>Proximity, not impact.</strong> No water level is propagated over land anywhere
@@ -414,13 +421,21 @@ Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
                 component can be offset by a high one.
               </li>
               <li>
-                <strong>Equal weights.</strong> The 1/3 weighting is an assumption, not an
+                <strong>Equal weights.</strong> The 1/2 weighting is an assumption, not an
                 impact-calibrated result.
               </li>
               <li>
-                <strong>Negative correlations.</strong> Frequency is negatively correlated with mean
-                overlap duration and mean intensity, so the three components are not mutually
-                reinforcing signals.
+                <strong>No physical vulnerability.</strong> Vulnerability is the social index alone.
+                Two stretches with the same income profile and the same hazard receive the same
+                vulnerability whether they sit on a rocky cliff or on a sand plain 1 m above sea
+                level.
+              </li>
+              <li>
+                <strong>Zero-hazard municipalities.</strong> 83 of the 280 municipalities with a
+                risk value draw their hazard from a grid point that accepted no compound event, so
+                their <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_mun</code>{' '}
+                is exactly 0 and their risk rests on the 0.01 floor. They occupy ranks 191–280, and
+                their ordering among themselves is set by exposure and vulnerability alone.
               </li>
             </ul>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">

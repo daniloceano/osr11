@@ -105,10 +105,10 @@ CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
 # which are rendered in gray rather than as the lowest positive class.
 FREQUENCY_BOUNDARIES = np.array([0.0, 0.015, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
 SEVERITY_BOUNDARIES = np.array([0.0, 0.0042, 0.15, 0.30, 0.45, 0.60, 0.75, 0.95])
-HAZARD_BOUNDARIES = np.linspace(0.0, 1.0, 9)
+HAZARD_BOUNDARIES = np.array([0.0, 1e-6, 0.15, 0.30, 0.45, 0.60, 0.75, 0.95])
 FREQUENCY_TICKS = np.array([0.0075, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
 SEVERITY_TICKS = np.array([0.0021, 0.15, 0.30, 0.45, 0.60, 0.75, 0.95])
-HAZARD_TICKS = HAZARD_BOUNDARIES[[0, 2, 4, 6, 8]]
+HAZARD_TICKS = HAZARD_BOUNDARIES
 DISPLAY_COMPONENT_FIELDS = (
     "compound_count_annual_mean",
     "mean_integrated_severity",
@@ -152,7 +152,7 @@ PANEL_SPECS = (
         "tick_format": "%.2f",
         "unit": "0-1 index",
         "palette": "hazard",
-        "zero_is_gray": False,
+        "zero_is_gray": True,
     },
 )
 
@@ -382,6 +382,7 @@ def _add_colorbar(
     label: str,
     tick_format: str,
     vertical_offset: float,
+    zero_is_gray: bool,
 ) -> None:
     position = axis.get_position()
     colorbar_axis = figure.add_axes(
@@ -402,6 +403,11 @@ def _add_colorbar(
     colorbar.set_label(label, fontsize=9.0, labelpad=2.0)
     colorbar.ax.xaxis.set_major_formatter(FormatStrFormatter(tick_format))
     colorbar.ax.tick_params(labelsize=8, length=2.8)
+    if zero_is_gray:
+        labels = [label.get_text() for label in colorbar.ax.get_xticklabels()]
+        if labels:
+            labels[0] = "No accepted event"
+            colorbar.ax.set_xticklabels(labels)
     tick_labels = colorbar.ax.get_xticklabels()
     if tick_labels:
         tick_labels[0].set_horizontalalignment("left")
@@ -562,6 +568,7 @@ def main() -> None:
             label=panel_spec["colorbar_label"],
             tick_format=panel_spec["tick_format"],
             vertical_offset=0.065,
+            zero_is_gray=bool(panel_spec.get("zero_is_gray")),
         )
 
     for directory in (OUT_DIR, DATA_DIR, METADATA_DIR):

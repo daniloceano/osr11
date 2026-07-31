@@ -36,18 +36,18 @@ export const resultCards: ResultCard[] = [
     description:
       'Central analysis block: compound detection on Hₛ (q70) and tide-free zos (q99) gated by HAT, '
       + 'followed by compound detection, duration/persistence, monthly seasonality, '
-      + 'Mann–Kendall trends, POT–GPD EVA, and Hs–SSH dependence (τ, ρ, χ, χ̄). '
-      + '404k Hₛ storms, 325k SSH_total storms, ~96k compound events across 808 coastal grid points. '
-      + 'The composite Hazard Index and its three components — compound-event frequency (events yr⁻¹), '
-      + 'mean overlap duration (days), and mean compound intensity (dimensionless) — are shown directly '
-      + 'on the coastline.',
+      + 'Mann–Kendall trends, POT–GPD EVA, and Hₛ–zos dependence (τ, ρ, χ, χ̄). '
+      + '707k Hₛ episodes, 42k tide-free zos episodes, 16,768 accepted compound events across 808 coastal grid points. '
+      + 'The composite Hazard Index and its two components — compound-event frequency (events yr⁻¹) '
+      + 'and mean integrated severity (dimensionless) — are shown directly on the coastline. '
+      + 'Mean overlap duration and peak intensity remain published as diagnostics but no longer enter the index.',
     rationale:
       'The storm catalogs are the foundation for all downstream hazard characterization. '
       + 'The submodule suite quantifies frequency, intensity, seasonality, trends, return levels, '
       + 'and dependence — providing a complete statistical portrait of compound coastal hazards.',
     outputs: [
-      '3.1: 404,535 Hₛ + 324,929 SSH_total storm episodes (JSON + CSV)',
-      '3.2: ~96k compound events, classification (Hₛ-only / SSH-only / compound), overlap metrics',
+      '3.1: 707,453 Hₛ + 42,455 tide-free zos storm episodes (JSON + CSV)',
+      '3.2: 16,768 compound events accepted by the HAT gate (15,857 candidates rejected), integrated severity, retained overlap and peak-intensity diagnostics',
       '3.3: Per-grid persistence statistics (mean/p95/max duration, inter-event times)',
       '3.4: Monthly climatology, peak month, seasonal DJF/MAM/JJA/SON split',
       '3.5: Mann–Kendall + Sen slope trends for 8 annual series per grid point',
@@ -91,7 +91,7 @@ export const resultCards: ResultCard[] = [
       + 'and the share alone favours the small entirely-coastal ones.',
     outputs: [
       'municipal_exposure.csv: population and occupied households per municipality for the whole municipality and the ≤1, ≤2, ≤5 and ≤10 km bands',
-      'Exposure_Index = √(absolute × relative) — adopted; absolute is log10(pop_10km) between fixed goalposts of 10² and 10⁶ inhabitants',
+      'Exposure_Index = √(absolute × relative) using pop_eff = 0.4·pop_1km + 0.3·pop_2km + 0.2·pop_5km + 0.1·pop_10km',
       'Rejected candidates retained for inspection: minmax(log10), percentile rank, and the degenerate minmax of the raw count',
       'Interactive municipal choropleth with both halves of the term, the raw counts and the coastal share, and hover values in every band',
       'Two exploratory figures: the normalisation comparison, and the risk map with and without exposure',
@@ -107,23 +107,23 @@ export const resultCards: ResultCard[] = [
     status: 'done',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '
-      + 'Exposure is operationalized by associating oceanic hazard metrics with Brazilian coastal municipalities through spatial join: '
-      + 'the current Hazard_Index combines normalized compound-event frequency, mean overlap duration, and mean intensity on the native grid. '
+      + 'Exposure is the resident population within 10 km of the coastline (IBGE Grade Estatística 2022); '
+      + 'the current Hazard_Index combines normalized compound-event frequency and mean integrated severity on the native grid, with equal weights. '
       + 'Social vulnerability (SVI_Coast_2022) was constructed via PCA on 10 socioeconomic and infrastructure variables '
-      + 'from the 2022 IBGE Census for 281 coastal municipalities, normalized 0–100. '
+      + 'from the 2022 IBGE Census for 282 coastal municipalities, normalized 0–100; it carries no physical susceptibility. '
       + 'The former count-only product and the originally delivered fields are retained for audit and comparison. '
-      + 'Risk_Hazard integrates SVI with the multimetric hazard layer to identify priority coastal risk hotspots.',
+      + 'Risk_Hazard is the conjunctive geometric mean of hazard, exposure and vulnerability, identifying priority coastal risk hotspots.',
     rationale:
       'The hazard alone is insufficient for risk assessment. Reported coastal disaster records supported threshold calibration '
       + '(Step 2, q70/q99 selection) but are not a separate downstream validation product. '
       + 'Combining compound-event hazard with municipal-scale exposure spatialization and social vulnerability transforms '
       + 'hazard maps into actionable risk indices for adaptation planning and policy communication. '
-      + 'The equal-weight index is compensatory: high frequency can be offset by lower mean duration or intensity.',
+      + 'The equal-weight hazard is compensatory: high frequency can be offset by lower mean integrated severity. Across the three risk components the geometric mean is conjunctive and does not compensate.',
     outputs: [
-      'SVI_Coast_2022: Social Vulnerability Index (PCA on 10 IBGE Census variables, 281 municipalities, 0–100)',
-      'Exposure: spatial join of oceanic compound-event metrics to coastal municipalities',
-      'Current Hazard_Index = norm_grid{[norm_grid(frequency) + norm_grid(duration) + norm_grid(intensity)] / 3}',
-      'Current Risk_Hazard_raw = (SVI_Coast_2022 / 100) × Hazard_Index',
+      'SVI_Coast_2022: Social Vulnerability Index (PCA on 10 IBGE Census variables, 282 municipalities, 0–100; PC1 explains 50.5 % of the variance). Social susceptibility only — no physical layer',
+      'Exposure_Index: resident population within 10 km of the coastline (IBGE Grade Estatística 2022), √(absolute × relative)',
+      'Current Hazard_Index = norm_grid{[norm_grid(compound_count_total) + norm_grid(mean_integrated_severity)] / 2} — two components since the duration term was retired',
+      'Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Φ(PC1/sd(PC1)))^(1/3), with no floor or final Min–Max',
       'Current Risk_Hazard = norm_municipal(Risk_Hazard_raw), scaled from 0 to 1',
       'Raw stages published alongside the normalized ones: Hazard_Index_raw and Risk_Hazard_raw',
       'Interactive municipal choropleth with raw and normalized stages of every index, popups, discrete legend, statistics, and ranking table',

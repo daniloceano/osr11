@@ -1,0 +1,85 @@
+municipality_code,municipality_name,state,Hazard_Index_mun_after,Exposure_Index_after,risk_zero_cause
+2932507,Una,BA,0.0,0.220358,hazard_zero_no_accepted_event_1993_2025
+2913606,Ilhéus,BA,0.0,0.738882,hazard_zero_no_accepted_event_1993_2025
+2921005,Mata de São João,BA,0.0,0.264678,hazard_zero_no_accepted_event_1993_2025
+2910503,Entre Rios,BA,0.0,0.274202,hazard_zero_no_accepted_event_1993_2025
+2910602,Esplanada,BA,0.0,0.095555,hazard_zero_no_accepted_event_1993_2025
+2908606,Conde,BA,0.0,0.348608,hazard_zero_no_accepted_event_1993_2025
+2917904,Jandaíra,BA,0.0,0.200426,hazard_zero_no_accepted_event_1993_2025
+2802106,Estância,SE,0.0,0.254459,hazard_zero_no_accepted_event_1993_2025
+2803203,Itaporanga d'Ajuda,SE,0.0,0.304674,hazard_zero_no_accepted_event_1993_2025
+2800308,Aracaju,SE,0.0,0.465526,hazard_zero_no_accepted_event_1993_2025
+2800605,Barra dos Coqueiros,SE,0.0,0.553328,hazard_zero_no_accepted_event_1993_2025
+2805307,Pirambu,SE,0.0,0.564776,hazard_zero_no_accepted_event_1993_2025
+2804904,Pacatuba,SE,0.0,0.249363,hazard_zero_no_accepted_event_1993_2025
+2706802,Piaçabuçu,AL,0.0,0.26935,hazard_zero_no_accepted_event_1993_2025
+2702306,Coruripe,AL,0.0,0.357193,hazard_zero_no_accepted_event_1993_2025
+2703759,Jequiá da Praia,AL,0.0,0.403815,hazard_zero_no_accepted_event_1993_2025
+2704708,Marechal Deodoro,AL,0.0,0.725326,hazard_zero_no_accepted_event_1993_2025
+2704302,Maceió,AL,0.0,0.626064,hazard_zero_no_accepted_event_1993_2025
+2707404,Porto de Pedras,AL,0.0,0.53073,hazard_zero_no_accepted_event_1993_2025
+2704500,Maragogi,AL,0.0,0.580021,hazard_zero_no_accepted_event_1993_2025
+2601409,Barreiros,PE,0.0,0.215888,hazard_zero_no_accepted_event_1993_2025
+2602902,Cabo de Santo Agostinho,PE,0.0,0.274608,hazard_zero_no_accepted_event_1993_2025
+2611606,Recife,PE,0.0,0.673262,hazard_zero_no_accepted_event_1993_2025
+2609600,Olinda,PE,0.0,0.544241,hazard_zero_no_accepted_event_1993_2025
+2606804,Igarassu,PE,0.0,0.377621,hazard_zero_no_accepted_event_1993_2025
+2503209,Cabedelo,PB,0.0,0.823909,hazard_zero_no_accepted_event_1993_2025
+2407500,Maxaranguape,RN,0.0,0.518579,hazard_zero_no_accepted_event_1993_2025
+2414407,Touros,RN,0.0,0.502735,hazard_zero_no_accepted_event_1993_2025
+2407203,Macau,RN,0.0,0.455713,hazard_zero_no_accepted_event_1993_2025
+2404101,Galinhos,RN,0.0,0.461108,hazard_zero_no_accepted_event_1993_2025
+2412559,São Miguel do Gostoso,RN,0.0,0.414992,hazard_zero_no_accepted_event_1993_2025
+2404408,Grossos,RN,0.0,0.208444,hazard_zero_no_accepted_event_1993_2025
+2401107,Areia Branca,RN,0.0,0.434961,hazard_zero_no_accepted_event_1993_2025
+2410256,Porto do Mangue,RN,0.0,0.402108,hazard_zero_no_accepted_event_1993_2025
+2411601,São Bento do Norte,RN,0.0,0.38234,hazard_zero_no_accepted_event_1993_2025
+2409506,Pedra Grande,RN,0.0,0.325255,hazard_zero_no_accepted_event_1993_2025
+2305357,Icapuí,CE,0.0,0.470766,hazard_zero_no_accepted_event_1993_2025
+2301109,Aracati,CE,0.0,0.299042,hazard_zero_no_accepted_event_1993_2025
+2302206,Beberibe,CE,0.0,0.411208,hazard_zero_no_accepted_event_1993_2025
+2303501,Cascavel,CE,0.0,0.256804,hazard_zero_no_accepted_event_1993_2025
+2301000,Aquiraz,CE,0.0,0.373745,hazard_zero_no_accepted_event_1993_2025
+2303709,Caucaia,CE,0.0,0.343734,hazard_zero_no_accepted_event_1993_2025
+2313500,Trairi,CE,0.0,0.390705,hazard_zero_no_accepted_event_1993_2025
+2310258,Paraipaba,CE,0.0,0.149556,hazard_zero_no_accepted_event_1993_2025
+2306405,Itapipoca,CE,0.0,0.132857,hazard_zero_no_accepted_event_1993_2025
+2302057,Barroquinha,CE,0.0,0.27753,hazard_zero_no_accepted_event_1993_2025
+2302602,Camocim,CE,0.0,0.399202,hazard_zero_no_accepted_event_1993_2025
+2307254,Jijoca de Jericoacoara,CE,0.0,0.234047,hazard_zero_no_accepted_event_1993_2025
+2304251,Cruz,CE,0.0,0.274024,hazard_zero_no_accepted_event_1993_2025
+2300200,Acaraú,CE,0.0,0.353772,hazard_zero_no_accepted_event_1993_2025
+2104305,Godofredo Viana,MA,0.0,0.21857,hazard_zero_no_accepted_event_1993_2025
+1508308,Viseu,PA,0.0,0.310713,hazard_zero_no_accepted_event_1993_2025
+2106201,Luís Domingues,MA,0.0,0.196375,hazard_zero_no_accepted_event_1993_2025
+1506302,Salvaterra,PA,0.0,0.608193,hazard_zero_no_accepted_event_1993_2025
+1507102,São Caetano de Odivelas,PA,0.0,0.450254,hazard_zero_no_accepted_event_1993_2025
+1600204,Calçoene,AP,0.0,0.0,hazard_zero_and_exposure_below_absolute_goalpost
+2800704,Brejo Grande,SE,0.0,0.150094,hazard_zero_no_accepted_event_1993_2025
+2702702,Feliz Deserto,AL,0.0,0.374919,hazard_zero_no_accepted_event_1993_2025
+2707800,Roteiro,AL,0.0,0.152447,hazard_zero_no_accepted_event_1993_2025
+2700607,Barra de São Miguel,AL,0.0,0.366309,hazard_zero_no_accepted_event_1993_2025
+2706448,Paripueira,AL,0.0,0.47999,hazard_zero_no_accepted_event_1993_2025
+2700508,Barra de Santo Antônio,AL,0.0,0.611685,hazard_zero_no_accepted_event_1993_2025
+2706505,Passo de Camaragibe,AL,0.0,0.271875,hazard_zero_no_accepted_event_1993_2025
+2708709,São Miguel dos Milagres,AL,0.0,0.552473,hazard_zero_no_accepted_event_1993_2025
+2703601,Japaratinga,AL,0.0,0.539243,hazard_zero_no_accepted_event_1993_2025
+2613404,São José da Coroa Grande,PE,0.0,0.673265,hazard_zero_no_accepted_event_1993_2025
+2614857,Tamandaré,PE,0.0,0.561625,hazard_zero_no_accepted_event_1993_2025
+2614204,Sirinhaém,PE,0.0,0.323147,hazard_zero_no_accepted_event_1993_2025
+2607208,Ipojuca,PE,0.0,0.391681,hazard_zero_no_accepted_event_1993_2025
+2607901,Jaboatão dos Guararapes,PE,0.0,0.44823,hazard_zero_no_accepted_event_1993_2025
+2610707,Paulista,PE,0.0,0.505091,hazard_zero_no_accepted_event_1993_2025
+2607604,Ilha de Itamaracá,PE,0.0,0.693087,hazard_zero_no_accepted_event_1993_2025
+2513703,Santa Rita,PB,0.0,0.282952,hazard_zero_no_accepted_event_1993_2025
+2508604,Lucena,PB,0.0,0.644414,hazard_zero_no_accepted_event_1993_2025
+2408953,Rio do Fogo,RN,0.0,0.508809,hazard_zero_no_accepted_event_1993_2025
+2401859,Caiçara do Norte,RN,0.0,0.631666,hazard_zero_no_accepted_event_1993_2025
+2404507,Guamaré,RN,0.0,0.320601,hazard_zero_no_accepted_event_1993_2025
+2411056,Tibau,RN,0.0,0.287185,hazard_zero_no_accepted_event_1993_2025
+2304459,Fortim,CE,0.0,0.285619,hazard_zero_no_accepted_event_1993_2025
+2304400,Fortaleza,CE,0.0,0.446459,hazard_zero_no_accepted_event_1993_2025
+2312403,São Gonçalo do Amarante,CE,0.0,0.304048,hazard_zero_no_accepted_event_1993_2025
+2310209,Paracuru,CE,0.0,0.293546,hazard_zero_no_accepted_event_1993_2025
+2110203,Santa Rita,MA,0.107251,0.0,exposure_zero_below_absolute_goalpost
+2102903,Carutapera,MA,0.0,0.483787,hazard_zero_no_accepted_event_1993_2025

@@ -67,9 +67,9 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 - **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
 
-- **Exposure:** The people present where the hazard acts — here, the resident population within 10 km of the coastline, from the IBGE Grade Estatística 2022. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*. (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
+- **Exposure:** The people present where the hazard acts — here, the **resident** (*de jure*) population within 10 km of the coastline, counted by the IBGE Grade Estatística on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*; and being *de jure*, it does not see the seasonal population of the resort municipalities (AUD-14). (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
 
-- **Vulnerability:** The physical susceptibility (geomorphology, land use, natural barriers) and social susceptibility (population, infrastructure, income) of coastal municipalities and sectors.
+- **Vulnerability:** The **social** susceptibility of the resident population — income, education, race, age structure, housing tenure, crowding and basic sanitation — measured by `SVI_Coast_2022` (Sub-step 4.3). **No physical susceptibility layer is implemented.** Geomorphology, beach-face slope, dune and mangrove barriers, terrain elevation, coastal defences and drainage capacity are absent from this product; two stretches with the same income profile and the same hazard therefore receive the same vulnerability regardless of the ground they stand on. This is a declared limitation of the current cycle, not an omission from the description — see "Notes and Limitations". (Tracked as AUD-10.)
 
 - **Risk:** The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.
 
@@ -113,7 +113,7 @@ Quantify the joint occurrence, intensity, and temporal structure of sea-level ex
 | IBGE | Localidades / Malhas APIs | Coordinates, boundaries | Current | Municipal | Municipal geometry |
 | IBGE | Censo 2022 via SIDRA | 10 socioeconomic indicators | 2022 | Municipal | Social vulnerability |
 | IBGE | Grade Estatística 2022 | Population, occupied households | 2022 | 200 m urban / 1 km rural | Population exposure |
-| MMA | Macrodiagnóstico da Zona<br>Costeira e Marinha | Geomorphology, erosion,<br>occupation, barriers | — | Coastal segments | Vulnerability layers |
+| ~~MMA~~ | ~~Macrodiagnóstico da Zona<br>Costeira e Marinha~~ | ~~Geomorphology, erosion,<br>occupation, barriers~~ | — | — | **Not used.** Listed in earlier versions as a physical-vulnerability source; it was never acquired, and no physical layer exists in this product (AUD-10) |
 
 **Data acknowledgments:**  
 CMEMS products are accessed via the `copernicusmarine` Python toolbox. Disaster records from S2ID and SC Civil Defense are used exclusively to support threshold calibration (Step 2); they are not used as a separate downstream validation product, given systematic under-reporting acknowledged in both databases. IBGE Census 2022 data accessed via SIDRA for 282 coastal municipalities (281 in Lima et al. 2024, plus Balneário Rincão, created in 2013 and absent from the standard SIDRA aggregates). Population exposure from the IBGE Grade Estatística 2022.
@@ -155,9 +155,35 @@ First-pass inspection of joint Hₛ and SSH (zos) exceedances at q90 during each
 
 #### Sub-step 2c — Tidal Sensitivity Analysis
 
-FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Establishes the canonical SSH_total definition.
+FES2022 astronomical tide (eo-tides, hourly evaluation) added to GLORYS12 SSH to form SSH_total = zos(00:00 UTC) + tide(daily max). Detection at q90: 22 → 26 events (+7 new, −3 lost, 19 maintained). Established the SSH_total definition **that has since been superseded**.
 
-**Status:** ✅ Complete  
+> **Phase incoherence of the summed level, and where it still applies (AUD-03).**
+> `zos` is a single daily sample at 00:00 UTC; `tide_daily_max` is the largest
+> tide of the day, at an arbitrary hour. Their sum is therefore not realised at
+> any real instant. GLORYS12 provides no sub-daily sea level, so no correction is
+> possible with the available inputs — this is a limitation of the data, not of
+> the analysis.
+>
+> **`SSH_total` is no longer segmented.** Since 2026-07-31 level episodes are
+> detected on tide-free `zos` at the local q99, so no tide enters the detection
+> threshold and the phase mismatch does **not** affect it. The mismatch survives
+> only in the two places where the tide legitimately re-enters: the acceptance
+> gate `max(SWL) > HAT` and the level term of the integrated severity, with
+> `SWL = (zos − mean zos) + tide_daily_max`.
+>
+> **Measured magnitude.** Bounding the true high-water `zos` by linear
+> interpolation between consecutive daily samples gives a phase error with a
+> domain median of **1.2 cm** per day (p95 3.2 cm), and it runs opposite to what
+> a tidal argument predicts: ≈1 cm in the macrotidal North (17–19 % of the local
+> `zos` standard deviation; rank correlation ρ ≥ 0.9996 against a phase-coherent
+> alternative) against **5–10 cm in the micro-tidal South** (50–66 %;
+> ρ = 0.93–0.98), where day-to-day `zos` variability is three times larger and
+> HAT is low enough that SWL crosses it often. The effect is noise rather than
+> bias — 89,922 currently-passing days would be lost and 91,274 currently-failing
+> days gained at the two ends of the interval. Reproduce with
+> `python -m src.exploratory.audit_AUD_03_ssh_phase_coherence`.
+
+**Status:** ✅ Complete — superseded as the production level definition on 2026-07-31; retained as the historical Step 2c record
 **Implementation:** `src/02_threshold_calibration/03_tidal_sensitivity/`
 
 #### Sub-step 2d — CSI Grid Scan (Diagnostic)
@@ -197,26 +223,28 @@ The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos −
 
 The most comprehensive analysis step. Applies the PU-optimal thresholds from Step 2e to the full 1993–2025 record and runs the complete suite of hazard characterization analyses.
 
-> **Mixed state since 2026-07-30.** Sub-step **3.2 is current**: it is regenerated
-> at the recalibrated pair **q70/q99** with the HAT gate and datum, and it is the
-> sole source of the published Hazard Index. Sub-steps **3.1 and 3.3–3.8 are
-> NOT**: they read the Hₛ/`SSH_total` catalogs built at q90/q90, and re-running
-> them unchanged would mix a superseded level variable into the published
-> statistics. Rows below marked *(superseded inputs)* are in that state. See
-> AUD-01 §14, remaining uncertainty (6).
+> **Whole step regenerated on 2026-07-31.** Every sub-step now runs on the
+> recalibrated pair **q70 (Hₛ) / q99 (tide-free `zos`)**. Sub-step 3.1 rebuilt the
+> catalogs on `zos` in place of `SSH_total` (`outputs/storm_catalog/logs/run_metadata.json`:
+> `level_var: "zos"`, `level_is_tide_free: true`, `thr_hs_pct: 0.7`,
+> `thr_level_pct: 0.99`), and 3.3–3.8 were rerun from those catalogs, so their
+> columns are now `zos_*` rather than `ssh_total_*`. The 3.1 and 3.2 thresholds
+> agree at all 808 points (maximum absolute difference 0.0 m).
+> `outputs/storm_catalog/catalog_ssh_total_storms.json` is the retired
+> `SSH_total` catalogue, kept for the record and read by nothing.
 
 | Submodule | Analysis | Key outputs |
 |-----------|----------|-------------|
-| **3.1 Storm Catalogs** *(superseded inputs)* | POT detection + episode clustering at q90/q90 on Hₛ and `SSH_total` | Per-grid-point JSON catalogs for Hₛ and `SSH_total` |
+| **3.1 Storm Catalogs** | POT detection + episode clustering at q70 on Hₛ and q99 on tide-free `zos` | Per-grid-point JSON catalogs for Hₛ and `zos` (707 453 and 42 455 episodes) |
 | **3.2 Compound Detection** | Temporal overlap of Hₛ and tide-free `zos` episodes, gated by `max(SWL) > HAT` | Compound events, integrated severity over the HAT datum (rescaled domain-wide), retained duration and peak-intensity diagnostics |
-| **3.3 Duration & Persistence** *(superseded inputs)* | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
-| **3.4 Monthly Seasonality** *(superseded inputs)* | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
-| **3.5 Trend Analysis** *(superseded inputs)* | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
-| **3.6 Univariate EVA** *(superseded inputs)* | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
-| **3.7 Dependence Analysis** *(superseded inputs)* | Hs–SSH_total statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
-| **3.8 Site Export** *(superseded inputs)* | Unified JSON for results website | All metrics merged per grid point |
+| **3.3 Duration & Persistence** | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
+| **3.4 Monthly Seasonality** | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
+| **3.5 Trend Analysis** | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
+| **3.6 Univariate EVA** | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
+| **3.7 Dependence Analysis** | Hₛ–`zos` statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
+| **3.8 Site Export** | Unified JSON for results website | All metrics merged per grid point |
 
-**Status:** ⚠ Partial — 3.2 regenerated at q70/q99 with the HAT gate on 2026-07-30; 3.1 and 3.3–3.8 still carry the superseded q90/q90 `SSH_total` inputs  
+**Status:** ✓ Complete — all sub-steps regenerated at q70/q99 on tide-free `zos` with the HAT gate (3.1 on 2026-07-31 01:48, 3.2–3.8 on 2026-07-31 02:08–02:09)
 **Implementation:** `src/03_storm_catalog_generation/`  
 **Run:**
 ```bash
@@ -278,55 +306,91 @@ cell centroid in EPSG:5880. The 10 km band feeds the risk index; the others
 exist so the criterion can be varied. Across the 282 coastal municipalities,
 **30.8 million** of the 37.4 million residents are within 10 km of the coast.
 
+> **The count is *de jure* and instantaneous.** The census enumerates residents
+> at their usual address on 2022-07-31, a single instant set against 33 years of
+> metocean record. The seasonal population of the resort municipalities — which
+> in Balneário Camboriú, Bombinhas, Guarujá, Ubatuba and Cabo Frio multiplies the
+> people present in summer — is therefore invisible, and the bias is directional:
+> it **under**states exposure in exactly the SC/PR/SP/RJ sector that carries the
+> highest physical hazard in the domain. No seasonal-population proxy is applied,
+> because none is available on a homogeneous basis for all 282 municipalities.
+> The index measures risk to **residents**, not to visitors or to tourism assets.
+> (AUD-14.)
+>
+> Four municipalities have a `pop_10km` too small for the metric to discriminate
+> — Santa Rita/MA (4 residents), Calçoene/AP (101), Oiapoque/AP (518) and
+> Terra de Areia/RS (765); the first two sit at the 0.01 exposure floor. Removing
+> all four leaves the published ranking unchanged (Spearman ρ = 1.000, maximum
+> rank shift 0), so they anchor no normalisation. (AUD-15.)
+
 **Implementation:** `src/04_risk_integration/municipal_exposure.py` (aggregation),
 `src/04_risk_integration/exposure_index.py` (normalisation),
 `src/01_data_preparation/acquisition/download_ibge_grade.py` (acquisition).
 
 #### Sub-step 4.3 — Social Vulnerability Index (SVI_Coast_2022)
 
-The SVI was built from 10 socioeconomic and infrastructure variables from the 2022 IBGE Census (SIDRA) for 282 coastal municipalities:
+The SVI was built from 10 socioeconomic and infrastructure variables from the 2022 IBGE Census (SIDRA) for 282 coastal municipalities. Variables were standardized with `StandardScaler` and submitted to PCA. PC1 was retained as the vulnerability axis, its global sign checked so that higher values mean higher social vulnerability, and the result rescaled to 0–100 (Min–Max). Methodology based on Lima et al. (2024, *Nat. Hazards*, https://doi.org/10.1007/s11069-023-06246-w).
 
-| Variable | Description |
-|----------|-------------|
-| `pop_house` | Mean residents per household |
-| `pop_rent` | Proportion in non-owned housing |
-| `pop_poverty` | Proportion in poverty |
-| `pop_agevul` | Proportion in vulnerable age groups (< 9 yr and 60+) |
-| `pop_nonwhite` | Proportion non-white |
-| `pop_illiterate` | Proportion illiterate |
-| `pop_nowater` | Proportion without adequate water supply |
-| `pop_nosewage` | Proportion without adequate sewage |
-| `pop_nogarbage` | Proportion without adequate waste collection |
-| `pop_nopaving` | Proportion on unpaved streets |
+**PC1 explains 50.5 % of the variance of the ten standardized indicators; PC2 explains 16.5 %.** The mean correlation of PC1 with its inputs came out **positive (+0.468)**, so the global sign flip in the build script did **not** fire: the component was already oriented towards higher deprivation. The loadings are:
 
-Variables were standardized with `StandardScaler` and submitted to PCA. PC1 was used as the main vulnerability axis; its sign was adjusted so that higher values represent higher social vulnerability. The final `SVI_Coast_2022` was normalized to 0–100 (Min–Max). Methodology based on Lima et al. (2024, *Nat. Hazards*, https://doi.org/10.1007/s11069-023-06246-w).
+| Variable | Description | PC1 loading | *r* with SVI |
+|----------|-------------|------------:|-------------:|
+| `pop_poverty` | Proportion of households up to ½ minimum wage per capita | **+0.418** | +0.940 |
+| `pop_illiterate` | Illiteracy rate (15+) | +0.371 | +0.833 |
+| `pop_house` | Mean residents per occupied household (published Min–Max rescaled to 0–1) | +0.350 | +0.787 |
+| `pop_nogarbage` | Proportion of households without waste collection | +0.349 | +0.783 |
+| `pop_nonwhite` | Proportion not self-declared white | +0.347 | +0.780 |
+| `pop_nosewage` | Proportion without adequate sewage | +0.320 | +0.719 |
+| `pop_nowater` | Proportion without a general water network | +0.254 | +0.570 |
+| `pop_nopaving` | Proportion on unpaved streets | +0.152 | +0.342 |
+| `pop_agevul` | Proportion in vulnerable age groups (0–9 and 60+) | **−0.137** | −0.309 |
+| `pop_rent` | Proportion of households **not owned** by a resident | **−0.338** | −0.760 |
+
+> **The two negative loadings are empirical results, not coding errors.** Every
+> one of the ten columns was traced back to its SIDRA query and tested against
+> municipalities whose real-world standing is not in dispute; all ten passed, so
+> no column is reversed. `pop_rent` loads negatively because non-ownership in
+> Brazil is a trait of urban affluence — rental and second-home stock concentrate
+> in the wealthy southern resort towns (Balneário Camboriú, 50.3 %) while
+> self-built owner occupancy dominates the poor rural coast (Chaves/PA, 9.8 %).
+> `pop_agevul` loads weakly negatively because it sums two age tails that move in
+> opposite directions with income: the 0–9 share falls with development while the
+> 60+ share rises, so their sum is nearly flat across the deprivation gradient.
+> Forcing the sign of either input before the PCA is a mathematical no-op — it
+> reflects the loading and leaves the component identical (ρ = 1.000, zero rank
+> shifts). See AUD-09 for the full audit.
+
+> **What the index is.** `SVI_Coast_2022` correlates *r* = **+0.940** with
+> `pop_poverty` and ρ = **−0.491** with log municipal population: it is an axis of
+> **material deprivation**, tracking Brazil's north–south development gradient. It
+> is *not* a measure of susceptibility to coastal flooding specifically, and it
+> contains no physical susceptibility at all (AUD-10). Two artefacts of the final
+> Min–Max are worth naming: Balneário Camboriú/SC receives exactly **0** and
+> Chaves/PA exactly **100**, because each anchors one end of the scale.
 
 #### Sub-step 4.4 — Hazard Index and integrated risk
 
 ```
-Hazard_Frequency = norm_native(compound_count_total)
-Hazard_Severity  = norm_native(mean_integrated_severity)
-Hazard_Index_raw = (Hazard_Frequency + Hazard_Severity) / 2
-Hazard_Index     = norm_native(Hazard_Index_raw)
-Hazard_Index_mun = norm_municipal(Hazard_Index)
+Hazard_Frequency = min(compound_count_total / 99, 1)
+Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)
+Hazard_Index = Hazard_Index_mun = (Hazard_Frequency + Hazard_Severity) / 2
 
-Exposure_absolute = clip[(log10(pop_10km) - 2) / (6 - 2), 0, 1]
-Exposure_relative = pop_10km / pop_municipality
-Exposure_Index    = sqrt(clip(Exposure_absolute) * clip(Exposure_relative))
+pop_eff = 0.4*pop_1km + 0.3*pop_2km + 0.2*pop_5km + 0.1*pop_10km
+Exposure_absolute = clip[(log10(pop_eff) - 2) / (6 - 2), 0, 1]
+Exposure_relative = pop_eff / pop_municipality
+Exposure_Index = sqrt(Exposure_absolute * Exposure_relative)
 
-Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index)
-                   * clip(SVI_Coast_2022/100)) ^ (1/3)
-Risk_Hazard     = norm_municipal(Risk_Hazard_raw)
+V = Phi(PC1 / sd(PC1, ddof=0))
+Risk_Hazard = (Hazard_Index_mun * Exposure_Index * V) ^ (1/3)
 ```
 
 Where:
-- `clip()` floors a component at **0.01** before any product, so that a
-  municipality sitting at the bottom of a Min–Max scale is not handed zero risk
-  as a scaling artefact — Balneário Camboriú is exactly at `SVI = 0`
-- `Hazard_Index_mun` — the hazard renormalized over the municipalities. The
-  native-grid `Hazard_Index` reaches only 0.829 across municipalities, which
-  would silently down-weight it in the product
-- `Exposure_Index` — resident population within 10 km of the coastline, from the
+- no floor, municipal hazard Min–Max, or final risk Min–Max is applied
+- `V` preserves the original SVI ordering (ρ = 1.0000) while avoiding exact
+  sample-extreme anchors; the original `SVI_Coast_2022` remains published
+- `Exposure_Index` — effective/weighted population, not a literal inhabitant
+  count. Because the bands are cumulative, the equivalent ring weights are
+  1.0 (0–1 km), 0.6 (1–2 km), 0.3 (2–5 km), and 0.1 (5–10 km), from the
   IBGE Grade Estatística 2022 (200 m urban / 1 km rural cells). Goalposts of
   10² and 10⁶ inhabitants are **fixed**, not taken from the data, so the scale
   does not move when the set of municipalities changes
@@ -334,6 +398,10 @@ Where:
   construction: a component near zero pulls the index down, which is the
   property the IPCC risk framework implies. An arithmetic mean would let a large
   population compensate for the absence of a physical driver
+
+An exact zero caused by hazard means **no compound event met the acceptance
+criteria in 1993–2025**; it does not mean that physical coastal risk is
+impossible. Missing association is a separate, explicit coverage category.
 
 The exposure recipe follows the Index for Risk Management
 ([INFORM, JRC](https://drmkc.jrc.ec.europa.eu/inform-index/INFORM-Risk/Methodology)),
@@ -348,11 +416,9 @@ entirely coastal ones.
 - `Hazard_Frequency`, `Hazard_Severity` — native-grid normalized hazard components
 - `mean_overlap_duration`, `mean_compound_intensity_norm` — diagnostics, published but no longer index components (see AUD-06)
 - `Hazard_Index_raw` — equal-weight mean of the three normalized components
-- `Hazard_Index` — native-grid Min–Max normalization of `Hazard_Index_raw`, transferred to municipalities
-- `Hazard_Index_mun` — `Hazard_Index` renormalized over the municipalities, so its amplitude matches SVI/100 in the equal-weight product
+- `Hazard_Index` / `Hazard_Index_mun` — fixed-anchor index, transferred without municipal renormalization
 - `Exposure_Index`, `Exposure_absolute`, `Exposure_relative`
-- `Risk_Hazard_raw` — geometric mean of `Hazard_Index_mun`, `Exposure_Index` and `SVI_Coast_2022/100` (each floored at 0.01)
-- `Risk_Hazard` — `Risk_Hazard_raw` Min–Max normalized to [0, 1] — current integrated coastal risk
+- `Risk_Hazard_raw` / `Risk_Hazard` — identical geometric mean of `Hazard_Index_mun`, `Exposure_Index` and `V`; no floor or final Min–Max
 
 > **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (4) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
@@ -456,12 +522,13 @@ The repository currently contains:
 
 ✅ **STEP 3 — Hazard Characterization** (complete for full Brazilian coast)
 - Compound detection (Step 3.2) under the current HAT-gated method: **16,768 events** over 808 grid points, 1993–2025; 208 points and 83 municipalities carry no accepted event
-- **Steps 3.1 and 3.3–3.8 have NOT been regenerated** under the current method: they read the Hₛ/`SSH_total` catalogs built at q90/q90, and re-running them unchanged would mix a superseded level variable into the published statistics. See AUD-01 §14, remaining uncertainty (6)
+- **All sub-steps regenerated on 2026-07-31** under the current method: 3.1 rebuilt the catalogs on tide-free `zos` at q70/q99, and 3.3–3.8 were rerun from those catalogs. No published statistic still derives from `SSH_total`
 
 ✅ **STEP 4 — Exposure, Vulnerability & Risk Integration** (complete at municipal scale)
 - SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (282 coastal municipalities)
 - Exposure from resident population within 10 km of the coastline (IBGE Grade Estatística 2022), not a spatial join of oceanic hazard metrics
-- Current Hazard_Index = norm_native{[norm_native(frequency) + norm_native(duration) + norm_native(intensity)]/3}; Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) × clip(Exposure_Index) × clip(SVI/100)) ^ (1/3)] — see Sub-step 4.4 for the full three-component formula
+- Current Hazard_Index = norm_native{[norm_native(compound_count_total) + norm_native(mean_integrated_severity)]/2} — **two** components since AUD-06 retired the duration term; Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) × clip(Exposure_Index) × clip(SVI/100)) ^ (1/3)] — see Sub-step 4.4
+- **Vulnerability is social only.** No physical susceptibility layer exists (AUD-10); 2 of 282 municipalities carry no risk value (AUD-15)
 
 
 ---
@@ -731,6 +798,123 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 - **Disaster records:** S2ID and Atlas Digital databases have incomplete and uneven reporting. Not all coastal flooding events are officially declared or documented. Reported impacts (damages, affected population) are minimum estimates and subject to underreporting bias.
 
 - **SC Civil Defense database:** The Leal et al. (2024) database provides high-quality event-level data for Santa Catarina (1998–2020) but is geographically limited. Threshold calibration based on SC events introduces regional bias when extrapolated to other coastal sectors—an acknowledged methodological limitation justified by data availability constraints.
+
+### Declared limitations for the manuscript
+
+The five paragraphs below are written to be transferable, essentially as they
+stand, into the Limitations section of the manuscript. Each closes an audit
+issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
+named at the end of each paragraph.
+
+- **Daily phase mismatch in the still-water level (AUD-03).** GLORYS12 supplies a
+  single `zos` sample per day, at 00:00 UTC, while the FES2022 term is the
+  largest astronomical tide of that day, which occurs at an arbitrary hour. The
+  still-water level `SWL = (zos − mean zos) + tide_daily_max` is therefore not
+  realised at any real instant, and no correction is possible without sub-daily
+  sea level, which the product does not provide. Since 2026-07-31 the mismatch
+  no longer touches the level detection threshold — episodes are segmented on
+  tide-free `zos`, with no tide added before the percentile is taken — but it
+  does enter the acceptance gate `max(SWL) > HAT` and the level term of the
+  integrated severity. Bounding the true high-water `zos` by linear
+  interpolation between consecutive daily samples puts the phase error at a
+  domain median of **1.2 cm** per day (p95 3.2 cm). It is strongly
+  latitude-dependent, and **in the opposite direction to the one a tidal
+  argument would suggest**: about 1 cm in the macrotidal north (17–19 % of the
+  local `zos` standard deviation, rank correlation ρ ≥ 0.9996 against a
+  phase-coherent alternative) against **5–10 cm in the micro-tidal south**
+  (50–66 % of the local standard deviation, ρ = 0.93–0.98), because day-to-day
+  `zos` variability there is three times larger and HAT is low enough that SWL
+  crosses it on 3–9 % of days rather than 0.1–0.3 %. On roughly half of the
+  southern days that currently pass the gate, the decision would flip at the
+  unfavourable end of the interpolation interval. The effect is **noise, not
+  bias**: across the domain 89,922 passing days would be lost and 91,274
+  currently-failing days would be gained, so the count is not systematically
+  inflated or deflated. The consequence to declare is that the attribution of
+  *individual* events in the South carries day-level uncertainty, even though
+  the aggregate hazard field is stable. No tide-gauge comparison was performed;
+  no observed sea-level series is held in this repository, and acquiring one
+  (GLOSS/IBGE or Marinha do Brasil) remains an open validation step.
+  *(`src/exploratory/audit_AUD_03_ssh_phase_coherence.py`)*
+
+- **Vulnerability is social only; there is no physical susceptibility layer
+  (AUD-10).** Vulnerability enters the risk index exclusively through
+  `SVI_Coast_2022`, built from ten IBGE/SIDRA 2022 socioeconomic and
+  infrastructure indicators. No variable describes the ground itself:
+  construction typology, terrain elevation, beach-face slope, dune, mangrove or
+  reef barriers, hard coastal defences, and drainage capacity are all absent.
+  Two municipalities with the same income profile and the same hazard therefore
+  receive the same vulnerability whether the exposed frontage is a rocky cliff
+  or a sand plain one metre above sea level — precisely the factor that
+  translates a given forcing into a given impact. The earlier framing, which
+  listed the MMA *Macrodiagnóstico da Zona Costeira e Marinha* as a
+  vulnerability source, was never implemented and has been withdrawn from the
+  data-source table. Exposure and vulnerability should also not be conflated:
+  the population count is exposure, not a physical vulnerability proxy. Building
+  the physical layer is the recommended next step, not a claim of this cycle.
+
+- **Exposure is resident and instantaneous; seasonal population is invisible
+  (AUD-14).** The exposure term counts residents *de jure* at their usual
+  address on 2022-07-31, a single instant set against 33 years of metocean
+  record. The floating population of the resort municipalities — which in
+  Balneário Camboriú, Bombinhas, Guarujá, Ubatuba and Cabo Frio multiplies the
+  people present during the summer — does not appear. The bias is systematic and
+  directional: it **understates** exposure in exactly the SC/PR/SP/RJ sector that
+  carries the highest physical hazard in the domain, so the risk of the southern
+  resort municipalities is a lower bound. No seasonal proxy has been applied,
+  because no defensible estimate is available on a homogeneous basis for all
+  282 municipalities and any occupancy factor for second homes would be an
+  unverifiable assumption. The index should be read as risk to **residents**, not
+  to visitors or to tourism assets. A partial mitigating factor, not a
+  correction: South Atlantic storm surge and extreme waves peak in austral autumn
+  and winter, when the floating population is at its lowest.
+
+- **Sample coverage and hazard-silent municipalities (AUD-15).** The municipal
+  set is inherited from Lima et al. (2024) plus Balneário Rincão, created in 2013
+  and absent from the standard SIDRA aggregates, giving **282** municipalities;
+  the membership criterion is inherited rather than re-derived here. All 282
+  carry an SVI, but only **280** carry a risk value. Both absences are
+  **association gaps, not scope decisions**, and both are recoverable.
+  **Fernando de Noronha/PE** is an archipelago ~350 km offshore, but the grid
+  does cover it: **19 points** lie over the archipelago, with ordinary oceanic
+  wave thresholds (Hₛ ≈ 2.0 m) and HAT ≈ 1.5 m, the nearest 1.5 km from the
+  municipal polygon. Each carries 9–13 candidate events, **all rejected by the
+  HAT gate**, so associating it would give it `Hazard_Index_mun` = 0 and place
+  it among the 83 hazard-silent municipalities below. **Içara/SC** has its
+  nearest point 16.5 km away, carrying 77 accepted events, with three
+  candidates inside 30 km. Both must be named in the map legends, not left in a
+  metadata file. Four municipalities have a population within 10 km too small for the
+  exposure metric to discriminate — **Santa Rita/MA (4 residents), Calçoene/AP
+  (101), Oiapoque/AP (518), Terra de Areia/RS (765)** — of which the first two
+  sit at the 0.01 exposure floor; removing all four leaves the published ranking
+  unchanged (ρ = 1.000, maximum rank shift 0), so they anchor no normalisation.
+  The coverage limitation that the current method newly creates is different in
+  kind and larger: **83 of the 280 municipalities draw their hazard from a grid
+  point that accepted no compound event at all**, so their `Hazard_Index_mun` is
+  exactly 0 and their risk rests entirely on the 0.01 floor. They are
+  concentrated in the North and Northeast (CE 18, AL 15, RN 14, PE 12, SE 7,
+  BA 7, PB 3, MA 3, PA 3, AP 1) and they occupy ranks **191–280** — the whole
+  bottom third of the ranking. Within that group the ordering is set by exposure
+  and vulnerability alone and carries no hazard information; it should not be
+  read as a hazard gradient.
+  *(`src/exploratory/audit_AUD_15_sample_coverage.py`)*
+
+- **Deprivation axis, not coastal susceptibility (AUD-09).** `SVI_Coast_2022` is
+  PC1 of the ten standardized indicators, explaining 50.5 % of their variance
+  (PC2: 16.5 %). It correlates *r* = +0.940 with the poverty indicator and
+  ρ = −0.491 with log municipal population: it measures **material deprivation**
+  along Brazil's north–south development gradient, and it is not specific to
+  coastal flooding. Two indicators carry negative PC1 loadings — `pop_rent`
+  (−0.338) and `pop_agevul` (−0.137) — which the audit confirmed are empirical
+  results rather than coding errors: all ten columns were traced to their SIDRA
+  queries and tested against municipalities of undisputed standing, and all ten
+  passed. Non-ownership is a trait of urban affluence in Brazil, and the
+  vulnerable-age share sums two tails that move oppositely with income. Forcing
+  the sign of either input before the PCA is a mathematical no-op. Redundancy is
+  real: mean |r| among the ten is 0.42, and four of them measure basic
+  sanitation. Finally, the Min–Max anchors are exact — Balneário Camboriú
+  receives SVI = 0 and Chaves/PA SVI = 100 — which is a scale artefact, not a
+  statement that one municipality has no social vulnerability.
+  *(`src/exploratory/audit_AUD_09_svi_directionality.py`)*
 
 ### Current Implementation Status
 

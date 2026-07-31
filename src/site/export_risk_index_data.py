@@ -42,14 +42,18 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyogrio
+from scipy.stats import norm, spearmanr
 from shapely import get_num_coordinates
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT
 from src.risk_integration.exposure_index import (
-    CLIP_FLOOR,
+    EFFECTIVE_POPULATION_WEIGHTS,
     GOALPOST_MAX_INHABITANTS,
     GOALPOST_MIN_INHABITANTS,
     exposure_absolute,
+    effective_population,
     exposure_inform,
     exposure_relative,
 )
@@ -64,8 +68,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE_DIR = ROOT / "outputs" / "risk_index"
 SOURCE_FILE = SOURCE_DIR / "risk_index.shp"
 EXPOSURE_CSV = ROOT / "outputs" / "exposure" / "municipal_exposure.csv"
-#: Distance band whose population feeds the exposure component.
-EXPOSURE_FIELD = "pop_10km"
+EXPOSURE_FIELDS = tuple(EFFECTIVE_POPULATION_WEIGHTS)
+VULNERABILITY_FIELD = "Vulnerability_CDF_PC1"
 SITE_DATA_DIR = ROOT / "site" / "public" / "data"
 OUTPUT_GEOJSON = SITE_DATA_DIR / "risk_index_municipalities.geojson"
 OUTPUT_METADATA = SITE_DATA_DIR / "risk_index_metadata.json"
@@ -120,6 +124,52 @@ SUPPORT_FIELD_CANDIDATES: dict[str, tuple[str, ...]] = {
     "pop_nogarbage": ("pop_nogarb", "pop_nogarbage"),
     "pop_nopaving": ("pop_nopavi", "pop_nopaving"),
 }
+SVI_INDICATORS = (
+    "pop_house", "pop_rent", "pop_poverty", "pop_agevul", "pop_nonwhite",
+    "pop_illiterate", "pop_nowater", "pop_nosewage", "pop_nogarbage",
+    "pop_nopaving",
+)
+
+
+def _derive_vulnerability(export: gpd.GeoDataFrame) -> tuple[pd.Series, dict[str, Any]]:
+    """Verify delivered PC1 and map it to a stable probability scale.
+
+    The original 0--100 SVI remains in the product. Integration uses
+    ``Phi(PC1 / sd(PC1))`` with population standard deviation (``ddof=0``).
+    """
+    missing = sorted({"PC1", "SVI_Coast_2022", *SVI_INDICATORS} - set(export.columns))
+    if missing:
+        raise ValueError(f"Cannot verify vulnerability; missing: {', '.join(missing)}")
+    matrix = export[list(SVI_INDICATORS)].astype(float).to_numpy()
+    scores = PCA().fit_transform(StandardScaler().fit_transform(matrix))[:, 0]
+    mean_corr = float(np.mean([
+        np.corrcoef(scores, matrix[:, j])[0, 1]
+        for j in range(matrix.shape[1])
+    ]))
+    if mean_corr < 0:
+        scores = -scores
+    delivered = pd.to_numeric(export["PC1"], errors="coerce").astype(float)
+    max_pc1_error = float(np.max(np.abs(scores - delivered.to_numpy())))
+    if max_pc1_error > 5e-5:
+        raise ValueError(
+            f"Delivered PC1 was not reproduced (max abs difference {max_pc1_error:.6g})"
+        )
+    sd = float(delivered.std(ddof=0))
+    if not np.isfinite(sd) or sd <= 0:
+        raise ValueError(f"Invalid PC1 population standard deviation: {sd}")
+    vulnerability = pd.Series(norm.cdf(delivered / sd), index=export.index)
+    rho = float(spearmanr(vulnerability, export["SVI_Coast_2022"].astype(float)).statistic)
+    if not math.isclose(rho, 1.0, abs_tol=1e-12):
+        raise ValueError(f"Vulnerability/SVI rank preservation failed: rho={rho}")
+    return vulnerability, {
+        "source_field": "PC1",
+        "formula": "Phi(PC1 / sd(PC1))",
+        "standard_deviation": {"value": sd, "ddof": 0, "population": int(len(export))},
+        "pc1_reproduction_max_abs_difference": max_pc1_error,
+        "spearman_with_original_svi_fraction": rho,
+        "original_field_preserved": "SVI_Coast_2022",
+        "indicator_sign_changes": "none; negative PCA loadings are empirical",
+    }
 
 
 #: Versioned archive of the municipality-to-grid-point association. The
@@ -216,14 +266,14 @@ def _require_exposure() -> pd.DataFrame:
     exposure = pd.read_csv(EXPOSURE_CSV, dtype={"municipality_code": str})
     missing = [
         column
-        for column in ("municipality_code", EXPOSURE_FIELD, "pop_municipality")
+        for column in ("municipality_code", *EXPOSURE_FIELDS, "pop_municipality")
         if column not in exposure.columns
     ]
     if missing:
         raise ValueError(
             f"{EXPOSURE_CSV} lacks required column(s): {', '.join(missing)}"
         )
-    return exposure[["municipality_code", EXPOSURE_FIELD, "pop_municipality"]]
+    return exposure[["municipality_code", *EXPOSURE_FIELDS, "pop_municipality"]]
 
 
 def _require_source_files() -> None:
@@ -293,16 +343,19 @@ def _numeric_stats(series) -> dict[str, float | int | None]:
     }
 
 
-def _minmax(series):
-    values = series.astype(float)
-    valid = values.dropna()
-    if valid.empty:
-        return values * np.nan
-    vmin = float(valid.min())
-    vmax = float(valid.max())
-    if math.isclose(vmin, vmax):
-        return values.where(values.isna(), 0.0)
-    return (values - vmin) / (vmax - vmin)
+def integrated_risk(
+    hazard: pd.Series,
+    exposure: pd.Series,
+    vulnerability: pd.Series,
+) -> pd.Series:
+    """Geometric risk product with exact zeros and no sample rescaling/floor."""
+    components = pd.concat(
+        [hazard.astype(float), exposure.astype(float), vulnerability.astype(float)],
+        axis=1,
+    )
+    if ((components < 0) | (components > 1)).any().any():
+        raise ValueError("Risk components must lie in [0,1]")
+    return (components.iloc[:, 0] * components.iloc[:, 1] * components.iloc[:, 2]) ** (1.0 / 3.0)
 
 
 def _where_clause(fields: list[str]) -> str:
@@ -353,19 +406,16 @@ def _nice_boundaries(
 CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
     {
         "key": "Risk_Hazard",
-        "label": "Integrated coastal risk (normalized)",
+        "label": "Integrated coastal risk",
         "short_label": "Risk (0–1)",
         "unit": "0–1",
         "stage": "normalized",
         "group": "Integrated risk",
-        "actual_field": (
-            "derived:norm_municipal((Hazard_Index_mun*Exposure_Index*"
-            "SVI_Coast_2022/100)^(1/3))"
-        ),
+        "actual_field": "derived:(Hazard_Index_mun*Exposure_Index*Vulnerability_CDF_PC1)^(1/3)",
         "description": (
             "Final integrated risk: the geometric mean of hazard, exposure and "
-            "vulnerability, Min-Max normalized across the coastal "
-            "municipalities. Conjunctive by construction — a component near zero "
+            "vulnerability on fixed scales, without final Min-Max. Conjunctive "
+            "by construction — a component near zero "
             "pulls the whole index down, which is the property the IPCC risk "
             "framework implies."
         ),
@@ -378,13 +428,12 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "stage": "raw",
         "group": "Integrated risk",
         "actual_field": (
-            "derived:(Hazard_Index_mun*Exposure_Index*SVI_Coast_2022/100)^(1/3)"
+            "derived:(Hazard_Index_mun*Exposure_Index*Vulnerability_CDF_PC1)^(1/3)"
         ),
         "description": (
             "The geometric mean of the three components before the municipal "
-            "Min-Max step, with each floored at 0.01 so that a municipality at "
-            "the bottom of a Min-Max scale is not handed zero risk as a scaling "
-            "artefact."
+            "geometric mean. This audit alias equals Risk_Hazard; no floor or "
+            "final sample-dependent normalization is applied."
         ),
     },
     {
@@ -394,9 +443,10 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "input",
         "group": "Exposure",
-        "actual_field": "derived:geomean(goalposts(log10(pop_10km)), pop_10km/pop_municipality)",
+        "actual_field": "derived:geomean(goalposts(log10(pop_eff)), pop_eff/pop_municipality)",
         "description": (
-            "Resident population within 10 km of the coastline, on a log scale "
+            "Effective population from cumulative 1, 2, 5 and 10 km bands "
+            "(weights 0.4, 0.3, 0.2, 0.1), on a log scale "
             "between fixed goalposts, paired by geometric mean with the share of "
             "the municipal population inside the band. Following INFORM, which "
             "computes physical exposure both ways because the count favours the "
@@ -411,7 +461,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "component",
         "group": "Exposure",
-        "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+        "actual_field": "derived:goalposts(log10(pop_eff), 1e2, 1e6)",
         "description": (
             "How many people, on a log scale fixed between 100 and 1,000,000 "
             "inhabitants. Fixed goalposts keep the scale independent of which "
@@ -425,7 +475,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "component",
         "group": "Exposure",
-        "actual_field": "derived:pop_10km/pop_municipality",
+        "actual_field": "derived:pop_eff/pop_municipality",
         "description": (
             "How coastal the municipality is rather than how many people it "
             "holds. A hamlet entirely on the shore and a city entirely on the "
@@ -457,26 +507,21 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "group": "Physical hazard",
         "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Severity)",
         "description": (
-            "The equal-weight mean of the three normalized components, before "
-            "the final Min-Max step. It spans a narrow interval, which is "
-            "exactly why the second normalization is applied."
+            "The equal-weight mean of the two fixed-anchor components. It is "
+            "identical to the final Hazard Index and retained as an audit alias."
         ),
     },
     {
         "key": "Hazard_Index_mun",
-        "label": "Hazard rescaled over the municipalities",
+        "label": "Hazard transferred to municipalities",
         "short_label": "Hazard (municipal)",
         "unit": "0–1",
         "stage": "normalized",
         "group": "Physical hazard",
-        "actual_field": "derived:norm_municipal(Hazard_Index)",
+        "actual_field": "transferred:Hazard_Index",
         "description": (
-            "The transferred Hazard Index rescaled to span [0,1] across the "
-            "municipalities. This is the field that enters the risk product: on "
-            "the native-grid scale the municipal maximum is 0.829, because the "
-            "most hazardous ocean point serves no municipality, and using it "
-            "inside a product would silently down-weight the hazard against the "
-            "other two components."
+            "The fixed-anchor Hazard Index transferred directly from the native "
+            "grid. No municipal Min-Max is applied."
         ),
     },
     {
@@ -486,10 +531,9 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "component",
         "group": "Physical hazard",
-        "actual_field": "transferred:norm_native(compound_count_total)",
+        "actual_field": "transferred:min(compound_count_total/99,1)",
         "description": (
-            "Compound-event count over 1993-2025, Min-Max normalized across "
-            "the native ocean grid."
+            "Compound-event count over 1993-2025 divided by the fixed 99-event anchor."
         ),
     },
     {
@@ -499,10 +543,9 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "component",
         "group": "Physical hazard",
-        "actual_field": "transferred:norm_native(mean_integrated_severity)",
+        "actual_field": "transferred:min(fillna(mean_integrated_severity,0)/1,1)",
         "description": (
-            "Mean overlap duration, Min-Max normalized across the native "
-            "ocean grid."
+            "Mean integrated severity divided by the fixed 1.0 anchor; no-event NaN is zero."
         ),
     },
     {
@@ -517,6 +560,16 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
             "Mean compound intensity, Min-Max normalized across the native "
             "ocean grid."
         ),
+    },
+    {
+        "key": VULNERABILITY_FIELD,
+        "label": "Social vulnerability (PC1 normal CDF)",
+        "short_label": "Vulnerability",
+        "unit": "0–1",
+        "stage": "input",
+        "group": "Social vulnerability",
+        "actual_field": "derived:Phi(PC1/sd(PC1,ddof=0))",
+        "description": "Monotonic fixed-reference transform used in risk integration; the original SVI is preserved for audit.",
     },
     {
         "key": "SVI_Coast_2022",
@@ -535,7 +588,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
 )
 
 FIXED_BOUNDARIES: dict[str, list[float]] = {
-    "Risk_Hazard": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
+    "Risk_Hazard": [0.0, 0.000001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
     "Hazard_Index": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
     "Hazard_Frequency": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
     "Hazard_Severity": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
@@ -590,16 +643,20 @@ def _derive_current_scope(
 
     export = base_export.copy()
     association_provenance = _apply_archived_association(export)
-    svi_fraction = export["SVI_Coast_2022"].astype(float) / 100.0
+    vulnerability, vulnerability_metadata = _derive_vulnerability(export)
+    export[VULNERABILITY_FIELD] = vulnerability.map(_to_jsonable)
 
     native_lookup = native_hazard.copy()
-    native_lookup["_lat_key"] = native_lookup["grid_lat"].round(6)
-    native_lookup["_lon_key"] = native_lookup["grid_lon"].round(6)
+    # NetCDF-derived coordinates carry float32 noise (for example -52.999988
+    # for the documented -53.0 grid point). The grid spacing is 0.2 degree, so
+    # one decimal is the canonical coordinate key.
+    native_lookup["_lat_key"] = native_lookup["grid_lat"].round(1)
+    native_lookup["_lon_key"] = native_lookup["grid_lon"].round(1)
     native_lookup = native_lookup.set_index(["_lat_key", "_lon_key"])
     municipality_keys = pd.MultiIndex.from_arrays(
         [
-            pd.to_numeric(export["grid_lat"], errors="coerce").round(6),
-            pd.to_numeric(export["grid_lon"], errors="coerce").round(6),
+            pd.to_numeric(export["grid_lat"], errors="coerce").round(1),
+            pd.to_numeric(export["grid_lon"], errors="coerce").round(1),
         ],
         names=["_lat_key", "_lon_key"],
     )
@@ -628,12 +685,15 @@ def _derive_current_scope(
     # municipalities. The risk product needs the three components to span
     # comparable amplitudes; the native-grid scale would silently down-weight
     # the hazard, since it reaches only 0.829 across municipalities.
-    hazard_mun = _minmax(hazard)
+    hazard_mun = hazard
     export["Hazard_Index_mun"] = hazard_mun.map(_to_jsonable)
 
     # Exposure. See src/04_risk_integration/exposure_index.py for the rationale
     # and for the three candidates that were rejected.
-    population = pd.to_numeric(export[EXPOSURE_FIELD], errors="coerce")
+    population = effective_population(export)
+    if (population <= 0).any():
+        raise ValueError("Effective population must be positive for all municipalities")
+    export["pop_eff"] = population.map(_to_jsonable)
     municipal_population = pd.to_numeric(export["pop_municipality"], errors="coerce")
     exposure = exposure_inform(population, municipal_population)
     export["Exposure_Index"] = exposure.map(_to_jsonable)
@@ -642,23 +702,18 @@ def _derive_current_scope(
         population, municipal_population
     ).map(_to_jsonable)
 
-    # Conjunctive risk: the geometric mean preserves the property the IPCC
+    # Conjunctive risk: exact zeros are scientifically meaningful and preserved.
     # framework implies, that risk needs all three to be present. An arithmetic
     # mean would let a large population compensate for the absence of a physical
-    # driver. Components are floored at CLIP_FLOOR first, so that a municipality
-    # sitting at the bottom of a Min--Max scale is not handed zero risk as a
-    # scaling artefact — Balneário Camboriú is exactly at SVI = 0.
-    floor = lambda series: series.clip(lower=CLIP_FLOOR, upper=1.0)  # noqa: E731
-    risk_raw = (
-        floor(hazard_mun) * floor(exposure) * floor(svi_fraction)
-    ) ** (1.0 / 3.0)
-    risk = _minmax(risk_raw)
+    # driver. No floor and no final Min--Max are applied.
+    risk = integrated_risk(hazard_mun, exposure, vulnerability)
+    risk_raw = risk
 
     export["Risk_Hazard_raw"] = risk_raw.map(_to_jsonable)
     export["Risk_Hazard"] = risk.map(_to_jsonable)
     transfer_metadata = {
         "method": (
-            "Exact lookup by grid_lat/grid_lon rounded to 6 decimals from the "
+            "Exact lookup by canonical 0.1-degree grid_lat/grid_lon keys from the "
             "native-grid Hazard Index to each municipality's pre-associated "
             "ocean point"
         ),
@@ -677,6 +732,24 @@ def _derive_current_scope(
             ].to_dict(orient="records")
         ],
     }
+    export["coverage_status"] = np.where(
+        hazard.isna(), "no_hazard_association",
+        np.where(hazard.eq(0), "associated_no_accepted_event_1993_2025", "associated_with_hazard"),
+    )
+    export["risk_zero_cause"] = "nonzero"
+    export.loc[hazard.isna(), "risk_zero_cause"] = "not_computed_missing_association"
+    export.loc[hazard.eq(0) & exposure.ne(0), "risk_zero_cause"] = (
+        "hazard_zero_no_accepted_event_1993_2025"
+    )
+    export.loc[hazard.ne(0) & exposure.eq(0), "risk_zero_cause"] = (
+        "exposure_zero_below_absolute_goalpost"
+    )
+    export.loc[hazard.eq(0) & exposure.eq(0), "risk_zero_cause"] = (
+        "hazard_zero_and_exposure_below_absolute_goalpost"
+    )
+    transfer_metadata["coverage_class_counts"] = export["coverage_status"].value_counts().to_dict()
+    transfer_metadata["risk_zero_cause_counts"] = export["risk_zero_cause"].value_counts().to_dict()
+    transfer_metadata["vulnerability_transform"] = vulnerability_metadata
     return export, transfer_metadata
 
 
@@ -747,9 +820,9 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     exposure_counts = _require_exposure()
     codes = base_export["municipality_code"].astype(str)
     lookup = exposure_counts.set_index("municipality_code")
-    for column in (EXPOSURE_FIELD, "pop_municipality"):
+    for column in (*EXPOSURE_FIELDS, "pop_municipality"):
         base_export[column] = codes.map(lookup[column])
-    unmatched = int(base_export[EXPOSURE_FIELD].isna().sum())
+    unmatched = int(base_export[EXPOSURE_FIELDS[0]].isna().sum())
     if unmatched:
         raise ValueError(
             f"{unmatched} municipalities have no exposure count. The delivered "
@@ -801,7 +874,9 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "Exposure_Index",
             "Exposure_absolute",
             "Exposure_relative",
-            EXPOSURE_FIELD,
+            *EXPOSURE_FIELDS,
+            "pop_eff",
+            VULNERABILITY_FIELD,
             "pop_municipality",
             "Risk_Hazard",
             "Risk_Hazard_raw",
@@ -821,7 +896,7 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Present in the GeoJSON properties for reproducibility but not "
                 "offered as map layers on the website."
             ),
-            "fields": [EXPOSURE_FIELD, "pop_municipality"],
+            "fields": [*EXPOSURE_FIELDS, "pop_eff", "pop_municipality", "coverage_status", "risk_zero_cause"],
         },
         "available_layers": _current_available_layers(current_export),
         "missing_expected_layers": [
@@ -840,30 +915,30 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "layers": {
                 "SVI_Coast_2022": layer_field_map.get("SVI_Coast_2022"),
                 "Hazard_Frequency": (
-                    "transferred:norm_native(compound_count_total)"
+                    "transferred:min(compound_count_total/99,1)"
                 ),
                 "Hazard_Severity": (
-                    "transferred:norm_native(mean_integrated_severity)"
+                    "transferred:min(fillna(mean_integrated_severity,0)/1,1)"
                 ),
 
                 "Hazard_Index_raw": (
                     "transferred:mean(Hazard_Frequency,Hazard_Severity)"
                 ),
                 "Hazard_Index": (
-                    "transferred:norm_native(Hazard_Index_raw)"
+                    "transferred:Hazard_Index"
                 ),
                 "Hazard_Index_mun": (
-                    "derived:norm_municipal(Hazard_Index)"
+                    "transferred:Hazard_Index"
                 ),
                 "Exposure_Index": (
-                    "derived:geomean(goalposts(log10(pop_10km),1e2,1e6),"
-                    "pop_10km/pop_municipality)"
+                    "derived:geomean(goalposts(log10(pop_eff),1e2,1e6),"
+                    "pop_eff/pop_municipality)"
                 ),
                 "Risk_Hazard_raw": (
                     "derived:(Hazard_Index_mun*Exposure_Index*"
-                    "SVI_Coast_2022/100)^(1/3)"
+                    "Vulnerability_CDF_PC1)^(1/3)"
                 ),
-                "Risk_Hazard": "derived:norm_municipal(Risk_Hazard_raw)",
+                "Risk_Hazard": "derived:Risk_Hazard_raw (no final normalization)",
             },
             "support": support_field_map,
         },
@@ -871,26 +946,19 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         "native_hazard_index": native_hazard_metadata,
         "hazard_transfer": hazard_transfer_metadata,
         "hazard_index_normalization": {
-            "method": "Min-Max after equal-weight component aggregation",
-            "population": "all finite native ocean grid points",
+            "method": "fixed anchors before equal-weight aggregation",
+            "population": "independent of native-grid sample extrema",
             "input_field": "Hazard_Index_raw",
             "input_stats": native_hazard_metadata["numeric_stats"][
                 "Hazard_Index_raw"
             ],
             "output_field": "Hazard_Index",
             "output_range": [0.0, 1.0],
-            "formula": (
-                "(Hazard_Index_raw - min(Hazard_Index_raw)) / "
-                "(max(Hazard_Index_raw) - min(Hazard_Index_raw))"
-            ),
+            "formula": "(min(count/99,1)+min(fillna(severity,0)/1,1))/2",
         },
         "municipal_hazard_renormalization": {
-            "method": "Min-Max over the municipalities",
-            "purpose": (
-                "Provide a hazard component whose amplitude matches SVI/100 "
-                "for equal-weight aggregations. Used as the hazard factor of "
-                "Risk_Hazard_raw; see integrated_risk_formula."
-            ),
+            "method": "none",
+            "purpose": "Preserve the fixed-anchor native-grid value exactly.",
             "population": (
                 "Brazilian coastal municipalities with a finite transferred "
                 "Hazard_Index"
@@ -899,32 +967,28 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "input_stats": _numeric_stats(current_export["Hazard_Index"]),
             "output_field": "Hazard_Index_mun",
             "output_range": [0.0, 1.0],
-            "formula": (
-                "(Hazard_Index - min(Hazard_Index)) / "
-                "(max(Hazard_Index) - min(Hazard_Index))"
-            ),
+            "formula": "Hazard_Index_mun = Hazard_Index",
         },
         "integrated_risk_formula": {
             "expression": (
-                "Risk_Hazard_raw = (clip(Hazard_Index_mun) * clip(Exposure_Index) "
-                "* clip(SVI_Coast_2022/100)) ** (1/3)"
+                "Risk_Hazard = (Hazard_Index_mun * Exposure_Index "
+                "* Vulnerability_CDF_PC1) ** (1/3)"
             ),
             "aggregation": "geometric mean of three components",
-            "clip_floor": CLIP_FLOOR,
+            "clip_floor": None,
             "rationale": (
                 "Conjunctive: the IPCC framework defines risk as emerging from "
                 "the interaction of hazard, exposure and vulnerability, which "
                 "implies that the absence of any one of them removes the "
                 "potential for adverse consequences. An arithmetic mean would "
                 "allow a large population to compensate for the absence of a "
-                "physical driver. The floor prevents a municipality at the "
-                "bottom of a Min-Max scale from receiving zero risk as a "
-                "scaling artefact."
+                "physical driver. Exact hazard zeros mean no accepted compound "
+                "event in 1993-2025, not impossibility of physical risk."
             ),
             "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)",
         },
         "integrated_risk_normalization": {
-            "method": "Min-Max",
+            "method": "none",
             "population": (
                 "Brazilian coastal municipalities with finite SVI_Coast_2022, "
                 "Hazard_Index and Exposure_Index"
@@ -933,10 +997,7 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "input_stats": _numeric_stats(current_export["Risk_Hazard_raw"]),
             "output_field": "Risk_Hazard",
             "output_range": [0.0, 1.0],
-            "formula": (
-                "(Risk_Hazard_raw - min(Risk_Hazard_raw)) / "
-                "(max(Risk_Hazard_raw) - min(Risk_Hazard_raw))"
-            ),
+            "formula": "Risk_Hazard = Risk_Hazard_raw",
         },
         "methodology": {
             "SVI_Coast_2022": "IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized with StandardScaler, submitted to PCA, PC1 sign-adjusted so higher values mean higher vulnerability, then normalized 0-100.",
@@ -947,12 +1008,10 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "association workflow."
             ),
             "Hazard_Frequency": (
-                "Min-Max normalization across the native grid of "
-                "compound_count_total."
+                "min(compound_count_total / 99, 1), with a fixed 33-year anchor."
             ),
             "Hazard_Severity": (
-                "Min-Max normalization across the native grid of "
-                "mean_integrated_severity: the compound severity summed over "
+                "min(fillna(mean_integrated_severity,0) / 1, 1): severity summed over "
                 "the days on which all detection criteria hold, so magnitude "
                 "and persistence enter as one quantity."
             ),
@@ -966,31 +1025,25 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "Equal-weight mean of Hazard_Frequency and Hazard_Severity."
             ),
             "Hazard_Index": (
-                "Min-Max normalization to [0,1] of Hazard_Index_raw across "
-                "the 808 native ocean grid points, transferred without "
-                "renormalization to municipalities."
+                "Equal-weight mean of the two fixed-anchor components."
             ),
             "Hazard_Index_mun": (
-                "Min-Max renormalization of the transferred Hazard_Index over "
-                "the municipalities, so that the hazard spans [0,1] like "
-                "SVI/100 for equal-weight aggregations. Used as the hazard "
-                "factor of Risk_Hazard_raw."
+                "Direct transfer of Hazard_Index; no municipal Min-Max."
             ),
             "Exposure_Index": (
-                "Resident population within 10 km of the coastline (IBGE Grade "
+                "Weighted effective population from cumulative 1, 2, 5 and 10 km bands "
                 "Estatistica 2022, 200 m urban / 1 km rural cells) on a log "
                 f"scale between fixed goalposts of {GOALPOST_MIN_INHABITANTS:,.0f} "
                 f"and {GOALPOST_MAX_INHABITANTS:,.0f} inhabitants, combined by "
                 "geometric mean with the share of the municipal population "
-                "inside the band. Proximity, not modelled inundation."
+                "represented by pop_eff/pop_municipality. Proximity, not modelled inundation."
             ),
             "Risk_Hazard_raw": (
                 "Geometric mean of Hazard_Index_mun, Exposure_Index and "
-                f"SVI_Coast_2022/100, each floored at {CLIP_FLOOR}."
+                "Vulnerability_CDF_PC1, with no floor."
             ),
             "Risk_Hazard": (
-                "Min-Max normalization to [0,1] of Risk_Hazard_raw across "
-                "municipalities with finite SVI and hazard values."
+                "Identical to Risk_Hazard_raw; no final Min-Max."
             ),
         },
     }

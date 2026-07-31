@@ -42,8 +42,8 @@ export default function RiskIntegrationPage() {
             </h1>
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
               Municipal-scale coastal risk from its three IPCC components: the native-grid
-              Hazard_Index (equal-weight compound-event frequency, mean overlap duration and mean
-              normalized intensity), the population within 10 km of the coastline, and the coastal
+              Hazard_Index (equal-weight compound-event frequency and mean integrated severity),
+              the resident population within 10 km of the coastline, and the coastal
               Social Vulnerability Index. They are combined by <strong>geometric mean</strong>, which
               is conjunctive — risk requires a hazard, people exposed to it, and a susceptibility.
               Each quantity is available <strong>before and after</strong> its Min–Max normalization,
@@ -64,7 +64,7 @@ export default function RiskIntegrationPage() {
               <ModuleCard
                 color="#2171b5"
                 title="Hazard_Index"
-                body="Normalized equal-weight combination of native-grid compound-event frequency, mean overlap duration, and mean intensity."
+                body="Normalized equal-weight combination of native-grid compound-event frequency and mean integrated severity. Duration and peak intensity are published as diagnostics but do not enter the index."
               />
               <ModuleCard
                 color="#31a354"
@@ -102,20 +102,16 @@ export default function RiskIntegrationPage() {
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
                   <strong className="text-gray-800">Current index definitions.</strong>{' '}
-                  Hazard_Index = norm_grid{'{'}[norm_grid(frequency) + norm_grid(duration) +
-                  norm_grid(intensity)] / 3{'}'}; Exposure_Index = √(absolute × relative), the
-                  population within 10 km log-scaled between fixed goalposts of 10² and 10⁶
-                  inhabitants paired with the municipal share; Risk_Hazard_raw =
-                  (Hazard_Index_mun · Exposure_Index · SVI_Coast_2022/100)^(1/3) with each
-                  component floored at 0.01; and Risk_Hazard = norm_municipal(Risk_Hazard_raw).
-                  The map publishes both the raw and the normalized stage of each quantity: Min–Max
-                  rescaling changes the numeric range, never the ranking of municipalities.
+                  Hazard_Index = [min(count/99,1) + min(severity/1,1)]/2; Exposure_Index uses
+                  pop_eff = 0.4·pop_1km + 0.3·pop_2km + 0.2·pop_5km + 0.1·pop_10km; and
+                  Risk_Hazard = (Hazard_Index_mun · Exposure_Index · Φ(PC1/sd(PC1)))^(1/3).
+                  There is no floor, municipal hazard Min–Max, or final risk Min–Max.
                 </p>
                 <p>
                   <strong className="text-gray-800">Component aggregation.</strong>{' '}
-                  Inside the hazard, frequency, duration and intensity receive equal weights and
-                  combine arithmetically; because frequency is negatively correlated with the two
-                  mean-event characteristics, that layer is compensatory. Across the three risk
+                  Inside the hazard, frequency and mean integrated severity receive equal weights
+                  and combine arithmetically; the two are positively correlated (Spearman +0.60), so
+                  that layer reinforces rather than cancels, though it remains compensatory. Across the three risk
                   components the aggregation is <em>geometric</em> and therefore not compensatory:
                   a municipality with almost nobody within 10 km of the coast cannot reach a high
                   risk on vulnerability alone.
