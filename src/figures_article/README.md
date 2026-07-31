@@ -93,8 +93,11 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 - `hazard_vulnerability_risk_multiplot.png`
   - Panel A: `Hazard_Index_mun` — the fixed-anchor `Hazard_Index` transferred
     without municipal renormalization.
-  - Panel B: `Vulnerability_CDF_PC1 = Φ(PC1/sd(PC1,ddof=0))`.
-  - Panel C: `Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Vulnerability_CDF_PC1)^(1/3)`,
+  - Panel B: `Exposure_Index` — geometric mean of the fixed-goalpost absolute
+    component and municipal share, both calculated from the weighted effective
+    population in the cumulative 1, 2, 5, and 10 km coastal bands.
+  - Panel C: `Vulnerability_CDF_PC1 = Φ(PC1/sd(PC1,ddof=0))`.
+  - Panel D: `Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Vulnerability_CDF_PC1)^(1/3)`,
     without floor or final Min--Max.
   - Uses discrete green-to-red classes derived from the inverted Composite
     Score heatmap palette.
