@@ -44,9 +44,11 @@ export default function HazardCharacterizationPage() {
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
               Complete statistical characterization of extreme ocean events along the Brazilian coast.
               The headline product is the composite <strong>Hazard Index</strong>, built from
-              compound-event frequency, mean overlap duration, and mean compound intensity on the
-              808-point native ocean grid and displayed directly on the coastline. Behind it, each
-              grid point carries 87 metrics derived from the storm catalogs produced in Step 3.1:
+              <strong> two</strong> equally weighted components — compound-event frequency and mean
+              integrated severity — on the 808-point native ocean grid and displayed directly on the
+              coastline. The former third component, mean overlap duration, was retired from the
+              index on 2026-07-29 and is published as a diagnostic only. Behind it, each
+              grid point carries metrics derived from the storm catalogs produced in Step 3.1:
               compound event detection, storm duration and persistence, monthly seasonality,
               decadal trends (Mann–Kendall + Sen slope), univariate extreme value analysis (GPD return levels),
               and wave–surge dependence structure (Kendall τ, Spearman ρ, extremal χ/χ̄).
@@ -59,7 +61,7 @@ export default function HazardCharacterizationPage() {
           <div className="mx-auto max-w-6xl px-6">
             <h2 className="mb-4 text-lg font-bold text-gray-900">Analysis Modules</h2>
             <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
-              <ModuleCard color="#756bb1" title="3.2 Compound" body="Temporal overlap between Hₛ and SSH_total storms. Normalized intensity, overlap duration, peak lag." />
+              <ModuleCard color="#756bb1" title="3.2 Compound" body="Temporal overlap between Hₛ and tide-free zos episodes, gated by max(SWL) > HAT. Integrated severity over the HAT datum." />
               <ModuleCard color="#2171b5" title="3.3 Duration" body="Storm episode duration statistics: mean, median, P95. Inter-event times and persistence." />
               <ModuleCard color="#238b45" title="3.4 Seasonality" body="Monthly/seasonal storm frequency. Peak month for Hₛ, SSH, and compound events." />
               <ModuleCard color="#d94801" title="3.5 Trends" body="Mann–Kendall + Sen slope for annual storm counts, peak intensity, and mean duration (1993–2025)." />
@@ -90,9 +92,10 @@ export default function HazardCharacterizationPage() {
               </Link>
             </div>
             <p className="mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
-              The three physical components are shown in their own catalog units — events yr⁻¹,
-              days, and the dimensionless compound intensity — and the Hazard Index is the
-              composite 0–1 layer built from them. The values are calculated on the 808 native
+              The two index components are shown in their own catalog units — events yr⁻¹ and the
+              dimensionless integrated severity — and the Hazard Index is the composite 0–1 layer
+              built from them. The duration and peak-intensity panels are retired diagnostics,
+              kept for comparison but carrying no weight in the index. The values are calculated on the 808 native
               ocean grid points and drawn on the Natural Earth coastline; the coastal rendering
               does not recalculate the index. This is the same construction as figure{' '}
               <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">
@@ -182,13 +185,17 @@ export default function HazardCharacterizationPage() {
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <p>
                   <strong className="text-gray-800">Storm catalogs.</strong>{' '}
-                  Base catalogs produced in Step 3.1 using peaks-over-threshold with q90 for both Hₛ (WAVERYS)
-                  and SSH_total (GLORYS zos + FES2022 daily-max tide). Consecutive exceedance days are merged
+                  Base catalogs produced in Step 3.1 using peaks-over-threshold. <strong>These base
+                  catalogs still carry the superseded q90/q90 pair on Hₛ and SSH_total and have not
+                  been regenerated under the current method</strong>; the compound product in 3.2 is
+                  computed independently from the unified dataset. Consecutive exceedance days are merged
                   into episodes (gap ≤ 1 day). 808 coastal grid points, 1993–2025.
                 </p>
                 <p>
                   <strong className="text-gray-800">Compound detection.</strong>{' '}
-                  A compound event is identified when an Hₛ episode and an SSH_total episode overlap by ≥ 1 calendar day.
+                  A compound event is identified when an Hₛ episode (local q70) and a tide-free
+                  <em> zos</em> episode (local q99) overlap by ≥ 1 calendar day <strong>and</strong> the
+                  still water level over those shared days exceeds the local HAT.
                   Normalized intensity = 0.5 × (Hₛ_norm + SSH_norm), scaled via domain-wide Q05/Q95.
                 </p>
                 <p>
@@ -217,9 +224,9 @@ export default function HazardCharacterizationPage() {
                 <p>
                   <strong className="text-gray-800">Limitations.</strong>{' '}
                   Daily temporal resolution means sub-daily co-occurrence cannot be resolved.
-                  SSH_total combines GLORYS zos sampled at 00:00 UTC with the daily-maximum FES2022 tide — these do not
-                  share the same timestamp, so SSH_total overestimates the true instantaneous total sea level.
-                  The q90/q90 detection thresholds were calibrated against reported Santa Catarina events and applied
+                  The still water level combines GLORYS zos sampled at 00:00 UTC with the daily-maximum FES2022 tide — these do not
+                  share the same timestamp, so it overestimates the true instantaneous total sea level.
+                  The q70/q99 detection thresholds were calibrated against reported Santa Catarina events and applied
                   coast-wide; their optimality outside SC is untested.
                   GPD parameter estimation may be unreliable for grid points with few exceedances.
                   Trend significance over 33 years is limited for low-frequency events.

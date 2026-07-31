@@ -192,7 +192,7 @@ export default function HazardIndexMethodologyPage() {
           <p className="mb-4 text-sm leading-relaxed text-gray-700">
             At each grid point, significant wave height (Hₛ, WAVERYS) and total sea level
             (SSH_total = GLORYS12 zos + FES2022 daily-maximum tide) are catalogued independently as
-            peaks-over-threshold episodes using the q90/q90 thresholds calibrated in Step 2e.
+            peaks-over-threshold episodes using the q70/q99 thresholds calibrated in Step 2e (recalibrated 2026-07-30 on the production detector).
             A <strong>compound event</strong> is an Hₛ episode and an SSH_total episode that
             overlap by at least one calendar day at the same point.
           </p>

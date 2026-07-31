@@ -248,10 +248,10 @@ export default function CompoundDetectionPage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               {[
-                { label: 'Drivers', value: 'Hₛ (WAVERYS) and SSH_total = GLORYS12 zos + FES2022 tide (daily max)' },
-                { label: 'Threshold', value: 'q90 / q90 — local, from the full 1993–2025 climatology (Step 2e)' },
+                { label: 'Drivers', value: 'Hₛ (WAVERYS) and tide-free zos (GLORYS12), with a level gate max(SWL) > HAT' },
+                { label: 'Threshold', value: 'q70 (Hₛ) / q99 (zos) — local, from the full 1993–2025 climatology (Step 2e, recalibrated 2026-07-30)' },
                 { label: 'Episode gap', value: '≤ 1 non-exceedance day bridges an episode' },
-                { label: 'Compound rule', value: 'Hₛ and SSH_total episodes overlap by ≥ 1 calendar day' },
+                { label: 'Compound rule', value: 'Hₛ and zos episodes overlap by ≥ 1 calendar day AND max(SWL) over those days > HAT' },
                 { label: 'Grouping', value: 'Union-find on shared days (chains episodes into one event)' },
                 { label: 'Scale', value: '~404k Hₛ + ~325k SSH_total storms → ~96k compound events' },
               ].map((m) => (
@@ -303,7 +303,7 @@ export default function CompoundDetectionPage() {
                 disasters within an asymmetric <strong>causal/antecedent window</strong>{' '}
                 <code className="rounded bg-white px-1 text-xs">[D-2, D-1, D, D+1 00Z]</code>.
                 This window is a <em>matching tolerance</em> between model and disaster records — it is
-                <strong> not</strong> part of the compound-event definition. Outcome: Hₛ=q90, SSH_total=q90.
+                <strong> not</strong> part of the compound-event definition. Outcome as of 2026-07-30: Hₛ=q70, zos=q99.
               </p>
             </div>
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
@@ -748,9 +748,9 @@ Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
               <li><strong>χ/χ̄ are screening diagnostics.</strong> Only ~12–16 pairs lie above the u = 0.95 tail per grid point, too few to firmly classify tail dependence; treat the χ/χ̄ maps as indicative, not definitive.</li>
             </ul>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
-              <li><strong>Gap tolerance.</strong> The 1-day episode gap and the ≥ 1-day overlap rule are deliberate, calibration-consistent choices; sensitivity to the gap was checked in Step 2e and found stable at q90/q90.</li>
+              <li><strong>Gap tolerance.</strong> The 1-day episode gap and the ≥ 1-day overlap rule are deliberate, calibration-consistent choices; sensitivity to the gap was checked in Step 2e and selects q70/q99 at three of the four tested values.</li>
               <li><strong>Equal-weight intensity.</strong> The 0.5/0.5 wave–surge weighting is a modelling assumption, not an impact-calibrated weight; site-specific damage functions could re-weight it.</li>
-              <li><strong>Regional calibration bias.</strong> The q90/q90 threshold pair was calibrated against reported Santa Catarina disaster events and then applied coast-wide; its optimality outside the SC sector is untested.</li>
+              <li><strong>Regional calibration bias.</strong> The q70/q99 threshold pair was calibrated against reported Santa Catarina disaster events and then applied coast-wide; its optimality outside the SC sector is untested (AUD-18).</li>
               <li><strong>Reanalysis basis.</strong> Catalogs inherit any biases of WAVERYS, GLORYS12, and FES2022; they characterize the reanalysed ocean, not in-situ observations.</li>
             </ul>
           </div>

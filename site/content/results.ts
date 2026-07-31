@@ -7,7 +7,7 @@ export const resultCards: ResultCard[] = [
     subtitle: 'Empirical detection framework · EDA · Preliminary · Tidal sensitivity · CSI scan · PU calibration',
     status: 'done',
     description:
-      'Umbrella step that empirically establishes the compound event detection framework. All five sub-steps completed: (2a) Exploratory Data Analysis validates the pipeline and municipality–grid associations; (2b) Preliminary Compound Analysis inspects q90 exceedances for all 91 events; (2c) Tidal Sensitivity adds FES2022 tide to form SSH_total; (2d) CSI Grid Scan (diagnostic) identifies optimal pair q90/q90 using the 91-event legacy database; (2e) PU Composite Calibration (final) independently confirms q90/q90 using the combined expanded (56) + legacy (91) = 147-event positive-event set and a PU composite score. Both methods converge on q90/q90, robust to database and methodology choices.',
+      'Umbrella step that empirically establishes the compound event detection framework. All five sub-steps completed: (2a) Exploratory Data Analysis validates the pipeline and municipality–grid associations; (2b) Preliminary Compound Analysis inspects q90 exceedances for all 91 events; (2c) Tidal Sensitivity adds FES2022 tide to form SSH_total; (2d) CSI Grid Scan (diagnostic) identifies optimal pair q90/q90 using the 91-event legacy database; (2e) PU Composite Calibration (final), recalibrated on 2026-07-30 to score the production detector over an extended 11×11 grid, selects q70/q99. The earlier agreement of 2d and 2e on q90/q90 is now understood as an artefact of the grid stopping at q90: extending it showed the old composite score had no interior optimum.',
     rationale:
       'Before detecting compound events at scale, thresholds must be calibrated against observed coastal disasters. This two-stage approach (Step 2d diagnostic + Step 2e final) distinguishes between methodological choices and provides independent confirmation of the q90/q90 threshold pair, accounting for systematic under-reporting in the Civil Defense database.',
     outputs: [
@@ -21,8 +21,8 @@ export const resultCards: ResultCard[] = [
       '2d: Optimal pair q90/q90 (H=21, M=70, F=1261, CSI=0.0155, diagnostic)',
       '2d: Per-municipality hit/miss/FA heatmaps, capture lag distribution',
       '2e: PU composite score (R_pos, burden, soft penalty) for 81 pairs using combined 147-event set',
-      '2e: Independent confirmation q90/q90 (H=35, R_pos=0.238, B=0.428, Score=-3.159, B_target_effective=324 ep/yr)',
-      '2e: Sensitivity analyses (weights, alpha, B_target, gap_days — all stable at q90/q90)',
+      '2e (recalibrated 2026-07-30): selected pair q70/q99 (H=28 of 147, R_pos=0.191, B=0.148, F_soft=420.4, Score=-0.318) — same recall as q90/q90 with 62% fewer unmatched detections',
+      '2e: Sensitivity analyses (weights, alpha, expected rate, gap_days) — the level percentile q99 is selected in 14 of 14 variants; the wave percentile is the poorly determined axis, spanning q50–q80 within 1% of the best score',
       '2e: Confidence weight distribution and unmatched episode audit',
     ],
     href: '/results/threshold-calibration',
@@ -34,7 +34,7 @@ export const resultCards: ResultCard[] = [
     subtitle: '808 grid points · coastal Hazard Index + 7 analysis submodules · 1993–2025',
     status: 'done',
     description:
-      'Central analysis block: independent storm catalogs for Hₛ and SSH_total (q90/q90), '
+      'Central analysis block: compound detection on Hₛ (q70) and tide-free zos (q99) gated by HAT, '
       + 'followed by compound detection, duration/persistence, monthly seasonality, '
       + 'Mann–Kendall trends, POT–GPD EVA, and Hs–SSH dependence (τ, ρ, χ, χ̄). '
       + '404k Hₛ storms, 325k SSH_total storms, ~96k compound events across 808 coastal grid points. '
@@ -115,7 +115,7 @@ export const resultCards: ResultCard[] = [
       + 'Risk_Hazard integrates SVI with the multimetric hazard layer to identify priority coastal risk hotspots.',
     rationale:
       'The hazard alone is insufficient for risk assessment. Reported coastal disaster records supported threshold calibration '
-      + '(Step 2, q90/q90 selection) but are not a separate downstream validation product. '
+      + '(Step 2, q70/q99 selection) but are not a separate downstream validation product. '
       + 'Combining compound-event hazard with municipal-scale exposure spatialization and social vulnerability transforms '
       + 'hazard maps into actionable risk indices for adaptation planning and policy communication. '
       + 'The equal-weight index is compensatory: high frequency can be offset by lower mean duration or intensity.',
