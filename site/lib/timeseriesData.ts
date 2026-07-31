@@ -14,7 +14,11 @@ export interface TimeSeriesThresholds {
   thr_zos_abs_m: number;
   thr_zos_anomaly_m: number;
   zos_mean_m: number;
-  mhws_m: number;
+  /** HAT: the level gate and the severity datum, which are the same level. */
+  hat_m: number;
+  /** Local percentiles the Step 2e calibration selected for this detector. */
+  thr_hs_pct: number;
+  thr_zos_pct: number;
 }
 
 export interface TimeSeriesPointMetrics {
@@ -25,12 +29,12 @@ export interface TimeSeriesPointMetrics {
   mean_compound_intensity_norm: number | null;
   mean_integrated_severity: number | null;
   n_candidate_events: number | null;
-  n_rejected_by_mhws: number | null;
+  n_rejected_by_hat: number | null;
 }
 
 export interface TimeSeriesSelectionFeatures {
   surge_q99_over_swing: number;
-  mhws_m: number;
+  hat_m: number;
   thr_hs_abs: number;
   Hazard_Frequency: number;
   Hazard_Severity: number;
@@ -64,7 +68,13 @@ export interface TimeSeriesIndex {
   points: TimeSeriesIndexEntry[];
 }
 
-/** A candidate level datum, with what the same detector does under it. */
+/**
+ * The level datum. There is exactly one: gate and severity reference are the
+ * same level, so the excess has an interpretation as a distance from the
+ * condition that defines the event. The candidate-datum alternatives that this
+ * type used to carry belonged to the AUD-01 sensitivity investigation, closed
+ * when HAT was adopted on 2026-07-30.
+ */
 export interface LevelDatum {
   key: string;
   label: string;
@@ -73,11 +83,6 @@ export interface LevelDatum {
   in_force: boolean;
   n_events: number;
   n_rejected: number;
-  n_event_days: number;
-  /** Share of accepted events the tide alone would have carried over. */
-  frac_tide_alone: number | null;
-  mean_meteo_term_m: number | null;
-  mean_astro_term_m: number | null;
 }
 
 export interface CompoundEvent {

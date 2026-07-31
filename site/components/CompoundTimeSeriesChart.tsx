@@ -13,12 +13,17 @@
  * surge-dominated south to look plainly different.
  *
  * One panel per criterion, stacked on a shared time axis and never sharing a
- * y-axis: the wave height against its q90; the still water level against the
- * MHWS, with the tide that carries it; and the tide-free sea level `zos`
- * against its q90. The last panel shows `zos` exactly as the detector reads
- * it — in the model's own vertical reference, against the threshold value
- * recorded in the catalogue — while the still water level keeps the local mean
- * removed, which is what makes it comparable with the MHWS.
+ * y-axis: the wave height against its local percentile; the still water level
+ * against HAT, with the tide that carries it; and the tide-free sea level
+ * `zos` against its own local percentile. The last panel shows `zos` exactly
+ * as the detector reads it — in the model's own vertical reference, against
+ * the threshold value recorded in the catalogue — while the still water level
+ * keeps the local mean removed, which is what makes it comparable with HAT.
+ *
+ * The level panel carries a single dashed datum, HAT. Gate and severity
+ * reference are the same level, so there is no second candidate to draw; the
+ * tide quantiles and MHWS that this panel used to overlay belonged to the
+ * AUD-01 datum investigation, closed on 2026-07-30.
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -74,6 +79,16 @@ const SERIES = {
 const INK = { primary: '#111827', secondary: '#374151', muted: '#6b7280' };
 const GRID = '#e5e7eb';
 const REFERENCE = '#4b5563';
+
+/**
+ * Percentile label, e.g. 0.7 -> "q70". Read from the payload rather than
+ * written into the markup: the Step 2e recalibration of 2026-07-30 moved the
+ * pair from q90/q90 to q70/q99, and a hard-coded label would have gone on
+ * claiming q90 over a threshold that is no longer one.
+ */
+function pctLabel(pct: number): string {
+  return `q${Math.round(pct * 100)}`;
+}
 
 /* ── Small helpers ─────────────────────────────────────────────────────── */
 
@@ -179,10 +194,6 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
   const [hoveredEvent, setHoveredEvent] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [hoverDay, setHoverDay] = useState<number | null>(null);
-  /* The candidate datums of the AUD-01 sensitivity. Only MHWS is in force; the
-   * others are drawn so the reader can see where the event condition would move
-   * without re-running anything. */
-  const [showDatums, setShowDatums] = useState(true);
 
   const nDays = point.period.n_days;
   const series = useMemo(
@@ -253,11 +264,9 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
   }, [series.hs, start, end, point.thresholds.thr_hs_abs_m]);
 
   const levelScale = useMemo(() => {
-    // MHWS is forced into the range so the line that defines an event is always
+    // HAT is forced into the range so the line that defines an event is always
     // on screen, even in a window where the level never approaches it.
-    const values: number[] = showDatums
-      ? point.datums.map((datum) => datum.value_m)
-      : [point.thresholds.mhws_m];
+    const values: number[] = [point.thresholds.hat_m];
     for (let index = start; index < end; index += 1) {
       for (const value of [series.tide[index], swl[index]]) {
         if (value !== null && Number.isFinite(value)) values.push(value);
@@ -274,11 +283,11 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
       yOf: (value: number) =>
         LEVEL_TOP + LEVEL_HEIGHT - ((value - lower) / (upper - lower)) * LEVEL_HEIGHT,
     };
-  }, [series, swl, start, end, point.thresholds.mhws_m, point.datums, showDatums]);
+  }, [series, swl, start, end, point.thresholds.hat_m]);
 
   const zosScale = useMemo(() => {
-    // The q90 is forced into the range so the sea-level criterion is always
-    // visible, even across a quiet window.
+    // The level percentile is forced into the range so the sea-level criterion
+    // is always visible, even across a quiet window.
     const values: number[] = [point.thresholds.thr_zos_abs_m];
     for (let index = start; index < end; index += 1) {
       const value = zosRaw[index];
@@ -399,7 +408,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
     [
       {
         y: waveScale.yOf(point.thresholds.thr_hs_abs_m),
-        text: `q90 Hₛ = ${format(point.thresholds.thr_hs_abs_m, 2)} m`,
+        text: `${pctLabel(point.thresholds.thr_hs_pct)} Hₛ = ${format(point.thresholds.thr_hs_abs_m, 2)} m`,
         color: INK.muted,
       },
       {
@@ -414,18 +423,9 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
   );
   const levelLabels = deCollide(
     [
-      ...(showDatums
-        ? point.datums
-            .filter((datum) => !datum.in_force)
-            .map((datum) => ({
-              y: levelScale.yOf(datum.value_m),
-              text: datum.label,
-              color: INK.muted,
-            }))
-        : []),
       {
-        y: levelScale.yOf(point.thresholds.mhws_m),
-        text: `MHWS = ${format(point.thresholds.mhws_m, 2)} m`,
+        y: levelScale.yOf(point.thresholds.hat_m),
+        text: `HAT = ${format(point.thresholds.hat_m, 2)} m`,
         color: INK.primary,
         bold: true,
       },
@@ -451,7 +451,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         // Both the series and the threshold are in the model's own vertical
         // reference here: this is the comparison the detector performs.
         y: zosScale.yOf(point.thresholds.thr_zos_abs_m),
-        text: `q90 zos = ${format(point.thresholds.thr_zos_abs_m, 2)} m`,
+        text: `${pctLabel(point.thresholds.thr_zos_pct)} zos = ${format(point.thresholds.thr_zos_abs_m, 2)} m`,
         color: INK.muted,
       },
       {
@@ -487,15 +487,6 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-gray-600">
-            <input
-              type="checkbox"
-              checked={showDatums}
-              onChange={(event) => setShowDatums(event.target.checked)}
-              className="rounded border-gray-300 text-blue-600"
-            />
-            Candidate datums
-          </label>
           <div className="flex items-center gap-1.5">
           <NavButton onClick={() => setStart(clampStart(start - WINDOW_DAYS))} label="◀◀">
             Previous window
@@ -627,26 +618,9 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         >
           Level above local mean sea level (m)
         </text>
-        {/* Candidate datums first, so the one in force is drawn over them. */}
-        {showDatums &&
-          point.datums
-            .filter((datum) => !datum.in_force)
-            .map((datum) => (
-              <line
-                key={`datum-${datum.key}`}
-                x1={MARGIN.left}
-                y1={levelScale.yOf(datum.value_m)}
-                x2={MARGIN.left + PLOT_WIDTH}
-                y2={levelScale.yOf(datum.value_m)}
-                stroke={REFERENCE}
-                strokeWidth={0.9}
-                strokeDasharray="2 4"
-                opacity={0.55}
-              />
-            ))}
         {/* The condition that defines an event: seeing it crossed is half the
             message, so it is labelled in place rather than left to the legend. */}
-        <ReferenceLine y={levelScale.yOf(point.thresholds.mhws_m)} dash="6 3" emphasis />
+        <ReferenceLine y={levelScale.yOf(point.thresholds.hat_m)} dash="6 3" emphasis />
         <path
           d={linePath(series.tide.slice(0, end), (i) => xOf(i), levelScale.yOf)}
           fill="none"
@@ -860,67 +834,6 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
         </span>
       </div>
 
-      {/* ── Level-datum sensitivity ──────────────────────────────────── */}
-      {showDatums && (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full min-w-[620px] text-left text-[10.5px]">
-            <caption className="px-3 pt-2 text-left text-[10.5px] leading-relaxed text-gray-500">
-              What the same detector does at this point under each candidate level
-              datum. Only <strong className="text-gray-700">MHWS</strong> is in force;
-              the shaded events above are its events. <em>Tide alone</em> is the share
-              of accepted events in which the astronomical tide would have cleared the
-              datum on the same days with no surge at all — the closer to zero, the
-              more the level condition requires the weather. The excess splits exactly
-              as <span className="font-mono">SWL − datum = zos′ + (tide − datum)</span>.
-            </caption>
-            <thead className="border-b border-gray-200 text-gray-500">
-              <tr>
-                <th className="px-3 py-1.5 font-semibold">Datum</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Level</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Events</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Rejected</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Tide alone</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Meteo term</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Astro term</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-700">
-              {point.datums.map((datum) => (
-                <tr
-                  key={datum.key}
-                  className={datum.in_force ? 'bg-blue-50 font-semibold' : ''}
-                >
-                  <td className="px-3 py-1.5">
-                    {datum.label}
-                    {datum.in_force && (
-                      <span className="ml-1.5 text-[9px] uppercase tracking-wide text-blue-700">
-                        in force
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono">
-                    {format(datum.value_m, 2)} m
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono">{datum.n_events}</td>
-                  <td className="px-3 py-1.5 text-right font-mono">{datum.n_rejected}</td>
-                  <td className="px-3 py-1.5 text-right font-mono">
-                    {datum.frac_tide_alone === null
-                      ? '—'
-                      : `${(datum.frac_tide_alone * 100).toFixed(0)}%`}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono">
-                    {format(datum.mean_meteo_term_m, 3)}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono">
-                    {format(datum.mean_astro_term_m, 3)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
       {/* ── Event tooltip ────────────────────────────────────────────── */}
       {hovered && (
         <div
@@ -972,7 +885,7 @@ export default function CompoundTimeSeriesChart({ point }: { point: PointTimeSer
             <MetricRow label="Peak intensity" value={format(hovered.peak_intensity_norm, 3)} />
             <MetricRow label="Peak Hₛ" value={`${format(hovered.peak_hs_m, 2)} m`} />
             <MetricRow label="Max still water level" value={`${format(hovered.max_swl_m, 2)} m`} />
-            <MetricRow label="Excess over MHWS" value={`${format(hovered.exc_level_m, 2)} m`} />
+            <MetricRow label="Excess over HAT" value={`${format(hovered.exc_level_m, 2)} m`} />
           </div>
         </div>
       )}
