@@ -1,0 +1,56 @@
+{
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "distribution": {
+    "n_municipalities": 280,
+    "n_exact_zero": 84,
+    "n_positive": 196,
+    "risk_range": [
+      0.0,
+      0.566342
+    ],
+    "zero_inflation_note": "The point mass at zero is the one unambiguous natural break in the distribution. It is a category, not the lowest class of a gradient: no accepted compound event in 1993-2025.",
+    "silverman_unimodality_positive_values": {
+      "n": 196,
+      "critical_bandwidth": 0.027887371138746245,
+      "draws": 500,
+      "p_value": 0.556,
+      "reject_unimodality_at_5pct": false
+    },
+    "silverman_unimodality_all_values": {
+      "n": 280,
+      "critical_bandwidth": 0.09303258192776785,
+      "draws": 500,
+      "p_value": 0.002,
+      "reject_unimodality_at_5pct": true
+    }
+  },
+  "jenks_gvf": {
+    "2": 0.6777,
+    "3": 0.8317,
+    "4": 0.9028,
+    "5": 0.9287,
+    "6": 0.9492,
+    "7": 0.9646,
+    "8": 0.9743
+  },
+  "interval_based_hotspot_counts": {
+    "robustly_within_top10": 7,
+    "published_top10_that_are_robust": 7,
+    "robustly_within_top20": 14,
+    "published_top20_that_are_robust": 14,
+    "robustly_within_top30": 22,
+    "published_top30_that_are_robust": 22,
+    "robustly_within_top50": 33,
+    "published_top50_that_are_robust": 33
+  },
+  "spatial_autocorrelation": {
+    "n_municipalities": 280,
+    "n_distinct_grid_points": 178,
+    "max_municipalities_per_point": 9,
+    "n_contiguity_pairs": 650,
+    "share_of_neighbour_pairs_sharing_a_grid_point": 0.3261538461538461,
+    "global_morans_I_risk": 0.8126060267256193,
+    "interpretation": "Neighbour pairs that share a grid point have identical hazard by construction, so Gi* would measure the association geometry as much as the risk field."
+  },
+  "note": "Class limits are now stable across regenerations because AUD-11 replaced sample anchoring with fixed goalposts; the record's objection to equal intervals over a Min-Max scale no longer applies."
+}

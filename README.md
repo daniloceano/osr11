@@ -71,7 +71,9 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 - **Vulnerability:** The **social** susceptibility of the resident population — income, education, race, age structure, housing tenure, crowding and basic sanitation — measured by `SVI_Coast_2022` (Sub-step 4.3). **No physical susceptibility layer is implemented.** Geomorphology, beach-face slope, dune and mangrove barriers, terrain elevation, coastal defences and drainage capacity are absent from this product; two stretches with the same income profile and the same hazard therefore receive the same vulnerability regardless of the ground they stand on. This is a declared limitation of the current cycle, not an omission from the description — see "Notes and Limitations". (Tracked as AUD-10.)
 
-- **Risk:** The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.
+- **Risk:** The integration of hazard, exposure, and vulnerability to identify priority areas and inform adaptation interventions.
+
+- **Hotspot:** A municipality whose **90 % rank interval stays within the first N positions** under a bootstrap over the 33 years of record — that is, one that does not leave the band when the record is resampled. Seven municipalities qualify at N = 10 and fourteen at N = 20. The term is used **only** in that sense. It does **not** mean a discrete cluster: among the 196 municipalities with any accepted compound event the risk distribution is continuous and unimodal (Silverman critical-bandwidth test, *p* = 0.56), and Fisher–Jenks goodness of variance fit rises smoothly with no elbow at any class count. The one genuine break in the distribution is the point mass of 84 municipalities at exactly zero, which is a statement about the record and not the lowest class of a gradient. (Tracked as AUD-16.)
 
 ---
 
@@ -815,7 +817,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The eight paragraphs below are written to be transferable, essentially as they
+The nine paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -1035,6 +1037,35 @@ named at the end of each paragraph.
   trend and interannual autocorrelation, which makes these intervals a floor on
   the uncertainty rather than a full estimate.
   *(`src/exploratory/audit_AUD_07_aggregation_sensitivity.py`)*
+
+- **There are no discrete hotspots; the result is a gradient (AUD-16).** The
+  stated aim of identifying "priority hotspots" presupposes that discrete
+  high-risk clusters exist. They do not. Silverman's critical-bandwidth
+  bootstrap rejects unimodality over all 280 municipalities (*p* = 0.002) but
+  **fails to reject it over the 196 with any accepted compound event**
+  (*p* = 0.56), which places the bimodality entirely in the point mass at zero
+  rather than in any cluster of high values; Fisher–Jenks goodness of variance
+  fit rises smoothly from 0.678 at two classes to 0.974 at eight, with no elbow
+  at any class count. The single genuine break in the distribution is therefore
+  the 84 municipalities at exactly zero, and that break is a statement about the
+  record — no accepted compound event in 1993–2025 — not the lowest class of a
+  gradient. The standard spatial route to a hotspot definition is unavailable
+  here: **32.6 % of the 650 contiguity neighbour pairs share the same ocean grid
+  point** and therefore carry an identical hazard by construction (178 points
+  serve 280 municipalities, up to 9 municipalities per point), so a Getis-Ord
+  Gi\* surface would measure the association geometry as much as the risk field,
+  and the global Moran's I of 0.813 has to be read with that in mind. What is
+  defensible is a definition based on the rank interval rather than the value: a
+  municipality qualifies at level N when its 90 % interval stays inside the first
+  N positions across resamples of the record. Seven municipalities qualify at
+  N = 10 and fourteen at N = 20, and no municipality outside the published top-N
+  qualifies — so the published list loses no one, it simply contains three
+  members at N = 10 that do not hold up. Equal-interval map classes are retained
+  and are no longer open to the objection that motivated this issue: since the
+  Min–Max chain was removed the scale has fixed anchors, so class limits keep
+  their meaning across regenerations, whereas Jenks would move them at every
+  regeneration and has no preferred class count.
+  *(`src/exploratory/audit_AUD_16_hotspot_definition.py`)*
 
 ### Current Implementation Status
 

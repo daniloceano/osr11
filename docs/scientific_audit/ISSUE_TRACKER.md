@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 3 de 18 (AUD-05, AUD-16, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 10 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
+**Questões abertas:** 2 de 18 (AUD-05, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 11 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-16) · **arquivadas:** 0
 
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
@@ -267,6 +267,48 @@
 > uma quebra natural, e as classes cartográficas já haviam sido alteradas no
 > código.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-16 fechada: não existem hotspots discretos
+>
+> **AUD-16 fechada** como `resultado-validado-mantido`. Nenhum valor publicado
+> nem classe cartográfica alterada. Diagnóstico em
+> `src/exploratory/audit_AUD_16_hotspot_definition.py` →
+> `outputs/audit/AUD-16_hotspot_definition/`.
+>
+> A questão nasceu porque "hotspot = top-10" não é critério. A medição mostrou
+> que o problema era mais fundo: **não existe a coisa que o critério deveria
+> delimitar.**
+>
+> - **Teste de unimodalidade de Silverman**: rejeita sobre os 280 (p = **0,002**)
+>   e **não** rejeita sobre os 196 com risco positivo (p = **0,556**). A
+>   bimodalidade está inteiramente na massa em zero, não num agrupamento de alto
+>   risco. Fisher–Jenks confirma: GVF sobe suavemente de 0,678 (k=2) a 0,974
+>   (k=8), **sem cotovelo**.
+> - **A única quebra genuína é o zero**, e ela é uma declaração sobre o registro
+>   — nenhum evento aceito em 1993–2025 —, não a classe mais baixa de um
+>   gradiente.
+> - **A rota Getis-Ord do §8.3 está indisponível**, e agora com número:
+>   **32,6 %** dos 650 pares de vizinhança compartilham o mesmo ponto de grade
+>   (178 pontos para 280 municípios, até 9 por ponto), logo têm perigo idêntico
+>   por construção. Gi\* mediria a geometria da associação. Resultado negativo,
+>   não pendência.
+> - **A definição defensável vem do intervalo, não do valor**: município cujo IC
+>   de 90 % permanece dentro das N primeiras posições sob reamostragem dos 33
+>   anos. **7 a N = 10, 14 a N = 20.** Nenhum município fora do top-N publicado é
+>   robustamente top-N — a lista não perde ninguém, apenas contém 3 membros que
+>   não se sustentam no top-10.
+> - **A objeção às classes de intervalo igual caiu**: AUD-11 removeu o Min–Max, a
+>   escala tem âncora fixa e os limites valem igual na próxima regeneração. Jenks
+>   foi comparado e recusado — recolocaria os limites a cada regeneração e não tem
+>   *k* preferencial.
+>
+> `diptest`, `jenkspy` e `libpysal` não existem neste ambiente; os três
+> procedimentos foram implementados no próprio script, em vez de acrescentar
+> dependências a um repositório de artigo.
+>
+> **Não feito, e declarado:** figura de KDE; e a definição por intervalo não foi
+> levada às figuras nem ao site como camada — continua sendo texto, não símbolo
+> no mapa.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -278,9 +320,9 @@ ver [`README.md`](README.md).
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
 | **P1 — resolver ou justificar** | 9 | 1 | 4 | 0 | **4** |
-| **P2 — recomendado** | 3 | 1 | 1 | 0 | **1** |
+| **P2 — recomendado** | 3 | 0 | 1 | 0 | **2** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **3** | **5** | **0** | **10** |
+| **Total** | **18** | **2** | **5** | **0** | **11** |
 
 ---
 
@@ -303,7 +345,7 @@ ver [`README.md`](README.md).
 | **AUD-13** | Índice integrado: conduzido pelo perigo (84,7 %); cancelamento dominante passou a ser H × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `resolvido` | `resultado-validado-mantido` | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
 | **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
 | **AUD-15** | Cobertura amostral: 2 ausentes, 4 degenerados, **83 sem perigo aceito** | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `em-investigacao` | — | 04 | [AUD-15](issues/AUD-15_sample_coverage.md) |
-| **AUD-16** | Ausência de definição operacional de "hotspot" | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `aberto` | — | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
+| **AUD-16** | **Não existem hotspots discretos** (Silverman p = 0,56 nos positivos); definição adotada é por intervalo de posto | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `resolvido` | `resultado-validado-mantido` | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
 | **AUD-17** | Quatorze inconsistências documentação ↔ código ↔ saídas (8 originais + 6 de 2026-07-31) | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim, salvo correção | `em-investigacao` | — | 09, 12 | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
 | **AUD-18** | Lacuna de validação independente fora de SC; limiares extrapolados | lacuna-validacao | transversal | 2d/2e → 3 → 4 | dados, interp., doc. | P1 | Sim, salvo declaração | `aberto` | — | — | [AUD-18](issues/AUD-18_independent_validation_gap.md) |
 
@@ -432,6 +474,8 @@ Nenhum achado da revisão de linha de base foi descartado.
 | O bootstrap por município perdeu o objeto: com âncoras fixas, reamostrar municípios desloca postos em exatamente 0,0 | AUD-07 §3-bis.1 | 2026-07-31 |
 | 94 dos 196 municípios com risco positivo têm menos de dez eventos aceitos; o 21º do país tem **um**. A severidade é média condicional e não escala com raridade | AUD-07 §3-bis.4 | 2026-07-31 |
 | A fronteira zero/não-zero é amostralmente instável: só 102 dos 280 municípios são robustamente não nulos | AUD-07 §3-bis.4; anotado em AUD-15 e AUD-16 | 2026-07-31 |
+| Não existem hotspots discretos: entre os 196 municípios com evento aceito a distribuição é unimodal (Silverman p = 0,56) e o Fisher–Jenks não tem cotovelo | AUD-16 §3-bis.1 | 2026-07-31 |
+| Getis-Ord Gi\* é inviável neste produto: 32,6 % dos pares de vizinhança compartilham ponto de grade e têm perigo idêntico por construção | AUD-16 §3-bis.3 | 2026-07-31 |
 
 ---
 

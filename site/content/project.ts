@@ -116,7 +116,7 @@ export const conceptualFramework = {
     },
     {
       term: 'Risk',
-      definition: 'The integration of hazard, exposure, and vulnerability to identify priority hotspots and inform adaptation interventions.'
+      definition: 'The integration of hazard, exposure, and vulnerability to identify priority areas and inform adaptation interventions. A "hotspot" here means a municipality whose 90% rank interval stays within the first N positions under a bootstrap over the 33 years of record — seven qualify at N=10 and fourteen at N=20 — and not a discrete cluster: among the 196 municipalities with any accepted compound event the risk distribution is continuous and unimodal (Silverman test, p = 0.56). The only genuine break is the point mass of 84 municipalities at exactly zero (AUD-16).'
     }
   ]
 };

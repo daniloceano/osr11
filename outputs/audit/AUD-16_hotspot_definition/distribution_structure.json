@@ -1,0 +1,24 @@
+{
+  "n_municipalities": 280,
+  "n_exact_zero": 84,
+  "n_positive": 196,
+  "risk_range": [
+    0.0,
+    0.566342
+  ],
+  "zero_inflation_note": "The point mass at zero is the one unambiguous natural break in the distribution. It is a category, not the lowest class of a gradient: no accepted compound event in 1993-2025.",
+  "silverman_unimodality_positive_values": {
+    "n": 196,
+    "critical_bandwidth": 0.027887371138746245,
+    "draws": 500,
+    "p_value": 0.556,
+    "reject_unimodality_at_5pct": false
+  },
+  "silverman_unimodality_all_values": {
+    "n": 280,
+    "critical_bandwidth": 0.09303258192776785,
+    "draws": 500,
+    "p_value": 0.002,
+    "reject_unimodality_at_5pct": true
+  }
+}

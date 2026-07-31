@@ -1,0 +1,17 @@
+scheme,class,n
+published equal intervals,"(-0.001, 1e-06]",84
+published equal intervals,"(1e-06, 0.1]",1
+published equal intervals,"(0.1, 0.2]",41
+published equal intervals,"(0.2, 0.3]",72
+published equal intervals,"(0.3, 0.4]",63
+published equal intervals,"(0.4, 0.5]",17
+published equal intervals,"(0.5, 0.6]",2
+quantiles of positive values,"(-0.001, 0.197]",124
+quantiles of positive values,"(0.197, 0.252]",39
+quantiles of positive values,"(0.252, 0.306]",39
+quantiles of positive values,"(0.306, 0.356]",39
+quantiles of positive values,"(0.356, 0.566]",39
+Fisher-Jenks k=4,"(-0.001, 0.205]",130
+Fisher-Jenks k=4,"(0.205, 0.288]",62
+Fisher-Jenks k=4,"(0.288, 0.374]",60
+Fisher-Jenks k=4,"(0.374, 0.566]",27

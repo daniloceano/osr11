@@ -112,7 +112,7 @@ export const resultCards: ResultCard[] = [
       + 'Social vulnerability (SVI_Coast_2022) was constructed via PCA on 10 socioeconomic and infrastructure variables '
       + 'from the 2022 IBGE Census for 282 coastal municipalities, normalized 0–100; it carries no physical susceptibility. '
       + 'The former count-only product and the originally delivered fields are retained for audit and comparison. '
-      + 'Risk_Hazard is the conjunctive geometric mean of hazard, exposure and vulnerability, identifying priority coastal risk hotspots.',
+      + 'Risk_Hazard is the conjunctive geometric mean of hazard, exposure and vulnerability. It is a continuous priority gradient, not a set of discrete hotspots: among the 196 municipalities with any accepted compound event the distribution is unimodal (Silverman test, p = 0.56), and only the point mass of 84 municipalities at exactly zero forms a genuine break. Seven municipalities keep their 90% rank interval inside the top 10 under a bootstrap over the record period, and fourteen inside the top 20.',
     rationale:
       'The hazard alone is insufficient for risk assessment. Reported coastal disaster records supported threshold calibration '
       + '(Step 2, q70/q99 selection) but are not a separate downstream validation product. '

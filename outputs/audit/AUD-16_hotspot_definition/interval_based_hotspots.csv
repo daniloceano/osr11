@@ -1,0 +1,61 @@
+rank_published,municipality_name,state,Risk_Hazard,rank_ci_low,rank_ci_high,share_of_draws_at_zero_risk,robust_top10,robust_top20
+1,São José do Norte,RS,0.566342,1.0,1.0,0.0,True,True
+2,Guaraqueçaba,PR,0.505445,2.0,2.0,0.0,True,True
+3,Magé,RJ,0.468027,3.0,3.0,0.0,True,True
+4,Mangaratiba,RJ,0.444282,4.0,9.0,0.0,True,True
+5,Paraty,RJ,0.440631,4.0,7.0499999999999545,0.0,True,True
+6,Guarujá,SP,0.438005,4.0,9.0,0.0,True,True
+7,Balneário Gaivota,SC,0.434647,4.0,10.0,0.0,True,True
+8,São Sebastião,SP,0.432443,7.0,11.0,0.0,False,True
+9,Saquarema,RJ,0.430434,6.0,14.0,0.0,False,True
+10,Passo de Torres,SC,0.429505,6.0,12.0,0.0,False,True
+11,Maricá,RJ,0.426837,8.0,14.0,0.0,False,True
+12,Rio Grande,RS,0.421935,7.0,16.0,0.0,False,True
+13,Palmares do Sul,RS,0.418606,10.0,16.0,0.0,False,True
+14,Arroio do Sal,RS,0.41496,12.0,18.0,0.0,False,True
+15,Iguape,SP,0.408137,12.0,21.0,0.0,False,False
+16,Bertioga,SP,0.406928,14.0,21.0,0.0,False,False
+17,Arraial do Cabo,RJ,0.406446,13.0,23.0,0.0,False,False
+18,Mostardas,RS,0.402897,15.0,22.0,0.0,False,False
+19,Angra dos Reis,RJ,0.401956,16.0,23.0,0.0,False,False
+20,Balneário Arroio do Silva,SC,0.395732,18.0,26.0,0.0,False,False
+21,Guimarães,MA,0.393606,15.0,133.0,0.34,False,False
+22,Alcântara,MA,0.393562,15.0,133.0,0.34,False,False
+23,Balneário Pinhal,RS,0.392858,20.0,27.0,0.0,False,False
+24,São Francisco de Itabapoana,RJ,0.386642,16.0,39.04999999999996,0.0,False,False
+25,Duque de Caxias,RJ,0.385615,21.0,29.049999999999955,0.0,False,False
+26,Laguna,SC,0.38399,22.0,31.0,0.0,False,False
+27,Cabo Frio,RJ,0.382092,21.0,34.0,0.0,False,False
+28,Raposa,MA,0.373527,24.0,133.0,0.34,False,False
+29,Ubatuba,SP,0.372571,26.0,37.0,0.0,False,False
+30,Maracanã,PA,0.371047,10.0,75.0,0.005,False,False
+31,Imbituba,SC,0.371014,26.0,37.0,0.0,False,False
+32,Icatu,MA,0.368353,26.0,133.0,0.34,False,False
+33,Marapanim,PA,0.365189,13.0,79.0,0.005,False,False
+34,Itapemirim,ES,0.365047,26.0,49.0,0.0,False,False
+35,Ilhabela,SP,0.36105,30.0,43.04999999999996,0.0,False,False
+36,Tavares,RS,0.3607,30.0,44.0,0.0,False,False
+37,Cidreira,RS,0.360356,30.0,44.0,0.0,False,False
+38,Cajapió,MA,0.35798,30.0,133.0,0.34,False,False
+39,Paranaguá,PR,0.35772,29.0,51.0,0.0,False,False
+40,Marataízes,ES,0.356014,30.0,54.04999999999996,0.0,False,False
+41,Cedral,MA,0.356003,32.0,133.0,0.34,False,False
+42,São Vicente,SP,0.355414,33.0,47.0,0.0,False,False
+43,Balneário Rincão,SC,0.353047,34.0,49.0,0.0,False,False
+44,Cananéia,SP,0.35142,34.0,53.0,0.0,False,False
+45,Jaguaruna,SC,0.350641,37.0,51.0,0.0,False,False
+46,Armação dos Búzios,RJ,0.350561,34.0,53.0,0.0,False,False
+47,Anchieta,ES,0.349391,33.0,60.0,0.0,False,False
+48,São Gonçalo,RJ,0.347431,39.0,51.0,0.0,False,False
+49,Salinópolis,PA,0.346147,29.0,80.0,0.019,False,False
+50,Xangri-lá,RS,0.342145,41.0,58.0,0.0,False,False
+51,Itanhaém,SP,0.34147,42.0,56.0,0.0,False,False
+52,Chaves,PA,0.339802,28.0,85.0,0.001,False,False
+53,Guapimirim,RJ,0.337326,46.0,59.0,0.0,False,False
+54,Garopaba,SC,0.337077,44.0,61.0,0.0,False,False
+55,Macaé,RJ,0.336096,45.0,62.0,0.0,False,False
+56,Ilha Comprida,SP,0.335069,44.0,65.0,0.0,False,False
+57,São João da Barra,RJ,0.334953,42.0,70.0,0.0,False,False
+58,Mongaguá,SP,0.333962,47.0,62.0,0.0,False,False
+59,Peruíbe,SP,0.325475,53.0,68.0,0.0,False,False
+60,Itaguaí,RJ,0.325045,52.0,71.0,0.0,False,False
