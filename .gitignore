@@ -32,6 +32,11 @@ outputs/preliminary_compound/*
 outputs/tidal_sensitivity/*
 outputs/threshold_calibration/*
 outputs/storm_catalog/
+# Unversioned on-disk snapshot of the Step 3 tree built on SSH_total at q90/q90,
+# taken 2026-07-31 before the HAT/q70-q99 regeneration overwrote outputs/storm_catalog/.
+# ~469 MB of catalogue JSON — far too large to version. The small derived products of
+# that method are committed separately under outputs/legacy_ssh_total_method/hazard/.
+outputs/legacy_ssh_total_method/step3_full_ssh_total_q90/
 outputs/risk_index/
 # Regeneratable NetCDF data under quicklook outputs (keep figures, drop data)
 outputs/monthly_quicklook_brazil_all/data/

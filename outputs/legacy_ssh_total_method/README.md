@@ -102,10 +102,14 @@ reflete **eventos que se sustentam apenas na maré**.
 | `risk/risk_index_municipalities.geojson` | produto municipal publicado (280 municípios com risco) |
 | `risk/risk_index_metadata.json` | metadados publicados do risco |
 
-**Não incluído:** `outputs/storm_catalog/compound/compound_catalog.json`
-(catálogo completo de eventos, ~44 MB). Permanece no disco em seu caminho
-original, mas não é versionado por causa do tamanho. Ele é regenerável a
-partir dos catálogos de tempestade do Step 3.1.
+**Não versionado, mas preservado em disco desde 2026-07-31:**
+`step3_full_ssh_total_q90/` guarda a árvore inteira do Step 3 deste método
+(~469 MB), copiada de `outputs/storm_catalog/` imediatamente antes de a
+regeneração sobre o portão HAT e o par q70/q99 sobrescrever aquele caminho.
+Inclui os dois catálogos de tempestade (`catalog_hs_storms.json`,
+`catalog_ssh_total_storms.json`), o catálogo composto e todas as saídas dos
+Steps 3.3–3.8. Está no `.gitignore` por causa do tamanho; sem cópia externa,
+não sobrevive a uma reinstalação do repositório.
 
 ---
 
@@ -124,3 +128,28 @@ instantâneo é integralmente reproduzível.
 
 **Arquivado em:** 2026-07-29
 **Estado do repositório na data:** ramo `main`, commit mais recente `e2680ed`
+
+
+---
+
+## Adendo — 2026-07-31
+
+O quadro "Onde está o método novo" acima ficou desatualizado no dia seguinte
+ao arquivamento: `detection_mhws.py` foi ele próprio superado quando a AUD-01
+§14 adotou o HAT como portão **e** como datum de severidade, em lugar do MHWS.
+O texto original fica como está, porque registra o que se sabia na data.
+
+Estado em 2026-07-31:
+
+| | Legado (aqui) | MHWS (intermediário) | Vigente |
+|---|---|---|---|
+| Detector | `detection.py` | `detection_mhws.py` | `compound_core.py` + `detection_hat.py` |
+| Datum de nível | — (limiar sobre `SSH_total`) | MHWS = A_M2 + A_S2 | HAT |
+| Par de limiares | q90/q90 sobre `SSH_total` | q90/q90 | **q70/q99** sobre `zos` livre de maré |
+| Métricas | `hazard/compound_metrics.csv` | `outputs/legacy_mhws_method/` | `outputs/storm_catalog/compound_hat/` |
+
+O par q70/q99 vem da recalibração do Step 2e de 2026-07-30, que pontuou o
+detector de produção sobre uma grade estendida de 121 pares. Ver
+[`docs/scientific_audit/issues/AUD-01_compound_detector_tidal_phase_locking.md`](../../docs/scientific_audit/issues/AUD-01_compound_detector_tidal_phase_locking.md)
+§14 — inclusive o registro de que a adoção ocorreu com o critério (c)
+reprovado.
