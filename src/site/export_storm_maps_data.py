@@ -61,7 +61,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG_DIR = ROOT / "outputs" / "storm_catalog"
 HS_CATALOG = CATALOG_DIR / "catalog_hs_storms.json"
-SSH_CATALOG = CATALOG_DIR / "catalog_ssh_total_storms.json"
+# The production level catalogue is segmented on tide-free ``zos``.  Keep the
+# legacy ``ssh`` output keys below because the existing site API consumes them.
+SSH_CATALOG = CATALOG_DIR / "catalog_zos_storms.json"
 METADATA_FILE = CATALOG_DIR / "logs" / "run_metadata.json"
 UNIFIED_DATASET = ROOT / "data" / "unified" / "metocean_brazil_unified_waverys_grid.nc"
 OUTPUT_DIR = ROOT / "site" / "public" / "data"
@@ -497,7 +499,7 @@ def main():
             "lat": round(lat, 4),
             "lon": round(lon, 4),
             "thr_hs": round(hs_gp.get("thr_hs_abs", 0), 4),
-            "thr_ssh": round(ssh_gp.get("thr_ssh_total_abs", 0), 4),
+            "thr_ssh": round(ssh_gp.get("thr_zos_abs", 0), 4),
             **metrics,
         }
         results.append(entry)
@@ -516,7 +518,7 @@ def main():
 
     # ── Pass 3: zos diagnostic layer (raw dynamic SSH, no tide) ────────────
     n_zos_raw_total = compute_zos_diagnostic(
-        results, run_meta["thr_ssh_pct"], n_years, run_meta["episode_max_gap_days"]
+        results, run_meta["thr_level_pct"], n_years, run_meta["episode_max_gap_days"]
     )
 
     # ── Build output ───────────────────────────────────────────────────────
@@ -527,7 +529,10 @@ def main():
             "n_years": round(n_years, 2),
             "n_grid_points": len(results),
             "thr_hs_pct": run_meta["thr_hs_pct"],
-            "thr_ssh_pct": run_meta["thr_ssh_pct"],
+            # Backward-compatible site key; this is now the zos percentile.
+            "thr_ssh_pct": run_meta["thr_level_pct"],
+            "level_var": run_meta.get("level_var", "zos"),
+            "level_is_tide_free": run_meta.get("level_is_tide_free", True),
             "episode_max_gap_days": run_meta["episode_max_gap_days"],
             "tide_model": run_meta["tide_model"],
             "compound_definition": (

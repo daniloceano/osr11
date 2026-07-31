@@ -95,11 +95,10 @@ from .detection_mhws import (
     INTENSITY_REF_HIGH_PCT,
     INTENSITY_REF_LOW_PCT,
     MIN_FINITE_DAYS,
-    POINT_SOURCE,
     UNIFIED,
     _point_metrics,
 )
-from .mhws_datum import mhws_at_points
+from .mhws_datum import mhws_at_points, still_water_level
 
 log = logging.getLogger(__name__)
 
@@ -115,6 +114,22 @@ MHWS_METRICS = (
     / "legacy_mhws_method"
     / "hazard"
     / "compound_metrics_mhws.csv"
+)
+#: Enumerates the 808 coastal grid points, in the canonical Step 3.1 order.
+#:
+#: ``detection_mhws`` reads them from ``compound/compound_catalog.json``, which
+#: was safe only while that file was another method's output. This module now
+#: WRITES that file, so reading it back would make the run depend on its own
+#: previous output — a stale or truncated catalogue would silently redefine the
+#: domain. The Step 3.1 metadata table is the upstream source and cannot do
+#: that. Verified 2026-07-31 to hold the same 808 points in the same order as
+#: the superseded catalogue.
+POINT_SOURCE = (
+    ROOT / "outputs" / "storm_catalog" / "tables" / "tab_SC3_catalog_metadata.csv"
+)
+#: Event-level catalogue consumed by Steps 3.3-3.8.
+EVENT_CATALOG = (
+    ROOT / "outputs" / "storm_catalog" / "compound" / "compound_catalog.json"
 )
 OPTIMAL_PAIR_FILE = (
     ROOT
@@ -151,7 +166,72 @@ def load_threshold_pair(source: Path = OPTIMAL_PAIR_FILE) -> tuple[float, float]
     return float(row["thr_hs_pct"]), float(row["thr_ssh_pct"])
 
 
-def _detect_task(task: tuple) -> tuple[int, dict[str, Any], list[dict[str, Any]]]:
+def _event_descriptors(
+    events: list[dict[str, Any]],
+    hs: np.ndarray,
+    zos: np.ndarray,
+    swl: np.ndarray,
+) -> list[dict[str, Any]]:
+    """Descriptive fields per event, for the event-level catalogue.
+
+    The detector itself returns only what the severity calculation needs. These
+    are the human-readable descriptors the downstream submodules consume:
+    dates, peaks of each driver, and the wave-to-level lag.
+
+    Window convention, and how it differs from the superseded catalogue
+    ---------------------------------------------------------------------
+    Peaks and the lag are taken over the **full-criterion window** — the days on
+    which the wave threshold, the level threshold and the HAT gate all hold at
+    once. The superseded SSH_total catalogue took them over the union of the
+    contributing episodes, which could include days when the event was not
+    actually in progress. Under a gated definition the event *is* the window
+    where all three conditions hold, so that is where its peaks live.
+
+    ``peak_hs`` is the exception: it is the detector's own value, taken over all
+    days of the contributing wave episodes, and is passed through unchanged so
+    that the catalogue and the severity calculation cannot disagree.
+
+    Indices are returned as integers; the caller converts them to dates, so the
+    full time axis never has to be shipped to a worker process.
+    """
+    descriptors: list[dict[str, Any]] = []
+    for event in events:
+        window = event["full_criterion_indices"]
+        if window.size == 0:
+            # Not reachable: an accepted event has at least one day above the
+            # gate by construction. Fall back rather than raise, so that a
+            # future change to the gate cannot silently lose events here.
+            window = event["overlap_indices"]
+        hs_window = hs[window]
+        swl_window = swl[window]
+        index_hs = int(window[int(np.nanargmax(hs_window))])
+        index_swl = int(window[int(np.nanargmax(swl_window))])
+        descriptors.append(
+            {
+                "start_index": int(event["start_index"]),
+                "end_index": int(event["end_index"]),
+                "overlap_duration_days": int(event["overlap_duration_days"]),
+                "full_criterion_duration_days": int(
+                    event["full_criterion_duration_days"]
+                ),
+                "peak_hs": round(float(event["peak_hs"]), 4),
+                "peak_zos": round(float(np.nanmax(zos[window])), 4),
+                "peak_swl": round(float(event["max_swl"]), 4),
+                "exc_wave": round(float(event["exc_wave"]), 4),
+                "exc_level": round(float(event["exc_level"]), 4),
+                "peak_hs_index": index_hs,
+                "peak_swl_index": index_swl,
+                # Positive => the wave peaks AFTER the level (wave lags surge),
+                # the same sign convention as the superseded catalogue.
+                "peak_lag_days": index_hs - index_swl,
+            }
+        )
+    return descriptors
+
+
+def _detect_task(
+    task: tuple,
+) -> tuple[int, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     """Phase-1 worker: detect one point and retain its raw excess arrays."""
     index, latitude, longitude, hs, zos, tide, n_years, hs_pct, zos_pct = task
     finite = np.isfinite(hs) & np.isfinite(zos) & np.isfinite(tide)
@@ -161,18 +241,19 @@ def _detect_task(task: tuple) -> tuple[int, dict[str, Any], list[dict[str, Any]]
             **record,
             "compound_count_total": None,
             "skip_reason": "insufficient_data",
-        }, []
+        }, [], []
 
     hat = float(np.nanmax(tide[finite]))
     events, context = compound_events_at_point(
         hs=hs, zos=zos, tide=tide, finite=finite, datum=hat,
         hs_pct=hs_pct, zos_pct=zos_pct,
     )
+    swl = still_water_level(zos, tide, zos_mean=context["zos_mean"])
     return index, {
         **record,
         **context,
         **_point_metrics(events, n_years),
-    }, events
+    }, events, _event_descriptors(events, hs, zos, swl)
 
 
 def _norm(values: Any, low: float, high: float) -> np.ndarray:
@@ -184,8 +265,13 @@ def _norm(values: Any, low: float, high: float) -> np.ndarray:
 
 def _score_task(
     task: tuple[int, list[dict[str, Any]], dict[str, float]]
-) -> tuple[int, dict[str, Any]]:
-    """Phase-2 worker: score one point with the domain-pooled HAT references."""
+) -> tuple[int, dict[str, Any], list[dict[str, float]]]:
+    """Phase-2 worker: score one point with the domain-pooled HAT references.
+
+    Returns the point-level aggregates and, alongside them, the per-event
+    severities in the same order as the point's event list, so the event-level
+    catalogue carries exactly the numbers the aggregates were built from.
+    """
     index, events, refs = task
     if not events:
         return index, {
@@ -198,7 +284,7 @@ def _score_task(
             "mean_integrated_severity": 0.0,
             "p95_integrated_severity": 0.0,
             "max_integrated_severity": 0.0,
-        }
+        }, []
 
     peak = 0.5 * (
         _norm(
@@ -230,6 +316,13 @@ def _score_task(
             for event in events
         ]
     )
+    per_event = [
+        {
+            "compound_intensity_norm": round(float(peak_value), 4),
+            "integrated_severity": round(float(integrated_value), 4),
+        }
+        for peak_value, integrated_value in zip(peak, integrated)
+    ]
     return index, {
         "mean_compound_intensity_norm": round(float(np.mean(peak)), 4),
         "p95_compound_intensity_norm": round(float(np.percentile(peak, 95)), 4),
@@ -237,7 +330,7 @@ def _score_task(
         "mean_integrated_severity": round(float(np.mean(integrated)), 4),
         "p95_integrated_severity": round(float(np.percentile(integrated, 95)), 4),
         "max_integrated_severity": round(float(np.max(integrated)), 4),
-    }
+    }, per_event
 
 
 def _parallel_map(function: Any, tasks: list[Any], workers: int) -> list[Any]:
@@ -356,6 +449,114 @@ def _assert_detector_fidelity(
     }
 
 
+def build_event_catalogue(
+    rows: list[dict[str, Any]],
+    descriptors: list[list[dict[str, Any]]],
+    severities: list[list[dict[str, float]]],
+    times: pd.DatetimeIndex,
+    municipalities: dict[tuple[float, float], str],
+) -> list[dict[str, Any]]:
+    """Assemble the event-level compound catalogue consumed by Steps 3.3-3.8.
+
+    One entry per grid point, each carrying its detection context and the list
+    of accepted events with dates rather than day indices.
+
+    Schema change from the superseded SSH_total catalogue
+    ----------------------------------------------------
+    ``peak_ssh_total`` and ``thr_ssh_total_abs`` are gone. The level driver is
+    now reported as three separate quantities, because under a gated method they
+    are three different things and collapsing them is what made the old product
+    hard to interpret:
+
+    ``peak_zos``      the tide-free level, which is what the threshold is on;
+    ``peak_swl``      the still-water level, which is what the gate is on;
+    ``exc_level``     ``peak_swl - HAT``, the severity-bearing excess.
+
+    ``full_criterion_duration_days`` is new: the number of days on which all
+    three conditions hold. It is the duration the severity integral runs over,
+    and it is always <= ``overlap_duration_days``.
+    """
+    catalogue: list[dict[str, Any]] = []
+    for row, point_descriptors, point_severities in zip(
+        rows, descriptors, severities
+    ):
+        latitude = float(row["grid_lat"])
+        longitude = float(row["grid_lon"])
+
+        events: list[dict[str, Any]] = []
+        # A point skipped for insufficient data has no severities; zip stops at
+        # the shorter sequence, which is the intended behaviour there.
+        for descriptor, severity in zip(point_descriptors, point_severities):
+            events.append(
+                {
+                    "date_start": times[descriptor["start_index"]].date().isoformat(),
+                    "date_end": times[descriptor["end_index"]].date().isoformat(),
+                    "overlap_duration_days": descriptor["overlap_duration_days"],
+                    "full_criterion_duration_days": descriptor[
+                        "full_criterion_duration_days"
+                    ],
+                    "peak_hs": descriptor["peak_hs"],
+                    "peak_zos": descriptor["peak_zos"],
+                    "peak_swl": descriptor["peak_swl"],
+                    "exc_wave": descriptor["exc_wave"],
+                    "exc_level": descriptor["exc_level"],
+                    "peak_hs_date": times[descriptor["peak_hs_index"]]
+                    .date()
+                    .isoformat(),
+                    "peak_swl_date": times[descriptor["peak_swl_index"]]
+                    .date()
+                    .isoformat(),
+                    "peak_lag_days": descriptor["peak_lag_days"],
+                    "compound_intensity_norm": severity["compound_intensity_norm"],
+                    "integrated_severity": severity["integrated_severity"],
+                }
+            )
+
+        entry = {
+            "grid_lat": latitude,
+            "grid_lon": longitude,
+            "municipality": municipalities.get((round(latitude, 2), round(longitude, 2))),
+        }
+        # Detection context and point aggregates, minus the coordinates already
+        # written above. Copied wholesale so the catalogue cannot drift from the
+        # metrics table: both are views of the same rows.
+        entry.update(
+            {
+                key: value
+                for key, value in row.items()
+                if key not in ("grid_lat", "grid_lon")
+            }
+        )
+        entry["compound_events"] = events
+        catalogue.append(entry)
+    return catalogue
+
+
+def write_event_catalogue(
+    catalogue: list[dict[str, Any]], destination: Path
+) -> None:
+    """Write the event-level catalogue as JSON, converting NumPy scalars."""
+
+    class _Encoder(json.JSONEncoder):
+        def default(self, o: Any) -> Any:
+            if isinstance(o, (np.integer,)):
+                return int(o)
+            if isinstance(o, (np.floating,)):
+                return float(o)
+            if isinstance(o, np.ndarray):
+                return o.tolist()
+            return super().default(o)
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(catalogue, cls=_Encoder))
+    size_mb = destination.stat().st_size / 1e6
+    total = sum(len(entry["compound_events"]) for entry in catalogue)
+    log.info(
+        "Wrote %s (%.1f MB, %d grid points, %d events)",
+        destination, size_mb, len(catalogue), total,
+    )
+
+
 def _band_counts(metrics: pd.DataFrame) -> dict[str, int]:
     counts = metrics["compound_count_total"].fillna(0)
     return {
@@ -397,6 +598,20 @@ def main() -> None:
         "--no-snapshot", action="store_true",
         help="Skip the versioned copy under outputs/current_method_hat/",
     )
+    parser.add_argument(
+        "--event-catalog", type=Path, default=None,
+        help=(
+            "Write the event-level catalogue elsewhere than "
+            "outputs/storm_catalog/compound/compound_catalog.json"
+        ),
+    )
+    parser.add_argument(
+        "--no-event-catalog", action="store_true",
+        help=(
+            "Skip the event-level catalogue. Steps 3.3-3.8 read it, so a "
+            "production run should not use this."
+        ),
+    )
     args = parser.parse_args()
     if args.workers < 1 or args.validate_points < 1:
         parser.error("workers and validate-points must be positive")
@@ -424,13 +639,18 @@ def main() -> None:
         if not path.exists():
             raise FileNotFoundError(path)
 
-    catalogue = json.loads(POINT_SOURCE.read_text())
-    points = pd.DataFrame(
-        [
-            {"grid_lat": point["grid_lat"], "grid_lon": point["grid_lon"]}
-            for point in catalogue
-        ]
-    )
+    point_table = pd.read_csv(POINT_SOURCE)
+    points = point_table[["grid_lat", "grid_lon"]].copy()
+    municipalities = {
+        (round(float(lat), 2), round(float(lon), 2)): (
+            None if pd.isna(name) else str(name)
+        )
+        for lat, lon, name in zip(
+            point_table["grid_lat"],
+            point_table["grid_lon"],
+            point_table.get("municipality", pd.Series([None] * len(point_table))),
+        )
+    }
     ds = xr.open_dataset(UNIFIED)
     # Reading the last values forces the NetCDF backend to traverse metadata
     # and data; a truncated file fails before the expensive parallel work.
@@ -488,6 +708,7 @@ def main() -> None:
     phase_1.sort(key=lambda item: item[0])
     rows = [item[1] for item in phase_1]
     events = [item[2] for item in phase_1]
+    descriptors = [item[3] for item in phase_1]
 
     refs = _references(events)
     score_tasks = [
@@ -495,7 +716,8 @@ def main() -> None:
     ]
     phase_2 = _parallel_map(_score_task, score_tasks, args.workers)
     phase_2.sort(key=lambda item: item[0])
-    for row, (_, scores) in zip(rows, phase_2):
+    per_event_severity = [item[2] for item in phase_2]
+    for row, (_, scores, _) in zip(rows, phase_2):
         row.update(scores)
 
     metrics = pd.DataFrame(rows)
@@ -611,6 +833,20 @@ def main() -> None:
     log.info("Compound events: %d", counts["domain_events"])
     log.info("Points with zero events: %d", counts["zero_event_points"])
     log.info("Wrote %s", output_dir / "compound_metrics_hat.csv")
+
+    if not args.no_event_catalog:
+        catalogue = build_event_catalogue(
+            rows, descriptors, per_event_severity, times, municipalities,
+        )
+        catalogue_total = sum(
+            len(entry["compound_events"]) for entry in catalogue
+        )
+        if catalogue_total != counts["domain_events"]:
+            raise AssertionError(
+                "Event-level catalogue and metrics table disagree on the event "
+                f"count: {catalogue_total} != {counts['domain_events']}"
+            )
+        write_event_catalogue(catalogue, args.event_catalog or EVENT_CATALOG)
 
     if not args.no_snapshot and output_dir == OUTPUT_DIR:
         SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)

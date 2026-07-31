@@ -332,6 +332,8 @@ interface DiscreteLegendProps {
   /** Override the class-label formatting, e.g. thousands separators on counts. */
   formatLabel?: (value: number) => string;
   note?: ReactNode;
+  /** The first class represents exactly zero and is rendered in gray. */
+  zeroIsGray?: boolean;
 }
 
 export function DiscreteLegend({
@@ -343,6 +345,7 @@ export function DiscreteLegend({
   monthLabels = false,
   formatLabel,
   note,
+  zeroIsGray = false,
 }: DiscreteLegendProps) {
   const format = (value: number) => {
     if (monthLabels) return MONTH_NAMES[Math.round(value) - 1] ?? String(value);
@@ -363,6 +366,10 @@ export function DiscreteLegend({
           const isLast = index === colors.length - 1;
           const label = monthLabels
             ? format(lower)
+            : zeroIsGray && index === 0
+              ? '0'
+              : zeroIsGray && index === 1
+                ? `> 0 – < ${format(upper)}`
             : isFirst
               ? `< ${format(upper)}`
               : isLast

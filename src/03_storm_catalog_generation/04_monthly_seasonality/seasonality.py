@@ -1,7 +1,7 @@
 """
 Monthly seasonality analysis for Step 3 — Hazard Characterization.
 
-Computes monthly climatological statistics for Hₛ storms, SSH_total storms,
+Computes monthly climatological statistics for Hₛ storms, tide-free zos storms,
 and compound events. No circular statistics in this phase (advanced/future).
 
 Per grid point:
@@ -31,7 +31,7 @@ from ..shared.catalog_utils import (
     save_json,
     save_csv,
     HS_CATALOG,
-    SSH_CATALOG,
+    LEVEL_CATALOG,
 )
 
 log = logging.getLogger(__name__)
@@ -99,17 +99,17 @@ def _monthly_climatology(monthly_counts: dict[int, int]) -> dict:
 
 def compute_point_seasonality(
     hs_storms: list[dict],
-    ssh_storms: list[dict],
+    level_storms: list[dict],
     compound_events: list[dict],
 ) -> dict:
     """Compute seasonality for all three event types at one grid point."""
     hs_monthly = _monthly_counts(hs_storms)
-    ssh_monthly = _monthly_counts(ssh_storms)
+    level_monthly = _monthly_counts(level_storms)
     compound_monthly = _monthly_counts(compound_events)
 
     return {
         "hs": _monthly_climatology(hs_monthly),
-        "ssh_total": _monthly_climatology(ssh_monthly),
+        "zos": _monthly_climatology(level_monthly),
         "compound": _monthly_climatology(compound_monthly),
     }
 
@@ -121,7 +121,7 @@ def run_seasonality(
     import json
 
     hs_catalog = load_catalog(HS_CATALOG)
-    ssh_catalog = load_catalog(SSH_CATALOG)
+    level_catalog = load_catalog(LEVEL_CATALOG)
 
     # Load compound catalog
     compound_path = compound_catalog_path or (
@@ -135,7 +135,7 @@ def run_seasonality(
             key = (round(gp["grid_lat"], 4), round(gp["grid_lon"], 4))
             compound_catalog[key] = gp.get("compound_events", [])
 
-    ssh_index = build_grid_index(ssh_catalog)
+    level_index = build_grid_index(level_catalog)
 
     grid_results = []
     for hs_gp in hs_catalog:
@@ -143,12 +143,12 @@ def run_seasonality(
         lon = hs_gp["grid_lon"]
         key = (round(lat, 4), round(lon, 4))
 
-        ssh_gp = ssh_index.get(key)
+        level_gp = level_index.get(key)
         hs_storms = hs_gp.get("storms", [])
-        ssh_storms = ssh_gp.get("storms", []) if ssh_gp else []
+        level_storms = level_gp.get("storms", []) if level_gp else []
         compound_events = compound_catalog.get(key, [])
 
-        seasonality = compute_point_seasonality(hs_storms, ssh_storms, compound_events)
+        seasonality = compute_point_seasonality(hs_storms, level_storms, compound_events)
 
         grid_results.append({
             "grid_lat": round(lat, 4),
@@ -160,12 +160,12 @@ def run_seasonality(
             "hs_peak_month": seasonality["hs"]["peak_month"],
             "hs_peak_month_name": seasonality["hs"]["peak_month_name"],
             "hs_seasonal_counts": seasonality["hs"]["seasonal_counts"],
-            # SSH_total seasonality
-            "ssh_total_monthly_counts": seasonality["ssh_total"]["monthly_counts"],
-            "ssh_total_monthly_share": seasonality["ssh_total"]["monthly_share"],
-            "ssh_total_peak_month": seasonality["ssh_total"]["peak_month"],
-            "ssh_total_peak_month_name": seasonality["ssh_total"]["peak_month_name"],
-            "ssh_total_seasonal_counts": seasonality["ssh_total"]["seasonal_counts"],
+            # Tide-free zos seasonality
+            "zos_monthly_counts": seasonality["zos"]["monthly_counts"],
+            "zos_monthly_share": seasonality["zos"]["monthly_share"],
+            "zos_peak_month": seasonality["zos"]["peak_month"],
+            "zos_peak_month_name": seasonality["zos"]["peak_month_name"],
+            "zos_seasonal_counts": seasonality["zos"]["seasonal_counts"],
             # Compound seasonality
             "compound_monthly_counts": seasonality["compound"]["monthly_counts"],
             "compound_monthly_share": seasonality["compound"]["monthly_share"],
@@ -194,13 +194,13 @@ def save_seasonality_results(results: dict, output_dir: Path | None = None):
             "municipality": gr.get("municipality"),
             "hs_peak_month": gr["hs_peak_month"],
             "hs_peak_month_name": gr["hs_peak_month_name"],
-            "ssh_total_peak_month": gr["ssh_total_peak_month"],
-            "ssh_total_peak_month_name": gr["ssh_total_peak_month_name"],
+            "zos_peak_month": gr["zos_peak_month"],
+            "zos_peak_month_name": gr["zos_peak_month_name"],
             "compound_peak_month": gr["compound_peak_month"],
             "compound_peak_month_name": gr["compound_peak_month_name"],
             # Seasonal counts as separate columns
             **{f"hs_season_{s}": gr["hs_seasonal_counts"][s] for s in ["DJF", "MAM", "JJA", "SON"]},
-            **{f"ssh_total_season_{s}": gr["ssh_total_seasonal_counts"][s] for s in ["DJF", "MAM", "JJA", "SON"]},
+            **{f"zos_season_{s}": gr["zos_seasonal_counts"][s] for s in ["DJF", "MAM", "JJA", "SON"]},
             **{f"compound_season_{s}": gr["compound_seasonal_counts"][s] for s in ["DJF", "MAM", "JJA", "SON"]},
         })
     df = pd.DataFrame(rows)

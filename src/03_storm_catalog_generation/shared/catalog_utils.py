@@ -21,7 +21,12 @@ log = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[3]
 CATALOG_DIR = ROOT / "outputs" / "storm_catalog"
 HS_CATALOG = CATALOG_DIR / "catalog_hs_storms.json"
-SSH_CATALOG = CATALOG_DIR / "catalog_ssh_total_storms.json"
+#: Level storm catalogue. Segmented on tide-free ``zos`` since 2026-07-31;
+#: the superseded SSH_total catalogue is at
+#: ``outputs/legacy_ssh_total_method/step3_full_ssh_total_q90/``.
+LEVEL_CATALOG = CATALOG_DIR / "catalog_zos_storms.json"
+#: Field-name prefix of the level catalogue, mirroring the Step 3 config.
+LEVEL_PREFIX = "zos"
 METADATA_FILE = CATALOG_DIR / "logs" / "run_metadata.json"
 
 

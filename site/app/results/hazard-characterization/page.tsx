@@ -94,8 +94,8 @@ export default function HazardCharacterizationPage() {
             <p className="mb-6 max-w-3xl text-xs leading-relaxed text-gray-500">
               The two index components are shown in their own catalog units — events yr⁻¹ and the
               dimensionless integrated severity — and the Hazard Index is the composite 0–1 layer
-              built from them. The duration and peak-intensity panels are retired diagnostics,
-              kept for comparison but carrying no weight in the index. The values are calculated on the 808 native
+              built from them. Mean overlap duration and peak intensity are available only in the
+              supporting diagnostic explorer below and carry no weight in the index. The values are calculated on the 808 native
               ocean grid points and drawn on the Natural Earth coastline; the coastal rendering
               does not recalculate the index. This is the same construction as figure{' '}
               <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">

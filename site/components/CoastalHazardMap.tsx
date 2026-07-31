@@ -64,6 +64,7 @@ export interface CoastalHazardLayer {
   display_values: string;
   description: string;
   statistics: LayerStats;
+  zero_is_gray?: boolean;
 }
 
 export interface CoastalPalettes {
@@ -347,6 +348,7 @@ export default function CoastalHazardMap({
             boundaries={layer.boundaries}
             colors={layer.colors}
             decimals={layer.decimals}
+            zeroIsGray={layer.zero_is_gray}
             note={
               <>
                 <p className="mt-3 text-[11px] leading-relaxed text-gray-500">

@@ -174,8 +174,8 @@ def main():
     )
 
     # Check catalogs exist
-    from .shared.catalog_utils import HS_CATALOG, SSH_CATALOG, METADATA_FILE
-    for path in [HS_CATALOG, SSH_CATALOG, METADATA_FILE]:
+    from .shared.catalog_utils import HS_CATALOG, LEVEL_CATALOG, METADATA_FILE
+    for path in [HS_CATALOG, LEVEL_CATALOG, METADATA_FILE]:
         if not path.exists():
             log.error("Required file not found: %s", path)
             log.error("Run 'python -m src.03_storm_catalog_generation.main' first.")

@@ -1,11 +1,11 @@
 """
 Duration and persistence metrics for Step 3 — Hazard Characterization.
 
-Computes per-grid-point persistence statistics for Hₛ storms, SSH_total storms,
+Computes per-grid-point persistence statistics for Hₛ storms, tide-free zos storms,
 and compound events. Metrics include storm counts, duration statistics,
 integrated intensity, and interevent waiting times.
 
-For Hₛ and SSH_total (per grid point):
+For Hₛ and tide-free zos (per grid point):
     - storm_count_total
     - storm_count_annual_mean
     - mean_duration_days
@@ -40,7 +40,7 @@ from ..shared.catalog_utils import (
     save_json,
     save_csv,
     HS_CATALOG,
-    SSH_CATALOG,
+    LEVEL_CATALOG,
 )
 
 log = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ def run_duration_persistence(
     import json
 
     hs_catalog = load_catalog(HS_CATALOG)
-    ssh_catalog = load_catalog(SSH_CATALOG)
+    level_catalog = load_catalog(LEVEL_CATALOG)
     run_meta = load_run_metadata()
     n_years = get_period_years(run_meta)
 
@@ -161,7 +161,7 @@ def run_duration_persistence(
             key = (round(gp["grid_lat"], 4), round(gp["grid_lon"], 4))
             compound_catalog[key] = gp.get("compound_events", [])
 
-    ssh_index = build_grid_index(ssh_catalog)
+    level_index = build_grid_index(level_catalog)
 
     grid_results = []
     for hs_gp in hs_catalog:
@@ -169,13 +169,13 @@ def run_duration_persistence(
         lon = hs_gp["grid_lon"]
         key = (round(lat, 4), round(lon, 4))
 
-        ssh_gp = ssh_index.get(key)
+        level_gp = level_index.get(key)
         hs_storms = hs_gp.get("storms", [])
-        ssh_storms = ssh_gp.get("storms", []) if ssh_gp else []
+        level_storms = level_gp.get("storms", []) if level_gp else []
         compound_events = compound_catalog.get(key, [])
 
         hs_metrics = compute_univariate_persistence(hs_storms, n_years)
-        ssh_metrics = compute_univariate_persistence(ssh_storms, n_years)
+        level_metrics = compute_univariate_persistence(level_storms, n_years)
         compound_metrics = compute_compound_persistence(compound_events, n_years)
 
         grid_results.append({
@@ -185,7 +185,7 @@ def run_duration_persistence(
             # Hs persistence
             **{f"hs_{k}": v for k, v in hs_metrics.items()},
             # SSH_total persistence
-            **{f"ssh_total_{k}": v for k, v in ssh_metrics.items()},
+            **{f"zos_{k}": v for k, v in level_metrics.items()},
             # Compound persistence
             **compound_metrics,
         })

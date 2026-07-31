@@ -6,19 +6,39 @@ Part of the OSR11 pipeline.
 Location: src/03_storm_catalog_generation/
 
 This step applies the PU-optimal thresholds from Step 2e to the full metocean
-record (1993–2025) and produces independent storm catalogs for Hs and SSH_total
-at each coastal grid point, then runs the full hazard characterization suite:
-compound detection, duration/persistence, seasonality, trends (Mann–Kendall +
-Sen slope), univariate EVA (POT–GPD), and dependence analysis (τ, ρ, χ, χ̄).
+record (1993–2025) and produces independent storm catalogs for Hs and tide-free
+sea level (zos) at each coastal grid point, then runs the full hazard
+characterization suite: compound detection, duration/persistence, seasonality,
+trends (Mann–Kendall + Sen slope), univariate EVA (POT–GPD), and dependence
+analysis (τ, ρ, χ, χ̄).
 
 Threshold source:
     The sole authoritative threshold pair is from Step 2e (PU Composite
     Calibration): outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv
     Step 2d (CSI Grid Scan) thresholds are NOT used.
 
-SSH_total definition (canonical, inherited from Step 2c):
-    SSH_total(d) = zos(d, 00:00 UTC) + tide_daily_max(d)
-    Using raw zos without tide is incorrect.
+Level variable (changed 2026-07-31 by AUD-01):
+    The level catalogue is segmented on raw ``zos`` — tide-free — and NOT on
+    SSH_total. The audit established that a percentile of zos + tide is set by
+    tidal phase rather than by storm forcing: north of 20 S the tide carries
+    96-98 % of the variance of SSH_total, so a local q90 of SSH_total is in
+    practice the spring-tide envelope, and exceedances recur fortnightly by
+    construction with no storm involved.
+
+    The astronomical tide re-enters the method as a *gate*, not as part of the
+    detection threshold. A compound event is accepted only where the still-water
+    level reaches the local Highest Astronomical Tide:
+
+        HAT    = max(tide_daily_max) over 1993-2025, per grid point
+        SWL(d) = (zos(d) - mean(zos)) + tide_daily_max(d)
+        gate   : max(SWL) over the shared days > HAT
+
+    zos is de-meaned because it is referenced to the geoid while HAT is a height
+    above local mean sea level; the two are only comparable after removing the
+    local offset.
+
+    The superseded definition, retained here for the record:
+        SSH_total(d) = zos(d, 00:00 UTC) + tide_daily_max(d)
 
 Threshold computation period:
     Local percentile thresholds are computed from the FULL metocean record
@@ -107,8 +127,25 @@ DEPENDENCE_DIR = OUTPUT_ROOT / "dependence"
 
 HS_VAR = "VHM0"           # significant wave height (m), daily max
 SSH_VAR = "zos"            # sea surface height above geoid (m), 00:00 UTC
-SSH_TOTAL_VAR = "SSH_total"  # pre-computed in preprocessing, or computed at runtime
+SSH_TOTAL_VAR = "SSH_total"  # superseded level variable; no longer segmented
 TIDE_DAILY_MAX_VAR = "tide_daily_max"  # pre-computed FES2022 daily-max tide
+
+# ══════════════════════════════════════════════════════════════════════════════
+# LEVEL VARIABLE FOR THE STORM CATALOGUE
+# ══════════════════════════════════════════════════════════════════════════════
+
+#: Dataset variable segmented into level storm episodes. Since 2026-07-31 this
+#: is tide-free ``zos``; see the module docstring for why SSH_total was retired.
+LEVEL_VAR = SSH_VAR
+
+#: Field-name prefix for the level catalogue (``thr_zos_pct``, ``peak_zos``, …).
+#: The prefix is part of the published schema, so it says what the quantity
+#: actually is — the site has twice shipped figures labelled SSH_total over
+#: tide-free data, and a prefix that lies is how that happens.
+LEVEL_PREFIX = "zos"
+
+#: Filename of the level catalogue written by Step 3.1.
+LEVEL_CATALOG_NAME = f"catalog_{LEVEL_PREFIX}_storms.json"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TIDE / SSH_TOTAL MODE

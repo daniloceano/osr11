@@ -45,7 +45,7 @@
     "n_points_below_1_5m": 256
   },
   "parallelism": {
-    "workers": 60,
+    "workers": 100,
     "phase_order": [
       "parallel detection",
       "global ordered Q05/Q95 barrier",
@@ -79,7 +79,7 @@
     "reference": "outputs/legacy_mhws_method/hazard/compound_metrics_mhws.csv",
     "comparable": false,
     "exact_points": 0,
-    "total_points": 808,
-    "maximum_absolute_difference_m": 0.7200000000000002
+    "total_points": 30,
+    "maximum_absolute_difference_m": 0.6699999999999999
   }
 }

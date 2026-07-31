@@ -72,8 +72,11 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
         "unit": "events yr⁻¹",
         "unit_plain": "events per year",
         "value_kind": "catalog",
-        "decimals": 1,
-        "boundaries": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+        "decimals": 2,
+        # The first interval isolates the exact zero; positive classes cover
+        # the current 0.03–2.97 events/yr range.
+        "boundaries": [0.0, 0.015, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+        "zero_is_gray": True,
         "palette": "component",
         "description": (
             "Mean annual number of compound wave/sea-level events at the "
@@ -82,39 +85,22 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
-        "key": "mean_overlap_duration",
-        "label": "Mean overlap duration",
-        "short_label": "Duration",
-        "unit": "days",
-        "unit_plain": "days",
-        "value_kind": "catalog",
-        "decimals": 2,
-        "boundaries": [1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6],
-        "palette": "component",
-        "description": (
-            "Mean number of calendar days during which the wave and the "
-            "sea-level episodes of a compound event overlap, straight from "
-            "the Step 3.2 catalog."
-        ),
-    },
-    {
-        "key": "mean_compound_intensity_norm",
-        "label": "Mean compound intensity",
-        "short_label": "Intensity",
+        "key": "mean_integrated_severity",
+        "label": "Mean integrated severity",
+        "short_label": "Severity",
         "unit": "dimensionless",
         "unit_plain": "dimensionless",
         "value_kind": "catalog",
         "decimals": 3,
-        "boundaries": [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
+        # The first interval isolates the exact zero; positive classes cover
+        # the current 0.0084–0.9483 range.
+        "boundaries": [0.0, 0.0042, 0.15, 0.3, 0.45, 0.6, 0.75, 0.95],
+        "zero_is_gray": True,
         "palette": "component",
         "description": (
-            "Event-level compound intensity stored in the catalog: how far "
-            "each driver rose above its own local q90 detection threshold, "
-            "rescaled by the domain-wide Q05/Q95 of those excesses and "
-            "averaged with equal weights. Subtracting the local baseline "
-            "keeps the astronomical tide out of the severity score. It is "
-            "already a dimensionless compound intensity, so the map shows it "
-            "unchanged — no extra Min-Max scaling is applied for display."
+            "Mean event-integrated excess above HAT at the nearest native "
+            "ocean grid point. This is the persistence-aware severity "
+            "component used by the current Hazard Index."
         ),
     },
     {
@@ -128,9 +114,9 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
         "boundaries": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
         "palette": "hazard",
         "description": (
-            "Final composite Hazard Index: the three components are Min-Max "
+            "Final composite Hazard Index: frequency and integrated severity are Min-Max "
             "normalized over the 808 native grid points, averaged with equal "
-            "weights of 1/3, and the mean is Min-Max normalized again to "
+            "weights of 1/2, and the mean is Min-Max normalized again to "
             "span 0-1."
         ),
     },
@@ -360,10 +346,16 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "decimals": spec["decimals"],
                 "boundaries": spec["boundaries"],
                 "colors": (
-                    component_colors(len(spec["boundaries"]) - 1)
+                    (
+                        ["#bdbdbd"]
+                        + component_colors(len(spec["boundaries"]) - 2)
+                        if spec.get("zero_is_gray")
+                        else component_colors(len(spec["boundaries"]) - 1)
+                    )
                     if spec["palette"] == "component"
                     else risk_colors(len(spec["boundaries"]) - 1)
                 ),
+                "zero_is_gray": bool(spec.get("zero_is_gray", False)),
                 "palette": spec["palette"],
                 "palette_source": (
                     "matplotlib magma sampled from 0.95 to 0.12, as in "
@@ -386,10 +378,10 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             field: numeric_stats(dissolved[field]) for field in DETAIL_FIELDS
         },
         "normalization_note": (
-            "The Min-Max normalization of the three components happens only "
-            "inside the index construction on the native grid. The frequency, "
-            "duration, and intensity layers of this map show the catalog "
-            "values themselves."
+            "The Min-Max normalization of the two components happens only "
+            "inside the index construction on the native grid. The frequency "
+            "and integrated-severity layers show the catalog values themselves. "
+            "Exact zeros are shown in gray and isolated from positive classes."
         ),
         "outputs": {
             "geojson": str(OUTPUT_GEOJSON.relative_to(ROOT)),

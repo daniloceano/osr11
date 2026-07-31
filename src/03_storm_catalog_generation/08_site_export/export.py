@@ -33,7 +33,7 @@ from ..shared.catalog_utils import (
     load_run_metadata,
     get_period_years,
     HS_CATALOG,
-    SSH_CATALOG,
+    LEVEL_CATALOG,
 )
 
 log = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ def run_site_export() -> dict:
 
         # ── Duration & persistence ──
         dur = duration_idx.get(key, {})
-        for prefix in ("hs", "ssh_total"):
+        for prefix in ("hs", "zos"):
             entry[f"{prefix}_storm_count_total"] = dur.get(f"{prefix}_storm_count_total")
             entry[f"{prefix}_storm_count_annual_mean"] = _safe_round(dur.get(f"{prefix}_storm_count_annual_mean"))
             entry[f"{prefix}_mean_duration_days"] = _safe_round(dur.get(f"{prefix}_mean_duration_days"))
@@ -141,7 +141,7 @@ def run_site_export() -> dict:
 
         # ── Seasonality ──
         sea = season_idx.get(key, {})
-        for prefix in ("hs", "ssh_total", "compound"):
+        for prefix in ("hs", "zos", "compound"):
             entry[f"{prefix}_peak_month"] = sea.get(f"{prefix}_peak_month")
             mc = sea.get(f"{prefix}_monthly_counts")
             if mc is not None:
@@ -153,9 +153,9 @@ def run_site_export() -> dict:
         # ── Trends ──
         tr = trends_idx.get(key, {})
         for metric in [
-            "annual_hs_count", "annual_ssh_total_count", "annual_compound_count",
-            "annual_mean_hs_peak", "annual_mean_ssh_total_peak",
-            "annual_mean_hs_duration", "annual_mean_ssh_total_duration",
+            "annual_hs_count", "annual_zos_count", "annual_compound_count",
+            "annual_mean_hs_peak", "annual_mean_zos_peak",
+            "annual_mean_hs_duration", "annual_mean_zos_duration",
             "annual_mean_overlap_duration",
         ]:
             entry[f"{metric}_slope"] = _safe_round(tr.get(f"{metric}_slope"), 6)
@@ -165,7 +165,7 @@ def run_site_export() -> dict:
 
         # ── EVA ──
         ev = eva_idx.get(key, {})
-        for prefix in ("hs", "ssh_total"):
+        for prefix in ("hs", "zos"):
             entry[f"{prefix}_gpd_shape"] = _safe_round(ev.get(f"{prefix}_gpd_shape"), 6)
             entry[f"{prefix}_gpd_scale"] = _safe_round(ev.get(f"{prefix}_gpd_scale"), 6)
             entry[f"{prefix}_fit_success"] = ev.get(f"{prefix}_fit_success")
@@ -202,7 +202,9 @@ def run_site_export() -> dict:
             "n_grid_points": len(grid_points),
             "modules_included": modules_present,
             "thr_hs_pct": run_meta.get("thr_hs_pct"),
-            "thr_ssh_pct": run_meta.get("thr_ssh_pct"),
+            "thr_level_pct": run_meta.get("thr_level_pct"),
+            "level_var": run_meta.get("level_var"),
+            "level_is_tide_free": run_meta.get("level_is_tide_free"),
             "episode_max_gap_days": run_meta.get("episode_max_gap_days"),
             "tide_model": run_meta.get("tide_model"),
         },

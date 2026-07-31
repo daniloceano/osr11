@@ -2,8 +2,13 @@
 Step 3 — Storm Catalog Generation: CLI orchestrator.
 
 Applies PU-optimal thresholds (from Step 2e) to the full 1993–2025 metocean
-record to produce independent storm catalogs for Hs and SSH_total at each
-coastal grid point.
+record to produce independent storm catalogs for Hs and tide-free sea level
+(zos) at each coastal grid point.
+
+The level catalogue was segmented on SSH_total until 2026-07-31. Audit AUD-01
+retired that: a percentile of zos + tide selects on tidal phase rather than on
+storm forcing. The tide re-enters as the HAT gate applied in Step 3.2, not as
+part of the level threshold. See ``config/analysis_config.py``.
 
 Usage
 -----
@@ -13,7 +18,7 @@ Usage
 Phases
 ------
     load-validate    Load inputs, identify coastal grid points
-    tides            Compute FES2022 daily-max tides and SSH_total
+    tides            Load the tide-free level series and the daily-max tide
     catalog          Build storm catalogs (thresholds + exceedance + clustering)
     figures          Generate QA figures
     all              Run the full pipeline (default)
@@ -79,10 +84,11 @@ def phase_load_validate() -> dict[str, Any]:
             muni_lookup[key] = row.get("municipality", "")
 
     log.info(
-        "Summary: %d coastal grid points, thresholds hs=q%.0f ssh=q%.0f, "
+        "Summary: %d coastal grid points, thresholds hs=q%.0f %s=q%.0f, "
         "municipality labels for %d points",
         len(coastal_df),
         thresholds["thr_hs_pct"] * 100,
+        cfg.LEVEL_PREFIX,
         thresholds["thr_ssh_pct"] * 100,
         len(muni_lookup),
     )
@@ -97,27 +103,35 @@ def phase_load_validate() -> dict[str, Any]:
 
 
 def phase_tides(ctx: dict[str, Any]) -> dict[str, Any]:
-    """Phase 2: Resolve SSH_total for all coastal grid points.
+    """Phase 2: Resolve the level and tide series for all coastal grid points.
 
-    Three modes (controlled by ``cfg.TIDE_MODE``):
+    Since 2026-07-31 the segmented level variable is tide-free ``zos``, so this
+    phase no longer builds SSH_total. It loads two things:
 
-    **auto** (default):
-        Detect what's in the dataset:
-        - If SSH_total exists → use directly (precomputed)
-        - Elif tide_daily_max + zos → reconstruct SSH_total
-        - Else → compute FES2022 at runtime (legacy)
+    * ``level_cache`` — the zos series that Phase 3 segments into episodes;
+    * ``tide_cache``  — the daily-maximum FES2022 tide, which Step 3.2 needs in
+      order to form SWL and apply the HAT gate. It is loaded here because this
+      is where the dataset is open, not because the level threshold uses it.
 
-    **precomputed**:
-        Require SSH_total in dataset. Fail if absent.
+    ``cfg.TIDE_MODE`` now governs only how the tide is obtained:
 
-    **runtime**:
-        Always compute FES2022 at runtime (legacy, slow).
+    **auto** (default)
+        Use ``tide_daily_max`` from the unified dataset if present; otherwise
+        compute FES2022 at runtime.
+    **precomputed**
+        Require ``tide_daily_max`` in the dataset. Fail if absent.
+    **runtime**
+        Always compute FES2022 at runtime (slow; small domains only).
 
-    Adds ``ssh_total_cache`` to context: dict mapping (lat, lon) → pd.Series.
-    Also sets ``ctx["tide_mode_used"]`` for run metadata.
+    Historical behaviour, superseded: this phase used to resolve SSH_total =
+    zos + tide and hand that to the segmentation. AUD-01 established that a
+    percentile of that sum selects on tidal phase rather than on storm forcing.
     """
     log.info("=" * 70)
-    log.info("PHASE 2 — Resolve SSH_total (TIDE_MODE=%s)", cfg.TIDE_MODE)
+    log.info(
+        "PHASE 2 — Resolve level (%s) and tide (TIDE_MODE=%s)",
+        cfg.LEVEL_VAR, cfg.TIDE_MODE,
+    )
     log.info("=" * 70)
 
     ds = ctx["ds"]
@@ -127,179 +141,97 @@ def phase_tides(ctx: dict[str, Any]) -> dict[str, Any]:
         zip(coastal_df["grid_lat"].values, coastal_df["grid_lon"].values)
     )
 
-    # ── Detect available pre-computed variables ───────────────────────────
-    has_ssh_total = cfg.SSH_TOTAL_VAR in ds.data_vars
+    has_level = cfg.LEVEL_VAR in ds.data_vars
     has_tide_daily_max = cfg.TIDE_DAILY_MAX_VAR in ds.data_vars
-    has_zos = cfg.SSH_VAR in ds.data_vars
-
     log.info(
-        "Dataset variables: SSH_total=%s, tide_daily_max=%s, zos=%s",
-        has_ssh_total, has_tide_daily_max, has_zos,
+        "Dataset variables: %s=%s, %s=%s",
+        cfg.LEVEL_VAR, has_level, cfg.TIDE_DAILY_MAX_VAR, has_tide_daily_max,
     )
 
-    # ── Determine which mode to use ──────────────────────────────────────
-    tide_mode = cfg.TIDE_MODE
+    if not has_level:
+        log.error(
+            "Level variable %r not found in the unified dataset. The level "
+            "catalogue is segmented on the tide-free field; there is no "
+            "fallback that would preserve the method.",
+            cfg.LEVEL_VAR,
+        )
+        sys.exit(1)
 
-    if tide_mode == "precomputed":
-        if not has_ssh_total:
-            log.error(
-                "TIDE_MODE='precomputed' but '%s' not found in dataset. "
-                "Run preprocessing with tides enabled, or set TIDE_MODE='auto'.",
-                cfg.SSH_TOTAL_VAR,
-            )
-            sys.exit(1)
-        mode_used = "precomputed_ssh_total"
-
-    elif tide_mode == "runtime":
-        mode_used = "runtime_fes2022"
-
-    elif tide_mode == "auto":
-        if has_ssh_total:
-            mode_used = "precomputed_ssh_total"
-        elif has_tide_daily_max and has_zos:
-            mode_used = "reconstructed_from_tide_daily_max"
-        else:
-            mode_used = "runtime_fes2022"
-
-    else:
-        raise ValueError(f"Unknown TIDE_MODE: {tide_mode!r}")
-
-    log.info("SSH_total resolution mode: %s", mode_used)
-    ctx["tide_mode_used"] = mode_used
-
-    # ── Execute the chosen mode ──────────────────────────────────────────
-
-    if mode_used == "precomputed_ssh_total":
-        ctx = _tides_from_precomputed_ssh_total(ctx, ds, grid_points)
-
-    elif mode_used == "reconstructed_from_tide_daily_max":
-        ctx = _tides_from_precomputed_tide(ctx, ds, grid_points)
-
-    elif mode_used == "runtime_fes2022":
-        ctx = _tides_from_runtime(ctx, ds, grid_points)
-
-    return ctx
-
-
-def _tides_from_precomputed_ssh_total(
-    ctx: dict[str, Any],
-    ds: xr.Dataset,
-    grid_points: list[tuple[float, float]],
-) -> dict[str, Any]:
-    """Extract SSH_total directly from the dataset (fastest production path)."""
-    log.info("Using pre-computed SSH_total from unified dataset")
-
-    ssh_total_cache: dict[tuple[float, float], pd.Series] = {}
-    failed: list[tuple[float, float]] = []
-
+    # ── Level series (tide-free) ──────────────────────────────────────────
+    level_cache: dict[tuple[float, float], pd.Series] = {}
+    level_failed: list[tuple[float, float]] = []
     for lat, lon in grid_points:
-        series = _extract_point_series(ds, cfg.SSH_TOTAL_VAR, lat, lon)
+        series = _extract_point_series(ds, cfg.LEVEL_VAR, lat, lon)
         if series is not None:
-            ssh_total_cache[(lat, lon)] = series
+            level_cache[(lat, lon)] = series
         else:
-            failed.append((lat, lon))
-
-    ctx["ssh_total_cache"] = ssh_total_cache
-    ctx["tide_cache"] = {}
-    ctx["tide_failed"] = failed
-
+            level_failed.append((lat, lon))
     log.info(
-        "SSH_total loaded for %d/%d grid points (%d failed)",
-        len(ssh_total_cache), len(grid_points), len(failed),
+        "Level series loaded for %d/%d grid points (%d failed)",
+        len(level_cache), len(grid_points), len(level_failed),
     )
-    return ctx
 
+    # ── Daily-maximum astronomical tide (for the Step 3.2 HAT gate) ───────
+    tide_mode = cfg.TIDE_MODE
+    if tide_mode == "precomputed" and not has_tide_daily_max:
+        log.error(
+            "TIDE_MODE='precomputed' but %r is absent. Run preprocessing with "
+            "tides enabled, or set TIDE_MODE='auto'.",
+            cfg.TIDE_DAILY_MAX_VAR,
+        )
+        sys.exit(1)
 
-def _tides_from_precomputed_tide(
-    ctx: dict[str, Any],
-    ds: xr.Dataset,
-    grid_points: list[tuple[float, float]],
-) -> dict[str, Any]:
-    """Reconstruct SSH_total from pre-computed tide_daily_max + zos."""
-    log.info("Reconstructing SSH_total from tide_daily_max + zos")
+    if tide_mode == "runtime" or not has_tide_daily_max:
+        mode_used = "runtime_fes2022"
+    else:
+        mode_used = "precomputed_tide_daily_max"
 
-    ssh_total_cache: dict[tuple[float, float], pd.Series] = {}
-    failed: list[tuple[float, float]] = []
-
-    for lat, lon in grid_points:
-        zos = _extract_point_series(ds, cfg.SSH_VAR, lat, lon)
-        tide = _extract_point_series(ds, cfg.TIDE_DAILY_MAX_VAR, lat, lon)
-        if zos is not None and tide is not None:
-            ssh_total = zos + tide
-            ssh_total.name = cfg.SSH_TOTAL_VAR
-            ssh_total_cache[(lat, lon)] = ssh_total
-        else:
-            failed.append((lat, lon))
-
-    ctx["ssh_total_cache"] = ssh_total_cache
-    ctx["tide_cache"] = {}
-    ctx["tide_failed"] = failed
-
-    log.info(
-        "SSH_total reconstructed for %d/%d grid points (%d failed)",
-        len(ssh_total_cache), len(grid_points), len(failed),
-    )
-    return ctx
-
-
-def _tides_from_runtime(
-    ctx: dict[str, Any],
-    ds: xr.Dataset,
-    grid_points: list[tuple[float, float]],
-) -> dict[str, Any]:
-    """Compute FES2022 tides at runtime (legacy mode, slow)."""
-    from .tides import build_tide_cache, compute_ssh_total
-
-    time_index = pd.DatetimeIndex(ds.time.values)
-
-    log.info(
-        "Computing FES2022 daily-max tides at runtime for %d grid points "
-        "(legacy mode — consider preprocessing with tides for large domains)...",
-        len(grid_points),
-    )
-    t0 = time.time()
-    tide_cache = build_tide_cache(grid_points, time_index)
-    elapsed = time.time() - t0
-    log.info("Tide computation completed in %.1f s", elapsed)
-
-    ssh_total_cache: dict[tuple[float, float], pd.Series] = {}
+    tide_cache: dict[tuple[float, float], pd.Series] = {}
     tide_failed: list[tuple[float, float]] = []
 
-    for lat, lon in grid_points:
-        key = (lat, lon)
-        if key not in tide_cache:
-            tide_failed.append(key)
-            continue
+    if mode_used == "precomputed_tide_daily_max":
+        for lat, lon in grid_points:
+            series = _extract_point_series(ds, cfg.TIDE_DAILY_MAX_VAR, lat, lon)
+            if series is not None:
+                tide_cache[(lat, lon)] = series
+            else:
+                tide_failed.append((lat, lon))
+    else:
+        from .tides import build_tide_cache
 
-        ssh_series = _extract_point_series(ds, cfg.SSH_VAR, lat, lon)
-        if ssh_series is None:
-            tide_failed.append(key)
-            continue
-
-        ssh_total = compute_ssh_total(ssh_series, tide_cache[key])
-        ssh_total_cache[key] = ssh_total
+        time_index = pd.DatetimeIndex(ds.time.values)
+        log.info(
+            "Computing FES2022 daily-max tides at runtime for %d grid points …",
+            len(grid_points),
+        )
+        t0 = time.time()
+        tide_cache = build_tide_cache(grid_points, time_index)
+        log.info("Tide computation completed in %.1f s", time.time() - t0)
+        tide_failed = [key for key in grid_points if key not in tide_cache]
 
     if tide_failed:
-        log.warning("%d grid points without SSH_total: %s", len(tide_failed), tide_failed)
+        log.warning("%d grid points without a tide series", len(tide_failed))
 
-    ctx["ssh_total_cache"] = ssh_total_cache
-    ctx["tide_cache"] = tide_cache
-    ctx["tide_failed"] = tide_failed
-
+    log.info("Tide resolution mode: %s", mode_used)
     log.info(
-        "SSH_total computed for %d/%d grid points",
-        len(ssh_total_cache), len(grid_points),
+        "Tide loaded for %d/%d grid points", len(tide_cache), len(grid_points)
     )
+
+    ctx["level_cache"] = level_cache
+    ctx["tide_cache"] = tide_cache
+    ctx["level_failed"] = level_failed
+    ctx["tide_failed"] = tide_failed
+    ctx["tide_mode_used"] = mode_used
     return ctx
 
 
 def phase_catalog(ctx: dict[str, Any]) -> dict[str, Any]:
-    """Phase 3: Build storm catalogs for Hs and SSH_total independently.
+    """Phase 3: Build storm catalogs for Hs and tide-free zos independently.
 
     Supports parallel processing via ``--workers N``. When N > 1, grid points
     are processed in parallel using a ProcessPoolExecutor.
 
-    Adds ``catalog_hs`` and ``catalog_ssh`` to context.
+    Adds ``catalog_hs`` and ``catalog_level`` to context.
     """
     from .segmentation import build_storm_catalog_for_point
     from . import io as sio
@@ -310,13 +242,16 @@ def phase_catalog(ctx: dict[str, Any]) -> dict[str, Any]:
 
     ds = ctx["ds"]
     coastal_df = ctx["coastal_df"]
-    ssh_total_cache = ctx["ssh_total_cache"]
+    level_cache = ctx["level_cache"]
+    tide_cache = ctx["tide_cache"]
     thresholds = ctx["thresholds"]
     muni_lookup = ctx["muni_lookup"]
     n_workers = ctx.get("n_workers", 1)
 
     thr_hs_pct = thresholds["thr_hs_pct"]
-    thr_ssh_pct = thresholds["thr_ssh_pct"]
+    # The Step 2e table still names the level column thr_ssh_pct. Its meaning
+    # changed with the detector: it is now a percentile of tide-free zos.
+    thr_level_pct = thresholds["thr_ssh_pct"]
 
     n_points = len(coastal_df)
 
@@ -330,47 +265,50 @@ def phase_catalog(ctx: dict[str, Any]) -> dict[str, Any]:
         muni = muni_lookup.get((round(lat, 2), round(lon, 2)))
 
         hs_series = _extract_point_series(ds, cfg.HS_VAR, lat, lon)
-        ssh_series = ssh_total_cache.get(key)
+        level_series = level_cache.get(key)
 
         point_data.append({
             "lat": lat,
             "lon": lon,
             "muni": muni,
             "hs_series": hs_series,
-            "ssh_series": ssh_series,
+            "level_series": level_series,
             "hs_valid_frac": float(row["hs_valid_frac"]),
-            "ssh_valid_frac": float(row["ssh_valid_frac"]),
+            "level_valid_frac": float(row["ssh_valid_frac"]),
             "dist_to_coast_km": float(row["dist_to_coast_km"]),
         })
 
     # ── Process grid points (sequential or parallel) ──────────────────────
     if n_workers > 1:
         log.info("Parallel catalog generation: %d workers, %d grid points", n_workers, n_points)
-        results = _catalog_parallel(point_data, thr_hs_pct, thr_ssh_pct, n_workers)
+        results = _catalog_parallel(point_data, thr_hs_pct, thr_level_pct, n_workers)
     else:
         log.info("Sequential catalog generation: %d grid points", n_points)
-        results = _catalog_sequential(point_data, thr_hs_pct, thr_ssh_pct)
+        results = _catalog_sequential(point_data, thr_hs_pct, thr_level_pct)
 
     # ── Unpack results ────────────────────────────────────────────────────
     catalog_hs = [r["entry_hs"] for r in results]
-    catalog_ssh = [r["entry_ssh"] for r in results]
+    catalog_level = [r["entry_level"] for r in results]
     grid_meta = [r["meta"] for r in results]
 
     # ── Aggregate stats ───────────────────────────────────────────────────
     total_hs = sum(len(e.get("storms", [])) for e in catalog_hs)
-    total_ssh = sum(len(e.get("storms", [])) for e in catalog_ssh)
+    total_level = sum(len(e.get("storms", [])) for e in catalog_level)
     log.info(
-        "Catalog complete: %d Hs storms, %d SSH_total storms across %d grid points",
-        total_hs, total_ssh, n_points,
+        "Catalog complete: %d Hs storms, %d %s storms across %d grid points",
+        total_hs, total_level, cfg.LEVEL_PREFIX, n_points,
     )
 
     # ── Save outputs ──────────────────────────────────────────────────────
     sio.make_output_dirs()
 
     sio.save_catalog_json(catalog_hs, cfg.CATALOG_DIR / "catalog_hs_storms.json")
-    sio.save_catalog_json(catalog_ssh, cfg.CATALOG_DIR / "catalog_ssh_total_storms.json")
+    sio.save_catalog_json(catalog_level, cfg.CATALOG_DIR / cfg.LEVEL_CATALOG_NAME)
     sio.save_catalog_csv(catalog_hs, cfg.TAB_DIR / "tab_SC3_hs_storms_summary.csv")
-    sio.save_catalog_csv(catalog_ssh, cfg.TAB_DIR / "tab_SC3_ssh_total_storms_summary.csv")
+    sio.save_catalog_csv(
+        catalog_level,
+        cfg.TAB_DIR / f"tab_SC3_{cfg.LEVEL_PREFIX}_storms_summary.csv",
+    )
     sio.save_grid_metadata_csv(grid_meta, cfg.TAB_DIR / "tab_SC3_catalog_metadata.csv")
 
     # ── Run metadata ──────────────────────────────────────────────────────
@@ -385,24 +323,27 @@ def phase_catalog(ctx: dict[str, Any]) -> dict[str, Any]:
         ],
         "period_threshold_computation": "full_record",
         "thr_hs_pct": thr_hs_pct,
-        "thr_ssh_pct": thr_ssh_pct,
+        "thr_level_pct": thr_level_pct,
+        "level_var": cfg.LEVEL_VAR,
+        "level_prefix": cfg.LEVEL_PREFIX,
+        "level_is_tide_free": True,
         "episode_max_gap_days": cfg.EPISODE_MAX_GAP_DAYS,
         "coastal_max_dist_km": cfg.COASTAL_MAX_DIST_KM,
         "min_valid_frac": cfg.MIN_VALID_FRAC,
         "tide_model": cfg.TIDE_MODEL,
         "tide_mode_configured": cfg.TIDE_MODE,
         "tide_mode_used": ctx.get("tide_mode_used", "unknown"),
-        "ssh_total_precomputed": ctx.get("tide_mode_used", "").startswith("precomputed"),
+        "tide_precomputed": ctx.get("tide_mode_used", "").startswith("precomputed"),
         "n_grid_points": n_points,
         "n_grid_points_skipped": len(ctx.get("skipped", [])),
         "n_catalog_workers": n_workers,
         "n_hs_storms_total": total_hs,
-        "n_ssh_total_storms_total": total_ssh,
+        f"n_{cfg.LEVEL_PREFIX}_storms_total": total_level,
     }
     sio.save_run_metadata(run_meta, cfg.LOG_DIR / "run_metadata.json")
 
     ctx["catalog_hs"] = catalog_hs
-    ctx["catalog_ssh"] = catalog_ssh
+    ctx["catalog_level"] = catalog_level
     ctx["grid_meta"] = grid_meta
     ctx["run_meta"] = run_meta
     return ctx
@@ -414,18 +355,23 @@ def phase_catalog(ctx: dict[str, Any]) -> dict[str, Any]:
 def _process_single_point(
     pd_data: dict,
     thr_hs_pct: float,
-    thr_ssh_pct: float,
+    thr_level_pct: float,
 ) -> dict:
-    """Process one grid point: build Hs and SSH_total catalog entries.
+    """Process one grid point: build the Hs and tide-free level catalog entries.
 
     This function is self-contained (no xarray, no global state) so it can be
     shipped to a worker process via ProcessPoolExecutor.
+
+    The level entry is segmented on ``cfg.LEVEL_VAR`` (zos) and its fields carry
+    the ``cfg.LEVEL_PREFIX`` prefix, so the schema names the quantity that was
+    actually thresholded.
     """
     from .segmentation import build_storm_catalog_for_point
 
     lat = pd_data["lat"]
     lon = pd_data["lon"]
     muni = pd_data["muni"]
+    prefix = cfg.LEVEL_PREFIX
 
     # ── Hs catalog ────────────────────────────────────────────────────────
     hs_series = pd_data["hs_series"]
@@ -441,42 +387,42 @@ def _process_single_point(
             "storms": [], "_skip_reason": "no_hs_data",
         }
 
-    # ── SSH_total catalog ─────────────────────────────────────────────────
-    ssh_series = pd_data["ssh_series"]
-    if ssh_series is not None:
-        entry_ssh = build_storm_catalog_for_point(
-            grid_lat=lat, grid_lon=lon, series=ssh_series,
-            threshold_pct=thr_ssh_pct, var_prefix="ssh_total", municipality=muni,
+    # ── Level catalog (tide-free) ─────────────────────────────────────────
+    level_series = pd_data["level_series"]
+    if level_series is not None:
+        entry_level = build_storm_catalog_for_point(
+            grid_lat=lat, grid_lon=lon, series=level_series,
+            threshold_pct=thr_level_pct, var_prefix=prefix, municipality=muni,
         )
     else:
-        entry_ssh = {
+        entry_level = {
             "grid_lat": lat, "grid_lon": lon, "municipality": muni,
-            "thr_ssh_total_pct": thr_ssh_pct, "thr_ssh_total_abs": None,
-            "storms": [], "_skip_reason": "no_ssh_total",
+            f"thr_{prefix}_pct": thr_level_pct, f"thr_{prefix}_abs": None,
+            "storms": [], "_skip_reason": "no_level_data",
         }
 
     # ── Per-grid-point metadata ───────────────────────────────────────────
     n_hs = len(entry_hs.get("storms", []))
-    n_ssh = len(entry_ssh.get("storms", []))
+    n_level = len(entry_level.get("storms", []))
     meta = {
         "grid_lat": lat, "grid_lon": lon, "municipality": muni,
         "hs_valid_frac": pd_data["hs_valid_frac"],
-        "ssh_valid_frac": pd_data["ssh_valid_frac"],
+        f"{prefix}_valid_frac": pd_data["level_valid_frac"],
         "dist_to_coast_km": pd_data["dist_to_coast_km"],
         "thr_hs_pct": thr_hs_pct,
         "thr_hs_abs": entry_hs.get("thr_hs_abs"),
-        "thr_ssh_total_pct": thr_ssh_pct,
-        "thr_ssh_total_abs": entry_ssh.get("thr_ssh_total_abs"),
-        "n_hs_storms": n_hs, "n_ssh_total_storms": n_ssh,
+        f"thr_{prefix}_pct": thr_level_pct,
+        f"thr_{prefix}_abs": entry_level.get(f"thr_{prefix}_abs"),
+        "n_hs_storms": n_hs, f"n_{prefix}_storms": n_level,
         "skip_reason_hs": entry_hs.get("_skip_reason"),
-        "skip_reason_ssh": entry_ssh.get("_skip_reason"),
+        "skip_reason_level": entry_level.get("_skip_reason"),
     }
 
-    return {"entry_hs": entry_hs, "entry_ssh": entry_ssh, "meta": meta}
+    return {"entry_hs": entry_hs, "entry_level": entry_level, "meta": meta}
 
 
 def _catalog_sequential(
-    point_data: list[dict], thr_hs_pct: float, thr_ssh_pct: float,
+    point_data: list[dict], thr_hs_pct: float, thr_level_pct: float,
 ) -> list[dict]:
     """Process all grid points sequentially."""
     results = []
@@ -484,14 +430,14 @@ def _catalog_sequential(
     for i, pd_item in enumerate(point_data):
         if (i + 1) % max(1, n // 10) == 0 or i == 0:
             log.info("  Processing grid point %d/%d", i + 1, n)
-        results.append(_process_single_point(pd_item, thr_hs_pct, thr_ssh_pct))
+        results.append(_process_single_point(pd_item, thr_hs_pct, thr_level_pct))
     return results
 
 
 def _catalog_parallel(
     point_data: list[dict],
     thr_hs_pct: float,
-    thr_ssh_pct: float,
+    thr_level_pct: float,
     n_workers: int,
 ) -> list[dict]:
     """Process grid points in parallel using ProcessPoolExecutor.
@@ -508,7 +454,7 @@ def _catalog_parallel(
     worker_fn = partial(
         _process_single_point,
         thr_hs_pct=thr_hs_pct,
-        thr_ssh_pct=thr_ssh_pct,
+        thr_level_pct=thr_level_pct,
     )
 
     n = len(point_data)
@@ -533,18 +479,18 @@ def phase_figures(ctx: dict[str, Any]) -> dict[str, Any]:
     log.info("=" * 70)
 
     catalog_hs = ctx["catalog_hs"]
-    catalog_ssh = ctx["catalog_ssh"]
+    catalog_level = ctx["catalog_level"]
 
     fig_mod.plot_annual_counts(
-        catalog_hs, catalog_ssh,
+        catalog_hs, catalog_level,
         cfg.FIG_DIR / "fig_SC3_annual_storm_counts.png",
     )
     fig_mod.plot_duration_distribution(
-        catalog_hs, catalog_ssh,
+        catalog_hs, catalog_level,
         cfg.FIG_DIR / "fig_SC3_duration_distribution.png",
     )
     fig_mod.plot_seasonal_climatology(
-        catalog_hs, catalog_ssh,
+        catalog_hs, catalog_level,
         cfg.FIG_DIR / "fig_SC3_seasonal_climatology.png",
     )
 
@@ -593,12 +539,15 @@ def print_summary(ctx: dict[str, Any]) -> None:
     print(f"  Dataset:            {Path(meta.get('dataset', '?')).name}")
     print(f"  Period:             {meta.get('period_full_series', ['?', '?'])}")
     print(f"  Thresholds:         Hs=q{meta.get('thr_hs_pct', 0)*100:.0f}, "
-          f"SSH_total=q{meta.get('thr_ssh_pct', 0)*100:.0f}")
+          f"{meta.get('level_var', 'level')} (tide-free)="
+          f"q{meta.get('thr_level_pct', 0)*100:.0f}")
     print(f"  Episode gap:        {meta.get('episode_max_gap_days', '?')} day(s)")
     print(f"  Coastal grid pts:   {meta.get('n_grid_points', '?')} "
           f"({meta.get('n_grid_points_skipped', 0)} skipped)")
     print(f"  Hs storms:          {meta.get('n_hs_storms_total', '?')}")
-    print(f"  SSH_total storms:   {meta.get('n_ssh_total_storms_total', '?')}")
+    _level_prefix = meta.get("level_prefix", "zos")
+    print(f"  {_level_prefix} storms:         "
+          f"{meta.get(f'n_{_level_prefix}_storms_total', '?')}")
     print(f"  Tide mode:          {meta.get('tide_mode_used', '?')}")
     print(f"  Tide model:         {meta.get('tide_model', '?')}")
     print(f"  Output dir:         {cfg.OUTPUT_ROOT}")
@@ -686,7 +635,7 @@ def main(argv: list[str] | None = None) -> None:
         ctx = phase_tides(ctx)
 
     if phase in ("catalog", "all"):
-        if "ssh_total_cache" not in ctx:
+        if "level_cache" not in ctx:
             if "ds" not in ctx:
                 ctx.update(phase_load_validate())
             ctx = phase_tides(ctx)

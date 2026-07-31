@@ -1,5 +1,5 @@
 """
-Dependence analysis (Hₛ–SSH_total) for Step 3 — Hazard Characterization.
+Dependence analysis (Hₛ–level) for Step 3 — Hazard Characterization.
 
 Computes measures of statistical dependence between wave height and total
 sea level extremes, using paired samples derived from compound events.
@@ -11,12 +11,12 @@ Core metrics:
     - χ̄ (chi-bar): extremal dependence below asymptotic independence
 
 χ and χ̄ quantify the strength of dependence in the tails of the joint
-distribution. They are central to understanding whether Hₛ and SSH_total
+distribution. They are central to understanding whether Hₛ and sea level
 tend to be simultaneously extreme.
 
 Sampling strategy:
     Paired samples are derived from compound events at each grid point —
-    specifically, the (peak_hs, peak_ssh_total) pairs from each compound
+    specifically, the (peak_hs, exc_level) pairs from each compound
     event. This ensures that the dependence analysis is based on co-occurring
     extremes, consistent with the compound event framework.
 
@@ -76,7 +76,7 @@ def compute_chi(u: np.ndarray, v: np.ndarray, quantile: float = 0.95) -> float |
     Parameters
     ----------
     u, v : array
-        Paired samples (e.g., Hs peaks and SSH_total peaks).
+        Paired samples (e.g., Hs peaks and level excesses above HAT).
     quantile : float
         Quantile threshold for tail estimation (default 0.95).
 
@@ -168,7 +168,7 @@ def _empirical_cdf(x: np.ndarray) -> np.ndarray:
 
 def compute_dependence_at_point(
     hs_peaks: np.ndarray,
-    ssh_peaks: np.ndarray,
+    level_peaks: np.ndarray,
     chi_quantile: float = 0.95,
 ) -> dict[str, Any]:
     """Compute all dependence metrics for one grid point.
@@ -177,8 +177,8 @@ def compute_dependence_at_point(
     ----------
     hs_peaks : array
         Hₛ peak values from compound events.
-    ssh_peaks : array
-        SSH_total peak values from compound events (paired).
+    level_peaks : array
+        Level excess above HAT from compound events (paired).
     chi_quantile : float
         Quantile for χ/χ̄ estimation.
 
@@ -206,7 +206,7 @@ def compute_dependence_at_point(
 
     # Kendall's τ
     try:
-        tau_val, tau_p = kendalltau(hs_peaks, ssh_peaks)
+        tau_val, tau_p = kendalltau(hs_peaks, level_peaks)
         result["tau"] = round(float(tau_val), 4)
         result["tau_p_value"] = round(float(tau_p), 6)
     except Exception as e:
@@ -214,7 +214,7 @@ def compute_dependence_at_point(
 
     # Spearman's ρ
     try:
-        rho_val, rho_p = spearmanr(hs_peaks, ssh_peaks)
+        rho_val, rho_p = spearmanr(hs_peaks, level_peaks)
         result["rho"] = round(float(rho_val), 4)
         result["rho_p_value"] = round(float(rho_p), 6)
     except Exception as e:
@@ -222,8 +222,8 @@ def compute_dependence_at_point(
 
     # χ and χ̄ (require larger samples)
     if n >= MIN_SAMPLES_CHI:
-        chi_val = compute_chi(hs_peaks, ssh_peaks, chi_quantile)
-        chi_bar_val = compute_chi_bar(hs_peaks, ssh_peaks, chi_quantile)
+        chi_val = compute_chi(hs_peaks, level_peaks, chi_quantile)
+        chi_bar_val = compute_chi_bar(hs_peaks, level_peaks, chi_quantile)
         result["chi"] = round(chi_val, 4) if chi_val is not None else None
         result["chi_bar"] = round(chi_bar_val, 4) if chi_bar_val is not None else None
     else:
@@ -240,7 +240,14 @@ def run_dependence(
 ) -> dict:
     """Run dependence analysis over all grid points.
 
-    Uses paired (peak_hs, peak_ssh_total) from compound events.
+    Uses paired (peak_hs, exc_level) from compound events, where
+    ``exc_level = peak_swl - HAT`` is the level excess above the gate.
+
+    Why the excess and not the raw level: HAT is a per-point constant, so within
+    a grid point ``peak_swl - HAT`` is a monotone transform of ``peak_swl``.
+    Kendall's tau, Spearman's rho, chi and chi-bar are all rank-based, so the
+    numbers are identical either way. The excess is used because it is the
+    quantity the method defines an event by, not because it changes the result.
     """
     compound_path = compound_catalog_path or (
         ROOT / "outputs" / "storm_catalog" / "compound" / "compound_catalog.json"
@@ -258,15 +265,23 @@ def run_dependence(
     for gp in compound_data:
         events = gp.get("compound_events", [])
 
-        hs_peaks = np.array([e["peak_hs"] for e in events if "peak_hs" in e])
-        ssh_peaks = np.array([e["peak_ssh_total"] for e in events if "peak_ssh_total" in e])
+        # Paired by construction: both fields are written for every accepted
+        # event, so a length mismatch would mean a malformed catalogue.
+        paired = [
+            (event["peak_hs"], event["exc_level"])
+            for event in events
+            if "peak_hs" in event and "exc_level" in event
+        ]
+        if len(paired) != len(events):
+            raise ValueError(
+                f"Grid point ({gp['grid_lat']}, {gp['grid_lon']}): "
+                f"{len(events) - len(paired)} of {len(events)} compound events "
+                "lack peak_hs or exc_level"
+            )
+        hs_peaks = np.array([value for value, _ in paired])
+        level_peaks = np.array([value for _, value in paired])
 
-        # Ensure paired
-        min_len = min(len(hs_peaks), len(ssh_peaks))
-        hs_peaks = hs_peaks[:min_len]
-        ssh_peaks = ssh_peaks[:min_len]
-
-        dep = compute_dependence_at_point(hs_peaks, ssh_peaks, chi_quantile)
+        dep = compute_dependence_at_point(hs_peaks, level_peaks, chi_quantile)
 
         grid_results.append({
             "grid_lat": gp["grid_lat"],

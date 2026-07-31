@@ -6,7 +6,7 @@ Fits a Generalized Pareto Distribution (GPD) to declustered storm peaks
 return periods.
 
 Methodology:
-    1. Take the per-grid-point storm peak values from the Hₛ and SSH_total
+    1. Take the per-grid-point storm peak values from the Hₛ and tide-free zos
        catalogs as the POT sample. These are already declustered by the
        episode clustering in Step 3 (gap tolerance ≤ 1 day).
     2. Define excesses as: excess = peak_value - threshold_abs
@@ -49,7 +49,7 @@ from ..shared.catalog_utils import (
     save_json,
     save_csv,
     HS_CATALOG,
-    SSH_CATALOG,
+    LEVEL_CATALOG,
 )
 
 log = logging.getLogger(__name__)
@@ -236,14 +236,21 @@ def _delta_method_ci(
 def run_eva(
     return_periods: list[int] | None = None,
 ) -> dict:
-    """Run univariate POT-GPD analysis for Hₛ and SSH_total.
+    """Run univariate POT-GPD analysis for Hₛ and tide-free zos.
+
+    The level marginal is fitted to peaks of the ``zos`` storm catalogue, which
+    is NOT gated on HAT. The HAT excess is undefined for the many level episodes
+    whose still-water level never reaches HAT, so it cannot serve as the
+    variable of a marginal extreme-value fit. The HAT excess is the severity
+    measure of *compound* events, where the gate has passed by construction;
+    the two are different objects and are kept apart deliberately.
 
     Returns dict with grid_results for both variables.
     """
     return_periods = return_periods or DEFAULT_RETURN_PERIODS
 
     hs_catalog = load_catalog(HS_CATALOG)
-    ssh_catalog = load_catalog(SSH_CATALOG)
+    level_catalog = load_catalog(LEVEL_CATALOG)
     run_meta = load_run_metadata()
     n_years = get_period_years(run_meta)
 
@@ -254,12 +261,12 @@ def run_eva(
         lon = hs_gp["grid_lon"]
         muni = hs_gp.get("municipality")
 
-        # Find matching SSH entry
-        ssh_gp = None
-        for g in ssh_catalog:
+        # Find matching level entry
+        level_gp = None
+        for g in level_catalog:
             if (round(g["grid_lat"], 4) == round(lat, 4) and
                     round(g["grid_lon"], 4) == round(lon, 4)):
-                ssh_gp = g
+                level_gp = g
                 break
 
         # Hs EVA
@@ -276,24 +283,24 @@ def run_eva(
                 "return_levels": {str(T): None for T in return_periods},
             }
 
-        # SSH_total EVA
-        if ssh_gp:
-            ssh_storms = ssh_gp.get("storms", [])
-            ssh_peaks = np.array([s["peak_value"] for s in ssh_storms])
-            ssh_thr = ssh_gp.get("thr_ssh_total_abs")
+        # Tide-free zos EVA
+        if level_gp:
+            level_storms = level_gp.get("storms", [])
+            level_peaks = np.array([s["peak_value"] for s in level_storms])
+            level_thr = level_gp.get("thr_zos_abs")
 
-            if ssh_thr is not None and len(ssh_peaks) > 0:
-                ssh_eva = fit_gpd_at_point(ssh_peaks, ssh_thr, n_years, return_periods)
+            if level_thr is not None and len(level_peaks) > 0:
+                level_eva = fit_gpd_at_point(level_peaks, level_thr, n_years, return_periods)
             else:
-                ssh_eva = {
+                level_eva = {
                     "n_exceedances": 0, "fit_success": False,
                     "fit_message": "no_threshold_or_no_storms",
                     "return_levels": {str(T): None for T in return_periods},
                 }
         else:
-            ssh_eva = {
+            level_eva = {
                 "n_exceedances": 0, "fit_success": False,
-                "fit_message": "no_ssh_data",
+                "fit_message": "no_level_data",
                 "return_levels": {str(T): None for T in return_periods},
             }
 
@@ -303,8 +310,8 @@ def run_eva(
             "municipality": muni,
             # Hs EVA
             **{f"hs_{k}": v for k, v in hs_eva.items()},
-            # SSH_total EVA
-            **{f"ssh_total_{k}": v for k, v in ssh_eva.items()},
+            # Tide-free zos EVA
+            **{f"zos_{k}": v for k, v in level_eva.items()},
         })
 
     log.info("EVA completed for %d grid points", len(grid_results))
@@ -336,16 +343,16 @@ def save_eva_results(results: dict, output_dir: Path | None = None):
         hs_rl = gr.get("hs_return_levels", {})
         for T in results["return_periods"]:
             row[f"hs_rl_{T}yr"] = hs_rl.get(str(T))
-        # SSH
-        row["ssh_total_n_exceedances"] = gr.get("ssh_total_n_exceedances")
-        row["ssh_total_lambda_per_year"] = gr.get("ssh_total_lambda_per_year")
-        row["ssh_total_gpd_shape"] = gr.get("ssh_total_gpd_shape")
-        row["ssh_total_gpd_scale"] = gr.get("ssh_total_gpd_scale")
-        row["ssh_total_fit_success"] = gr.get("ssh_total_fit_success")
-        row["ssh_total_fit_message"] = gr.get("ssh_total_fit_message")
-        ssh_rl = gr.get("ssh_total_return_levels", {})
+        # Tide-free zos
+        row["zos_n_exceedances"] = gr.get("zos_n_exceedances")
+        row["zos_lambda_per_year"] = gr.get("zos_lambda_per_year")
+        row["zos_gpd_shape"] = gr.get("zos_gpd_shape")
+        row["zos_gpd_scale"] = gr.get("zos_gpd_scale")
+        row["zos_fit_success"] = gr.get("zos_fit_success")
+        row["zos_fit_message"] = gr.get("zos_fit_message")
+        level_rl = gr.get("zos_return_levels", {})
         for T in results["return_periods"]:
-            row[f"ssh_total_rl_{T}yr"] = ssh_rl.get(str(T))
+            row[f"zos_rl_{T}yr"] = level_rl.get(str(T))
         rows.append(row)
 
     df = pd.DataFrame(rows)

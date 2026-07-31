@@ -9,12 +9,12 @@ Handles lag-1 autocorrelation via the modified Mann–Kendall approach
 
 Annual series tested (see TREND_METRICS — 8 series):
     - annual_hs_count
-    - annual_ssh_total_count
+    - annual_zos_count
     - annual_compound_count
     - annual_mean_hs_peak
-    - annual_mean_ssh_total_peak
+    - annual_mean_zos_peak
     - annual_mean_hs_duration
-    - annual_mean_ssh_total_duration
+    - annual_mean_zos_duration
     - annual_mean_overlap_duration
 
 Note: ``annual_mean_compound_intensity_norm`` is allocated in ``build_annual_series``
@@ -51,7 +51,7 @@ from ..shared.catalog_utils import (
     save_json,
     save_csv,
     HS_CATALOG,
-    SSH_CATALOG,
+    LEVEL_CATALOG,
 )
 
 log = logging.getLogger(__name__)
@@ -259,7 +259,7 @@ def mann_kendall_test(
 
 def build_annual_series(
     hs_catalog: list[dict],
-    ssh_catalog: list[dict],
+    level_catalog: list[dict],
     compound_catalog: dict[tuple, list],
     grid_lat: float,
     grid_lon: float,
@@ -280,28 +280,28 @@ def build_annual_series(
             key_hs = gp
             break
 
-    key_ssh = None
-    for gp in ssh_catalog:
+    key_level = None
+    for gp in level_catalog:
         if (round(gp["grid_lat"], 4) == round(grid_lat, 4) and
                 round(gp["grid_lon"], 4) == round(grid_lon, 4)):
-            key_ssh = gp
+            key_level = gp
             break
 
     hs_storms = key_hs.get("storms", []) if key_hs else []
-    ssh_storms = key_ssh.get("storms", []) if key_ssh else []
+    level_storms = key_level.get("storms", []) if key_level else []
     compound_key = (round(grid_lat, 4), round(grid_lon, 4))
     compound_events = compound_catalog.get(compound_key, [])
 
     # Initialize annual arrays
     series = {
         "annual_hs_count": np.zeros(n_years),
-        "annual_ssh_total_count": np.zeros(n_years),
+        "annual_zos_count": np.zeros(n_years),
         "annual_compound_count": np.zeros(n_years),
         "annual_mean_hs_peak": np.full(n_years, np.nan),
-        "annual_mean_ssh_total_peak": np.full(n_years, np.nan),
+        "annual_mean_zos_peak": np.full(n_years, np.nan),
         "annual_mean_compound_intensity_norm": np.full(n_years, np.nan),
         "annual_mean_hs_duration": np.full(n_years, np.nan),
-        "annual_mean_ssh_total_duration": np.full(n_years, np.nan),
+        "annual_mean_zos_duration": np.full(n_years, np.nan),
         "annual_mean_overlap_duration": np.full(n_years, np.nan),
     }
 
@@ -319,19 +319,19 @@ def build_annual_series(
             series["annual_mean_hs_peak"][i] = np.mean([s["peak_value"] for s in storms])
             series["annual_mean_hs_duration"][i] = np.mean([s["duration_days"] for s in storms])
 
-    # Aggregate SSH
-    ssh_by_year: dict[int, list[dict]] = {y: [] for y in years}
-    for s in ssh_storms:
+    # Aggregate the tide-free level catalogue
+    level_by_year: dict[int, list[dict]] = {y: [] for y in years}
+    for s in level_storms:
         yr = int(s["date_start"][:4])
-        if yr in ssh_by_year:
-            ssh_by_year[yr].append(s)
+        if yr in level_by_year:
+            level_by_year[yr].append(s)
 
     for i, yr in enumerate(years):
-        storms = ssh_by_year[yr]
-        series["annual_ssh_total_count"][i] = len(storms)
+        storms = level_by_year[yr]
+        series["annual_zos_count"][i] = len(storms)
         if storms:
-            series["annual_mean_ssh_total_peak"][i] = np.mean([s["peak_value"] for s in storms])
-            series["annual_mean_ssh_total_duration"][i] = np.mean([s["duration_days"] for s in storms])
+            series["annual_mean_zos_peak"][i] = np.mean([s["peak_value"] for s in storms])
+            series["annual_mean_zos_duration"][i] = np.mean([s["duration_days"] for s in storms])
 
     # Aggregate compound
     compound_by_year: dict[int, list[dict]] = {y: [] for y in years}
@@ -357,12 +357,12 @@ def build_annual_series(
 # Metrics to test (with units for slope)
 TREND_METRICS = {
     "annual_hs_count": "events/year",
-    "annual_ssh_total_count": "events/year",
+    "annual_zos_count": "events/year",
     "annual_compound_count": "events/year",
     "annual_mean_hs_peak": "m/year",
-    "annual_mean_ssh_total_peak": "m/year",
+    "annual_mean_zos_peak": "m/year",
     "annual_mean_hs_duration": "days/year",
-    "annual_mean_ssh_total_duration": "days/year",
+    "annual_mean_zos_duration": "days/year",
     "annual_mean_overlap_duration": "days/year",
 }
 
@@ -378,7 +378,7 @@ def run_trends(
     import json
 
     hs_catalog = load_catalog(HS_CATALOG)
-    ssh_catalog = load_catalog(SSH_CATALOG)
+    level_catalog = load_catalog(LEVEL_CATALOG)
     run_meta = load_run_metadata()
 
     year_start = int(run_meta["period_full_series"][0][:4])
@@ -403,7 +403,7 @@ def run_trends(
         lon = hs_gp["grid_lon"]
 
         annual = build_annual_series(
-            hs_catalog, ssh_catalog, compound_catalog,
+            hs_catalog, level_catalog, compound_catalog,
             lat, lon, (year_start, year_end),
         )
 

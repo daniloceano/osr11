@@ -7,9 +7,9 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     \includegraphics[width=\textwidth]{outputs/article_figures/coastal_hazard_index_components.png}
     \caption{Compound coastal-event characteristics and composite Hazard
     Index along the Brazilian coast during 1993--2025: (a) mean annual
-    compound-event frequency (events~yr$^{-1}$), (b) mean temporal overlap
-    duration (days), (c) mean compound intensity (dimensionless), and (d) the
-    composite Hazard Index. Panels (a)--(c) show the native-grid values
+    compound-event frequency (events~yr$^{-1}$), (b) mean integrated
+    severity (dimensionless), and (c) the composite Hazard Index.
+    Panels (a)--(b) show the native-grid values
     without the additional cross-grid Min--Max scaling used to construct the
     Hazard Index. The intensity in panel (c) is the dimensionless compound
     event-level metric stored in the catalog: for each event, how far each
@@ -100,18 +100,18 @@ METADATA_PATH = (
 
 OUTPUT_CRS = "EPSG:4326"
 CONTEXT_EXTENT = (-74.5, -32.0, -35.5, 6.5)
-FREQUENCY_BOUNDARIES = np.arange(1.0, 11.0, 1.0)
-SEVERITY_BOUNDARIES = np.round(np.arange(0.1, 1.01, 0.1), 2)
-DURATION_BOUNDARIES = np.round(np.arange(1.0, 8.1, 1.0), 1)
+# Current q70/q99 catalogue ranges: frequency 0–2.97 events/yr and mean
+# integrated severity 0–0.9483.  A narrow first bin isolates exact zeros,
+# which are rendered in gray rather than as the lowest positive class.
+FREQUENCY_BOUNDARIES = np.array([0.0, 0.015, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+SEVERITY_BOUNDARIES = np.array([0.0, 0.0042, 0.15, 0.30, 0.45, 0.60, 0.75, 0.95])
 HAZARD_BOUNDARIES = np.linspace(0.0, 1.0, 9)
-FREQUENCY_TICKS = FREQUENCY_BOUNDARIES[[0, 2, 4, 6, 8, 9]]
-SEVERITY_TICKS = SEVERITY_BOUNDARIES[::2]
-DURATION_TICKS = DURATION_BOUNDARIES[::2]
+FREQUENCY_TICKS = np.array([0.0075, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+SEVERITY_TICKS = np.array([0.0021, 0.15, 0.30, 0.45, 0.60, 0.75, 0.95])
 HAZARD_TICKS = HAZARD_BOUNDARIES[[0, 2, 4, 6, 8]]
 DISPLAY_COMPONENT_FIELDS = (
     "compound_count_annual_mean",
     "mean_integrated_severity",
-    "mean_overlap_duration",
 )
 NORMALIZED_COMPONENT_FIELDS = (
     "Hazard_Frequency",
@@ -125,9 +125,10 @@ PANEL_SPECS = (
         "boundaries": FREQUENCY_BOUNDARIES,
         "ticks": FREQUENCY_TICKS,
         "colorbar_label": r"Events yr$^{-1}$",
-        "tick_format": "%.0f",
+        "tick_format": "%.1f",
         "unit": "events per year",
         "palette": "component",
+        "zero_is_gray": True,
     },
     {
         "field": "mean_integrated_severity",
@@ -136,24 +137,14 @@ PANEL_SPECS = (
         "boundaries": SEVERITY_BOUNDARIES,
         "ticks": SEVERITY_TICKS,
         "colorbar_label": "Mean integrated severity (dimensionless)",
-        "tick_format": "%.1f",
+        "tick_format": "%.2f",
         "unit": "dimensionless",
         "palette": "component",
-    },
-    {
-        "field": "mean_overlap_duration",
-        "panel": "C",
-        "title": "Mean overlap duration (diagnostic, not an index component)",
-        "boundaries": DURATION_BOUNDARIES,
-        "ticks": DURATION_TICKS,
-        "colorbar_label": "Mean overlap duration (days)",
-        "tick_format": "%.0f",
-        "unit": "days",
-        "palette": "component",
+        "zero_is_gray": True,
     },
     {
         "field": "Hazard_Index",
-        "panel": "D",
+        "panel": "C",
         "title": "Composite Hazard Index",
         "boundaries": HAZARD_BOUNDARIES,
         "ticks": HAZARD_TICKS,
@@ -161,6 +152,7 @@ PANEL_SPECS = (
         "tick_format": "%.2f",
         "unit": "0-1 index",
         "palette": "hazard",
+        "zero_is_gray": False,
     },
 )
 
@@ -453,6 +445,7 @@ def _write_metadata(
                     else "normalized composite Hazard Index"
                 ),
                 "label": spec["colorbar_label"],
+                "zero_is_gray": bool(spec.get("zero_is_gray", False)),
             }
             for spec in PANEL_SPECS
         },
@@ -468,11 +461,8 @@ def _write_metadata(
             ),
         },
         "layout": {
-            "panel_grid": "2x2",
-            "left_column_anchor": "east",
-            "right_column_anchor": "west",
-            "horizontal_subplot_spacing": 0.015,
-            "vertical_subplot_spacing": 0.30,
+            "panel_grid": "1x3",
+            "horizontal_subplot_spacing": 0.035,
             "individual_panel_colorbars": True,
             "purpose": (
                 "remove unused horizontal canvas while preserving the "
@@ -509,7 +499,12 @@ def main() -> None:
         field = spec["field"]
         if spec["palette"] == "component":
             panel_cmaps[field] = ListedColormap(
-                component_colors(len(spec["boundaries"]) - 1),
+                (
+                    ["#bdbdbd"]
+                    + component_colors(len(spec["boundaries"]) - 2)
+                    if spec.get("zero_is_gray")
+                    else component_colors(len(spec["boundaries"]) - 1)
+                ),
                 name=f"magma_discrete_reversed_{field}",
             )
         else:
@@ -519,26 +514,25 @@ def main() -> None:
             )
 
     figure, axes = plt.subplots(
-        2,
-        2,
-        figsize=(10.8, 11.8),
+        1,
+        3,
+        figsize=(15.6, 7.2),
         constrained_layout=False,
         subplot_kw={"projection": ccrs.PlateCarree()},
     )
     figure.subplots_adjust(
-        left=0.055,
-        right=0.975,
-        top=0.975,
-        bottom=0.090,
-        wspace=0.015,
-        hspace=0.30,
+        left=0.045,
+        right=0.985,
+        top=0.955,
+        bottom=0.145,
+        wspace=0.035,
     )
     panels: list[dict[str, Any]] = []
     for index, (axis, panel_spec) in enumerate(
-        zip(axes.flat, PANEL_SPECS)
+        zip(np.atleast_1d(axes).flat, PANEL_SPECS)
     ):
         field = panel_spec["field"]
-        axis.set_anchor("E" if index % 2 == 0 else "W")
+        axis.set_anchor("C")
         panels.append(
             _plot_segment_field(
                 axis,
@@ -550,14 +544,14 @@ def main() -> None:
                 cmap=panel_cmaps[field],
                 boundaries=panel_spec["boundaries"],
                 unit=panel_spec["unit"],
-                draw_left_labels=index % 2 == 0,
-                draw_bottom_labels=index >= 2,
+                draw_left_labels=index == 0,
+                draw_bottom_labels=True,
             )
         )
 
     figure.canvas.draw()
     for index, (axis, panel_spec) in enumerate(
-        zip(axes.flat, PANEL_SPECS)
+        zip(np.atleast_1d(axes).flat, PANEL_SPECS)
     ):
         _add_colorbar(
             figure,
@@ -567,7 +561,7 @@ def main() -> None:
             ticks=panel_spec["ticks"],
             label=panel_spec["colorbar_label"],
             tick_format=panel_spec["tick_format"],
-            vertical_offset=0.050 if index < 2 else 0.075,
+            vertical_offset=0.065,
         )
 
     for directory in (OUT_DIR, DATA_DIR, METADATA_DIR):
