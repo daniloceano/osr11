@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T23:52:04.570825+00:00",
+  "generated_at": "2026-07-31T00:19:14.174760+00:00",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
   "risk_key": "Risk_Hazard",
@@ -9,10 +9,10 @@
     "input_field": "Risk_Hazard_raw",
     "input_stats": {
       "count": 280,
-      "min": 0.132097,
-      "max": 0.702506,
-      "mean": 0.404086,
-      "median": 0.402981
+      "min": 0.041835,
+      "max": 0.657828,
+      "mean": 0.31236,
+      "median": 0.297536
     },
     "output_field": "Risk_Hazard",
     "output_range": [
@@ -32,70 +32,70 @@
           "Municipality": "Santa Vitória do Palmar",
           "State": "Rio Grande do Sul",
           "UF": "RS",
-          "Hazard index": 0.922588
+          "Hazard index": 0.837802
         },
         {
           "Rank": 2,
-          "Municipality": "São Sebastião",
-          "State": "São Paulo",
-          "UF": "SP",
-          "Hazard index": 0.777705
-        },
-        {
-          "Rank": 3,
-          "Municipality": "Laguna",
-          "State": "Santa Catarina",
-          "UF": "SC",
-          "Hazard index": 0.777672
-        },
-        {
-          "Rank": 4,
-          "Municipality": "São José do Norte",
-          "State": "Rio Grande do Sul",
-          "UF": "RS",
-          "Hazard index": 0.776707
-        },
-        {
-          "Rank": 5,
-          "Municipality": "Bertioga",
-          "State": "São Paulo",
-          "UF": "SP",
-          "Hazard index": 0.767314
-        },
-        {
-          "Rank": 6,
-          "Municipality": "Jaguaruna",
-          "State": "Santa Catarina",
-          "UF": "SC",
-          "Hazard index": 0.745907
-        },
-        {
-          "Rank": 7,
           "Municipality": "Tavares",
           "State": "Rio Grande do Sul",
           "UF": "RS",
-          "Hazard index": 0.724582
+          "Hazard index": 0.826115
+        },
+        {
+          "Rank": 3,
+          "Municipality": "São José do Norte",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Hazard index": 0.811627
+        },
+        {
+          "Rank": 4,
+          "Municipality": "Laguna",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Hazard index": 0.797433
+        },
+        {
+          "Rank": 5,
+          "Municipality": "Jaguaruna",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Hazard index": 0.770508
+        },
+        {
+          "Rank": 6,
+          "Municipality": "Bertioga",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.756606
+        },
+        {
+          "Rank": 7,
+          "Municipality": "São Sebastião",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Hazard index": 0.751343
         },
         {
           "Rank": 8,
-          "Municipality": "Araranguá",
-          "State": "Santa Catarina",
-          "UF": "SC",
-          "Hazard index": 0.71758
+          "Municipality": "Mostardas",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Hazard index": 0.743327
         },
         {
           "Rank": 9,
-          "Municipality": "Balneário Rincão",
+          "Municipality": "Araranguá",
           "State": "Santa Catarina",
           "UF": "SC",
-          "Hazard index": 0.71758
+          "Hazard index": 0.73941
         },
         {
           "Rank": 10,
-          "Municipality": "Praia Grande",
-          "State": "São Paulo",
-          "UF": "SP",
-          "Hazard index": 0.711372
+          "Municipality": "Balneário Rincão",
+          "State": "Santa Catarina",
+          "UF": "SC",
+          "Hazard index": 0.73941
         }
       ],
       "csv": "outputs/article_figures/tables/top10_municipalities_by_hazard.csv",
@@ -185,73 +185,73 @@
       "rows": [
         {
           "Rank": 1,
-          "Municipality": "Apicum-Açu",
-          "State": "Maranhão",
-          "UF": "MA",
+          "Municipality": "São José do Norte",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
           "Risk index": 1.0
         },
         {
           "Rank": 2,
-          "Municipality": "Turiaçu",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.883705
-        },
-        {
-          "Rank": 3,
-          "Municipality": "Chaves",
-          "State": "Pará",
-          "UF": "PA",
-          "Risk index": 0.878296
-        },
-        {
-          "Rank": 4,
-          "Municipality": "São José do Norte",
-          "State": "Rio Grande do Sul",
-          "UF": "RS",
-          "Risk index": 0.867165
-        },
-        {
-          "Rank": 5,
-          "Municipality": "Guaraqueçaba",
-          "State": "Paraná",
-          "UF": "PR",
-          "Risk index": 0.833796
-        },
-        {
-          "Rank": 6,
           "Municipality": "Magé",
           "State": "Rio de Janeiro",
           "UF": "RJ",
-          "Risk index": 0.831177
+          "Risk index": 0.944752
         },
         {
-          "Rank": 7,
+          "Rank": 3,
+          "Municipality": "Tavares",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Risk index": 0.938392
+        },
+        {
+          "Rank": 4,
           "Municipality": "Maricá",
           "State": "Rio de Janeiro",
           "UF": "RJ",
-          "Risk index": 0.822689
+          "Risk index": 0.934247
         },
         {
-          "Rank": 8,
-          "Municipality": "Cururupu",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.820716
+          "Rank": 5,
+          "Municipality": "Mostardas",
+          "State": "Rio Grande do Sul",
+          "UF": "RS",
+          "Risk index": 0.916327
         },
         {
-          "Rank": 9,
-          "Municipality": "Icatu",
-          "State": "Maranhão",
-          "UF": "MA",
-          "Risk index": 0.816967
+          "Rank": 6,
+          "Municipality": "Duque de Caxias",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.911194
         },
         {
-          "Rank": 10,
+          "Rank": 7,
           "Municipality": "Saquarema",
           "State": "Rio de Janeiro",
           "UF": "RJ",
-          "Risk index": 0.814374
+          "Risk index": 0.906462
+        },
+        {
+          "Rank": 8,
+          "Municipality": "São Sebastião",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Risk index": 0.895275
+        },
+        {
+          "Rank": 9,
+          "Municipality": "Paraty",
+          "State": "Rio de Janeiro",
+          "UF": "RJ",
+          "Risk index": 0.888254
+        },
+        {
+          "Rank": 10,
+          "Municipality": "Bertioga",
+          "State": "São Paulo",
+          "UF": "SP",
+          "Risk index": 0.871935
         }
       ],
       "csv": "outputs/article_figures/tables/top10_municipalities_by_integrated_risk.csv",

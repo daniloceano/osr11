@@ -9,14 +9,14 @@
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | **P0** |
 | **Bloqueia publicação?** | **Sim** — um "evento de onda extrema" com Hs = 0,20 m não é defensável sob nenhum enquadramento |
-| **Status** | `aberto` |
+| **Status** | `aberto` — **agravado em 2026-07-30**: o par recalibrado do Step 2e baixa o percentil de onda de q90 para q70, e com ele o piso de `thr_hs`. Ver §14, entrada de 2026-07-30 |
 | **Desfecho** | — |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-13 |
 | **Relacionado a** | AUD-01, AUD-18 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §1 (preocupação 2), §3.1, §8 item 2, §9.1 item 2 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-30 (recalibração do Step 2e; a questão **piorou**) |
 
 ---
 
@@ -218,7 +218,7 @@ sucessivos.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-30 | `7eb8cc8` e seguintes | `main` | **Novos:** `src/exploratory/audit_AUD_02_threshold_grid_floor.py`, `outputs/audit/AUD-02_threshold_grid_floor/`. **Alterados indiretamente:** o par de limiares em `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv` e, por consequência, `thr_hs_abs` em todo o catálogo | Diagnóstico do piso de `thr_hs` em toda a grade de percentis, e efeito colateral da recalibração de AUD-01 sobre esta questão. Nenhuma alteração foi feita **para** AUD-02; a questão permanece aberta e agravada |
 
 ## 14. Histórico de investigação
 
@@ -241,3 +241,24 @@ sucessivos.
 | **Alterações implementadas** | Nenhuma |
 | **Incerteza remanescente** | A ancoragem de um piso absoluto continua sem critério definido — é a mesma lacuna registrada em AUD-02 §7.4. Ver também a ressalva de AUD-01 §14 (2026-07-29, magnitude física): não é possível distinguir "sinal ausente na natureza" de "sinal não resolvido pelo GLORYS12" sem maregrafo no Norte (AUD-18) |
 | **Próxima decisão necessária** | Decisão estruturante pendente do usuário, comum a AUD-01, AUD-02 e AUD-18: substituir o limiar percentílico local por piso físico absoluto nos forçantes |
+
+### 2026-07-30 — Efeito da grade nova e do par recalibrado sobre o piso de `thr_hs`: **piora**
+
+> **Nota de escopo.** Esta entrada registra o efeito colateral, sobre AUD-02, da
+> recalibração do Step 2e feita para AUD-01. Os diagnósticos próprios de AUD-02
+> (§8) permanecem **não executados**, com exceção parcial do §8.3, coberto
+> abaixo. A situação da questão segue `aberto`, agora **agravada**.
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Duas. **(1)** Cobre o diagnóstico §8.3: estender a grade de percentis do Step 2e além de q90 move o par ótimo, e o que isso faz com o piso de `thr_hs`? **(2)** O par efetivamente selecionado pela recalibração melhora, piora ou não altera AUD-02? |
+| **Dados e métodos** | `thr_hs` e `thr_zos` locais calculados nos **808** pontos de produção, para cada um dos 11 percentis da grade nova (q50 a q99), a partir de `data/unified/metocean_brazil_unified_waverys_grid.nc` sobre 1993–2025. Contagem de pontos abaixo dos dois marcos que AUD-02 §3 usa, 1,0 m e 1,5 m |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_02_threshold_grid_floor` |
+| **Novas saídas geradas** | `outputs/audit/AUD-02_threshold_grid_floor/{thresholds_by_point.csv, thresholds_by_percentile.csv, summary.json}` |
+| **Validação** | O diagnóstico reproduz **exatamente** os valores publicados em AUD-02 §3 no q90: mínimo **0,20 m**, **35** pontos abaixo de 1,0 m e **129** abaixo de 1,5 m. A concordância vale como verificação de que a extração e o cálculo de percentil deste script são os mesmos do pipeline |
+| **Achado 1 — subir o percentil eleva o piso, mas pouco** | Mínimo de `thr_hs` nos 808 pontos: q50 **0,07 m**, q70 0,14, q85 0,19, q90 **0,20**, q95 0,23, q99 **0,27 m**. Pontos abaixo de 1,0 m: 83 → 56 → 44 → **35** → 31 → **21**. Abaixo de 1,5 m: 436 → 256 → 160 → **129** → 90 → **61**. Ou seja: **nem no extremo q99 o limiar mínimo de "onda extrema" chega a 0,3 m.** Estender a grade **atenua** a patologia, mas não a resolve sob nenhum enquadramento — 61 pontos abaixo de 1,5 m continuam sendo 7,5 % da costa |
+| **Achado 2 — o par selecionado PIORA a questão** | A recalibração selecionou **q70/q99**: q99 no **nível**, q70 na **onda**. Como AUD-02 é sobre a onda, o efeito é o oposto do desejável. Contra o q90 vigente até então: mínimo **0,20 m → 0,14 m**; pontos abaixo de 1,0 m **35 → 56**; abaixo de 1,5 m **129 → 256**, praticamente o dobro |
+| **Interpretação** | O diagnóstico §8.3 fica respondido e a nota de AUD-02 §4 — "o ótimo está na borda da grade, o que é em si um sinal de que o ótimo pode estar fora dela" — confirma-se, mas **não na direção que ajudaria esta questão**. O ótimo estava fora da grade no eixo do **nível**, não no da onda: `q_zos = q99` é selecionado em 14 de 14 variantes de sensibilidade, enquanto o percentil de onda é o eixo mal determinado da seleção, com os seis melhores pares diferindo em menos de 1 % no score e cobrindo de q50 a q80. O score composto simplesmente **não tem informação** para escolher o limiar de onda, e o valor que ele devolve rebaixa o piso. Isso reforça a alternativa de AUD-02 §7.4 e §9: se um piso físico absoluto for adotado, ele terá de vir de fora da calibração PU, porque a calibração demonstravelmente não o determina |
+| **Alterações implementadas** | Nenhuma **para** AUD-02. O script é read-only e não aplica piso algum. A mudança de `thr_hs` no catálogo é consequência da adoção de AUD-01, apresentada ao pesquisador responsável **antes** da execução, com estes números, e por ele autorizada |
+| **Incerteza remanescente** | (1) A ancoragem de um piso absoluto continua sem critério definido — mesma lacuna de §7.4. (2) Os critérios de resolução de §9 permanecem **todos** não atendidos, e agora sobre uma população maior de pontos problemáticos. (3) Como AUD-02 bloqueia publicação e a distância até o piso defensável **aumentou**, a questão passa a ser mais urgente, não menos |
+| **Próxima decisão necessária** | Decidir o tratamento do limiar de onda de forma independente da calibração PU, já que esta não o determina. As opções continuam sendo as de §7 e §11: piso físico absoluto com ancoragem declarada; restrição de domínio pela partição de AUD-01 (antimodo em 0,257, que remove 97 % dos pontos com `thr_hs` < 1,0 m); ou renomear a quantidade para "excedência local de Hs" em todo o manuscrito, figuras e site |

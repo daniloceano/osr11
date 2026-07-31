@@ -1,3 +1,32 @@
+> ## ⚠ Nota de adoção — 2026-07-30
+>
+> **O HAT foi adotado como método vigente, apesar da conclusão do §6 deste
+> documento.** O §6 diz, e continua dizendo, que "estes resultados não
+> autorizam adotar HAT como método vigente". Ele **não foi alterado**: a
+> conclusão da comparação permanece contrária à decisão que foi tomada.
+>
+> A adoção foi decidida e reafirmada pelo pesquisador responsável, **Danilo
+> Couto de Souza**, com o critério falsificável (c) — estabilidade do ranking
+> municipal no Sul/Sudeste — **reprovado**. O registro completo, com os dois
+> conjuntos de números e o dissenso explícito, está na entrada de execução de
+> 2026-07-30 da §14 de
+> [`AUD-01`](../../docs/scientific_audit/issues/AUD-01_compound_detector_tidal_phase_locking.md).
+>
+> **Esta comparação foi feita com o par de limiares antigo, q90/q90.** A
+> recalibração do Step 2e, executada junto com a adoção, moveu o par para
+> **q70/q99**, o que muda o catálogo inteiro. Todos os números abaixo — 37.225
+> eventos, 248 pontos sem evento, 96 municípios, ρ = 0,658, Spearman municipal
+> 0,700 — descrevem o **braço q90/q90**, não o produto vigente. Os números do
+> catálogo definitivo estão em
+> [`outputs/audit/AUD-01_final_criteria/`](../audit/AUD-01_final_criteria/) e na
+> §14. Para referência: 16.768 eventos, 208 pontos e 83 municípios sem evento,
+> ρ(|lat|, índice) = 0,710, Spearman municipal 0,695.
+>
+> Este documento é preservado como o registro da comparação que precedeu a
+> decisão. **Não regenerar nem editar.**
+
+---
+
 # Comparação de método — MHWS (vigente) × HAT (experimental)
 
 Comparação componente a componente do detector vigente com um braço que troca
