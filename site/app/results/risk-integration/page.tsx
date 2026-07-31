@@ -136,10 +136,12 @@ export default function RiskIntegrationPage() {
                 </p>
                 <p>
                   <strong className="text-gray-800">Caveats.</strong>{' '}
-                  Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence unresolved);
-                  SSH_total mixes zos at 00:00 UTC with the daily-maximum tide (overestimates total
-                  level); q90/q90 thresholds were calibrated on Santa Catarina events and applied
-                  coast-wide. Exposure is a proximity criterion — no water level is propagated
+                  Underlying Step 3 caveats still apply: daily resolution (sub-daily co-occurrence
+                  unresolved); the still water level mixes zos at 00:00 UTC with the daily-maximum
+                  tide, so it does not share a timestamp; the q70/q99 thresholds were calibrated on
+                  Santa Catarina events and applied coast-wide, and the wave percentile is the
+                  poorly determined axis of that calibration — at q70 the local wave threshold falls
+                  below 1.5 m at 256 of the 808 points (AUD-02, open and aggravated). Exposure is a proximity criterion — no water level is propagated
                   over land anywhere in this workflow, so it counts residents near the coast and
                   never residents affected — and it uses de jure residents on a single census date
                   against 33 years of metocean record. The export carries a single product, so

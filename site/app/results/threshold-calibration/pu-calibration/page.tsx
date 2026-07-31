@@ -10,7 +10,7 @@ import { tc5Figures, tc5FigureGroups } from '@/content/figures';
 export const metadata = {
   title: 'PU Composite Calibration (Step 2e) — OSR11',
   description:
-    'Final threshold calibration via PU composite scoring against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020). B_target_effective = 12 × 27 = 324 ep/yr. Independent threshold sweep confirming q90/q90.',
+    'Final threshold calibration via PU composite scoring against the combined positive-event set (expanded 56 + legacy 91 = 147 events, 27 municipalities, 1998–2020). Recalibrated 2026-07-30 on the production detector over a 121-pair grid; selected pair q70/q99.',
 };
 
 export default function PuCalibrationPage() {
@@ -85,8 +85,8 @@ export default function PuCalibrationPage() {
               <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
                 <p>
                   Step 2d (CSI Grid Scan) revealed that FAR is near 1 at all threshold pairs — even the
-                  most restrictive (q90/q90) produces 1 298 unmatched compound episodes against 91
-                  reported disasters. The CSI score (0.0151) is low. The naive interpretation is
+                  most restrictive pair it scanned (q90/q90) produces 1 298 unmatched compound
+                  episodes against 91 reported disasters. The CSI score (0.0151) is low. The naive interpretation is
                   that the detector has almost no skill.
                 </p>
                 <p>
@@ -120,9 +120,10 @@ export default function PuCalibrationPage() {
                     <li>— Uses combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities</li>
                     <li>— 0 exact (municipality, date) overlaps between databases; 2 near-matches at Florianópolis (±3 d)</li>
                     <li>— Unmatched episodes = unlabeled, not false alarms</li>
-                    <li>— Score = w₁·R_pos − w₂·B − w₃·F_soft/P</li>
-                    <li>— B_target_effective = 12 × 27 = 324 ep/yr</li>
-                    <li>— Result: q90/q90 — robust to weight / target / database choices</li>
+                    <li>— Score = w₁·R_pos − w₂·B − w₃·F_soft/P, with w = (0.30, 0.60, 0.10)</li>
+                    <li>— B is a two-sided deviation from an expected rate of 2.0 detections/municipality/year</li>
+                    <li>— Grid extended to 11 levels (q50…q90, q95, q99) = 121 pairs</li>
+                    <li>— Result: <strong>q70/q99</strong>, recalibrated 2026-07-30 on the production detector</li>
                   </ul>
                 </div>
               </div>
@@ -348,29 +349,34 @@ export default function PuCalibrationPage() {
                   <div><span className="text-gray-500">Evaluable (grid-mapped)</span><br /><span className="font-bold text-gray-800">~143 (4 expanded cities unmapped)</span></div>
                   <div><span className="text-gray-500">B_target_effective</span><br /><span className="font-bold text-gray-800">12 × 27 = 324 ep/yr</span></div>
                   <div><span className="text-gray-500">N_union_cities</span><br /><span className="font-bold text-gray-800">27 municipalities</span></div>
-                  <div><span className="text-gray-500">Result</span><br /><span className="font-bold text-gray-800">q90/q90 confirmed</span></div>
+                  <div><span className="text-gray-500">Result</span><br /><span className="font-bold text-gray-800">q70/q99</span></div>
                   <div><span className="text-gray-500">Near-matches</span><br /><span className="font-bold text-gray-800">2 (±3 d, Florianópolis)</span></div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                  <h3 className="text-xs font-semibold text-blue-900 mb-1.5">Step 2d / Step 2e convergence</h3>
+                  <h3 className="text-xs font-semibold text-blue-900 mb-1.5">Why the earlier q90/q90 agreement did not survive</h3>
                   <p className="text-xs text-blue-800 leading-relaxed">
-                    The CSI optimisation (Step 2d, 91 legacy events) and the PU composite calibration
-                    (Step 2e, combined 147-event set from both databases) independently select q90/q90
-                    as the optimal pair. This triple convergence — across two datasets, two objective
-                    functions, and now the combined positive-event framework — provides strong evidence
-                    that q90/q90 is the robust operational choice for this domain.
+                    Step 2d (CSI, 91 legacy events) and the first Step 2e calibration both selected
+                    q90/q90, and that agreement was read as convergent evidence. It was not: both
+                    sweeps stopped <em>at</em> q90, and both scored a detector built on
+                    SSH_total = zos + tide. Recalibrating on the production detector over a grid
+                    extended to q95 and q99 showed the composite score has no interior optimum —
+                    Spearman(Score, accepted episodes) = −0.999 — so q90/q90 had only ever looked
+                    optimal because the grid ended there. See AUD-01 §14.
                   </p>
                 </div>
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                   <h3 className="text-xs font-semibold text-gray-900 mb-1.5">Robustness across sensitivity experiments</h3>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    The q90/q90 pair is optimal across all tested weight triplets (high-recall, balanced,
-                    default) and all tested B_target values (6, 12, 18, 24 ep/yr/muni). The composite
-                    score improves (less negative) as the burden target becomes more permissive, but the
-                    selected threshold pair does not change.
+                    Across the 14 variants tested (weights, alphas, expected rate, episode gap), the
+                    level percentile <strong>q99 is selected in 14 of 14</strong>. The wave percentile
+                    is the poorly determined axis: q70 in 8, q50 in 2, q85 in 2, q95 in 1, q99 in 1.
+                    The six best pairs differ by less than 1 % in score and span q50 to q80, so the
+                    composite score does not carry the information to fix the wave threshold — which
+                    matters for AUD-02, where a physical floor would have to come from outside this
+                    calibration.
                   </p>
                 </div>
               </div>
@@ -379,14 +385,14 @@ export default function PuCalibrationPage() {
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
               <h3 className="text-sm font-semibold text-amber-900 mb-2">Scientific interpretation — why the score is negative</h3>
               <p className="text-xs text-amber-800 leading-relaxed">
-                The composite score at q90/q90 is −3.40, dominated by the large F_soft term (972 unmatched
-                episodes, most with low qᵢ). This does not mean the detector is useless — it means the
-                PU framework correctly identifies that the majority of the 1 267 unmatched episodes lack
-                independent corroboration and cannot be confidently attributed to real events.
-                The score is <em>relative</em>: q90/q90 scores better (less negative) than any other pair
-                across all 81 threshold combinations, confirming it as the optimal choice under this framework.
-                The large soft penalty reflects the fundamental challenge of calibrating compound detectors
-                against an incomplete impact database at daily resolution.
+                The composite score at the selected pair q70/q99 is −0.318. It is negative because the
+                soft penalty still dominates: 831 unmatched episodes, most with low qᵢ. That does not mean
+                the detector is useless — it means the PU framework correctly identifies that most
+                unmatched episodes lack independent corroboration and cannot be confidently attributed to
+                real events. The score is <em>relative</em>: q70/q99 scores better than any other of the
+                121 pairs. Against the superseded q90/q90 <em>under the same detector</em>, it achieves the
+                identical recall (H = 28 of 147) with 62 % fewer unmatched detections — 831 against 2 214 —
+                and a detection rate of 1.42 against an anchor of 2.0 per municipality per year.
               </p>
             </div>
           </div>
@@ -397,9 +403,10 @@ export default function PuCalibrationPage() {
           <div className="mx-auto max-w-5xl px-6">
             <h2 className="mb-2 text-xl font-bold text-gray-900">Score Decomposition</h2>
             <p className="mb-6 text-sm text-gray-600 max-w-3xl">
-              Full decomposition of <strong>Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P</strong> across all 81
-              threshold pairs. Each heatmap shows one weighted term, making it transparent which component
-              dominates the final score at each pair. The optimal pair (q90/q90) is marked with a black border.
+              Full decomposition of <strong>Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P</strong> across all 121
+              threshold pairs of the extended grid (q50…q90, q95, q99). Each heatmap shows one weighted term,
+              making it transparent which component dominates the final score at each pair. The selected pair
+              (q70/q99) is marked with a black border.
             </p>
             <ScoreDecompositionHeatmaps />
           </div>
@@ -410,7 +417,7 @@ export default function PuCalibrationPage() {
           <div className="mx-auto max-w-5xl px-6">
             <h2 className="mb-2 text-xl font-bold text-gray-900">Episode Confidence Decomposition (qᵢ)</h2>
             <p className="mb-6 text-sm text-gray-600 max-w-3xl">
-              Per-episode breakdown of the confidence weight qᵢ at the optimal pair (q90/q90).
+              Per-episode breakdown of the confidence weight qᵢ at the selected pair (q70/q99).
               Shows the weighted contribution of each component — external evidence (α_E·Eᵢ),
               physical intensity (α_I·Iᵢ), and context coherence (α_C·Cᵢ) — so that the
               driver of each episode&apos;s penalty (1 − qᵢ) is immediately visible.
@@ -438,7 +445,7 @@ export default function PuCalibrationPage() {
             <div className="space-y-3">
               {[
                 {
-                  label: 'The calibrated pair is q90/q90 — confirmed by two independent methods and the combined database.',
+                  label: 'The calibrated pair is q70/q99, selected on 2026-07-30 over a 121-pair grid, scoring the production detector.',
                   text: 'Step 2d (CSI, 91 legacy events) and Step 2e (PU composite, combined 147-event set: 56 expanded + 91 legacy, 27 municipalities) both select q90/q90. The result is robust to the events database used, the calibration objective, and all sensitivity parameters tested. B_target_effective = 12 × 27 = 324 ep/yr using the union of both database city sets.',
                 },
                 {
@@ -447,10 +454,10 @@ export default function PuCalibrationPage() {
                 },
                 {
                   label: 'The high unmatched count reflects under-reporting, not detector failure.',
-                  text: '1 267 unmatched compound episodes remain at q90/q90. The PU framework assigns most of them low qᵢ weights (insufficient external corroboration), which is consistent with under-reporting being the dominant explanation rather than spurious oceanic detections. The ocean signal is physically real; the observational database is incomplete.',
+                  text: '831 unmatched compound episodes remain at q70/q99, against 2 214 at the superseded q90/q90 under the same detector. The PU framework assigns most of them low qᵢ weights, which is consistent with under-reporting being the dominant explanation rather than spurious oceanic detections. External evidence is available for only 0.04 % of unmatched episodes, which is why α_E was reduced from 0.60 to 0.20: the term was measuring the sparseness of the register, not the implausibility of a detection.',
                 },
                 {
-                  label: 'Step 3 receives: tab_TC5_optimal_pair_pu.csv → q90/q90.',
+                  label: 'Step 3 receives: tab_TC5_optimal_pair_pu.csv → q70/q99.',
                   text: 'The optimal threshold pair (hs_percentile=90, ssh_percentile=90) is passed to Step 3 (Storm Catalog Generation), where it defines the exceedance thresholds used to identify independent compound storm episodes in the full 1993–2025 series at all coastal grid points across the five SC coastal sectors.',
                 },
               ].map((item, i) => (

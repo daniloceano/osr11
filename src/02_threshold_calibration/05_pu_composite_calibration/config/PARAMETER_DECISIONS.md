@@ -73,7 +73,7 @@ necessary rather than cosmetic.
 
 ---
 
-## 3. Confidence Weight Parameters (q_i)
+## 3. Confidence Weight Parameters (q_i) — **changed 2026-07-30**
 
 ```
 q_i = clip(α_E·E_i + α_I·I_i + α_C·C_i, 0, 1)
