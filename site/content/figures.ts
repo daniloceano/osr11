@@ -179,7 +179,19 @@ export const figureGroups = [
 // The calibration uses the COMBINED positive-event set:
 //   expanded (56 events, 14 cities) + legacy (91 events, 22 cities)
 //   = 147 unique (municipality, date) pairs, 27 municipalities, 1998–2020.
-// B_target_effective = 12 ep/yr/muni × 27 municipalities = 324 ep/yr.
+//
+// RECALIBRATED 2026-07-30. All figures below were regenerated on that date.
+// Five things changed and every caption reflects them:
+//   * scored detector — Hs and TIDE-FREE zos, gated by max(SWL) > HAT.
+//     It used to be Hs and SSH_total = zos + tide, a variable production no
+//     longer reads.
+//   * grid — 11 levels (q50…q90, q95, q99), 121 pairs, up from 9 levels / 81.
+//   * burden — two-sided deviation from an expected rate of 2.0 detections per
+//     municipality per year, anchored on Leal et al. (2024). It used to be a
+//     one-sided ceiling at 12/yr, which was minimised at ZERO detections.
+//   * weights — w = (0.30, 0.60, 0.10), was (0.60, 0.20, 0.20).
+//   * alphas — (0.20, 0.50, 0.30), was (0.60, 0.30, 0.10).
+// Selected pair: q70 (Hs) / q99 (zos). See AUD-01 §14.
 
 export const tc5Figures: FigureItem[] = [
   // Score heatmaps (H series)
@@ -191,7 +203,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H1_score_heatmap.png',
     title: 'PU Composite Score Surface — Threshold Grid',
     caption:
-      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 9×9 threshold grid (Hₛ × SSH_total, q50–q90). Colour scale: lighter (yellow) = higher score = better; darker (green) = lower score = worse. The optimal pair (black rectangle) maximises Score. Default weights: w₁=0.60 (recall), w₂=0.20 (burden), w₃=0.20 (soft penalty). Combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities, 1998–2020.',
+      'Heatmap of the PU composite score Score(θ) = w₁·R_pos − w₂·B − w₃·F_soft/P across the 11×11 threshold grid (Hₛ × tide-free zos, q50–q90 plus q95 and q99). Colour scale: lighter (yellow) = higher score = better; darker (green) = lower score = worse. The selected pair q70/q99 (black rectangle) maximises Score at −0.3178. Weights: w₁=0.30 (recall), w₂=0.60 (rate deviation), w₃=0.10 (soft penalty), reweighted on 2026-07-30. The grid was extended past q90 because the previous optimum sat on the q90 edge; doing so revealed that under the old weights the score had no interior optimum at all — Spearman(Score, accepted episodes) = −0.999. Combined positive-event set: 147 events (expanded 56 + legacy 91), 27 municipalities, 1998–2020.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -199,7 +211,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H2_recall_heatmap.png',
     title: 'Positive Recall R_pos Surface — Threshold Grid',
     caption:
-      'Heatmap of positive recall R_pos(θ) = H/P across the 9×9 threshold grid. Colour scale: lighter (yellow) = higher recall = better; darker (green) = lower recall = worse. More permissive (lower percentile) thresholds capture more events at the cost of higher burden. Combined positive-event set: 147 events (expanded 56 + legacy 91, 27 municipalities). The optimal pair is marked with a black rectangle.',
+      'Heatmap of positive recall R_pos(θ) = H/P across the 11×11 threshold grid. Colour scale: lighter (yellow) = higher recall = better; darker (green) = lower recall = worse. More permissive (lower percentile) thresholds capture more events at the cost of a higher detection rate. At the selected pair q70/q99, R_pos = 0.1905 (H = 28 of 147) — identical to the superseded q90/q90 pair scored under the same detector, which the new pair matches while producing 62 % fewer unmatched detections. Combined positive-event set: 147 events, 27 municipalities. The selected pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -207,7 +219,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H3_burden_heatmap.png',
     title: 'Annual Burden B(θ) Surface — Threshold Grid',
     caption:
-      'Heatmap of the normalised annual burden B(θ) = min(1, (H+U)/(Y·B_target)) across the 9×9 threshold grid. Colour scale: lighter (yellow) = lower burden = better; darker (red) = higher burden = worse. B_target_effective = 12 ep/yr/muni × 27 municipalities (union of expanded + legacy) = 324 ep/yr total. The optimal pair is marked with a black rectangle.',
+      'Heatmap of the burden term B(θ) = min(1, |log₁₀(rate(θ)/r*)|) across the 11×11 threshold grid, where rate(θ) = (H+U)/(Y·n_municipalities) and r* = 2.0 detections per municipality per year. Colour scale: lighter (yellow) = closer to the expected rate = better; darker (red) = further from it = worse. Since 2026-07-30 this is a TWO-SIDED deviation: detecting far fewer episodes than expected is penalised as much as flooding. The former one-sided ceiling was minimised at zero detections, so it pushed in the same direction as the soft penalty and could not anchor the selection — sweeping its weight from 0.20 to 0.69 left the optimum pinned at the emptiest pair of the grid. The anchor r* assumes under-reporting of about 8× the rate documented by Leal et al. (2024); sensitivity spans 0.5 to 6.0. The selected pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -215,7 +227,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_H4_fsoft_heatmap.png',
     title: 'Normalised Soft Penalty F_soft(θ)/P Surface — Threshold Grid',
     caption:
-      'Heatmap of the soft unmatched penalty F_soft(θ)/P across the 9×9 threshold grid. F_soft = Σᵢ(1 − qᵢ): low qᵢ = low plausibility (large penalty); high qᵢ = plausible unmatched episode (small penalty). Colour scale: lighter (yellow) = lower penalty = better; darker (red) = higher penalty = worse. Normalised by P (147 combined events). The optimal pair is marked with a black rectangle.',
+      'Heatmap of the soft unmatched penalty F_soft(θ)/P across the 11×11 threshold grid. F_soft = Σᵢ(1 − qᵢ): low qᵢ = low plausibility (large penalty); high qᵢ = plausible unmatched episode (small penalty). Colour scale: lighter (yellow) = lower penalty = better; darker (red) = higher penalty = worse. Normalised by P (147 combined events). This term is unbounded above — it reaches 29.4 at q50/q50 against a maximum recall contribution of 0.60 — which is why its weight was cut from 0.20 to 0.10 on 2026-07-30: at the former weight it made the score a monotone preference for detecting nothing. The selected pair is marked with a black rectangle.',
     group: 'Score Surface',
     part: 'Step 2e',
   },
@@ -224,7 +236,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S1_csi_vs_pu.png',
     title: 'CSI Optimal Pair vs PU Optimal Pair — Threshold Comparison',
     caption:
-      'Side-by-side bar chart comparing the threshold percentiles selected by Step 2d (CSI optimisation, 91-event legacy database) and Step 2e (PU composite calibration, combined 147-event positive set: expanded 56 + legacy 91, 27 municipalities). Both methods converge on q90/q90 for Hₛ and SSH_total, providing independent confirmation that the q90 pair is robust to the choice of events database and calibration metric. The convergence suggests the result is not an artefact of a single database or method.',
+      'Side-by-side bar chart comparing the threshold percentiles selected by Step 2d (CSI optimisation, 91-event legacy database) and Step 2e (PU composite calibration, combined 147-event positive set). The two used to agree on q90/q90, and that agreement was read as convergent evidence. It was not: both sweeps stopped AT q90 and both scored a detector built on SSH_total. Recalibrating Step 2e on the production detector over a grid extended to q95 and q99 moved its answer to q70/q99. Step 2d remains a diagnostic step and has not been re-run; its q90/q90 result is retained here as the historical record of that scan, not as corroboration.',
     group: 'Comparison',
     part: 'Step 2e',
   },
@@ -232,7 +244,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S2_sensitivity_weights.png',
     title: 'Weight Sensitivity — Optimal Pair Stability',
     caption:
-      'Sensitivity of the PU-optimal threshold pair to alternative (w₁, w₂, w₃) weight triplets. Each row shows the optimal Hₛ and SSH_total threshold percentile for one weight preset: high_recall (w₁=0.70), balanced (w₁=0.50), and default (w₁=0.60). Stability across presets confirms that the q90/q90 result does not depend on the specific weight choice within a reasonable range.',
+      'Sensitivity of the selected threshold pair to alternative (w₁, w₂, w₃) weight triplets: recall_leaning (0.40/0.50/0.10), rate_anchored (0.20/0.70/0.10), penalty_leaning (0.30/0.55/0.15), default (0.30/0.60/0.10) and legacy_2026_07_29 (0.60/0.20/0.20). The level percentile q99 is selected under every triplet. The wave percentile is not stable — q70 under the default and recall_leaning presets, q50 under rate_anchored, q85 under penalty_leaning — and under the legacy triplet the optimum collapses back to the emptiest pair of the grid, which is what motivated the reweighting.',
     group: 'Sensitivity',
     part: 'Step 2e',
   },
@@ -240,7 +252,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S3_sensitivity_b_target.png',
     title: 'B_target Sensitivity — Score vs Per-Municipality Burden Target',
     caption:
-      'Sensitivity of the PU composite score and optimal threshold pair to alternative per-municipality annual burden targets (6, 12, 18, 24 episodes/year/municipality). The effective domain budget scales with n_union_municipalities = 27 (union of both databases; total = value × 27). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested targets, demonstrating robustness. Score improves (less negative) with more permissive targets, reflecting the reduced burden penalty.',
+      'Sensitivity of the PU composite score and selected threshold pair to alternative expected detection rates r* (0.5, 1.0, 2.0, 3.0, 6.0 per municipality per year), spanning roughly 2× to 25× the 0.243 rate documented by Leal et al. (2024) plus the expanded archive. Left axis: composite score; right axis: selected threshold percentiles (Hₛ in red, zos in orange). The level percentile is q99 throughout. The wave percentile responds to the anchor: q95 at r*=0.5, q85 at r*=1.0, and q70 for r* ≥ 2.0, where it is stable. The anchor is a declared assumption about under-reporting, not a measurement — AUD-18 records that no independent validation base exists.',
     group: 'Sensitivity',
     part: 'Step 2e',
   },
@@ -248,7 +260,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_S4_sensitivity_gap_days.png',
     title: 'Episode Gap Sensitivity — Score vs Gap Tolerance',
     caption:
-      'Sensitivity of the PU composite score and optimal threshold pair to alternative episode gap tolerance values (0, 1, 2, 3 days). The gap tolerance controls how many non-exceedance days can separate consecutive exceedance days within a single episode (EPISODE_MAX_GAP_DAYS). Left axis: composite score; right axis: optimal threshold percentiles (Hₛ in red, SSH in orange). The optimal pair remains q90/q90 across all tested values. Score improves monotonically with larger gaps (fewer, longer episodes reduce burden), but the effect is modest (Score ranges from -3.22 at gap=0 to -3.02 at gap=3).',
+      'Sensitivity of the PU composite score and selected threshold pair to alternative episode gap tolerance values (0, 1, 2, 3 days), which control how many non-exceedance days may separate consecutive exceedance days within one episode. Left axis: composite score; right axis: selected threshold percentiles (Hₛ in red, zos in orange). The pair is q70/q99 at gaps 0, 1 and 2, and q55/q99 at gap 3, where the score is effectively tied (−0.3176 against −0.3178). Both layers of the scan are re-run for each gap value: since the level gate applies to the episode as a whole, merging or splitting episodes changes which ones clear max(SWL) > HAT, so holding Layer 1 fixed would silently mix gap tolerances between the two layers.',
     group: 'Sensitivity',
     part: 'Step 2e',
   },
@@ -257,7 +269,7 @@ export const tc5Figures: FigureItem[] = [
     filename: 'tc5_summary/fig_TC5_A1_qi_distribution.png',
     title: 'Distribution of qᵢ Confidence Weights — Unmatched Episodes',
     caption:
-      'Histogram of qᵢ confidence weights for all unmatched episodes at the PU-optimal threshold pair (q90/q90). qᵢ = clip(α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ, 0, 1) aggregates external evidence (Eᵢ), physical intensity (Iᵢ), and context coherence (Cᵢ) for each unmatched episode. Red dashed line: mean; orange dotted line: median. Episodes clustered near 0 have low plausibility (few circumstantial indicators of a real event); episodes near 1 are highly plausible but unconfirmed in the documentary database, likely reflecting under-reporting.',
+      'Histogram of qᵢ confidence weights for the 831 unmatched episodes at the selected pair q70/q99. qᵢ = clip(α_E·Eᵢ + α_I·Iᵢ + α_C·Cᵢ, 0, 1) aggregates external evidence (Eᵢ), physical intensity (Iᵢ) and context coherence (Cᵢ). Red dashed line: mean (0.494); orange dotted line: median (0.500). The alphas were rebalanced on 2026-07-30 from (0.60, 0.30, 0.10) to (0.20, 0.50, 0.30): Eᵢ = 1 in only 154 of 436 352 unmatched episodes across the sweep — 0.04 % — so α_E = 0.60 capped qᵢ at 0.40 by construction for 99.96 % of episodes. That measured the sparseness of the documentary register, not the implausibility of a detection, and contradicted the premise of the PU framework itself. Episodes near 1 are physically plausible but unconfirmed, most likely reflecting under-reporting.',
     group: 'Episode Audit',
     part: 'Step 2e',
   },
@@ -269,28 +281,29 @@ export const tc5Figures: FigureItem[] = [
     group: 'City Audit',
     part: 'Step 2e',
   },
-  // Event-level capture diagnostics (E series) — sector-coloured, SSH_total mandatory
+  // Event-level capture diagnostics (E series) — sector-coloured. Since the
+  // 2026-07-30 recalibration the level driver on these axes is TIDE-FREE zos.
   {
     filename: 'tc5_summary/fig_TC5_E1_event_capture.png',
-    title: 'TC5-E1 — Peak Hₛ per Event, by Coastal Sector (PU-optimal pair)',
+    title: 'TC5-E1 — Peak Hₛ per Event, by Coastal Sector (selected pair q70/q99)',
     caption:
-      'Peak Hₛ within the causal window [D-2 … D+1] for all 147 combined positive events sorted by coastal sector (canonical order: North → Central-north → Central → Central-south → South) and then by date. Colour encodes coastal sector, consistent with Step 2d sector-colour convention (SECTOR_COLORS). Filled markers = captured (compound hit at Hₛ q90 ∧ SSH_total q90); open = missed. Dashed horizontal line = median local Hₛ q90 threshold across all grid points (individual thresholds vary). Light green shading marks the zone above the median threshold.',
+      'Peak Hₛ within the causal window [D-2 … D+1] for all 147 combined positive events sorted by coastal sector (canonical order: North → Central-north → Central → Central-south → South) and then by date. Colour encodes coastal sector, consistent with Step 2d sector-colour convention (SECTOR_COLORS). Filled markers = captured (accepted compound episode overlapping the causal window at the selected pair Hₛ q70 ∧ zos q99, gated by max(SWL) > HAT); open = missed. Dashed horizontal line = median local Hₛ q70 threshold across all grid points (individual thresholds vary). Light green shading marks the zone above the median threshold.',
     group: 'Event Capture',
     part: 'Step 2e',
   },
   {
     filename: 'tc5_summary/fig_TC5_E2_ssh_capture.png',
-    title: 'TC5-E2 — Peak SSH_total per Event, by Coastal Sector (PU-optimal pair)',
+    title: 'TC5-E2 — Peak Tide-Free zos per Event, by Coastal Sector (selected pair q70/q99)',
     caption:
-      'Analogous to TC5-E1 but with peak SSH_total = zos + FES2022 tide on the y-axis. Events sorted by coastal sector then date. SSH_total is computed as the daily-maximum SSH (GLORYS12 zos) plus the FES2022 astronomical tide at hourly resolution, resampled to daily maxima. Dotted horizontal line = median local SSH_total q90 threshold. Light blue shading marks the zone above the threshold. Filled = captured; open = missed at the PU-optimal pair (q90/q90).',
+      'Analogous to TC5-E1 but with the peak of the TIDE-FREE level driver, GLORYS12 zos, on the y-axis. Events sorted by coastal sector then date. Until 2026-07-30 this axis carried SSH_total = zos + FES2022 tide; the detector no longer reads that variable, so the axis now shows the quantity the level percentile is actually applied to. The dotted line is the median local q99 of zos across the event grid points. Filled markers are captured events, open markers missed: H = 28, M = 119, R_pos = 0.19 over the 147 combined positive events. Note the range — a few tenths of a metre — which is the surge signal alone, without the metre-scale astronomical tide that used to dominate this axis.',
     group: 'Event Capture',
     part: 'Step 2e',
   },
   {
     filename: 'tc5_summary/fig_TC5_E3_peak_scatter.png',
-    title: 'TC5-E3 — Peak Hₛ vs SSH_total Scatter (PU-optimal pair)',
+    title: 'TC5-E3 — Peak Hₛ vs Peak Tide-Free zos Scatter (selected pair q70/q99)',
     caption:
-      'Scatter of peak Hₛ (x-axis) vs peak SSH_total = zos + FES2022 tide (y-axis) within the causal window [D-2 … D+1] for all 147 combined positive events. Colour encodes coastal sector; filled = captured (compound hit), open = missed at the PU-optimal pair (Hₛ q90 / SSH_total q90). Dashed and dotted reference lines show the median local thresholds across grid points. Light green shading marks the zone where both thresholds are exceeded. This figure is the Step 2e analogue of Step 2d TC4-S5, applied to the final combined 147-event positive set.',
+      'Scatter of peak Hₛ (x-axis) against peak tide-free zos (y-axis) within the causal window [D-2 … D+1] for all 147 combined positive events. Colour encodes coastal sector; filled markers are events captured at the selected pair q70/q99, open markers are missed. The two median threshold lines partition the plane into the four quadrants of the compound criterion. Capture also requires the level gate max(SWL) > HAT over the shared days, which this projection cannot show: an event can sit inside the upper-right quadrant and still be rejected because the still water level never cleared the local HAT.',
     group: 'Event Capture',
     part: 'Step 2e',
   },

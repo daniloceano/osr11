@@ -88,8 +88,28 @@ function interpolateColor(value: number, min: number, max: number, scale: 'green
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+/**
+ * Axes and optimal pair are derived from the payload, never written into the
+ * markup. The Step 2e recalibration of 2026-07-30 took the grid from 9 to 11
+ * levels and moved the selected pair off q90/q90, and hard-coded values would
+ * have silently dropped the q95 and q99 rows and outlined the wrong cell.
+ */
+function axisLevels(data: ScoreRow[]): { hs: number[]; ssh: number[] } {
+  const hs = [...new Set(data.map((r) => r.hs_percentile))].sort((a, b) => a - b);
+  const ssh = [...new Set(data.map((r) => r.ssh_percentile))].sort((a, b) => a - b);
+  return { hs, ssh };
+}
+
+function optimalPair(data: ScoreRow[]): ScoreRow | undefined {
+  return data.reduce<ScoreRow | undefined>(
+    (best, row) => (best === undefined || row.Score > best.Score ? row : best),
+    undefined,
+  );
+}
+
 function Heatmap({ data, metric }: { data: ScoreRow[]; metric: typeof METRICS[number] }) {
-  const percentiles = [50, 55, 60, 65, 70, 75, 80, 85, 90];
+  const levels = axisLevels(data);
+  const best = optimalPair(data);
   const values = data.map((r) => r[metric.key]);
   const vmin = Math.min(...values);
   const vmax = Math.max(...values);
@@ -107,22 +127,25 @@ function Heatmap({ data, metric }: { data: ScoreRow[]; metric: typeof METRICS[nu
         <table className="text-[10px] border-collapse">
           <thead>
             <tr>
-              <th className="px-1 py-0.5 text-gray-500 font-normal">Hₛ \ SSH</th>
-              {percentiles.map((p) => (
+              <th className="px-1 py-0.5 text-gray-500 font-normal">Hₛ \ zos</th>
+              {levels.ssh.map((p) => (
                 <th key={p} className="px-1.5 py-0.5 text-gray-500 font-medium text-center">q{p}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {percentiles.map((hs) => (
+            {levels.hs.map((hs) => (
               <tr key={hs}>
                 <td className="px-1 py-0.5 text-gray-500 font-medium">q{hs}</td>
-                {percentiles.map((ssh) => {
+                {levels.ssh.map((ssh) => {
                   const row = grid.get(`${hs}-${ssh}`);
                   if (!row) return <td key={ssh} className="px-1.5 py-1" />;
                   const val = row[metric.key];
                   const bg = interpolateColor(val, vmin, vmax, metric.colorScale);
-                  const isOptimal = hs === 90 && ssh === 90;
+                  const isOptimal =
+                    best !== undefined &&
+                    hs === best.hs_percentile &&
+                    ssh === best.ssh_percentile;
                   return (
                     <td
                       key={ssh}
@@ -168,14 +191,17 @@ export default function ScoreDecompositionHeatmaps() {
     return <div className="text-sm text-gray-400 py-8 text-center">No score decomposition data available.</div>;
   }
 
-  // Optimal pair summary
-  const opt = data.find((r) => r.hs_percentile === 90 && r.ssh_percentile === 90);
+  // Selected pair summary, read off the payload rather than assumed.
+  const opt = optimalPair(data);
+  const levels = axisLevels(data);
 
   return (
     <div className="space-y-6">
       {opt && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h4 className="text-xs font-semibold text-blue-900 mb-2">Optimal pair (q90/q90) — Term breakdown</h4>
+          <h4 className="text-xs font-semibold text-blue-900 mb-2">
+            Selected pair (q{opt.hs_percentile}/q{opt.ssh_percentile}) — Term breakdown
+          </h4>
           <div className="grid grid-cols-3 gap-3 text-xs">
             <div className="rounded-lg border border-emerald-200 bg-white p-3">
               <div className="text-[10px] text-gray-500">w₁ · R_pos</div>
@@ -186,6 +212,7 @@ export default function ScoreDecompositionHeatmaps() {
               <div className="text-[10px] text-gray-500">−w₂ · B</div>
               <div className="text-lg font-bold text-amber-700">{opt.term_burden_weighted.toFixed(4)}</div>
               <div className="text-[10px] text-gray-400">B = {opt.B.toFixed(4)} (raw: {opt.B_raw.toFixed(4)}) × w₂={opt.w2}</div>
+              <div className="text-[10px] text-gray-400">deviation from the expected rate, both directions</div>
             </div>
             <div className="rounded-lg border border-red-200 bg-white p-3">
               <div className="text-[10px] text-gray-500">−w₃ · F_soft/P</div>
@@ -194,9 +221,11 @@ export default function ScoreDecompositionHeatmaps() {
             </div>
           </div>
           <div className="mt-3 text-xs text-blue-800">
-            <strong>Score = {opt.Score.toFixed(4)}</strong> — the F_soft/P term dominates
-            ({((Math.abs(opt.term_fsoft_weighted) / (Math.abs(opt.term_recall_weighted) + Math.abs(opt.term_burden_weighted) + Math.abs(opt.term_fsoft_weighted))) * 100).toFixed(0)}%
-            of total absolute magnitude)
+            <strong>Score = {opt.Score.toFixed(4)}</strong> — the F_soft/P term carries{' '}
+            {((Math.abs(opt.term_fsoft_weighted) / (Math.abs(opt.term_recall_weighted) + Math.abs(opt.term_burden_weighted) + Math.abs(opt.term_fsoft_weighted))) * 100).toFixed(0)}%
+            of the total absolute magnitude. Before the 2026-07-30 reweighting it carried over 90 %
+            and had no upper bound, which made the score a monotone preference for detecting nothing:
+            Spearman(Score, accepted episodes) = −0.999 over this grid.
           </div>
         </div>
       )}
@@ -210,8 +239,11 @@ export default function ScoreDecompositionHeatmaps() {
       </div>
 
       <p className="text-[10px] text-gray-400 text-center">
-        Black border = optimal pair (q90/q90). Hover cells for exact values.
-        Full data: <code>tab_TC5_score_decomposition.csv</code> (81 rows × 21 columns).
+        {opt && (
+          <>Black border = selected pair (q{opt.hs_percentile}/q{opt.ssh_percentile}). </>
+        )}
+        Hover cells for exact values. Grid: {levels.hs.length} × {levels.ssh.length} ={' '}
+        {data.length} pairs. Full data: <code>tab_TC5_score_decomposition.csv</code>.
       </p>
     </div>
   );

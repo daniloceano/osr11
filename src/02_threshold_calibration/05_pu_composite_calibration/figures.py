@@ -18,9 +18,9 @@ fig_TC5_A1_qi_distribution.png      — Distribution of q_i values across all ep
 fig_TC5_A2_city_source_audit.png    — Municipality audit map on SC coast (cartopy)
 fig_TC5_E1_event_capture.png        — Peak Hₛ per event sorted by coastal sector;
                                        filled = captured, open = missed at optimal pair
-fig_TC5_E2_ssh_capture.png          — Peak SSH_total per event sorted by coastal sector;
-                                       analogous to E1 but SSH_total = zos + FES tide
-fig_TC5_E3_peak_scatter.png         — Peak Hₛ vs SSH_total scatter (analogous to TC4-S5);
+fig_TC5_E2_ssh_capture.png          — Peak tide-free zos per event sorted by coastal
+                                       sector; analogous to E1 on the level driver
+fig_TC5_E3_peak_scatter.png         — Peak Hₛ vs peak zos scatter (analogous to TC4-S5);
                                        coloured by coastal sector, filled = captured
 """
 from __future__ import annotations
@@ -128,7 +128,7 @@ def plot_metric_heatmap(
     ax.set_yticks(range(len(hs_labels)))
     ax.set_xticklabels(ssh_labels, fontsize=9)
     ax.set_yticklabels(hs_labels, fontsize=9)
-    ax.set_xlabel("SSH_total threshold", fontsize=11)
+    ax.set_xlabel("zos threshold (tide-free)", fontsize=11)
     ax.set_ylabel("Hₛ threshold", fontsize=11)
     ax.set_title(title, fontsize=12, pad=8)
 
@@ -242,7 +242,7 @@ def plot_csi_vs_pu_comparison(
 ) -> None:
     """Side-by-side bar comparison of Step 2d CSI-optimal and Step 2e PU-optimal pairs.
 
-    Shows Hₛ and SSH_total threshold percentiles for each method.
+    Shows Hₛ and level threshold percentiles for each method.
     """
     # Load Step 2d results if available
     csi_hs = csi_ssh = None
@@ -262,7 +262,7 @@ def plot_csi_vs_pu_comparison(
     x = np.array([0, 1])
     width = 0.35
 
-    labels = ["Hₛ threshold", "SSH_total threshold"]
+    labels = ["Hₛ threshold", "zos threshold"]
 
     if csi_hs is not None:
         ax.bar(x - width/2, [csi_hs, csi_ssh], width, label="Step 2d (CSI)",
@@ -753,7 +753,7 @@ def plot_city_source_audit(
 # ── Event-level capture figures (TC5-E1, TC5-E2, TC5-E3) ────────────────────
 # All three figures use sector-based colours consistent with Step 2d (SECTOR_COLORS
 # from config.plot_config).  Filled markers = captured; open = missed.
-# SSH_total = zos + FES2022 tide is mandatory; these functions raise if SSH is NaN.
+# The level driver is tide-free zos; these functions raise if it is all-NaN.
 
 def _get_sector_colors() -> dict[str, str]:
     """Return the project-wide SECTOR_COLORS dict from config.plot_config."""
@@ -806,7 +806,7 @@ def _ensure_sector_column(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _require_ssh(df: pd.DataFrame, fig_id: str) -> pd.DataFrame:
-    """Raise RuntimeError if SSH_total peaks are all-NaN.  Return cleaned df."""
+    """Raise RuntimeError if the level peaks are all-NaN.  Return cleaned df."""
     df = df.dropna(subset=["peak_hs_causal"])
     if df.empty:
         raise RuntimeError(f"{fig_id}: no valid peak_hs_causal values in event status table.")
@@ -814,7 +814,7 @@ def _require_ssh(df: pd.DataFrame, fig_id: str) -> pd.DataFrame:
     if n_ssh_nan == len(df):
         raise RuntimeError(
             f"{fig_id}: peak_ssh_causal is all-NaN for all {len(df)} events. "
-            "SSH_total = zos + FES2022 tide is mandatory for Step 2e. "
+            "A tide-free zos series is mandatory for Step 2e. "
             "Run the pipeline inside the 'osr' conda environment where eo_tides is installed. "
             "Tide model directory: data/tide_models_clipped_brasil/.  "
             "Re-run: /path/to/osr/bin/python main.py --scoring"
@@ -946,10 +946,10 @@ def plot_ssh_capture_strip(
     optimal: dict,
     output_path: Path,
 ) -> None:
-    """TC5-E2 — Peak SSH_total per event, sorted by coastal sector then date.
+    """TC5-E2 — Peak tide-free zos per event, sorted by coastal sector then date.
 
-    Analogous to TC5-E1 but with SSH_total = zos + FES2022 tide on the y-axis.
-    Raises RuntimeError if SSH_total is all-NaN (eo_tides unavailable).
+    Analogous to TC5-E1 but with the tide-free level driver on the y-axis.
+    Raises RuntimeError if the level series is all-NaN.
 
     Parameters
     ----------
@@ -986,7 +986,7 @@ def plot_ssh_capture_strip(
         )
         ax.axhline(
             median_thr_ssh, color="dimgray", ls=":", lw=0.9, alpha=0.75, zorder=1,
-            label=f"Median SSH_total q{round(opt_ssh_pct*100)} = {median_thr_ssh:.2f} m",
+            label=f"Median zos q{round(opt_ssh_pct*100)} = {median_thr_ssh:.2f} m",
         )
 
     for sector, color in SECTOR_COLORS.items():
@@ -1031,9 +1031,9 @@ def plot_ssh_capture_strip(
     ax.legend(handles=marker_handles, fontsize=8, loc="upper left", framealpha=0.85)
 
     ax.set_xlabel("Event rank (sorted by coastal sector, then date)", fontsize=11)
-    ax.set_ylabel("Peak SSH_total = zos + tide in causal window [D-2 … D+1] (m)", fontsize=11)
+    ax.set_ylabel("Peak tide-free zos in causal window [D-2 … D+1] (m)", fontsize=11)
     ax.set_title(
-        f"TC5-E2 — Peak SSH_total per event at PU-optimal pair (SSH_total q{round(opt_ssh_pct*100)})\n"
+        f"TC5-E2 — Peak tide-free zos per event at the selected pair (zos q{round(opt_ssh_pct*100)})\n"
         f"n={len(df_sort)} combined positive events  ·  H={H}  M={M}  (R_pos={H/(H+M):.2f})",
         fontsize=10, fontweight="bold",
     )
@@ -1049,11 +1049,11 @@ def plot_peak_scatter_pu(
     optimal: dict,
     output_path: Path,
 ) -> None:
-    """TC5-E3 — Peak Hₛ vs peak SSH_total scatter, coloured by coastal sector.
+    """TC5-E3 — Peak Hₛ vs peak tide-free zos scatter, coloured by coastal sector.
 
     Analogous to Step 2d's TC4-S5 plot_peak_scatter, applied to the final
-    Step 2e combined positive-event set.  Both axes use SSH_total = zos + FES tide.
-    Raises RuntimeError if SSH_total is all-NaN (eo_tides unavailable).
+    Step 2e combined positive-event set.  The y-axis is the tide-free level driver.
+    Raises RuntimeError if the level series is all-NaN.
 
     Parameters
     ----------
@@ -1099,7 +1099,7 @@ def plot_peak_scatter_pu(
     if not np.isnan(median_thr_ssh):
         ax.axhline(
             median_thr_ssh, color="dimgray", ls=":", lw=1.0, alpha=0.75, zorder=1,
-            label=f"Median SSH_total q{round(opt_ssh_pct*100)} = {median_thr_ssh:.2f} m",
+            label=f"Median zos q{round(opt_ssh_pct*100)} = {median_thr_ssh:.2f} m",
         )
 
     for sector, color in SECTOR_COLORS.items():
@@ -1142,10 +1142,10 @@ def plot_peak_scatter_pu(
     )
 
     ax.set_xlabel("Peak Hₛ in causal window [D-2 … D+1] (m)", fontsize=11)
-    ax.set_ylabel("Peak SSH_total = zos + tide in causal window [D-2 … D+1] (m)", fontsize=11)
+    ax.set_ylabel("Peak tide-free zos in causal window [D-2 … D+1] (m)", fontsize=11)
     ax.set_title(
-        f"TC5-E3 — Peak Hₛ vs SSH_total at PU-optimal pair  ·  filled = captured\n"
-        f"Hₛ q{round(opt_hs_pct*100)} / SSH_total q{round(opt_ssh_pct*100)}"
+        f"TC5-E3 — Peak Hₛ vs zos at PU-optimal pair  ·  filled = captured\n"
+        f"Hₛ q{round(opt_hs_pct*100)} / zos q{round(opt_ssh_pct*100)}"
         f"  ·  H={H}  M={M}  (R_pos={H/(H+M):.2f})",
         fontsize=10, fontweight="bold",
     )
@@ -1270,7 +1270,7 @@ def run_all_figures(
             _event_status, optimal,
             summary_dir / "fig_TC5_E1_event_capture.png",
         )
-        # TC5-E2 — peak SSH_total per event sorted by sector (SSH mandatory)
+        # TC5-E2 — peak tide-free zos per event sorted by sector
         try:
             plot_ssh_capture_strip(
                 _event_status, optimal,
@@ -1279,7 +1279,7 @@ def run_all_figures(
         except RuntimeError as e:
             log.error("TC5-E2 skipped: %s", e)
 
-        # TC5-E3 — Hs vs SSH_total scatter (analogous to TC4-S5, SSH mandatory)
+        # TC5-E3 — Hs vs zos scatter (analogous to TC4-S5, SSH mandatory)
         try:
             plot_peak_scatter_pu(
                 _event_status, optimal,
