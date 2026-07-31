@@ -7,11 +7,11 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     \includegraphics[width=\textwidth]{outputs/article_figures/supplementary_integrated_risk_zooms.png}
     \caption{Regional detail of the integrated compound coastal-risk index
     for municipalities along (a) the coast from Rio Grande do Sul to Rio de
-    Janeiro and (b) the coast from Par\'a to Piau\'i. The integrated index is
-    obtained by Min--Max normalizing to the interval [0,1] the product of the
-    Social Vulnerability Index (scaled from 0 to 1) and the normalized
-    frequency-duration-intensity Hazard Index transferred from the native
-    ocean grid. Both panels use the same discrete class
+    Janeiro, (b) Esp\'irito Santo to Natal, (c) Natal to Piau\'i, and
+    (d) Piau\'i to Par\'a. The integrated index is the geometric mean of the
+    fixed-anchor municipal Hazard Index, population exposure, and social
+    vulnerability transformed with the standard-normal CDF, without a floor
+    or final Min--Max normalization. All panels use the same discrete class
     limits and green-to-red palette as the integrated-risk panel in the main
     figure, allowing direct comparison between regions.
     Coastal municipalities from neighboring states that intersect the fixed
@@ -80,10 +80,14 @@ RISK_KEY = "Risk_Hazard"
 ARTICLE_DPI = 300
 
 SOUTH_SOUTHEAST_STATES = ("RS", "SC", "PR", "SP", "RJ")
-NORTH_NORTHEAST_STATES = ("PA", "MA", "PI")
+EAST_NORTHEAST_STATES = ("ES", "BA", "SE", "AL", "PE", "PB", "RN")
+NORTHEAST_STATES = ("RN", "CE", "PI")
+NORTH_STATES = ("PI", "MA", "PA")
 SOUTH_SOUTHEAST_EXTENT = (-54.8, -39.8, -34.5, -20.2)
-NORTH_NORTHEAST_EXTENT = (-52.8, -40.0, -4.3, 1.8)
-CONTEXT_EXTENT = (-56.0, -38.0, -35.5, 3.0)
+EAST_NORTHEAST_EXTENT = (-42.5, -34.0, -22.5, -4.5)
+NORTHEAST_EXTENT = (-42.5, -34.5, -7.5, -1.5)
+NORTH_EXTENT = (-52.8, -40.0, -4.3, 1.8)
+CONTEXT_EXTENT = (-56.0, -33.0, -35.5, 3.0)
 
 RISK_BOUNDARIES = np.array([0.0, 1e-6, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 
@@ -383,14 +387,16 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
         "source_metadata": _relative(RISK_METADATA_PATH),
         "source_scope": source_metadata.get("scope"),
         "risk_key": RISK_KEY,
-        "risk_definition": (
-            "Min-Max normalization to [0,1] of "
-            "(SVI_Coast_2022 / 100) * Hazard_Index, where Hazard_Index is "
-            "the native-grid normalized equal-weight combination of "
-            "compound-event frequency, mean overlap duration, and mean "
-            "normalized intensity"
+        "risk_definition": source_metadata.get("integrated_risk_formula", {}).get(
+            "expression",
+            "Risk_Hazard=(Hazard_Index_mun*Exposure_Index*"
+            "Vulnerability_CDF_PC1)^(1/3)",
+        ),
+        "integrated_risk_normalization": source_metadata.get(
+            "integrated_risk_normalization"
         ),
         "panels": panels,
+        "layout": {"rows": 2, "columns": 2},
         "colorbar": {
             "type": "discrete",
             "boundaries": RISK_BOUNDARIES.tolist(),
@@ -428,20 +434,33 @@ def main() -> None:
     )
     norm = BoundaryNorm(RISK_BOUNDARIES, cmap.N, clip=True)
 
-    figure = plt.figure(figsize=(13.2, 5.8), constrained_layout=False)
-    grid_spec = figure.add_gridspec(
-        1,
+    figure = plt.figure(figsize=(13.2, 11.2), constrained_layout=False)
+    outer_grid = figure.add_gridspec(
         2,
-        width_ratios=(1.0, 1.82),
+        1,
         left=0.055,
         right=0.985,
-        top=0.93,
-        bottom=0.19,
-        wspace=0.10,
+        top=0.96,
+        bottom=0.11,
+        hspace=0.12,
+    )
+    top_grid = outer_grid[0, 0].subgridspec(
+        1,
+        2,
+        width_ratios=(1.0, 0.45),
+        wspace=0.08,
+    )
+    bottom_grid = outer_grid[1, 0].subgridspec(
+        1,
+        2,
+        width_ratios=(1.0, 1.58),
+        wspace=0.08,
     )
     axes = [
-        figure.add_subplot(grid_spec[0, 0], projection=ccrs.PlateCarree()),
-        figure.add_subplot(grid_spec[0, 1], projection=ccrs.PlateCarree()),
+        figure.add_subplot(top_grid[0, 0], projection=ccrs.PlateCarree()),
+        figure.add_subplot(top_grid[0, 1], projection=ccrs.PlateCarree()),
+        figure.add_subplot(bottom_grid[0, 0], projection=ccrs.PlateCarree()),
+        figure.add_subplot(bottom_grid[0, 1], projection=ccrs.PlateCarree()),
     ]
     panels = [
         _plot_region(
@@ -459,10 +478,32 @@ def main() -> None:
             axes[1],
             municipalities,
             coastline,
-            states=NORTH_NORTHEAST_STATES,
-            extent=NORTH_NORTHEAST_EXTENT,
-            title="Pará–Piauí",
+            states=EAST_NORTHEAST_STATES,
+            extent=EAST_NORTHEAST_EXTENT,
+            title="Espírito Santo–Natal",
             panel_label="B",
+            cmap=cmap,
+            norm=norm,
+        ),
+        _plot_region(
+            axes[2],
+            municipalities,
+            coastline,
+            states=NORTHEAST_STATES,
+            extent=NORTHEAST_EXTENT,
+            title="Natal–Piauí",
+            panel_label="C",
+            cmap=cmap,
+            norm=norm,
+        ),
+        _plot_region(
+            axes[3],
+            municipalities,
+            coastline,
+            states=NORTH_STATES,
+            extent=NORTH_EXTENT,
+            title="Piauí–Pará",
+            panel_label="D",
             cmap=cmap,
             norm=norm,
         ),
@@ -470,7 +511,7 @@ def main() -> None:
 
     mappable = ScalarMappable(norm=norm, cmap=cmap)
     mappable.set_array([])
-    colorbar_axis = figure.add_axes([0.22, 0.085, 0.60, 0.035])
+    colorbar_axis = figure.add_axes([0.22, 0.045, 0.60, 0.025])
     colorbar = figure.colorbar(
         mappable,
         cax=colorbar_axis,

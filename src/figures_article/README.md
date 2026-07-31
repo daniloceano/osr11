@@ -106,7 +106,11 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
     land and a light-blue ocean.
 - `supplementary_integrated_risk_zooms.png`
   - Panel A: integrated-risk detail for RS, SC, PR, SP, and RJ.
-  - Panel B: integrated-risk detail for PA, MA, and PI.
+  - Panel B: integrated-risk detail from ES to Natal (RN).
+  - Panel C: integrated-risk detail from Natal (RN) to PI.
+  - Panel D: integrated-risk detail from PI to PA.
+  - The 2 × 2 sequence provides continuous zoom coverage of the Brazilian
+    coast, with slight overlap at the joins between regional windows.
   - Coastal municipalities from neighboring states are also colored wherever
     they intersect the fixed map extents.
   - Uses the same global 0–1 discrete limits as the integrated-risk panel in
