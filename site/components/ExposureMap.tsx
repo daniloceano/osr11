@@ -78,6 +78,12 @@ export interface ExposureMetadata {
   feature_count: number;
   map_extent: number[];
   exposure_field: string;
+  effective_population?: {
+    formula: string;
+    cumulative_band_weights: Record<string, number>;
+    equivalent_ring_weights: Record<string, number>;
+    interpretation: string;
+  };
   distance_bands_km?: number[] | null;
   attribution?: string | null;
   interpretation?: string | null;
@@ -116,6 +122,7 @@ const DETAIL_FIELDS: DetailField[] = [
   { key: 'pop_5km', label: 'Population ≤5 km', decimals: 0, shareKey: 'share_pop_5km' },
   { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0, shareKey: 'share_pop_2km' },
   { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0, shareKey: 'share_pop_1km' },
+  { key: 'pop_eff', label: 'Effective population (weighted; not literal)', decimals: 1, shareKey: 'share_pop_eff', rule: true },
   { key: 'dom_municipality', label: 'Households, whole municipality', decimals: 0, rule: true },
   { key: 'dom_10km', label: 'Households ≤10 km', decimals: 0, shareKey: 'share_dom_10km' },
   { key: 'E_inform_absolute', label: 'E — absolute half (goalposts)', decimals: 3, rule: true },
@@ -454,7 +461,7 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
                     <th className="py-2 pr-3 font-semibold">Municipality</th>
                     <th className="py-2 pr-3 font-semibold">UF</th>
                     <th className="py-2 pr-3 text-right font-semibold">{layer.short_label}</th>
-                    <th className="py-2 text-right font-semibold">Pop. ≤10 km</th>
+                    <th className="py-2 text-right font-semibold">Effective pop.</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -477,7 +484,7 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
                         {isCount ? formatCount(entry.value) : formatValue(entry.value, layer.decimals)}
                       </td>
                       <td className="py-2 text-right font-mono text-gray-500">
-                        {formatCount(numericValue(entry.feature.properties.pop_10km))}
+                        {formatValue(numericValue(entry.feature.properties.pop_eff), 1)}
                       </td>
                     </tr>
                   ))}
@@ -494,7 +501,7 @@ export default function ExposureMap({ data, metadata, basemap }: Props) {
 
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-[11px] leading-relaxed text-gray-600">
             <p>
-              <strong className="text-gray-800">The open decision.</strong>{' '}
+              <strong className="text-gray-800">Adopted criterion.</strong>{' '}
               {metadata.decision_pending}
             </p>
             <p className="mt-2">{metadata.attribution}</p>

@@ -31,7 +31,7 @@ export default function ExposurePage() {
                 IBGE Grade Estatística 2022 · 200 m urban / 1 km rural
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                INFORM recipe · adopted in the risk index
+                Cumulative bands · adopted weights 0.4 / 0.3 / 0.2 / 0.1
               </span>
             </div>
 
@@ -46,8 +46,8 @@ export default function ExposurePage() {
               index says who would cope badly with them. Neither says how many people are there.
               This page counts them, from the census grid. Neither how many people live near the
               coast nor how coastal a municipality is answers the question alone, so the adopted
-              term carries both, following the treatment INFORM gives its physical-exposure
-              indicators. The rejected alternatives stay on the map for comparison.
+              term uses an effective population built from all four cumulative distance bands.
+              Alternative normalisations stay on the map for comparison only.
             </p>
           </div>
         </div>
@@ -58,8 +58,8 @@ export default function ExposurePage() {
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <ModuleCard
                 color="#2171b5"
-                title="E — INFORM"
-                body="The adopted term: a log-scaled count between fixed goalposts, paired by geometric mean with the coastal share."
+                title="Adopted Exposure Index"
+                body="Uses pop_eff from the cumulative 1, 2, 5 and 10 km bands in both the absolute and relative components."
               />
               <ModuleCard
                 color="#d94801"
@@ -68,8 +68,8 @@ export default function ExposurePage() {
               />
               <ModuleCard
                 color="#756bb1"
-                title="Share ≤10 km"
-                body="How coastal the municipality is: the percentage of its population inside the band. The relative half of E (INFORM)."
+                title="Effective share"
+                body="pop_eff divided by municipal population; the relative half of the adopted exposure criterion."
               />
               <ModuleCard
                 color="#737373"
@@ -82,6 +82,8 @@ export default function ExposurePage() {
               <span className="font-mono">1, 2, 5, 10 km</span> and the municipality as a whole —
               each with the share of the municipal total in per cent, next to every normalised
               value, so the derived number can always be traced back to the population behind it.
+              It also shows <span className="font-mono">pop_eff</span>, which is a weighted
+              exposure proxy rather than a literal inhabitant count.
             </p>
           </div>
         </div>
@@ -116,6 +118,14 @@ export default function ExposurePage() {
                   municipality and to a distance band, which keeps the totals additive at the cost
                   of a discretisation error bounded by half a cell diagonal. Distances are measured
                   in EPSG:5880, the same metric projection the coastal hazard projection uses.
+                </p>
+                <p>
+                  <strong className="text-gray-800">Cumulative-band decision.</strong>{' '}
+                  The adopted population is <span className="font-mono">pop_eff = 0.4·pop_1km +
+                  0.3·pop_2km + 0.2·pop_5km + 0.1·pop_10km</span>. Because the bands are
+                  cumulative, the equivalent weights by ring are 1.0 at 0–1 km, 0.6 at 1–2 km,
+                  0.3 at 2–5 km and 0.1 at 5–10 km. This quantity is an effective/weighted
+                  population, not a literal number of distinct inhabitants.
                 </p>
                 <p>
                   <strong className="text-gray-800">Absolute and relative together.</strong> The
@@ -155,7 +165,7 @@ export default function ExposurePage() {
                   in the North.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Status.</strong> The exposure term is part of
+                  <strong className="text-gray-800">Status.</strong> The cumulative-band exposure term is part of
                   the published risk index, which is the geometric mean of hazard, exposure and
                   vulnerability. Results are preliminary — do not cite without consulting the
                   authors.

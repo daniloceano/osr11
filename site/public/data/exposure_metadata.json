@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-30T21:34:23.865665+00:00",
+  "generated_at": "2026-07-31T17:06:09.822145+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",
@@ -15,7 +15,23 @@
     6.5
   ],
   "basemap": "site/public/data/coastal_basemap.geojson",
-  "exposure_field": "pop_10km",
+  "exposure_field": "pop_eff",
+  "effective_population": {
+    "formula": "0.4*pop_1km + 0.3*pop_2km + 0.2*pop_5km + 0.1*pop_10km",
+    "cumulative_band_weights": {
+      "pop_1km": 0.4,
+      "pop_2km": 0.3,
+      "pop_5km": 0.2,
+      "pop_10km": 0.1
+    },
+    "equivalent_ring_weights": {
+      "0-1km": 1.0,
+      "1-2km": 0.6,
+      "2-5km": 0.3,
+      "5-10km": 0.1
+    },
+    "interpretation": "effective/weighted population, not a literal count of inhabitants"
+  },
   "distance_bands_km": [
     1.0,
     2.0,
@@ -28,12 +44,12 @@
   "available_layers": [
     {
       "key": "E_inform",
-      "label": "Exposure — INFORM recipe (recommended)",
-      "short_label": "E (INFORM)",
+      "label": "Exposure — adopted effective-population criterion",
+      "short_label": "Exposure Index",
       "unit": "0–1",
       "stage": "normalized",
       "group": "Candidate normalisations",
-      "actual_field": "derived:geomean(goalposts(log10(pop_10km), 1e2, 1e6), pop_10km/pop_municipality)",
+      "actual_field": "derived:geomean(goalposts(log10(pop_eff), 1e2, 1e6), pop_eff/pop_municipality)",
       "decimals": 3,
       "boundaries": [
         0.0,
@@ -58,13 +74,13 @@
       ],
       "palette": "risk",
       "palette_source": "green-to-red palette shared with the hazard and risk layers",
-      "description": "The count on a log scale between fixed goalposts of 100 and 1,000,000 inhabitants, combined by geometric mean with the share of the municipal population inside the band. Following INFORM: the absolute count favours the metropolitan municipalities and the share favours the small fully-coastal ones, so the indicator is computed both ways and the pair aggregated. Fixed goalposts make the scale independent of which municipalities are in the set — 0.5 always denotes 10,000 inhabitants — at the cost of saturating the six municipalities outside them.",
+      "description": "The effective/weighted population on a log scale between fixed goalposts of 100 and 1,000,000 inhabitants, combined by geometric mean with the share of the municipal population inside the band. Following INFORM: the absolute count favours the metropolitan municipalities and the share favours the small fully-coastal ones, so the indicator is computed both ways and the pair aggregated. Fixed goalposts make the scale independent of which municipalities are in the set — 0.5 always denotes 10,000 inhabitants — at the cost of saturating the six municipalities outside them.",
       "stats": {
         "count": 282,
-        "min": 0.01,
-        "max": 1.0,
-        "mean": 0.670599,
-        "median": 0.709466
+        "min": 0.0,
+        "max": 0.834946,
+        "mean": 0.43349,
+        "median": 0.448696
       }
     },
     {
@@ -74,7 +90,7 @@
       "unit": "0–1",
       "stage": "normalized",
       "group": "The two halves of E (INFORM)",
-      "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+      "actual_field": "derived:goalposts(log10(pop_eff), 1e2, 1e6)",
       "decimals": 3,
       "boundaries": [
         0.0,
@@ -104,18 +120,18 @@
         "count": 282,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.603071,
-        "median": 0.586877
+        "mean": 0.514475,
+        "median": 0.515634
       }
     },
     {
-      "key": "share_pop_10km",
-      "label": "INFORM half — share of the municipal population within 10 km",
-      "short_label": "Share ≤10 km",
+      "key": "share_pop_eff",
+      "label": "Exposure half — effective population as municipal share",
+      "short_label": "Effective share",
       "unit": "%",
       "stage": "raw",
       "group": "The two halves of E (INFORM)",
-      "actual_field": "derived:100*pop_10km/pop_municipality",
+      "actual_field": "derived:100*pop_eff/pop_municipality",
       "decimals": 1,
       "boundaries": [
         0.0,
@@ -143,10 +159,10 @@
       "description": "How coastal the municipality is, rather than how many people it holds: a hamlet entirely on the shore and a city entirely on the shore both reach 100 %. On its own it is not exposure, which is why it is paired with the absolute half. Class limits are not uniform — the median municipality is at 90 % and a quarter above 99.8 %, so even classes would collapse the top of the scale.",
       "stats": {
         "count": 282,
-        "min": 0.010873,
-        "max": 100.0,
-        "mean": 77.377893,
-        "median": 89.919035
+        "min": 0.001087,
+        "max": 97.984196,
+        "mean": 39.906747,
+        "median": 37.348451
       }
     },
     {
@@ -156,7 +172,7 @@
       "unit": "0–1",
       "stage": "normalized",
       "group": "Candidate normalisations",
-      "actual_field": "derived:minmax(log10(pop_10km+1))",
+      "actual_field": "derived:minmax(log10(pop_eff+1))",
       "decimals": 3,
       "boundaries": [
         0.0,
@@ -186,8 +202,8 @@
         "count": 282,
         "min": 0.0,
         "max": 1.0,
-        "mean": 0.625015,
-        "median": 0.614028
+        "mean": 0.651224,
+        "median": 0.653271
       }
     },
     {
@@ -197,7 +213,7 @@
       "unit": "0–1",
       "stage": "normalized",
       "group": "Candidate normalisations",
-      "actual_field": "derived:rank(pop_10km, pct=True)",
+      "actual_field": "derived:rank(pop_eff, pct=True)",
       "decimals": 3,
       "boundaries": [
         0.0,
@@ -232,13 +248,13 @@
       }
     },
     {
-      "key": "pop_10km",
-      "label": "Resident population within 10 km of the coastline",
-      "short_label": "Population ≤10 km",
-      "unit": "inhabitants",
+      "key": "pop_eff",
+      "label": "Effective population from cumulative distance bands",
+      "short_label": "Effective population",
+      "unit": "weighted inhabitants",
       "stage": "raw",
       "group": "Raw counts",
-      "actual_field": "pop_10km",
+      "actual_field": "pop_eff",
       "decimals": 0,
       "boundaries": [
         0.0,
@@ -249,29 +265,27 @@
         150000.0,
         400000.0,
         1000000.0,
-        3000000.0,
-        9000000.0
+        3000000.0
       ],
       "colors": [
         "#fde7a9",
-        "#feb67c",
-        "#fb8560",
-        "#ea5661",
-        "#c43c75",
-        "#992d80",
-        "#6e1e81",
-        "#451077",
+        "#feae77",
+        "#f8765c",
+        "#dc4869",
+        "#ab337c",
+        "#7b2382",
+        "#4c117a",
         "#1a1042"
       ],
       "palette": "component",
       "palette_source": "magma ramp shared with the hazard components",
-      "description": "The count itself, from the IBGE Grade Estatistica 2022 (200 m urban / 1 km rural cells), attributed by cell centroid. Class limits are log-spaced: equal-width classes would place almost every municipality in the first one.",
+      "description": "Weighted exposure proxy, not a literal inhabitant count: 0.4×pop_1km + 0.3×pop_2km + 0.2×pop_5km + 0.1×pop_10km. Source counts come from the IBGE Grade Estatistica 2022 (200 m urban / 1 km rural cells), attributed by cell centroid. Class limits are log-spaced: equal-width classes would place almost every municipality in the first one.",
       "stats": {
         "count": 282,
-        "min": 4.0,
-        "max": 4374900.0,
-        "mean": 109317.861702,
-        "median": 22259.5
+        "min": 0.4,
+        "max": 1384424.0,
+        "mean": 46910.563475,
+        "median": 11549.4
       }
     },
     {
@@ -463,17 +477,17 @@
     },
     "E_inform": {
       "count": 282,
-      "min": 0.01,
-      "max": 1.0,
-      "mean": 0.670599,
-      "median": 0.709466
+      "min": 0.0,
+      "max": 0.834946,
+      "mean": 0.43349,
+      "median": 0.448696
     },
     "E_log10": {
       "count": 282,
       "min": 0.0,
       "max": 1.0,
-      "mean": 0.625015,
-      "median": 0.614028
+      "mean": 0.651224,
+      "median": 0.653271
     },
     "E_rank": {
       "count": 282,
@@ -486,24 +500,38 @@
       "count": 282,
       "min": 0.0,
       "max": 1.0,
-      "mean": 0.024987,
-      "median": 0.005087
+      "mean": 0.033884,
+      "median": 0.008342
     },
     "E_inform_absolute": {
       "count": 282,
       "min": 0.0,
       "max": 1.0,
-      "mean": 0.603071,
-      "median": 0.586877
+      "mean": 0.514475,
+      "median": 0.515634
     },
     "E_inform_relative": {
       "count": 282,
-      "min": 0.000109,
-      "max": 1.0,
-      "mean": 0.773779,
-      "median": 0.899191
+      "min": 1.1e-05,
+      "max": 0.979842,
+      "mean": 0.399067,
+      "median": 0.373484
+    },
+    "pop_eff": {
+      "count": 282,
+      "min": 0.4,
+      "max": 1384424.0,
+      "mean": 46910.563475,
+      "median": 11549.4
+    },
+    "share_pop_eff": {
+      "count": 282,
+      "min": 0.001087,
+      "max": 97.984196,
+      "mean": 39.906747,
+      "median": 37.348451
     }
   },
-  "decision_pending": "Which normalisation enters the published risk index is not decided. E_log10 leaves the exposure term present but inert (Spearman -0.04 against the integrated risk); E_rank makes it the driver (+0.59) but neutralises social vulnerability (-0.02). The Min--Max of the raw count is retained as E_linear for inspection only: it puts 89% of the municipalities below 0.05.",
+  "decision_pending": "The adopted criterion uses pop_eff from all four cumulative bands. Alternative log/rank/linear layers remain comparison diagnostics only.",
   "caveat": "Proximity, not modelled inundation: no water level is propagated over land anywhere in this workflow. Resident (de jure) population on 2022-07-31; the seasonal population of the resort municipalities is not represented."
 }

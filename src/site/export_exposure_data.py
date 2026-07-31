@@ -44,9 +44,11 @@ import pandas as pd
 
 from src.risk_integration.coastal_projection import COASTAL_MAP_EXTENT
 from src.risk_integration.exposure_index import (
+    EFFECTIVE_POPULATION_WEIGHTS,
     GOALPOST_MAX_INHABITANTS,
     GOALPOST_MIN_INHABITANTS,
     all_variants,
+    effective_population,
     variant_components,
 )
 from src.risk_integration.palettes import component_colors, risk_colors
@@ -62,7 +64,7 @@ OUTPUT_GEOJSON = SITE_DATA_DIR / "exposure_municipalities.geojson"
 OUTPUT_METADATA = SITE_DATA_DIR / "exposure_metadata.json"
 
 OUTPUT_CRS = "EPSG:4326"
-EXPOSURE_FIELD = "pop_10km"
+EXPOSURE_FIELD = "pop_eff"
 NORMALIZED_BOUNDARIES = [round(value, 3) for value in np.linspace(0.0, 1.0, 9)]
 #: Class limits for the coastal share, in per cent. Deliberately not uniform:
 #: the median municipality has 90 % of its people inside the band and a quarter
@@ -134,6 +136,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         how="left",
         validate="one_to_one",
     )
+    merged[EXPOSURE_FIELD] = effective_population(merged)
     missing = int(merged[EXPOSURE_FIELD].isna().sum())
     if missing:
         raise ValueError(
@@ -149,6 +152,9 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
     }
     for name, values in derived.items():
         merged[name] = values
+    merged["share_pop_eff"] = (
+        population / municipal_population.replace(0, np.nan) * 100.0
+    ).fillna(0.0).clip(0.0, 100.0)
 
     # The coastal share in its readable unit. ``E_inform_relative`` is the same
     # quantity as a fraction, which is what the formula consumes; these are for
@@ -176,20 +182,22 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         *count_fields,
         *share_fields,
         *derived,
+        "pop_eff",
+        "share_pop_eff",
     ):
         export[column] = merged[column].map(_to_jsonable)
 
     layers: list[dict[str, Any]] = [
         {
             "key": "E_inform",
-            "label": "Exposure — INFORM recipe (recommended)",
-            "short_label": "E (INFORM)",
+            "label": "Exposure — adopted effective-population criterion",
+            "short_label": "Exposure Index",
             "unit": "0–1",
             "stage": "normalized",
             "group": "Candidate normalisations",
             "actual_field": (
-                "derived:geomean(goalposts(log10(pop_10km), 1e2, 1e6), "
-                "pop_10km/pop_municipality)"
+                "derived:geomean(goalposts(log10(pop_eff), 1e2, 1e6), "
+                "pop_eff/pop_municipality)"
             ),
             "decimals": 3,
             "boundaries": NORMALIZED_BOUNDARIES,
@@ -197,7 +205,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "palette": "risk",
             "palette_source": "green-to-red palette shared with the hazard and risk layers",
             "description": (
-                "The count on a log scale between fixed goalposts of "
+                "The effective/weighted population on a log scale between fixed goalposts of "
                 f"{GOALPOST_MIN_INHABITANTS:,.0f} and {GOALPOST_MAX_INHABITANTS:,.0f} "
                 "inhabitants, combined by geometric mean with the share of the "
                 "municipal population inside the band. Following INFORM: the "
@@ -217,7 +225,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "unit": "0–1",
             "stage": "normalized",
             "group": "The two halves of E (INFORM)",
-            "actual_field": "derived:goalposts(log10(pop_10km), 1e2, 1e6)",
+            "actual_field": "derived:goalposts(log10(pop_eff), 1e2, 1e6)",
             "decimals": 3,
             "boundaries": NORMALIZED_BOUNDARIES,
             "colors": risk_colors(8),
@@ -233,13 +241,13 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "stats": _numeric_stats(export["E_inform_absolute"]),
         },
         {
-            "key": "share_pop_10km",
-            "label": "INFORM half — share of the municipal population within 10 km",
-            "short_label": "Share ≤10 km",
+            "key": "share_pop_eff",
+            "label": "Exposure half — effective population as municipal share",
+            "short_label": "Effective share",
             "unit": "%",
             "stage": "raw",
             "group": "The two halves of E (INFORM)",
-            "actual_field": "derived:100*pop_10km/pop_municipality",
+            "actual_field": "derived:100*pop_eff/pop_municipality",
             "decimals": 1,
             "boundaries": SHARE_BOUNDARIES,
             "colors": component_colors(len(SHARE_BOUNDARIES) - 1),
@@ -253,7 +261,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "uniform — the median municipality is at 90 % and a quarter above "
                 "99.8 %, so even classes would collapse the top of the scale."
             ),
-            "stats": _numeric_stats(export["share_pop_10km"]),
+            "stats": _numeric_stats(export["share_pop_eff"]),
         },
         {
             "key": "E_log10",
@@ -262,7 +270,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "unit": "0–1",
             "stage": "normalized",
             "group": "Candidate normalisations",
-            "actual_field": "derived:minmax(log10(pop_10km+1))",
+            "actual_field": "derived:minmax(log10(pop_eff+1))",
             "decimals": 3,
             "boundaries": NORMALIZED_BOUNDARIES,
             "colors": risk_colors(8),
@@ -284,7 +292,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "unit": "0–1",
             "stage": "normalized",
             "group": "Candidate normalisations",
-            "actual_field": "derived:rank(pop_10km, pct=True)",
+            "actual_field": "derived:rank(pop_eff, pct=True)",
             "decimals": 3,
             "boundaries": NORMALIZED_BOUNDARIES,
             "colors": risk_colors(8),
@@ -300,9 +308,9 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         },
         {
             "key": EXPOSURE_FIELD,
-            "label": "Resident population within 10 km of the coastline",
-            "short_label": "Population ≤10 km",
-            "unit": "inhabitants",
+            "label": "Effective population from cumulative distance bands",
+            "short_label": "Effective population",
+            "unit": "weighted inhabitants",
             "stage": "raw",
             "group": "Raw counts",
             "actual_field": EXPOSURE_FIELD,
@@ -312,7 +320,9 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "palette": "component",
             "palette_source": "magma ramp shared with the hazard components",
             "description": (
-                "The count itself, from the IBGE Grade Estatistica 2022 (200 m urban "
+                "Weighted exposure proxy, not a literal inhabitant count: 0.4×pop_1km + "
+                "0.3×pop_2km + 0.2×pop_5km + 0.1×pop_10km. Source counts come from "
+                "the IBGE Grade Estatistica 2022 (200 m urban "
                 "/ 1 km rural cells), attributed by cell centroid. Class limits are "
                 "log-spaced: equal-width classes would place almost every "
                 "municipality in the first one."
@@ -359,6 +369,12 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         "map_extent": list(COASTAL_MAP_EXTENT),
         "basemap": "site/public/data/coastal_basemap.geojson",
         "exposure_field": EXPOSURE_FIELD,
+        "effective_population": {
+            "formula": "0.4*pop_1km + 0.3*pop_2km + 0.2*pop_5km + 0.1*pop_10km",
+            "cumulative_band_weights": EFFECTIVE_POPULATION_WEIGHTS,
+            "equivalent_ring_weights": {"0-1km": 1.0, "1-2km": 0.6, "2-5km": 0.3, "5-10km": 0.1},
+            "interpretation": "effective/weighted population, not a literal count of inhabitants",
+        },
         "distance_bands_km": upstream.get("distance_bands_km"),
         "attribution": upstream.get("attribution"),
         "interpretation": upstream.get("interpretation"),
@@ -375,15 +391,11 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         },
         "numeric_stats": {
             field: _numeric_stats(export[field])
-            for field in (*count_fields, *share_fields, *derived)
+            for field in (*count_fields, *share_fields, *derived, "pop_eff", "share_pop_eff")
         },
         "decision_pending": (
-            "Which normalisation enters the published risk index is not decided. "
-            "E_log10 leaves the exposure term present but inert (Spearman -0.04 "
-            "against the integrated risk); E_rank makes it the driver (+0.59) but "
-            "neutralises social vulnerability (-0.02). The Min--Max of the raw "
-            "count is retained as E_linear for inspection only: it puts 89% of the "
-            "municipalities below 0.05."
+            "The adopted criterion uses pop_eff from all four cumulative bands. "
+            "Alternative log/rank/linear layers remain comparison diagnostics only."
         ),
         "caveat": (
             "Proximity, not modelled inundation: no water level is propagated over "
