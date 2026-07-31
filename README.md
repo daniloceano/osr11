@@ -227,6 +227,21 @@ The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos −
 > variants. Per-sector and per-state tables are supplementary material
 > (`outputs/audit/AUD-02_threshold_exposure/`).
 
+> **Detector performance against reported events, and how to read it (AUD-18).**
+> On the calibrated pair q70/q99 the detector captures **R_pos = 0.19** of the
+> 147 reported municipality×date pairs (H = 28, M = 119, U = 831,
+> `outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv`), up from
+> **R_pos = 0.10** on the superseded q90/q90 pair. The Step 2d diagnostic on that
+> earlier pair recorded **FAR = 0.984** and CSI = 0.015. Neither number should be
+> read as accuracy. The positive-unlabeled framing exists precisely because the
+> "negatives" are **unlabelled, not negative**: a detection with no matching
+> record may be a real event that was never reported, and the SC databases are
+> acknowledged by their own authors to under-report. A recall of 0.19 against an
+> incomplete reference is a lower bound on true recall, and a false-alarm rate
+> computed against that same reference is not interpretable as a false-alarm rate
+> at all. This is also why the disaster records support calibration only and are
+> not used as a downstream validation product.
+
 **Theoretical basis:** Positive-unlabeled learning framework (Bekker and Davis, 2020); impact observation bias (Wyatt et al., 2023; Delforge et al., 2025).
 
 **Status:** ✅ Complete  
@@ -817,7 +832,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The nine paragraphs below are written to be transferable, essentially as they
+The ten paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -1066,6 +1081,40 @@ named at the end of each paragraph.
   their meaning across regenerations, whereas Jenks would move them at every
   regeneration and has no preferred class count.
   *(`src/exploratory/audit_AUD_16_hotspot_definition.py`)*
+
+- **Calibrated in one state, applied to twenty-seven degrees of latitude
+  (AUD-18).** Every positive event used to calibrate the detection thresholds
+  comes from **Santa Catarina**: 91 records from the state Civil Defense database
+  (Leal et al., 2024) plus 56 curated from news archives, theses and technical
+  reports, giving 147 unique municipality×date pairs across 27 municipalities.
+  The selected pair is then applied unchanged from 35°S to 7°N. The **transfer
+  assumption** is that a local percentile is portable even when its absolute value
+  and its physical meaning are not — which is the point of using percentiles, and
+  also the reason the detected quantity is a local exceedance rather than an
+  absolute extreme. The assumption is not testable outside Santa Catarina with the
+  data held here. A documented reconnaissance for a comparable reference in the
+  North and Northeast returned a qualified negative: what exists is **not
+  equivalent, but the gap is not irremediable either**. The national compilation
+  *Panorama da Erosão Costeira no Brasil* (Muehe, org., MMA, 2018) covers every
+  coastal state chapter by chapter, but it diagnoses **where** the shoreline is
+  retreating, not **when** events occurred, so it cannot validate a dated event
+  detector; it can support qualitative sanity checks only. The federal S2ID and
+  its Atlas Digital do carry dates, but they are declaration-driven and are
+  acknowledged in this repository as systematically under-reported, which is why
+  they were excluded from downstream validation in the first place. At least one
+  dated regional analysis exists for a single Northeastern city — storm-surge
+  events at Fortaleza/CE (Paula, Morais, Ferreira & Dias, 2015) — but a single
+  municipality cannot calibrate a coastline. The GLOSS-Brasil network operated
+  through the Navy's CHM and the IBGE RMPG provide observed sea level at Northern
+  and Northeastern stations, which would validate the **level** component
+  directly; no tide-gauge comparison has been performed in this cycle, and it
+  remains the single most tractable validation step available. The consequence to
+  declare is therefore narrower than "no validation is possible": the detector is
+  **empirically anchored only in the South/Southeast**, its behaviour elsewhere is
+  an extrapolation whose physical meaning changes with the surge-to-tide ratio
+  (which spans two orders of magnitude across the domain), and the sources that
+  could partially test it have been identified but not yet used.
+  *(reconnaissance recorded in `docs/scientific_audit/issues/AUD-18_independent_validation_gap.md` §3-bis)*
 
 ### Current Implementation Status
 

@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 2 de 18 (AUD-05, AUD-18) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 11 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-16) · **arquivadas:** 0
+**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 12 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-16, AUD-18) · **arquivadas:** 0
 
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
@@ -309,6 +309,46 @@
 > levada às figuras nem ao site como camada — continua sendo texto, não símbolo
 > no mapa.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-18 fechada; resta **uma** questão aberta
+>
+> **AUD-18 fechada** como `limitacao-reconhecida`. Nenhuma alteração de método,
+> de escopo geográfico ou de valor publicado. Nenhum script novo — a questão não
+> tem cálculo, e emitir tabela fixa por script daria aparência de diagnóstico a
+> um levantamento bibliográfico.
+>
+> - **Dois números do registro caducaram.** `R_pos` = 0,102 é do par q90/q90
+>   superseded; no par vigente **q70/q99** vale **0,1905** (H = 28, M = 119,
+>   U = 831) — o detector quase dobrou o recall em SC. E o "ótimo de borda" da
+>   §3.3 **já foi testado** em 2026-07-30: a grade foi a q95/q99 e o ótimo migrou,
+>   mas pelo eixo do **nível**, não pelo da onda.
+> - **A busca por base regional no N/NE dá negativo qualificado.** Não existe
+>   equivalente aos 147 pares município×data de SC, logo **recalibração regional
+>   continua impossível**. Mas três fontes servem parcialmente e ficam nomeadas:
+>   *Panorama da Erosão Costeira no Brasil* (Muehe, org., MMA, 2018), com capítulo
+>   por estado, que diz **onde** a costa recua e não **quando** houve evento;
+>   a análise datada de ressacas em Fortaleza/CE (Paula et al., 2015), que cobre
+>   **um** município; e as redes maregráficas **GLOSS-Brasil** (CHM/Marinha) e
+>   **RMPG** (IBGE), com estações no N/NE, que validariam a **componente de
+>   nível** e **nunca foram usadas**.
+> - **A distinção que o manuscrito precisa fazer**: "não dá para recalibrar fora
+>   de SC" é verdade; "não dá para verificar nada" seria falso e mais cômodo. A
+>   comparação com marégrafos é tratável hoje, com dado público, e fecharia também
+>   a lacuna de AUD-03.
+> - **O domínio de validade não é recorte geográfico.** AUD-01 caracterizou a
+>   partição por razão surge/maré (bimodal, antimodo em 0,257, intervalo 32× o
+>   típico) e **deliberadamente não a aplicou**, porque o portão HAT elimina a
+>   patologia por construção. O que se declara, portanto, é que **o mesmo detector
+>   significa físicas diferentes ao longo da costa**, com a razão variando por
+>   quase duas ordens de grandeza.
+>
+> **Ressalva registrada:** o reconhecimento **não é exaustivo** e o conteúdo das
+> fontes **não foi verificado** — apenas existência, escopo e natureza. Registros
+> de capitania e de autoridade portuária não foram procurados.
+>
+> **Resta uma única questão aberta: AUD-05**, a suíte de casos conhecidos, que é
+> terminal e depende de sete questões — todas hoje resolvidas ou em investigação
+> com decisão tomada.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -319,10 +359,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
-| **P1 — resolver ou justificar** | 9 | 1 | 4 | 0 | **4** |
+| **P1 — resolver ou justificar** | 9 | 0 | 4 | 0 | **5** |
 | **P2 — recomendado** | 3 | 0 | 1 | 0 | **2** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **2** | **5** | **0** | **11** |
+| **Total** | **18** | **1** | **5** | **0** | **12** |
 
 ---
 
@@ -347,7 +387,7 @@ ver [`README.md`](README.md).
 | **AUD-15** | Cobertura amostral: 2 ausentes, 4 degenerados, **83 sem perigo aceito** | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `em-investigacao` | — | 04 | [AUD-15](issues/AUD-15_sample_coverage.md) |
 | **AUD-16** | **Não existem hotspots discretos** (Silverman p = 0,56 nos positivos); definição adotada é por intervalo de posto | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `resolvido` | `resultado-validado-mantido` | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
 | **AUD-17** | Quatorze inconsistências documentação ↔ código ↔ saídas (8 originais + 6 de 2026-07-31) | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim, salvo correção | `em-investigacao` | — | 09, 12 | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
-| **AUD-18** | Lacuna de validação independente fora de SC; limiares extrapolados | lacuna-validacao | transversal | 2d/2e → 3 → 4 | dados, interp., doc. | P1 | Sim, salvo declaração | `aberto` | — | — | [AUD-18](issues/AUD-18_independent_validation_gap.md) |
+| **AUD-18** | Calibração é 100 % catarinense; busca por base no N/NE dá **negativo qualificado** — não é irremediável, é não explorada | lacuna-validacao | transversal | 2d/2e → 3 → 4 | dados, interp., doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `limitacao-reconhecida` | — | [AUD-18](issues/AUD-18_independent_validation_gap.md) |
 
 ---
 
