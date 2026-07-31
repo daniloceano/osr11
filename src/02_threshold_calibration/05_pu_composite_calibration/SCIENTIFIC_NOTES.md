@@ -482,3 +482,161 @@ Wyatt, F. R., Lusk, B., Robbins, J. C., et al. (2023). Investigating bias in imp
 observation sources and implications for impact-based forecast evaluation. *International
 Journal of Disaster Risk Reduction*, 90, 103639.
 https://doi.org/10.1016/j.ijdrr.2023.103639
+
+---
+
+## 2026-07-30 — Recalibração sobre o detector de produção
+
+### O que mudou, e por quê
+
+Até esta data o Step 2e pontuava pares de limiar contra
+`SSH_total = zos + maré`. O método de produção abandonou essa variável em
+2026-07-29, quando a maré passou de forçante a variável condicionante, e sob o
+portão HAT adotado em 2026-07-30 não a lê de forma alguma. **Calibrar sobre uma
+variável que o detector não lê é inconsistência científica**, e estava
+registrada como incerteza remanescente no fechamento de AUD-01 de 2026-07-29.
+
+O detector pontuado passa a ser exatamente o de produção:
+
+$$
+\text{onda: } H_s(d) \ge q_{hs}^{\,\text{local}}
+\qquad
+\text{nível: } \eta(d) \ge q_{zos}^{\,\text{local}}
+$$
+
+$$
+\text{portão: } \max_{d \in \mathcal{O}} \mathrm{SWL}(d) > \mathrm{HAT}
+\qquad
+\mathrm{SWL}(d) = \bigl(\eta(d) - \overline{\eta}\bigr) + \tau_{\max}(d)
+$$
+
+com $\eta$ = `zos` do GLORYS12 (livre de maré), $\tau_{\max}$ = máximo diário
+da maré FES2022, $\overline{\eta}$ = média local de `zos` sobre 1993–2025,
+$\mathcal{O}$ = dias de sobreposição do evento, e
+
+$$
+\mathrm{HAT} = \max_{1993 \le t \le 2025} \tau_{\max}(t)
+$$
+
+por ponto de grade. A de-mediação de $\eta$ é necessária porque `zos` é
+referenciado ao geoide e HAT ao nível médio local.
+
+**Um detector, duas camadas.** As Layers 1 e 2 passam a chamar a mesma função de
+detecção, de modo que um acerto e um episódio não casado são o mesmo objeto
+visto dos dois lados da relação de casamento. Sem portão as duas formulações
+coincidem — um episódio intersecta a janela causal exatamente quando um de seus
+dias compostos o faz —, portanto é generalização estrita, não troca de critério.
+
+**Pressupostos preservados.** Percentis, média local de `zos` e HAT vêm do
+registro **completo** 1993–2025; a varredura de acerto/erro continua restrita ao
+período validado pelas bases de eventos (1998–2020). Janela causal
+$[D-2, D-1, D, D+1]$ inalterada.
+
+### Grade estendida
+
+A grade passou de 9 níveis (q50–q90, passo 0,05; 81 pares) para **11 níveis
+explícitos** — q50 a q90 em passo 0,05, mais **q95 e q99** — totalizando **121
+pares**. AUD-02 §4 registrava que o ótimo estava na **borda** da grade, "um
+sinal de que o ótimo pode estar fora dela". Estender testou isso diretamente.
+
+### Achado: o score composto não tinha ótimo interior
+
+Sob o detector correto e a grade estendida,
+
+$$
+\rho_{\text{Spearman}}\bigl(\text{Score},\; n_{\text{episódios aceitos}}\bigr) = -0{,}999
+$$
+
+O score era uma **preferência monótona por detectar menos**. Seu ótimo era
+q99/q99, com 40 episódios aceitos em Santa Catarina contra 147 eventos
+positivos e recall 0,034 — *menor* que o do q90/q90 (0,190). O termo dominante
+era $-w_3 F_{\text{soft}}/P$, que atingia $-29{,}4$ contra um máximo de $+0{,}60$
+do termo de recall. O q90/q90 só parecia ótimo porque a grade parava nele.
+
+### Três correções de critério, autorizadas explicitamente
+
+**(1) Carga bilateral.** O termo de carga era um teto unilateral,
+
+$$
+B_{\text{antigo}}(\theta) = \min\!\left(1,\ \frac{H+U}{Y \cdot B_{\text{alvo}} \cdot N_{\text{mun}}}\right)
+$$
+
+minimizado em **zero** detecções, logo empurrando na mesma direção da penalidade
+branda. Aumentar $w_2$ fortalecia a atração para o vazio: varrer $w_2$ de 0,20 a
+0,69 **não movia o ótimo**. A forma nova é um desvio simétrico de uma taxa
+esperada:
+
+$$
+r(\theta) = \frac{H(\theta) + U(\theta)}{Y \cdot N_{\text{mun}}}
+\qquad
+B(\theta) = \min\!\left(1,\ \left|\log_{10} \frac{r(\theta)}{r^{*}}\right|\right)
+$$
+
+Detectar metade da taxa esperada custa o mesmo que detectar o dobro, e o teto em
+1 mantém o termo em $[0,1]$ como os outros dois, tornando $w_1+w_2+w_3=1$
+interpretável.
+
+**(2) Pesos** $0{,}60/0{,}20/0{,}20 \rightarrow 0{,}30/0{,}60/0{,}10$, para que o
+único termo ancorado em observação carregue a decisão.
+
+**(3) Alphas** $0{,}60/0{,}30/0{,}10 \rightarrow 0{,}20/0{,}50/0{,}30$. Medido
+sobre a varredura: $E_i = 1$ em **154 de 436 352** episódios (**0,04 %**). Com
+$\alpha_E = 0{,}60$, o peso de confiança ficava limitado a
+$q_i \le 0{,}40$ **por construção** em 99,96 % dos casos. Isso não media
+implausibilidade: media a escassez do registro documental, e contradizia a
+premissa do próprio arcabouço PU. O peso migrou para os dois termos que não
+dependem do registro. $\overline{q_i}$ sobe de 0,276 para 0,543.
+
+### Ancoragem da taxa esperada
+
+Leal et al. (2024) registram 72 desastres costeiros declarados distintos em
+Santa Catarina entre 1998 e 2023, isto é **2,77 eventos/ano** para a costa
+inteira. Com a base documentária expandida, o conjunto positivo tem 147 pares
+(município, data) em 22,4 anos e 27 municípios:
+
+$$
+r_{\text{reportada}} = \frac{147}{22{,}4 \times 27} = 0{,}243 \ \text{detecções município}^{-1}\,\text{ano}^{-1}
+$$
+
+**Isto é piso, não expectativa.** A subnotificação é a premissa do arcabouço PU,
+e AUD-18 registra que não existe base independente para medi-la. O alvo adotado,
+$r^{*} = 2{,}0$, **assume subnotificação de ~8×** — uma hipótese declarada, com
+sensibilidade de 0,5 a 6,0 anexa.
+
+**[INCERTO]** O fator de subnotificação não é medido em lugar nenhum deste
+trabalho. A seleção é estável em q70/q99 para $r^{*} \ge 2{,}0$; em
+$r^{*} = 1{,}0$ move para q85/q99 e em $r^{*} = 0{,}5$ para q95/q99.
+
+### Par selecionado e sua comparação
+
+**q70/q99.** Contra o q90/q90 superado, **sob o mesmo detector**: recall idêntico
+($H = 28$ de 147), $B$ 0,148 contra 0,268, $F_{\text{soft}}$ 420,4 contra
+1 142,0, Score $-0{,}318$ contra $-0{,}881$, episódios aceitos 484 contra 1 224,
+taxa 1,42 contra 3,71 detecções/município/ano para um alvo de 2,0.
+
+**O par novo não vence por detectar menos eventos reportados — vence por
+detectar 62 % menos ruído com o mesmo recall.**
+
+### Robustez e o eixo mal determinado
+
+$q_{zos} = q99$ é selecionado em **14 de 14** variantes de sensibilidade. O
+percentil de **onda** é o eixo mal determinado: q70 em 8 variantes, q50 em 2,
+q85 em 2, q95 em 1, q99 em 1; os seis melhores pares diferem em menos de 1 % no
+score e cobrem de q50 a q80.
+
+**Consequência para AUD-02:** o score composto **não tem informação** para
+escolher o limiar de onda, e o valor que devolve (q70) *rebaixa* o piso de
+`thr_hs` — mínimo de 0,20 m para 0,14 m nos 808 pontos, e de 129 para 256 pontos
+abaixo de 1,5 m. Se um piso físico absoluto for adotado, terá de vir de fora
+desta calibração.
+
+### Caveats
+
+1. **[PRELIMINAR]** O alvo de taxa é hipótese, não medida; ver acima.
+2. A mudança de critério de pontuação foi autorizada caso a caso e está
+   registrada em AUD-01 §14 e em `config/PARAMETER_DECISIONS.md`. Não é uma
+   escolha derivada dos dados.
+3. A calibração continua feita **exclusivamente com eventos de Santa Catarina**
+   e aplicada a 27° de latitude (AUD-18, não resolvida).
+4. As colunas `thr_ssh_pct` e `ssh_peak` mantêm os nomes antigos por
+   compatibilidade, mas carregam o percentil e o pico de `zos`.

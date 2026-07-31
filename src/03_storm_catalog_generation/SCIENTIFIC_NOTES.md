@@ -970,3 +970,133 @@ duration raises that share to 90 %.
 - Wahl, T., Jain, S., Bender, J., Meyers, S. D., & Luther, M. E. (2015). Increasing risk of compound flooding from storm surge and rainfall for major US cities. *Nature Climate Change*, 5, 1093–1097. https://doi.org/10.1038/nclimate2736
 - Yue, S., Pilon, P., Phinney, B., & Cavadias, G. (2002). The influence of autocorrelation on the ability to detect trend in hydrological series. *Hydrological Processes*, 16(9), 1807–1829.
 - Zscheischler, J., et al. (2020). A typology of compound weather and climate events. *Nature Reviews Earth & Environment*, 1, 333–347. https://doi.org/10.1038/s43017-020-0060-z
+
+---
+
+## 2026-07-30 — Portão e datum em HAT, e o par recalibrado
+
+### Definição vigente
+
+O detector composto passa a usar o **HAT como portão de nível e como datum da
+severidade**, os dois no mesmo nível. Substitui o MHWS, vigente entre
+2026-07-29 e 2026-07-30, cujos produtos estão preservados em
+`outputs/legacy_mhws_method/`.
+
+$$
+\text{onda: } H_s(d) \ge q_{70}^{\,\text{local}}
+\qquad
+\text{nível: } \eta(d) \ge q_{99}^{\,\text{local}}
+$$
+
+$$
+\mathrm{SWL}(d) = \bigl(\eta(d) - \overline{\eta}\bigr) + \tau_{\max}(d)
+\qquad
+\mathrm{HAT} = \max_{1993 \le t \le 2025} \tau_{\max}(t)
+$$
+
+Um evento composto é um episódio de onda e um episódio de nível que
+compartilham ao menos um dia de excedência (agrupamento por componentes conexas,
+gap $\le 1$ dia), **condicionado a**
+
+$$
+\max_{d \in \mathcal{O}} \mathrm{SWL}(d) > \mathrm{HAT}
+$$
+
+onde $\mathcal{O}$ é o conjunto de dias de sobreposição. A severidade integrada
+soma, sobre os dias de critério pleno,
+
+$$
+S = \sum_{d \in \mathcal{F}} \tfrac{1}{2}\left[
+  \mathcal{N}\bigl(H_s(d) - \mathrm{thr}_{hs}\bigr) +
+  \mathcal{N}\bigl(\mathrm{SWL}(d) - \mathrm{HAT}\bigr)
+\right]
+$$
+
+com $\mathcal{N}$ reescalando pelos percentis Q05/Q95 do excesso agrupados no
+domínio inteiro, **recalculados dentro deste braço**.
+
+### Por que HAT, e por que portão e datum no mesmo nível
+
+O portão MHWS mostrou-se pouco informativo em toda a costa: a maré astronômica
+sozinha já o cruzaria em 73,0 % dos eventos ao norte de 15°S e em 79,6 % ao sul
+de 25°S. Pior, o **conteúdo físico da severidade variava com a latitude** — 56 %
+do excesso de nível no Amapá era astronômico, contra 26 % no Rio Grande do Sul —
+de modo que um mesmo valor do índice significava astronomia no Norte e
+sobrelevação no Sudeste.
+
+Como $\tau \le \mathrm{HAT}$ por definição, o termo astronômico do excesso
+
+$$
+\mathrm{SWL} - \mathrm{HAT} = \underbrace{(\eta - \overline{\eta})}_{\text{meteorológico}} + \underbrace{(\tau_{\max} - \mathrm{HAT})}_{\le\, 0}
+$$
+
+é sempre não positivo, e a severidade fica sendo a sobrelevação descontada do
+déficit de maré.
+
+**Portão e datum não podem divergir.** O híbrido portão-HAT com datum-MHWS foi
+avaliado e é indefensável: a constante herdada $\mathrm{HAT} - \mathrm{MHWS}$
+responderia por 94–99 % do excesso no Norte, tornando a severidade um número
+fixado pela estrutura harmônica local. O excesso só tem interpretação como
+distância da condição que define o evento.
+
+### Par de limiares
+
+**q70 (onda) / q99 (nível)**, recalibrado no Step 2e de 2026-07-30 sobre este
+mesmo detector — ver `src/02_threshold_calibration/05_pu_composite_calibration/SCIENTIFIC_NOTES.md`.
+O par anterior, q90/q90, fora otimizado sobre `SSH_total`, variável que este
+método não lê.
+
+### Pressupostos
+
+1. **HAT como estatística de ordem extrema.** É o máximo de uma amostra de 33
+   anos, dependente do comprimento e da janela do registro, ao contrário de
+   $A_{M2} + A_{S2}$, que é analítico. **[INCERTO]** O conjunto de eventos passa
+   a depender de 1993–2025 e não é transferível diretamente a projeções. 33 anos
+   cobrem o ciclo nodal de 18,6 anos, o que limita mas não elimina o problema.
+2. **Soma linear de maré e `zos`.** GLORYS12 (sem forçante de maré) e FES2022
+   são modelos independentes; a soma ignora a supressão não linear de
+   sobrelevação em preamar em águas rasas, efeito potencialmente relevante na
+   plataforma amazônica.
+3. **Incoerência de fase.** `zos` é instantâneo às 00:00 UTC e $\tau_{\max}$ é
+   máximo diário; os dois termos de SWL não compartilham timestamp, de modo que
+   SWL superestima o nível instantâneo (AUD-03).
+4. **Política de ponto sem evento.** Ausência de evento aceito implica
+   frequência $=0$ e severidade integrada $=0$, nunca ausente. Preserva os 808
+   pontos na população de normalização Min–Max.
+
+### Resultados
+
+| Quantidade | MHWS | HAT q90/q90 | **HAT q70/q99** |
+|---|---:|---:|---:|
+| eventos no domínio | 79 639 | 37 225 | **16 768** |
+| pontos sem evento (de 808) | 0 | 248 | **208** |
+| municípios sem evento (de 280) | 0 | 96 | **83** |
+| $\rho(\lvert\text{lat}\rvert, \text{Índice})$ | +0,584 | +0,658 | **+0,710** |
+| $\rho(\lvert\text{lat}\rvert, \text{Severidade})$ | +0,345 | +0,653 | **+0,699** |
+| severidade média no AP | 0,429 | 0,112 | **0,048** |
+| severidade média em SC/PR | 0,438 | 0,497 | **0,486** |
+
+O empate entre Amapá e Santa Catarina na severidade, que motivou a mudança,
+desaparece. A cobertura **melhora** frente ao braço q90/q90 (208 pontos zerados
+contra 248) porque o limiar de onda mais baixo compensa o portão de nível mais
+estrito.
+
+### Caveats e limitações
+
+1. **[BLOQUEANTE] AUD-02 piorou.** O `thr_hs` mínimo nos 808 pontos cai de
+   0,20 m para **0,14 m**; pontos abaixo de 1,5 m sobem de 129 para **256**. Um
+   "evento de onda extrema" com $H_s = 0{,}14$ m não é defensável.
+2. **[BLOQUEANTE] O critério falsificável (c) reprovou.** O ranking municipal
+   move-se de forma relevante: Spearman de 0,695 no domínio, 4 de 10 municípios
+   mantidos no topo, deslocamento mediano de 36 posições no Sul/Sudeste. A
+   adoção seguiu assim, por decisão do pesquisador responsável, contra a
+   conclusão do §6 de `outputs/method_comparison_mhws_vs_hat/README.md`.
+3. **[PENDENTE] Steps 3.1 e 3.3–3.8 não foram regenerados.** Eles leem os
+   catálogos de $H_s$ e `SSH_total` produzidos pelo Step 3.1 em q90/q90.
+   Reexecutá-los sem alterar o Step 3.1 produziria um híbrido incoerente —
+   estatísticas de persistência, sazonalidade, tendência, EVA e dependência
+   calculadas sobre `SSH_total`, variável que o método vigente não usa.
+4. **[INCERTO]** O teste de Rayleigh não foi reexecutado sobre o catálogo final.
+5. A remoção de eventos no Norte é **exclusão implícita de domínio**, não
+   correção física demonstrada: o portão próximo do máximo astronômico observado
+   esvazia o setor macromareal em vez de reponderá-lo.
