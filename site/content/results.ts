@@ -107,7 +107,7 @@ export const resultCards: ResultCard[] = [
     status: 'done',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal). '
-      + 'Exposure is the resident population within 10 km of the coastline (IBGE Grade Estatística 2022); '
+      + 'Exposure uses weighted resident populations in cumulative 1, 2, 5 and 10 km coastline bands (IBGE Grade Estatística 2022); '
       + 'the current Hazard_Index combines normalized compound-event frequency and mean integrated severity on the native grid, with equal weights. '
       + 'Social vulnerability (SVI_Coast_2022) was constructed via PCA on 10 socioeconomic and infrastructure variables '
       + 'from the 2022 IBGE Census for 282 coastal municipalities, normalized 0–100; it carries no physical susceptibility. '
@@ -121,12 +121,11 @@ export const resultCards: ResultCard[] = [
       + 'The equal-weight hazard is compensatory: high frequency can be offset by lower mean integrated severity. Across the three risk components the geometric mean is conjunctive and does not compensate.',
     outputs: [
       'SVI_Coast_2022: Social Vulnerability Index (PCA on 10 IBGE Census variables, 282 municipalities, 0–100; PC1 explains 50.5 % of the variance). Social susceptibility only — no physical layer',
-      'Exposure_Index: resident population within 10 km of the coastline (IBGE Grade Estatística 2022), √(absolute × relative)',
-      'Current Hazard_Index = norm_grid{[norm_grid(compound_count_total) + norm_grid(mean_integrated_severity)] / 2} — two components since the duration term was retired',
+      'Exposure_Index: weighted cumulative populations within 1, 2, 5 and 10 km (IBGE Grade Estatística 2022), √(fixed-goalpost absolute × relative share)',
+      'Current Hazard_Index = [min(compound_count_total/99,1) + min(fillna(mean_integrated_severity,0)/1,1)]/2 — fixed anchors, with no second or municipal Min–Max',
       'Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Φ(PC1/sd(PC1)))^(1/3), with no floor or final Min–Max',
-      'Current Risk_Hazard = norm_municipal(Risk_Hazard_raw), scaled from 0 to 1',
-      'Raw stages published alongside the normalized ones: Hazard_Index_raw and Risk_Hazard_raw',
-      'Interactive municipal choropleth with raw and normalized stages of every index, popups, discrete legend, statistics, and ranking table',
+      'Hazard_Index_raw equals Hazard_Index and Risk_Hazard_raw equals Risk_Hazard; aliases are retained for audit',
+      'Interactive municipal choropleth with index components, population bands, popups, discrete legend, statistics, and ranking table',
     ],
     href: '/results/risk-integration',
     parts: ['Hazard Components', 'Hazard Index', 'SVI', 'Risk (raw)', 'Risk Hazard'],

@@ -148,7 +148,7 @@ export const methodologySteps: MethodStep[] = [
     label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
     description:
       'Municipal-scale integration of compound hazard characterization with social vulnerability (Karine Bastos Leal / INPE). '
-      + 'Exposure is the resident population within 10 km of the coastline (IBGE Grade Estatística 2022). '
+      + 'Exposure uses weighted resident populations in cumulative 1, 2, 5 and 10 km coastline bands (IBGE Grade Estatística 2022). '
       + 'SVI_Coast_2022 was constructed from 10 IBGE Census variables via PCA for 282 municipalities (0–100); it is social only, with no physical susceptibility layer. '
       + 'Current scope: compound-event frequency and mean integrated severity use fixed anchors of 99 events and 1.0, then are averaged with equal weights. '
       + 'Risk_Hazard = (Hazard_Index_mun · Exposure_Index · Φ(PC1/sd(PC1)))^(1/3), without floor or final Min–Max.',
@@ -225,7 +225,7 @@ database incompleteness (FAR=0.984). This approach follows Zscheischler
 et al. (2020) and Bekker and Davis (2020), consistent with the physical understanding that wave
 generation and surge propagation are driven by the same atmospheric systems at the regional scale.
 
-Exposure is the resident (de jure) population within 10 km of the coastline, from the IBGE Grade
+Exposure is a weighted effective resident (de jure) population from cumulative 1, 2, 5 and 10 km coastline bands, from the IBGE Grade
 Estatística 2022; the seasonal population of the resort municipalities is not represented. The
 Social Vulnerability Index (SVI_Coast_2022, Lima et al. 2024) integrates 10 IBGE Census 2022
 variables via PCA for 282 municipalities and measures social susceptibility only — no physical

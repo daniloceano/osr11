@@ -12,9 +12,10 @@ native-grid multimetric Hazard Index to the municipalities, and writes:
 The published risk is the conjunctive, IPCC-style geometric mean of its three
 components,
 
-    Risk_Hazard_raw = (Hazard_Index_mun * Exposure_Index * SVI/100) ** (1/3)
+    V = Phi(PC1 / sd(PC1, ddof=0))
+    Risk_Hazard = (Hazard_Index_mun * Exposure_Index * V) ** (1/3)
 
-each floored at 0.01 first. The geometric mean is what preserves the property
+No floor or sample-dependent Min--Max is applied. The geometric mean preserves the property
 the IPCC framework implies — that risk requires a hazard, someone exposed to it,
 and a susceptibility, all three — whereas an arithmetic mean would let a large
 population compensate for the absence of a physical driver.
@@ -529,7 +530,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
     },
     {
         "key": "Exposure_relative",
-        "label": "Exposure half — share of the municipal population within 10 km",
+        "label": "Exposure half — weighted coastal population share",
         "short_label": "Exposure (share)",
         "unit": "0–1",
         "stage": "component",
@@ -549,7 +550,7 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "unit": "0–1",
         "stage": "normalized",
         "group": "Physical hazard",
-        "actual_field": "transferred:norm_native(Hazard_Index_raw)",
+        "actual_field": "transferred:Hazard_Index_raw",
         "description": (
             "The Hazard Index normalized on the 808-point native ocean grid "
             "and transferred to the municipality without renormalization. "
@@ -743,15 +744,9 @@ def _derive_current_scope(
     hazard = pd.to_numeric(export["Hazard_Index"], errors="coerce")
 
     # ``Hazard_Index`` deliberately keeps the native-grid scale: the most
-    # hazardous of the 808 ocean points serves no municipality, so the municipal
-    # maximum stays below 1 (see SCIENTIFIC_NOTES, 2026-07-27). That scale is
-    # the right one for reading the municipal layer against the coastal field,
-    # but it gives the hazard a narrower amplitude than SVI/100 in any
-    # equal-weight aggregation, which silently down-weights it.
-    # ``Hazard_Index_mun`` is the same field rescaled to [0,1] over the
-    # municipalities. The risk product needs the three components to span
-    # comparable amplitudes; the native-grid scale would silently down-weight
-    # the hazard, since it reaches only 0.829 across municipalities.
+    # hazardous of the 808 ocean points need not serve a municipality, so the
+    # municipal maximum may stay below 1. ``Hazard_Index_mun`` preserves that
+    # fixed-anchor scale exactly; no municipal rescaling is applied.
     hazard_mun = hazard
     export["Hazard_Index_mun"] = hazard_mun.map(_to_jsonable)
 

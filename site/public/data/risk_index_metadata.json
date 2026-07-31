@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-31T17:18:06.725707+00:00",
+  "generated_at": "2026-07-31T18:28:49.405308+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -506,7 +506,7 @@
     },
     {
       "key": "Exposure_relative",
-      "label": "Exposure half — share of the municipal population within 10 km",
+      "label": "Exposure half — weighted coastal population share",
       "short_label": "Exposure (share)",
       "unit": "0–1",
       "stage": "component",
@@ -546,7 +546,7 @@
       "unit": "0–1",
       "stage": "normalized",
       "group": "Physical hazard",
-      "actual_field": "transferred:norm_native(Hazard_Index_raw)",
+      "actual_field": "transferred:Hazard_Index_raw",
       "description": "The Hazard Index normalized on the 808-point native ocean grid and transferred to the municipality without renormalization. Because the most hazardous grid point is not associated with any municipality, the municipal maximum is below 1.",
       "decimals": 2,
       "boundaries": [

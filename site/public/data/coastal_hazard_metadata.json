@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_coastal_hazard_data",
-  "generated_at": "2026-07-31T16:58:19.691177+00:00",
+  "generated_at": "2026-07-31T18:28:59.989313+00:00",
   "period": "1993-2025",
   "source_file": "outputs/storm_catalog/compound_hat/compound_metrics_hat.csv",
   "native_hazard_index": {
@@ -307,7 +307,7 @@
       "zero_is_gray": true,
       "palette": "component",
       "palette_source": "matplotlib magma sampled from 0.95 to 0.12, as in outputs/article_figures/coastal_hazard_index_components.png",
-      "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
+      "display_values": "native-grid catalog values in their own units",
       "description": "Mean annual number of compound wave/sea-level events at the nearest native ocean grid point, straight from the Step 3.2 catalog.",
       "statistics": {
         "count": 867,
@@ -347,7 +347,7 @@
       "zero_is_gray": true,
       "palette": "component",
       "palette_source": "matplotlib magma sampled from 0.95 to 0.12, as in outputs/article_figures/coastal_hazard_index_components.png",
-      "display_values": "native-grid catalog values, without the methodological Min-Max scaling used to build the index",
+      "display_values": "native-grid catalog values in their own units",
       "description": "Mean event-integrated excess above HAT at the nearest native ocean grid point. This is the persistence-aware severity component used by the current Hazard Index.",
       "statistics": {
         "count": 867,
@@ -389,8 +389,8 @@
       "zero_is_gray": false,
       "palette": "hazard",
       "palette_source": "green-to-red palette shared with the Risk Index",
-      "display_values": "final Hazard Index after both Min-Max steps",
-      "description": "Final composite Hazard Index: frequency and integrated severity are Min-Max normalized over the 808 native grid points, averaged with equal weights of 1/2, and the mean is Min-Max normalized again to span 0-1.",
+      "display_values": "final fixed-anchor Hazard Index",
+      "description": "Final composite Hazard Index: frequency is divided by the fixed 99-event anchor, integrated severity by the fixed anchor 1, both are capped at 1, and their equal-weight mean is used directly.",
       "statistics": {
         "count": 867,
         "min": 0.0,
@@ -423,7 +423,7 @@
       "median": 0.066102
     }
   },
-  "normalization_note": "The Min-Max normalization of the two components happens only inside the index construction on the native grid. The frequency and integrated-severity layers show the catalog values themselves. Exact zeros are shown in gray and isolated from positive classes.",
+  "normalization_note": "The index uses fixed anchors of 99 events and severity 1, independent of observed extrema; their mean is not rescaled again. The frequency and integrated-severity layers show the catalog values themselves. Exact zeros are shown in gray and isolated from positive classes.",
   "outputs": {
     "geojson": "site/public/data/coastal_hazard_segments.geojson",
     "metadata": "site/public/data/coastal_hazard_metadata.json",

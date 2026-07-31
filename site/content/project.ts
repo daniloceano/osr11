@@ -71,7 +71,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Population exposure',
     description:
-      'Operationalize exposure as the resident population within 10 km of the coastline, aggregated from the IBGE Grade Estatística 2022. Separately, compound-event frequency and mean integrated severity are combined with equal weights on the native grid into the normalized Hazard Index, which is then transferred to municipalities through the archived association.',
+      'Operationalize exposure from weighted resident populations in cumulative 1, 2, 5 and 10 km coastline bands, aggregated from the IBGE Grade Estatística 2022. Separately, fixed-anchor compound-event frequency and mean integrated severity are combined with equal weights into the Hazard Index and transferred unchanged through the archived municipal association.',
   },
   {
     label: 'Social vulnerability index',
@@ -108,7 +108,7 @@ export const conceptualFramework = {
     },
     {
       term: 'Exposure',
-      definition: 'The people present where the hazard acts — the resident (de jure) population within 10 km of the coastline, from the IBGE Grade Estatística 2022, counted on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, and being de jure it does not capture the seasonal population of the resort municipalities (AUD-14).'
+      definition: 'The people present where the hazard acts — a weighted effective resident (de jure) population from cumulative 1, 2, 5 and 10 km coastline bands, from the IBGE Grade Estatística 2022, counted on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, and being de jure it does not capture the seasonal population of the resort municipalities (AUD-14).'
     },
     {
       term: 'Vulnerability',
@@ -122,7 +122,7 @@ export const conceptualFramework = {
 };
 
 export const currentScope = `
-The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The detection method was revised twice in 2026: on 2026-07-29 the astronomical tide moved from forcing to conditioning variable, and on 2026-07-30 the level gate and severity datum both moved to HAT (highest astronomical tide) and the Step 2e calibration was redone on the production detector, selecting the q70/q99 pair. A compound event now requires a wave episode (local q70 of Hₛ), a tide-free sea-level episode (local q99 of GLORYS12 zos) sharing at least one day, and a still water level over those days exceeding the local HAT. Step 3.2 (compound detection) is complete for all 808 grid points: 16,768 events, with 208 points and 83 municipalities carrying no accepted event. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: the native-grid Hazard_Index is the equally weighted mean of normalized compound-event frequency and normalized mean integrated severity — two components, not three; mean overlap duration was retired from the index on 2026-07-29 and is published as a diagnostic. The raw SVI–hazard product is retained as Risk_Hazard_raw and the published Risk_Hazard is Min–Max normalized to 0–1 across municipalities. Two open audit issues block publication: AUD-01 (the adoption proceeded with one of its three falsifiable criteria failed) and AUD-02 (the local wave threshold falls to 0.14 m at some sheltered points).
+The current implementation covers the full Brazilian coast — 808 coastal grid points, 1993–2025. Steps 1 (Data Preparation) and 2 (Threshold Calibration) are complete. The detection method was revised twice in 2026: on 2026-07-29 the astronomical tide moved from forcing to conditioning variable, and on 2026-07-30 the level gate and severity datum both moved to HAT (highest astronomical tide) and the Step 2e calibration was redone on the production detector, selecting the q70/q99 pair. A compound event now requires a wave episode (local q70 of Hₛ), a tide-free sea-level episode (local q99 of GLORYS12 zos) sharing at least one day, and a still water level over those days exceeding the local HAT. Step 3.2 (compound detection) is complete for all 808 grid points: 16,768 events, with 208 points and 83 municipalities carrying no accepted event. Step 4 (Exposure, Vulnerability & Risk Integration) is complete at municipal scale: Hazard_Frequency and Hazard_Severity use fixed anchors of 99 events and 1, and Hazard_Index is their equal-weight mean with no second or municipal Min–Max. Exposure uses the weighted cumulative 1, 2, 5 and 10 km populations and fixed population goalposts; vulnerability is Φ(PC1/sd(PC1)). Risk_Hazard is their geometric mean with no floor or final Min–Max. Mean overlap duration remains only a diagnostic. Two open audit issues block publication: AUD-01 (the adoption proceeded with one of its three falsifiable criteria failed) and AUD-02 (the local wave threshold falls to 0.14 m at some sheltered points).
 `;
 
 export const timelinePhases: TimelinePhase[] = [
@@ -285,15 +285,15 @@ export const timelinePhases: TimelinePhase[] = [
   {
     id: 'step-4',
     label: 'STEP 4 — Exposure, Vulnerability & Risk Integration',
-    description: 'Municipal-scale integration of compound hazard characterization with social vulnerability and exposure spatialization. Produces a normalized frequency-duration-intensity Hazard_Index on the native grid, transfers it to municipalities, and combines it with SVI_Coast_2022 to produce Risk_Hazard.',
+    description: 'Municipal-scale integration of fixed-anchor compound-event frequency and integrated severity with weighted population exposure and CDF-transformed social vulnerability.',
     status: 'done',
     stepNumber: 4,
     tasks: [
       'SVI_Coast_2022 constructed via PCA on 10 IBGE Census variables (282 municipalities; PC1 explains 50.5 % of the variance) ✓',
-      'Current Hazard_Index = normalized equal-weight mean of native-grid compound-event frequency and mean integrated severity — two components since the duration term was retired ✓',
-      'Exposure_Index from the IBGE Grade Estatística 2022: population within 10 km of the coastline ✓',
-      'Risk_Hazard = norm[(Hazard_Index_mun · Exposure_Index · SVI/100)^(1/3)], geometric and conjunctive ✓',
-      'Raw and normalized stages published side by side for every quantity ✓',
+      'Current Hazard_Index = equal-weight mean of fixed-anchor frequency and integrated severity — no second or municipal Min–Max ✓',
+      'Exposure_Index from weighted cumulative 1, 2, 5 and 10 km populations with fixed goalposts ✓',
+      'Risk_Hazard = (Hazard_Index_mun · Exposure_Index · Φ(PC1/sd(PC1)))^(1/3), without floor or final Min–Max ✓',
+      'Raw aliases retained for audit and equal to their published counterparts ✓',
     ],
   },
 ];

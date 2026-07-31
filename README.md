@@ -67,7 +67,7 @@ COMPOUND HAZARD → EXPOSURE → VULNERABILITY → RISK
 
 - **Compound hazard:** The simultaneous occurrence of sea-level extremes (associated with storm surge and meteorological tides) and extreme wave events, capable of amplifying coastal impacts beyond what isolated extremes would produce.
 
-- **Exposure:** The people present where the hazard acts — here, the **resident** (*de jure*) population within 10 km of the coastline, counted by the IBGE Grade Estatística on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*; and being *de jure*, it does not see the seasonal population of the resort municipalities (AUD-14). (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
+- **Exposure:** The people present where the hazard acts — here, a weighted **resident** (*de jure*) population from cumulative 1, 2, 5 and 10 km coastline bands, counted by the IBGE Grade Estatística on the single reference date of 2022-07-31. It is a proximity criterion, not a modelled inundation extent, so it counts residents *near* the coast and never residents *affected*; and being *de jure*, it does not see the seasonal population of the resort municipalities (AUD-14). (Until 2026-07-28 this repository used the word "exposure" for the spatial association between ocean grid points and municipalities, which is a cartographic step and not an exposure component; that usage was wrong and has been removed.)
 
 - **Vulnerability:** The **social** susceptibility of the resident population — income, education, race, age structure, housing tenure, crowding and basic sanitation — measured by `SVI_Coast_2022` (Sub-step 4.3). **No physical susceptibility layer is implemented.** Geomorphology, beach-face slope, dune and mangrove barriers, terrain elevation, coastal defences and drainage capacity are absent from this product; two stretches with the same income profile and the same hazard therefore receive the same vulnerability regardless of the ground they stand on. This is a declared limitation of the current cycle, not an omission from the description — see "Notes and Limitations". (Tracked as AUD-10.)
 
@@ -300,10 +300,10 @@ as five candidate rules were tested and all return the same value there
 
 #### Sub-step 4.2 — Population exposure
 
-Resident population and occupied households within 1, 2, 5 and 10 km of the
-Natural Earth coastline, aggregated from the IBGE Grade Estatística 2022 by
-cell centroid in EPSG:5880. The 10 km band feeds the risk index; the others
-exist so the criterion can be varied. Across the 282 coastal municipalities,
+Resident population and occupied households within cumulative 1, 2, 5 and 10 km
+bands from the Natural Earth coastline, aggregated from the IBGE Grade Estatística
+2022 by cell centroid in EPSG:5880. All four population bands feed the weighted
+effective population used by the risk index. Across the 282 coastal municipalities,
 **30.8 million** of the 37.4 million residents are within 10 km of the coast.
 
 > **The count is *de jure* and instantaneous.** The census enumerates residents
@@ -317,9 +317,11 @@ exist so the criterion can be varied. Across the 282 coastal municipalities,
 > The index measures risk to **residents**, not to visitors or to tourism assets.
 > (AUD-14.)
 >
-> Four municipalities have a `pop_10km` too small for the metric to discriminate
-> — Santa Rita/MA (4 residents), Calçoene/AP (101), Oiapoque/AP (518) and
-> Terra de Areia/RS (765); the first two sit at the 0.01 exposure floor. Removing
+> Four delivered records were checked because their `pop_10km` is very small:
+> Santa Rita/MA (4 residents), Calçoene/AP (101), Oiapoque/AP (518) and
+> Terra de Areia/RS (765). Santa Rita/MA and Calçoene/AP have exposure zero
+> because their weighted population remains below the fixed 100-person goalpost;
+> this is not a 0.01 floor. Removing
 > all four leaves the published ranking unchanged (Spearman ρ = 1.000, maximum
 > rank shift 0), so they anchor no normalisation. (AUD-15.)
 
@@ -423,7 +425,7 @@ entirely coastal ones.
 > **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (4) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Status:** ✅ Complete  
-**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (four layers drawn on the Natural Earth coastline) and keeps the 87-metric explorer below it, transposed to the same coastline with the same graphic style. `/results/risk-integration` displays the current municipal product with every quantity available **before and after** its Min–Max normalization (`Hazard_Index_raw`, `Risk_Hazard_raw`). `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index.
+**Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (three current layers drawn on the Natural Earth coastline) and keeps the metric explorer below it. `/results/risk-integration` displays the fixed-anchor hazard, weighted exposure, transformed vulnerability and their geometric-mean risk; the `*_raw` aliases are retained for audit but equal their published counterparts because no second Min–Max is applied. `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index.
 
 **Risk-index shapefile export:**
 Karine's shapefile outputs are stored in `outputs/risk_index/` as `risk_index.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg`. Convert them to the web data format with:
@@ -478,11 +480,10 @@ which writes `site/public/data/coastal_hazard_segments.geojson`,
 projection, maximum segment length, association method, nearest-distance
 statistics, per-layer fields, units, class limits and palettes), and
 `coastal_basemap.geojson` (Natural Earth land, country, and Brazilian state
-context). The map exposes four layers: `compound_count_annual_mean`
-(events yr⁻¹), `mean_overlap_duration` (days), `mean_compound_intensity_norm`
-(dimensionless), and `Hazard_Index` (0–1). The first three show the catalog
-values themselves — the Min–Max scaling of the components is a methodological
-step internal to the index and is not applied for display.
+context). The main map exposes three current layers: `compound_count_annual_mean`
+(events yr⁻¹), `mean_integrated_severity` (dimensionless), and `Hazard_Index`
+(0–1). The component layers show catalog values in their own units; the index
+uses fixed anchors of 99 events and severity 1, not sample Min–Max.
 
 Each coastal segment also carries:
 
@@ -526,8 +527,8 @@ The repository currently contains:
 
 ✅ **STEP 4 — Exposure, Vulnerability & Risk Integration** (complete at municipal scale)
 - SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (282 coastal municipalities)
-- Exposure from resident population within 10 km of the coastline (IBGE Grade Estatística 2022), not a spatial join of oceanic hazard metrics
-- Current Hazard_Index = norm_native{[norm_native(compound_count_total) + norm_native(mean_integrated_severity)]/2} — **two** components since AUD-06 retired the duration term; Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) × clip(Exposure_Index) × clip(SVI/100)) ^ (1/3)] — see Sub-step 4.4
+- Exposure from the weighted cumulative 1, 2, 5 and 10 km populations (IBGE Grade Estatística 2022), not a spatial join of oceanic hazard metrics
+- Current `Hazard_Index = [min(compound_count_total/99,1) + min(fillna(mean_integrated_severity,0)/1,1)]/2`; `Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Φ(PC1/sd(PC1)))^(1/3)`, with no floor or sample-dependent Min–Max — see Sub-step 4.4
 - **Vulnerability is social only.** No physical susceptibility layer exists (AUD-10); 2 of 282 municipalities carry no risk value (AUD-15)
 
 
@@ -884,18 +885,19 @@ named at the end of each paragraph.
   candidates inside 30 km. Both must be named in the map legends, not left in a
   metadata file. Four municipalities have a population within 10 km too small for the
   exposure metric to discriminate — **Santa Rita/MA (4 residents), Calçoene/AP
-  (101), Oiapoque/AP (518), Terra de Areia/RS (765)** — of which the first two
-  sit at the 0.01 exposure floor; removing all four leaves the published ranking
+  (101), Oiapoque/AP (518), Terra de Areia/RS (765)**. Santa Rita/MA and
+  Calçoene/AP have exposure zero because `pop_eff` is below the fixed 100-person
+  absolute goalpost; there is no 0.01 floor. Removing all four leaves the published ranking
   unchanged (ρ = 1.000, maximum rank shift 0), so they anchor no normalisation.
   The coverage limitation that the current method newly creates is different in
   kind and larger: **83 of the 280 municipalities draw their hazard from a grid
-  point that accepted no compound event at all**, so their `Hazard_Index_mun` is
-  exactly 0 and their risk rests entirely on the 0.01 floor. They are
+  point that accepted no compound event at all**, so their `Hazard_Index_mun` and
+  risk are exactly 0. They are
   concentrated in the North and Northeast (CE 18, AL 15, RN 14, PE 12, SE 7,
   BA 7, PB 3, MA 3, PA 3, AP 1) and they occupy ranks **191–280** — the whole
-  bottom third of the ranking. Within that group the ordering is set by exposure
-  and vulnerability alone and carries no hazard information; it should not be
-  read as a hazard gradient.
+  bottom third of the ranking as tied exact zeros; they do not define a hazard
+  gradient. Zero here means no accepted event in 1993–2025, not impossibility of
+  physical coastal risk.
   *(`src/exploratory/audit_AUD_15_sample_coverage.py`)*
 
 - **Deprivation axis, not coastal susceptibility (AUD-09).** `SVI_Coast_2022` is

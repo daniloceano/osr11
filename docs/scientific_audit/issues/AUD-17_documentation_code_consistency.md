@@ -473,3 +473,17 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 | **Validação realizada** | `cmp` confirma que `outputs/current_method_hat/` é idêntico byte a byte a `outputs/storm_catalog/compound_hat/` nos dois arquivos. O par de limiares de cada instantâneo foi lido do próprio `compound_summary_hat.json`: `hat_method` sem par registrado e 37 225 eventos; `current_method_hat` e `compound_hat` com 0,7/0,99 e 16 768 |
 | **Incerteza remanescente** | Os README de `outputs/storm_catalog/` **não são versionados** e desaparecem se o diretório for regenerado do zero. A cópia durável é a tabela de `RUN.md`; se o Step 3 for reexecutado, os README de disco precisam ser reescritos à mão, ou o passo de escrita deveria ser incorporado ao próprio pipeline — melhoria não implementada |
 | **Próxima decisão necessária** | Nenhuma. Correção factual sem escolha metodológica |
+
+### 2026-07-31 (cont.) — Varredura pós-implementação das normalizações fixas
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | As superfícies atuais do site, READMEs, docstrings e metadados publicados descrevem a implementação de AUD-08/AUD-09/AUD-11, sem resíduos da cadeia Min–Max/piso anterior? |
+| **Dados e métodos** | Varredura dirigida por `rg` sobre `README.md`, `site/`, `src/site/` e `src/figures_article/`, seguida de confronto com `hazard_index.py`, `exposure_index.py` e `integrated_risk()`. Arquivos explicitamente legados e comparações antes/depois foram preservados. |
+| **Scripts executados** | `python -m src.site.export_risk_index_data`; `python -m src.site.export_coastal_hazard_data`; `PYTHONPATH=. pytest -q tests`; `npm run lint`; `npm run build` em `site/`. |
+| **Novas saídas geradas** | `site/public/data/risk_index_metadata.json` e `site/public/data/coastal_hazard_metadata.json`, regenerados pelas fontes corrigidas. Os GeoJSON foram verificados e permaneceram sem diferença versionada. |
+| **Achados** | O cálculo já usava âncoras fixas e risco sem piso/Min–Max, mas ainda havia prosa falsa no cabeçalho do exportador de risco, nos dois READMEs principais, no README das figuras, em `site/content/`, nas páginas de Compound Detection/Hazard Index/Risk Integration e no metadado costeiro. Também havia descrição obsoleta do multiplot como quatro painéis e do `Hazard_Index_mun` como renormalizado. |
+| **Alterações implementadas** | Todas as superfícies atuais passaram a registrar: hazard com âncoras 99 e 1; nenhuma segunda ou municipal Min–Max; exposição baseada em `pop_eff` das quatro bandas cumulativas e goalposts fixos; vulnerabilidade `Phi(PC1/sd, ddof=0)`; risco geométrico sem piso e sem Min–Max final. O rótulo `actual_field` de `Hazard_Index` e as descrições do exportador costeiro foram corrigidos na fonte geradora. |
+| **Validação realizada** | Testes científicos: 4 aprovados. Site: ESLint aprovado; build estático Next.js aprovado, 21 páginas. JSON carregado com sucesso. Varredura residual encontrou apenas a fórmula antiga dentro do campo explicitamente `superseded` e frases que afirmam corretamente a ausência de piso/Min–Max. |
+| **Incerteza remanescente** | AUD-17 permanece aberta pelas pendências independentes já registradas; esta passagem resolve apenas os resíduos factuais relacionados à normalização atual. |
+| **Próxima decisão necessária** | Nenhuma para esta classe de inconsistência. Manter fórmulas antigas somente em arquivos `legacy`, diagnósticos comparativos e campos marcados `superseded`. |

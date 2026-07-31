@@ -7,7 +7,7 @@ import RiskIntegrationClient from './RiskIntegrationClient';
 export const metadata = {
   title: 'Multimetric Coastal Risk Integration | OSR11',
   description:
-    'Municipal-scale coastal risk indices using a normalized frequency-duration-intensity hazard layer and social vulnerability for Brazilian coastal municipalities.',
+    'Municipal coastal risk from fixed-anchor hazard, weighted population exposure, and CDF-transformed social vulnerability.',
 };
 
 export default function RiskIntegrationPage() {

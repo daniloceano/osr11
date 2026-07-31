@@ -6,7 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 export const metadata = {
   title: 'Hazard Index — Construction and Coastal Representation | OSR11',
   description:
-    'How the composite coastal Hazard Index is built: compound-event detection, the three physical components, Min–Max normalization on the 808-point native ocean grid, equal-weight aggregation, coastal rendering, and transfer to municipalities.',
+    'How the composite coastal Hazard Index is built from fixed-anchor frequency and integrated severity, equal-weight aggregation, coastal rendering, and transfer to municipalities.',
 };
 
 /* ───────────────────────── shared components ───────────────────────── */
@@ -301,17 +301,17 @@ Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)`}</Eq>
           </p>
         </Section>
 
-        {/* ── 7. Final normalization ─────────────────────────────── */}
-        <Section step={7} eyebrow="Construction" title="Final normalization of the Hazard Index">
+        {/* ── 7. Final scale ─────────────────────────────────────── */}
+        <Section step={7} eyebrow="Construction" title="Final scale of the Hazard Index">
           <p className="mb-3 text-sm leading-relaxed text-gray-700">
             The mean is the final index; no second Min–Max is applied:
           </p>
           <Eq>{`Hazard_Index = Hazard_Index_raw ∈ [0, 1]`}</Eq>
           <p className="text-sm leading-relaxed text-gray-700">
             Since <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_raw</code>{' '}
-            spans roughly 0.18–0.66 on the grid, this second step is what turns the composite into a
-            readable 0–1 index. The value 0 marks the least hazardous native grid point and 1 the
-            most hazardous one — not an absolute zero or an absolute maximum of coastal hazard.
+            already lies in [0,1] because both inputs use fixed anchors. Its observed range need not
+            reach either endpoint. A value of 0 means no accepted compound event in 1993–2025;
+            1 is the fixed-anchor ceiling, not the observed sample maximum.
           </p>
         </Section>
 
@@ -371,7 +371,7 @@ Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)`}</Eq>
             says who would cope badly. The vulnerability term is <strong>social only</strong>: no
             physical susceptibility layer — geomorphology, terrain elevation, natural barriers,
             coastal defences, drainage — exists in this product. Exposure is the resident population
-            within 10 km of the coastline, from the IBGE Grade Estatística 2022:
+            in cumulative 1, 2, 5 and 10 km coastline bands, from the IBGE Grade Estatística 2022:
           </p>
           <Eq>{`pop_eff = 0.4·pop_1km + 0.3·pop_2km + 0.2·pop_5km + 0.1·pop_10km
 Exposure_absolute = clip[(log₁₀(pop_eff) − 2) / (6 − 2), 0, 1]
@@ -416,9 +416,9 @@ Risk_Hazard = (Hazard_Index_mun × Exposure_Index × V)^(1/3)`}</Eq>
           <div className="grid gap-4 md:grid-cols-2">
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
               <li>
-                <strong>Relative and compensatory.</strong> Both Min–Max steps are taken over the
-                808-point domain, so the index ranks the Brazilian coast against itself; a low
-                component can be offset by a high one.
+                <strong>Fixed-anchor and compensatory.</strong> The anchors are independent of the
+                808-point sample, but the equal-weight mean still allows a high component to offset
+                a low one.
               </li>
               <li>
                 <strong>Equal weights.</strong> The 1/2 weighting is an assumption, not an
@@ -434,8 +434,8 @@ Risk_Hazard = (Hazard_Index_mun × Exposure_Index × V)^(1/3)`}</Eq>
                 <strong>Zero-hazard municipalities.</strong> 83 of the 280 municipalities with a
                 risk value draw their hazard from a grid point that accepted no compound event, so
                 their <code className="rounded bg-gray-100 px-1 font-mono text-[11px]">Hazard_Index_mun</code>{' '}
-                is exactly 0 and their risk rests on the 0.01 floor. They occupy ranks 191–280, and
-                their ordering among themselves is set by exposure and vulnerability alone.
+                and risk are exactly 0. They form a tied zero-risk group; this means no accepted
+                event in 1993–2025, not impossibility of physical coastal risk.
               </li>
             </ul>
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">

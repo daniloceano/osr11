@@ -114,10 +114,9 @@ LAYER_SPECS: tuple[dict[str, Any], ...] = (
         "boundaries": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0],
         "palette": "hazard",
         "description": (
-            "Final composite Hazard Index: frequency and integrated severity are Min-Max "
-            "normalized over the 808 native grid points, averaged with equal "
-            "weights of 1/2, and the mean is Min-Max normalized again to "
-            "span 0-1."
+            "Final composite Hazard Index: frequency is divided by the fixed "
+            "99-event anchor, integrated severity by the fixed anchor 1, both "
+            "are capped at 1, and their equal-weight mean is used directly."
         ),
     },
 )
@@ -364,10 +363,9 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                     else "green-to-red palette shared with the Risk Index"
                 ),
                 "display_values": (
-                    "native-grid catalog values, without the methodological "
-                    "Min-Max scaling used to build the index"
+                    "native-grid catalog values in their own units"
                     if spec["value_kind"] == "catalog"
-                    else "final Hazard Index after both Min-Max steps"
+                    else "final fixed-anchor Hazard Index"
                 ),
                 "description": spec["description"],
                 "statistics": numeric_stats(dissolved[spec["key"]]),
@@ -378,8 +376,8 @@ def build_coastal_hazard_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             field: numeric_stats(dissolved[field]) for field in DETAIL_FIELDS
         },
         "normalization_note": (
-            "The Min-Max normalization of the two components happens only "
-            "inside the index construction on the native grid. The frequency "
+            "The index uses fixed anchors of 99 events and severity 1, independent "
+            "of observed extrema; their mean is not rescaled again. The frequency "
             "and integrated-severity layers show the catalog values themselves. "
             "Exact zeros are shown in gray and isolated from positive classes."
         ),

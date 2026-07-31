@@ -75,31 +75,27 @@ Municipal geometries are reprojected to EPSG:4326 when needed and simplified for
 ## Generated Figures
 
 - `coastal_hazard_index_components.png`
-  - A 2 × 2 panel showing mean annual compound-event frequency
-    (events yr⁻¹), mean integrated severity (dimensionless), mean overlap
-    duration (days, a published diagnostic that is **not** an index component),
-    and the resulting 0--1 Hazard Index.
-  - Panels A--C display the native-grid catalog values without the additional
-    cross-grid Min--Max scaling. The integrated severity sums, over the days on
+  - A 1 × 3 panel showing mean annual compound-event frequency
+    (events yr⁻¹), mean integrated severity (dimensionless), and the resulting
+    0--1 Hazard Index. Mean overlap duration is not part of the main figure.
+  - Panels A--B display the native-grid catalog values in their own units. The integrated severity sums, over the days on
     which all detection criteria hold, the excess of each driver over its own
     local reference — the local q90 for waves and the mean high water springs
     datum for level — rescaled by the domain-wide Q05/Q95 of those daily
     excesses. Magnitude and persistence therefore enter as a single quantity.
-  - For the Hazard calculation, the two components are Min--Max normalized
-    independently across all 808 native ocean-grid points. Their equal-weight
-    mean is normalized again to 0--1. The duration was retired from the index
-    in 2026-07-29; see the audit record AUD-06.
+  - For the Hazard calculation, frequency is divided by the fixed 99-event
+    anchor and integrated severity by the fixed anchor 1, both capped at 1.
+    Their equal-weight mean is the final index; no second Min--Max is applied.
+    Duration was retired from the index on 2026-07-29; see AUD-06.
   - Every panel is projected onto Natural Earth coastline segments of at most
     5 km. Each segment receives the value at its nearest grid point in SIRGAS
     2000 / Brazil Polyconic (EPSG:5880).
 - `hazard_vulnerability_risk_multiplot.png`
-  - Panel A: `Hazard_Index_mun` — municipal-renormalized
-    `Hazard_Index = norm_native[(norm_native(frequency) + norm_native(integrated severity))/2]`
-  - Panel B: `Exposure_Index` — INFORM-style municipal population exposure
-  - Panel C: `SVI_Coast_2022`
-  - Panel D: current
-    `Risk_Hazard = norm_municipal[(clip(Hazard_Index_mun) * clip(Exposure_Index) * clip(SVI_Coast_2022/100)) ^ (1/3)]`,
-    on a 0–1 scale
+  - Panel A: `Hazard_Index_mun` — the fixed-anchor `Hazard_Index` transferred
+    without municipal renormalization.
+  - Panel B: `Vulnerability_CDF_PC1 = Φ(PC1/sd(PC1,ddof=0))`.
+  - Panel C: `Risk_Hazard = (Hazard_Index_mun × Exposure_Index × Vulnerability_CDF_PC1)^(1/3)`,
+    without floor or final Min--Max.
   - Uses discrete green-to-red classes derived from the inverted Composite
     Score heatmap palette.
   - Includes Natural Earth country and Brazilian-state boundaries over gray
@@ -136,16 +132,15 @@ The script does not assume exact shapefile DBF names. It detects aliases for:
 
 ## Coastal-Line Map — Values and Shared Implementation
 
-The coastal-line map displays panels A--C in the catalog's own units
-(events yr⁻¹, dimensionless, days) and panel D as the final composite index.
-The cross-grid Min--Max normalization below is internal to the index
-construction and is **not** applied to the displayed component values:
+The coastal-line map displays panels A--B in the catalog's own units
+(events yr⁻¹ and dimensionless) and panel C as the final composite index.
+The index construction uses fixed anchors independent of sample extrema:
 
 ```text
-Hazard_Frequency = norm_native(compound_count_total)
-Hazard_Severity  = norm_native(mean_integrated_severity)
+Hazard_Frequency = min(compound_count_total / 99, 1)
+Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)
 Hazard_Index_raw = (Hazard_Frequency + Hazard_Severity) / 2
-Hazard_Index = norm_native(Hazard_Index_raw)
+Hazard_Index = Hazard_Index_raw
 ```
 
 The formula itself lives in `src/04_risk_integration/hazard_index.py`; the

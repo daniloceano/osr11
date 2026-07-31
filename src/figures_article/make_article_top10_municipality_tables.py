@@ -49,7 +49,7 @@ TABLE_SPECS: dict[str, dict[str, str]] = {
         "stem": "top10_municipalities_by_hazard",
         "caption": (
             "Top 10 Brazilian coastal municipalities by "
-            "normalized frequency-duration-intensity hazard index."
+            "fixed-anchor frequency–integrated-severity hazard index."
         ),
         "latex_label": "tab:top10-municipal-hazard",
     },

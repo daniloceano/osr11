@@ -211,14 +211,15 @@ Regenerate them from the repository root:
 python -m src.site.export_risk_index_data
 ```
 
-The current metadata records the native-grid calculation
-`Hazard_Index = norm{[norm(frequency) + norm(duration) + norm(intensity)]/3}`,
-its transfer to municipalities, the municipal renormalization
-`Hazard_Index_mun = norm_municipal(Hazard_Index)`, and the conjunctive risk
-`Risk_Hazard_raw = (clip(Hazard_Index_mun) × clip(Exposure_Index) × clip(SVI_Coast_2022/100))^(1/3)`
-and `Risk_Hazard = norm_municipal(Risk_Hazard_raw)` on a 0–1 scale. Each quantity is
-published both before and after its Min–Max normalization (`Hazard_Index_raw`,
-`Risk_Hazard_raw`). `Hazard_Index_mun` and `Exposure_Index` are both offered as
+The current metadata records the fixed-anchor native-grid calculation
+`Hazard_Frequency=min(compound_count_total/99,1)`,
+`Hazard_Severity=min(fillna(mean_integrated_severity,0)/1,1)`, and
+`Hazard_Index=(Hazard_Frequency+Hazard_Severity)/2`; its unchanged transfer as
+`Hazard_Index_mun`; vulnerability `V=Φ(PC1/sd(PC1,ddof=0))`; and the conjunctive
+`Risk_Hazard=(Hazard_Index_mun×Exposure_Index×V)^(1/3)`. No floor, municipal
+hazard Min–Max, or final risk Min–Max is applied. The `Hazard_Index_raw` and
+`Risk_Hazard_raw` aliases equal their published counterparts and are retained
+for audit. `Hazard_Index_mun` and `Exposure_Index` are both offered as
 selectable map layers, in addition to feeding the risk product. The metadata records the single resolved DBF
 alias, `SVI_Coast_` -> `SVI_Coast_2022`; the delivered `Haz_index`,
 `Risk_comp` and `Risk_harza` columns are not read.

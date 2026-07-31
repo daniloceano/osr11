@@ -648,22 +648,20 @@ u = q90 threshold,  σ = scale,  ξ = shape,  λ = exceedances per year`}</Eq>
           <Stage
             step={2}
             title="Putting them on a common scale"
-            question="How do you add events, days, and a dimensionless score?"
+            question="How are frequency and severity made commensurable?"
           >
             <p>
-              You cannot. Counts, days, and a dimensionless score have different units and different
-              ranges, so each one is first Min–Max rescaled to [0, 1]{' '}
-              <strong>over the 808 native grid points</strong> — the whole coast at once, never
-              municipality by municipality:
+              The two inputs use fixed, sample-independent anchors. Frequency is divided by 99
+              events (three accepted events per year over 33 years), and mean integrated severity
+              by 1. Values above either anchor are capped at 1; missing severity at a no-event point
+              is set to exactly zero:
             </p>
-            <Eq>{`norm_grid(x) = (x − min_grid x) / (max_grid x − min_grid x)
-
-Hazard_Frequency = norm_grid(compound_count_total)
-Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
+            <Eq>{`Hazard_Frequency = min(compound_count_total / 99, 1)
+Hazard_Severity  = min(fillna(mean_integrated_severity, 0) / 1, 1)`}</Eq>
             <p>
-              This rescaling exists <em>only</em> to make the three commensurable. It is not what the
-              maps display: the component maps keep the catalog values in events yr⁻¹, days, and the
-              dimensionless intensity.
+              The anchors do not change when a grid point or municipality is added or removed. The
+              component maps still show catalog values in events yr⁻¹ and dimensionless integrated
+              severity rather than these index scores.
             </p>
           </Stage>
 
@@ -687,18 +685,16 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
 
           <Stage
             step={4}
-            title="Making the composite readable"
-            question="Why normalize a second time?"
+            title="Keeping the fixed scale"
+            question="Is the mean normalized again?"
           >
             <p>
-              The mean of three [0, 1] components never uses the full range — across the grid it spans
-              roughly 0.18 to 0.66. A second Min–Max step over the same 808 points stretches it back to
-              a 0–1 scale without changing the ranking of any point:
+              No. The component mean is already bounded by construction and is used directly:
             </p>
-            <Eq>{`Hazard_Index = norm_grid(Hazard_Index_raw) ∈ [0, 1]`}</Eq>
+            <Eq>{`Hazard_Index = Hazard_Index_raw ∈ [0, 1]`}</Eq>
             <p>
-              0 marks the least hazardous grid point of the Brazilian coast and 1 the most hazardous
-              one. The index is relative to this domain — it is not an absolute hazard level.
+              Zero is preserved exactly and means no accepted compound event in 1993–2025. The
+              observed maximum need not equal 1 because 1 is an anchor ceiling, not the sample maximum.
             </p>
           </Stage>
 
@@ -723,18 +719,16 @@ Hazard_Severity  = norm_grid(mean_integrated_severity)`}</Eq>
           >
             <p>
               Step 4 joins each coastal municipality to its associated grid point and hands it the
-              Hazard Index normalized on the grid, rescaled over the municipalities as{' '}
+              fixed-anchor Hazard Index unchanged as{' '}
               <code className="rounded bg-gray-100 px-1 text-xs">Hazard_Index_mun</code>. The integrated
-              risk is the <strong>conjunctive geometric mean</strong> of that hazard, the population
-              exposure and the Social Vulnerability Index — each floored at 0.01 first — Min–Max
-              normalized across municipalities:
+              risk is the <strong>conjunctive geometric mean</strong> of that hazard, population
+              exposure and the transformed vulnerability PC1:
             </p>
-            <Eq>{`Risk_Hazard_raw = (Hazard_Index_mun × Exposure_Index × SVI_Coast_2022/100)^(1/3)
-
-Risk_Hazard = norm_municipal(Risk_Hazard_raw) ∈ [0, 1]`}</Eq>
+            <Eq>{`V = Φ(PC1 / sd(PC1, ddof=0))
+Risk_Hazard = (Hazard_Index_mun × Exposure_Index × V)^(1/3)`}</Eq>
             <p>
-              This final Min–Max is the only normalization performed in the municipal domain, and it
-              applies to the risk product — never to the Hazard Index itself.
+              No 0.01 floor, municipal hazard Min–Max, or final risk Min–Max is applied. Therefore
+              exact hazard zero produces exact risk zero.
             </p>
           </Stage>
 
