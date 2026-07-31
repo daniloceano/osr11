@@ -410,7 +410,7 @@ def _add_colorbar(
     if zero_is_gray:
         labels = [label.get_text() for label in colorbar.ax.get_xticklabels()]
         if labels:
-            labels[0] = "No accepted\nevent"
+            labels[0] = "0"
             colorbar.ax.set_xticklabels(labels)
             colorbar.ax.get_xticklabels()[0].set_fontsize(7)
     tick_labels = colorbar.ax.get_xticklabels()
