@@ -1,0 +1,26 @@
+municipality_code,municipality_name,state,frontage_km,distance_to_coastline_km,pop_10km,pop_municipality,Risk_Hazard,coverage_status,has_measured_frontage
+4207007,Içara,Santa Catarina,0.0,4.024387903274285,9870,59141,,no_hazard_association,False
+2411056,Tibau,Rio Grande do Norte,0.0,1.4422028979896133,5063,5827,0.0,associated_no_accepted_event_1993_2025,False
+2304251,Cruz,Ceará,0.0,0.678568695203573,22114,30227,0.0,associated_no_accepted_event_1993_2025,False
+3531100,Mongaguá,São Paulo,0.0,0.5830987101000754,61689,61689,0.333962,associated_with_hazard,False
+4321436,Terra de Areia,Rio Grande do Sul,0.0,0.5452154938752612,765,10368,0.231011,associated_with_hazard,False
+4208203,Itajaí,Santa Catarina,0.0,0.5447044597357159,217579,263998,0.170952,associated_with_hazard,False
+2403251,Parnamirim,Rio Grande do Norte,0.0,0.5328453128494843,115400,252371,0.11765,associated_with_hazard,False
+2404408,Grossos,Rio Grande do Norte,0.0,0.5171400897571248,9713,9728,0.0,associated_no_accepted_event_1993_2025,False
+4304630,Capão da Canoa,Rio Grande do Sul,0.0,0.4840256005256335,63315,63315,0.297574,associated_with_hazard,False
+4321600,Tramandaí,Rio Grande do Sul,0.0,0.481722917535843,54118,54404,0.305599,associated_with_hazard,False
+2402204,Canguaretama,Rio Grande do Norte,0.0,0.44817154468116044,2753,29258,0.12689,associated_with_hazard,False
+4301636,Balneário Pinhal,Rio Grande do Sul,0.0,0.4006780550606747,13408,14943,0.392858,associated_with_hazard,False
+2609600,Olinda,Pernambuco,0.0,0.39678057111213366,346407,346407,0.0,associated_no_accepted_event_1993_2025,False
+4211306,Navegantes,Santa Catarina,0.0,0.35433432437078566,81474,86269,0.213029,associated_with_hazard,False
+4305454,Cidreira,Rio Grande do Sul,0.0,0.33822955138582644,16913,17037,0.360356,associated_with_hazard,False
+2310258,Paraipaba,Ceará,0.0,0.3107858812143186,13540,32235,0.0,associated_no_accepted_event_1993_2025,False
+4220000,Balneário Rincão,Santa Catarina,0.0,0.2265539574853588,16025,16025,0.353047,associated_with_hazard,False
+3300209,Araruama,Rio de Janeiro,0.0,0.18419390242181763,81680,129723,0.32018,associated_with_hazard,False
+2408953,Rio do Fogo,Rio Grande do Norte,0.0,0.1785634608221586,9533,9870,0.0,associated_no_accepted_event_1993_2025,False
+2614204,Sirinhaém,Pernambuco,0.0,0.14406438874934419,28996,37353,0.0,associated_no_accepted_event_1993_2025,False
+2706448,Paripueira,Alagoas,0.0,0.12754558125738527,13621,13842,0.0,associated_no_accepted_event_1993_2025,False
+2708709,São Miguel dos Milagres,Alagoas,0.0,0.07926346396105789,8386,8427,0.0,associated_no_accepted_event_1993_2025,False
+4310330,Imbé,Rio Grande do Sul,0.0,0.07301704998147765,26841,26841,0.323694,associated_with_hazard,False
+3204906,São Mateus,Espírito Santo,0.0,0.03149279418928758,32354,123809,0.173327,associated_with_hazard,False
+2919207,Lauro de Freitas,Bahia,0.0,0.03127890805635477,203189,203236,0.2145,associated_with_hazard,False

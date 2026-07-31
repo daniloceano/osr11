@@ -1,0 +1,52 @@
+{
+  "sources": {
+    "geometry": "outputs/risk_index/risk_index.shp",
+    "published_fields": "site/public/data/risk_index_municipalities.geojson",
+    "coastline": "data/ne_10m_coastline/ne_10m_coastline.shp"
+  },
+  "coastline_caveat": "Natural Earth 10 m is generalised at about 1:10,000,000. It reports no intersection for 25 municipalities, nearly all of them unambiguously coastal -- Olinda, Itajai and Navegantes among them -- every one within 700 m of the drawn line. This screening cannot classify frontage on its own; a definitive classification needs a coastline at survey resolution, which this repository does not hold.",
+  "n_municipalities": 282,
+  "n_with_measured_frontage": 257,
+  "n_without_measured_frontage": 25,
+  "resolution_band_km": 1.5,
+  "unambiguous_no_frontage": [
+    {
+      "municipality_name": "Içara",
+      "state": "Santa Catarina",
+      "distance_to_coastline_km": 4.024387903274285,
+      "pop_10km": 9870
+    }
+  ],
+  "icara_case": {
+    "municipality": "Içara",
+    "found": true,
+    "own_distance_to_coastline_km": 4.024,
+    "adjacent_members_of_the_set": [
+      {
+        "municipality_name": "Araranguá",
+        "state": "Santa Catarina",
+        "distance_to_coastline_km": 0.0,
+        "frontage_km": 7.119
+      },
+      {
+        "municipality_name": "Jaguaruna",
+        "state": "Santa Catarina",
+        "distance_to_coastline_km": 0.0,
+        "frontage_km": 15.895
+      },
+      {
+        "municipality_name": "Balneário Rincão",
+        "state": "Santa Catarina",
+        "distance_to_coastline_km": 0.227,
+        "frontage_km": 0.0
+      }
+    ],
+    "shielded_by": [
+      "Araranguá",
+      "Jaguaruna",
+      "Balneário Rincão"
+    ]
+  },
+  "santa_rita_ma_frontage_km": 1.9845728907284959,
+  "membership_hypothesis": "Exactly one member has no sea frontage, and it has a dated reason: Balneario Rincao was created out of Icara by state law 12.668/2003 and installed in 2013, taking the shore with it. Lima et al. (2024) report 281 municipalities and do not include Balneario Rincao, which this repository had to add by hand. The economical reading is that the inherited roster predates or ignores that split: it carries the pre-split parent, now landlocked, and misses the post-split child. That is a defect of the inherited list, not evidence that the criterion is broader than frontage -- Santa Rita/MA, the other case the record doubted, does front the sea."
+}

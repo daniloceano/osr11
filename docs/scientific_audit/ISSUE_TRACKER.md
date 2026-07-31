@@ -2,8 +2,14 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 12 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 4 (AUD-08, AUD-09, AUD-11, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 13 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
 
+> ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
+>
+> *Os contadores desta nota valiam quando ela foi escrita. O estado corrente está
+> na linha de contadores acima e na tabela mestra da §2; as notas de sessão
+> seguintes registram o que mudou desde então.*
+>
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
 > julgamento de especialista, e foi arquivada como dado de entrada versionado
@@ -349,6 +355,46 @@
 > terminal e depende de sete questões — todas hoje resolvidas ou em investigação
 > com decisão tomada.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-15 fechada; duas afirmações do registro refutadas
+>
+> **AUD-15 fechada** como `limitacao-reconhecida`. Diagnóstico em
+> `src/exploratory/audit_AUD_15_sea_frontage.py` →
+> `outputs/audit/AUD-15_sea_frontage/`. Nenhum município excluído, nenhum valor
+> numérico alterado.
+>
+> - **Içara/SC não é lacuna recuperável — a ausência está correta.** Está a
+>   **4,0 km da costa, sem frente de mar**, e os **três** vizinhos dela dentro do
+>   conjunto ficam entre ela e o mar (Araranguá 7,12 km de frente, Jaguaruna
+>   15,90 km, Balneário Rincão a 0,23 km da linha). A razão é datável:
+>   **Balneário Rincão foi desmembrado de Içara** pela Lei Estadual 12.668/2003,
+>   instalado em 2013, levando o litoral. Um município sem frente de mar não tem
+>   ponto oceânico próprio — a associação não falhou, não havia o que associar.
+>   **A dependência de AUD-04 e a pendência com Karine deixam de existir.**
+> - **Santa Rita/MA foi mal julgada.** A §2 dizia "provavelmente não é costeiro
+>   em nenhum sentido útil"; tem **1,98 km de frente de mar**. O problema é
+>   exposição (4 residentes) e associação (ponto a 77 km), não pertencimento.
+> - **O critério de pertencimento deixou de ser desconhecido.** O conjunto tem
+>   **exatamente uma** exceção à frente de mar, e ela é defeito datável da lista
+>   herdada: Lima et al. reportam 281 e **não incluem Balneário Rincão**, logo a
+>   lista parece anteceder o desmembramento — carrega o pai sem litoral e perde o
+>   filho com a costa. Continua **não reconstruível** a partir do repositório.
+> - **A classificação de frente de mar sai como triagem.** A Natural Earth 10 m
+>   devolve interseção zero para 25 municípios quase todos costeiros — Olinda,
+>   Itajaí, Navegantes —, todos a menos de 0,7 km da linha. Só o caso a uma ordem
+>   de grandeza fora da banda é decidível.
+> - **Classe própria para o zero na figura do artigo**, por decisão do
+>   pesquisador: baliza `1e-6` no painel D do multiplot, **mantendo o verde** e
+>   rotulando apenas `0`, sem texto explicativo na legenda. Resolve o conflito
+>   entre a exigência de AUD-11 (categoria própria) e o commit `4db5001` (que a
+>   desligara), atendendo à exigência sem impor o cinza. O site e a figura de
+>   zooms **já** isolavam o zero; o multiplot era o que faltava.
+>
+> **Divergência deixada em aberto:** a figura de zooms rotula a mesma classe como
+> "No accepted event", texto que o pesquisador dispensou no multiplot. Não
+> unificado por conta própria — é escolha de apresentação.
+>
+> **Resta uma única questão aberta: AUD-05**, e nenhuma questão P2 em aberto.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -360,9 +406,9 @@ ver [`README.md`](README.md).
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
 | **P1 — resolver ou justificar** | 9 | 0 | 4 | 0 | **5** |
-| **P2 — recomendado** | 3 | 0 | 1 | 0 | **2** |
+| **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **1** | **5** | **0** | **12** |
+| **Total** | **18** | **1** | **4** | **0** | **13** |
 
 ---
 
@@ -384,7 +430,7 @@ ver [`README.md`](README.md).
 | **AUD-12** | Contaminação estuarina e fluvial no estuário amazônico | qualidade-dados | perigo | 2a → 3.1/3.2 | dados, interp., saídas | P1 | Não — top-10 já não depende desses pontos | `resolvido` | `resultado-validado-mantido` | 01 | [AUD-12](issues/AUD-12_estuarine_river_contamination.md) |
 | **AUD-13** | Índice integrado: conduzido pelo perigo (84,7 %); cancelamento dominante passou a ser H × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `resolvido` | `resultado-validado-mantido` | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
 | **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
-| **AUD-15** | Cobertura amostral: 2 ausentes, 4 degenerados, **83 sem perigo aceito** | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `em-investigacao` | — | 04 | [AUD-15](issues/AUD-15_sample_coverage.md) |
+| **AUD-15** | Cobertura: **Içara não tem frente de mar** — ausência correta; 4 degenerados, 83 sem perigo aceito, fronteira de zero instável | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-15](issues/AUD-15_sample_coverage.md) |
 | **AUD-16** | **Não existem hotspots discretos** (Silverman p = 0,56 nos positivos); definição adotada é por intervalo de posto | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `resolvido` | `resultado-validado-mantido` | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
 | **AUD-17** | Quatorze inconsistências documentação ↔ código ↔ saídas (8 originais + 6 de 2026-07-31) | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim, salvo correção | `em-investigacao` | — | 09, 12 | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
 | **AUD-18** | Calibração é 100 % catarinense; busca por base no N/NE dá **negativo qualificado** — não é irremediável, é não explorada | lacuna-validacao | transversal | 2d/2e → 3 → 4 | dados, interp., doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `limitacao-reconhecida` | — | [AUD-18](issues/AUD-18_independent_validation_gap.md) |
@@ -513,7 +559,9 @@ Nenhum achado da revisão de linha de base foi descartado.
 | A escolha entre média geométrica e aritmética deixou de ser quase neutra (ρ 0,934) e passou a determinar o resultado (ρ 0,550) | AUD-13 §3-bis.5; consequência para AUD-07 | 2026-07-31 |
 | O bootstrap por município perdeu o objeto: com âncoras fixas, reamostrar municípios desloca postos em exatamente 0,0 | AUD-07 §3-bis.1 | 2026-07-31 |
 | 94 dos 196 municípios com risco positivo têm menos de dez eventos aceitos; o 21º do país tem **um**. A severidade é média condicional e não escala com raridade | AUD-07 §3-bis.4 | 2026-07-31 |
-| A fronteira zero/não-zero é amostralmente instável: só 102 dos 280 municípios são robustamente não nulos | AUD-07 §3-bis.4; anotado em AUD-15 e AUD-16 | 2026-07-31 |
+| A fronteira zero/não-zero é amostralmente instável: só 102 dos 280 municípios são robustamente não nulos | AUD-07 §3-bis.4; declarado em AUD-15 | 2026-07-31 |
+| Içara/SC não tem frente de mar desde o desmembramento de Balneário Rincão (2003/2013): sua ausência do produto está correta, não é falha de associação | AUD-15 §3-bis.3 | 2026-07-31 |
+| Santa Rita/MA tem 1,98 km de frente de mar — é costeira por critério geométrico, contra o que o registro supunha | AUD-15 §3-bis.4 | 2026-07-31 |
 | Não existem hotspots discretos: entre os 196 municípios com evento aceito a distribuição é unimodal (Silverman p = 0,56) e o Fisher–Jenks não tem cotovelo | AUD-16 §3-bis.1 | 2026-07-31 |
 | Getis-Ord Gi\* é inviável neste produto: 32,6 % dos pares de vizinhança compartilham ponto de grade e têm perigo idêntico por construção | AUD-16 §3-bis.3 | 2026-07-31 |
 

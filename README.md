@@ -903,22 +903,42 @@ named at the end of each paragraph.
   set is inherited from Lima et al. (2024) plus Balneário Rincão, created in 2013
   and absent from the standard SIDRA aggregates, giving **282** municipalities;
   the membership criterion is inherited rather than re-derived here. All 282
-  carry an SVI, but only **280** carry a risk value. Both absences are
-  **association gaps, not scope decisions**, and both are recoverable.
-  **Fernando de Noronha/PE** is an archipelago ~350 km offshore, but the grid
-  does cover it: **19 points** lie over the archipelago, with ordinary oceanic
-  wave thresholds (Hₛ ≈ 2.0 m) and HAT ≈ 1.5 m, the nearest 1.5 km from the
-  municipal polygon. Each carries 9–13 candidate events, **all rejected by the
-  HAT gate**, so associating it would give it `Hazard_Index_mun` = 0 and place
-  it among the 83 hazard-silent municipalities below. **Içara/SC** has its
-  nearest point 16.5 km away, carrying 77 accepted events, with three
-  candidates inside 30 km. Both must be named in the map legends, not left in a
-  metadata file. Four municipalities have a population within 10 km too small for the
-  exposure metric to discriminate — **Santa Rita/MA (4 residents), Calçoene/AP
-  (101), Oiapoque/AP (518), Terra de Areia/RS (765)**. Santa Rita/MA and
-  Calçoene/AP have exposure zero because `pop_eff` is below the fixed 100-person
-  absolute goalpost; there is no 0.01 floor. Removing all four leaves the published ranking
-  unchanged (ρ = 1.000, maximum rank shift 0), so they anchor no normalisation.
+  carry an SVI, but only **280** carry a risk value, and **the two absences have
+  different causes**. **Fernando de Noronha/PE** is an archipelago ~350 km
+  offshore, but the grid does cover it: **19 points** lie over the archipelago,
+  with ordinary oceanic wave thresholds (Hₛ ≈ 2.0 m) and HAT ≈ 1.5 m, the nearest
+  1.5 km from the municipal polygon. Each carries 9–13 candidate events, **all
+  rejected by the HAT gate**, so associating it would give it `Hazard_Index_mun`
+  = 0 and place it among the 83 hazard-silent municipalities below: its absence
+  is a **result**. **Içara/SC** is different, and an earlier reading of it was
+  wrong. It lies **4.0 km from the coastline with no sea frontage at all**, and
+  its three neighbours inside the set — Araranguá, Jaguaruna and Balneário Rincão
+  — all sit between it and the water. The reason is dated: Balneário Rincão was
+  created out of Içara by state law 12,668/2003 and installed in 2013, taking the
+  shore with it. A municipality without frontage has no ocean grid point of its
+  own, so the association did not fail — there was nothing to associate, and the
+  absence is **correct by definition**. That also exposes a defect in the
+  inherited roster: Lima et al. (2024) list 281 municipalities and do **not**
+  include Balneário Rincão, which had to be added here by hand, so the roster
+  appears to predate or ignore the 2013 split — carrying the now-landlocked
+  parent and missing the child that kept the coast. Exactly one member of the set
+  has no sea frontage, and it is that one. A frontage screening of all 282 against
+  the Natural Earth 10 m coastline is versioned, but it is a **screening, not a
+  classification**: that dataset reports no intersection for 25 municipalities,
+  nearly all unambiguously coastal — Olinda, Itajaí, Navegantes among them — every
+  one within 700 m of the drawn line, so only a case an order of magnitude outside
+  that band is decidable. A definitive classification needs a coastline at survey
+  resolution, which this repository does not hold. Four municipalities have a
+  population within 10 km too small for the exposure metric to discriminate —
+  **Santa Rita/MA (4 residents), Calçoene/AP (101), Oiapoque/AP (518),
+  Terra de Areia/RS (765)**. Santa Rita/MA and Calçoene/AP have exposure zero
+  because `pop_eff` is below the fixed 100-person absolute goalpost; there is no
+  0.01 floor. Santa Rita/MA is nonetheless a **sea-fronting municipality**, with
+  1.98 km of measured frontage: its problem is exposure measurement and hazard
+  association — its point lies 77 km away — not membership, and excluding it on
+  low `pop_10km` would use the very variable being measured. Removing all four
+  leaves the published ranking unchanged (ρ = 1.000, maximum rank shift 0), so
+  they anchor no normalisation.
   The coverage limitation that the current method newly creates is different in
   kind and larger: **83 of the 280 municipalities draw their hazard from a grid
   point that accepted no compound event at all**, so their `Hazard_Index_mun` and
@@ -927,8 +947,19 @@ named at the end of each paragraph.
   BA 7, PB 3, MA 3, PA 3, AP 1) and they occupy ranks **191–280** — the whole
   bottom third of the ranking as tied exact zeros; they do not define a hazard
   gradient. Zero here means no accepted event in 1993–2025, not impossibility of
-  physical coastal risk.
-  *(`src/exploratory/audit_AUD_15_sample_coverage.py`)*
+  physical coastal risk. In the published GeoJSON every case carries its own
+  label — `coverage_status` separates the 197 municipalities with an accepted
+  event, the 83 without and the 2 without an association, and `risk_zero_cause`
+  separates a hazard zero from an exposure zero — and panel (d) of the article
+  multiplot gives exact zeros a class of their own on the colour bar, labelled 0.
+  **That boundary is itself sampling-dependent.** Resampling the 33 years of
+  record (AUD-07) sends a further **94 municipalities to exactly zero in some
+  draws** — 34 % of draws for Guimarães/MA, Alcântara/MA, Raposa/MA and Icatu/MA,
+  which rank 21st, 22nd, 28th and 32nd — so only **102 of the 280 are robustly
+  non-zero**. The zero category should be read as a property of a 33-year sample,
+  not as a fixed partition of the coast.
+  *(`src/exploratory/audit_AUD_15_sample_coverage.py`,
+  `src/exploratory/audit_AUD_15_sea_frontage.py`)*
 
 - **Deprivation axis, not coastal susceptibility (AUD-09).** `SVI_Coast_2022` is
   PC1 of the ten standardized indicators, explaining 50.5 % of their variance

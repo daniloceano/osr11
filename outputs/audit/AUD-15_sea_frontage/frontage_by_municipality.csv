@@ -1,0 +1,283 @@
+municipality_code,municipality_name,state,frontage_km,distance_to_coastline_km,pop_10km,pop_municipality,Risk_Hazard,coverage_status,has_measured_frontage
+4207007,Içara,Santa Catarina,0.0,4.024387903274285,9870,59141,,no_hazard_association,False
+2411056,Tibau,Rio Grande do Norte,0.0,1.4422028979896133,5063,5827,0.0,associated_no_accepted_event_1993_2025,False
+2304251,Cruz,Ceará,0.0,0.678568695203573,22114,30227,0.0,associated_no_accepted_event_1993_2025,False
+3531100,Mongaguá,São Paulo,0.0,0.5830987101000754,61689,61689,0.333962,associated_with_hazard,False
+4321436,Terra de Areia,Rio Grande do Sul,0.0,0.5452154938752612,765,10368,0.231011,associated_with_hazard,False
+4208203,Itajaí,Santa Catarina,0.0,0.5447044597357159,217579,263998,0.170952,associated_with_hazard,False
+2403251,Parnamirim,Rio Grande do Norte,0.0,0.5328453128494843,115400,252371,0.11765,associated_with_hazard,False
+2404408,Grossos,Rio Grande do Norte,0.0,0.5171400897571248,9713,9728,0.0,associated_no_accepted_event_1993_2025,False
+4304630,Capão da Canoa,Rio Grande do Sul,0.0,0.4840256005256335,63315,63315,0.297574,associated_with_hazard,False
+4321600,Tramandaí,Rio Grande do Sul,0.0,0.481722917535843,54118,54404,0.305599,associated_with_hazard,False
+2402204,Canguaretama,Rio Grande do Norte,0.0,0.44817154468116044,2753,29258,0.12689,associated_with_hazard,False
+4301636,Balneário Pinhal,Rio Grande do Sul,0.0,0.4006780550606747,13408,14943,0.392858,associated_with_hazard,False
+2609600,Olinda,Pernambuco,0.0,0.39678057111213366,346407,346407,0.0,associated_no_accepted_event_1993_2025,False
+4211306,Navegantes,Santa Catarina,0.0,0.35433432437078566,81474,86269,0.213029,associated_with_hazard,False
+4305454,Cidreira,Rio Grande do Sul,0.0,0.33822955138582644,16913,17037,0.360356,associated_with_hazard,False
+2310258,Paraipaba,Ceará,0.0,0.3107858812143186,13540,32235,0.0,associated_no_accepted_event_1993_2025,False
+4220000,Balneário Rincão,Santa Catarina,0.0,0.2265539574853588,16025,16025,0.353047,associated_with_hazard,False
+3300209,Araruama,Rio de Janeiro,0.0,0.18419390242181763,81680,129723,0.32018,associated_with_hazard,False
+2408953,Rio do Fogo,Rio Grande do Norte,0.0,0.1785634608221586,9533,9870,0.0,associated_no_accepted_event_1993_2025,False
+2614204,Sirinhaém,Pernambuco,0.0,0.14406438874934419,28996,37353,0.0,associated_no_accepted_event_1993_2025,False
+2706448,Paripueira,Alagoas,0.0,0.12754558125738527,13621,13842,0.0,associated_no_accepted_event_1993_2025,False
+2708709,São Miguel dos Milagres,Alagoas,0.0,0.07926346396105789,8386,8427,0.0,associated_no_accepted_event_1993_2025,False
+4310330,Imbé,Rio Grande do Sul,0.0,0.07301704998147765,26841,26841,0.323694,associated_with_hazard,False
+3204906,São Mateus,Espírito Santo,0.0,0.03149279418928758,32354,123809,0.173327,associated_with_hazard,False
+2919207,Lauro de Freitas,Bahia,0.0,0.03127890805635477,203189,203236,0.2145,associated_with_hazard,False
+4212304,Paulo Lopes,Santa Catarina,1.1408686404720922,0.0,8316,9090,0.296219,associated_with_hazard,True
+3301702,Duque de Caxias,Rio de Janeiro,9.784951398171549,0.0,649287,807233,0.385615,associated_with_hazard,True
+4205407,Florianópolis,Santa Catarina,94.86690384508084,0.0,536876,536876,0.261843,associated_with_hazard,True
+4218004,Tijucas,Santa Catarina,10.031598481636326,0.0,49288,51595,0.250529,associated_with_hazard,True
+3302502,Magé,Rio de Janeiro,18.23768991046982,0.0,166026,228147,0.468027,associated_with_hazard,True
+4213500,Porto Belo,Santa Catarina,9.313111940342681,0.0,27606,27606,0.280167,associated_with_hazard,True
+3304524,Rio das Ostras,Rio de Janeiro,24.332054276235358,0.0,154030,155775,0.31141,associated_with_hazard,True
+3300936,Carapebus,Rio de Janeiro,17.29003095425203,0.0,12438,13881,0.281632,associated_with_hazard,True
+3204203,Piúma,Espírito Santo,2.1463958211269705,0.0,21986,21986,0.28702,associated_with_hazard,True
+3301850,Guapimirim,Rio de Janeiro,6.262648225826822,0.0,12068,51557,0.337326,associated_with_hazard,True
+3301900,Itaboraí,Rio de Janeiro,2.312810579929013,0.0,29916,223854,0.252394,associated_with_hazard,True
+4212809,Balneário Piçarras,Santa Catarina,0.18738894494523872,0.0,26868,27180,0.234542,associated_with_hazard,True
+4216602,São José,Santa Catarina,10.202509261627602,0.0,269900,271013,0.248551,associated_with_hazard,True
+4202305,Biguaçu,Santa Catarina,13.599713941404621,0.0,74252,76590,0.306858,associated_with_hazard,True
+4202107,Barra Velha,Santa Catarina,7.293893649449281,0.0,44994,45128,0.279626,associated_with_hazard,True
+3304904,São Gonçalo,Rio de Janeiro,10.101997204448699,0.0,837612,895560,0.347431,associated_with_hazard,True
+3302007,Itaguaí,Rio de Janeiro,13.042431859843585,0.0,107362,116489,0.325045,associated_with_hazard,True
+4201307,Araquari,Santa Catarina,11.367567210439692,0.0,29276,45211,0.23612,associated_with_hazard,True
+4115705,Matinhos,Paraná,13.544822065855039,0.0,39200,39200,0.253096,associated_with_hazard,True
+3522109,Itanhaém,São Paulo,1.2109746486113673,0.0,111936,112541,0.34147,associated_with_hazard,True
+3551009,São Vicente,São Paulo,20.429131559287534,0.0,328987,328987,0.355414,associated_with_hazard,True
+3548500,Santos,São Paulo,36.25891370818982,0.0,418350,418360,0.261002,associated_with_hazard,True
+4208302,Itapema,Santa Catarina,3.367686172480683,0.0,75330,75330,0.226699,associated_with_hazard,True
+2109452,Raposa,Maranhão,22.816969559980016,0.0,30845,30845,0.373527,associated_with_hazard,True
+2105104,Icatu,Maranhão,106.00590131021241,0.0,22405,24618,0.368353,associated_with_hazard,True
+2101707,Barreirinhas,Maranhão,13.224255536899209,0.0,2711,65690,0.141982,associated_with_hazard,True
+2105005,Humberto de Campos,Maranhão,126.12038667585438,0.0,17154,25901,0.227714,associated_with_hazard,True
+2109403,Primeira Cruz,Maranhão,36.79062083696212,0.0,7269,13521,0.308729,associated_with_hazard,True
+2104909,Guimarães,Maranhão,70.45269343149931,0.0,10033,10285,0.393606,associated_with_hazard,True
+2103109,Cedral,Maranhão,26.095569474939843,0.0,8996,9914,0.356003,associated_with_hazard,True
+1508209,Vigia,Pará,42.24632130991672,0.0,49382,50518,0.171897,associated_with_hazard,True
+2101301,Bacuri,Maranhão,57.62296821707747,0.0,6520,16318,0.182223,associated_with_hazard,True
+2100832,Apicum-Açu,Maranhão,49.709006331368,0.0,17525,17526,0.175136,associated_with_hazard,True
+2103703,Cururupu,Maranhão,199.9654809563356,0.0,29741,31127,0.258674,associated_with_hazard,True
+2104305,Godofredo Viana,Maranhão,74.11645809560648,0.0,3039,10210,0.0,associated_no_accepted_event_1993_2025,True
+1508308,Viseu,Pará,122.02604412764927,0.0,33687,58873,0.0,associated_no_accepted_event_1993_2025,True
+2106201,Luís Domingues,Maranhão,26.568322347088227,0.0,6627,7169,0.0,associated_no_accepted_event_1993_2025,True
+1506302,Salvaterra,Pará,39.36975507673236,0.0,23831,24094,0.0,associated_no_accepted_event_1993_2025,True
+3202801,Itapemirim,Espírito Santo,9.274317440495334,0.0,31338,39949,0.365047,associated_with_hazard,True
+4212254,Passo de Torres,Santa Catarina,0.38734376060620274,0.0,12883,12883,0.429505,associated_with_hazard,True
+4323804,Xangri-lá,Rio Grande do Sul,7.263801811030893,0.0,16876,16876,0.342145,associated_with_hazard,True
+4313508,Osório,Rio Grande do Sul,1.1009775401009552,0.0,4581,47228,0.197916,associated_with_hazard,True
+1600501,Oiapoque,Amapá,206.53092276967854,0.0,518,27264,0.071752,associated_with_hazard,True
+1600204,Calçoene,Amapá,68.52131639218015,0.0,101,10554,0.0,associated_no_accepted_event_1993_2025,True
+1600105,Amapá,Amapá,147.23595833674307,0.0,6958,8065,0.204642,associated_with_hazard,True
+1600303,Macapá,Amapá,302.24037040126734,0.0,425062,441451,0.178303,associated_with_hazard,True
+1501709,Bragança,Pará,104.87440997204578,0.0,107114,122951,0.254169,associated_with_hazard,True
+1507904,Soure,Pará,46.62650770152586,0.0,23871,24146,0.217272,associated_with_hazard,True
+1504307,Maracanã,Pará,76.42253727072072,0.0,19480,25442,0.371047,associated_with_hazard,True
+1502905,Curuçá,Pará,64.1662522667284,0.0,32395,41000,0.32354,associated_with_hazard,True
+1508035,Tracuateua,Pará,38.348922977009,0.0,4977,28849,0.188675,associated_with_hazard,True
+1506112,Quatipuru,Pará,41.53360995128407,0.0,10693,11238,0.301001,associated_with_hazard,True
+1507474,São João de Pirabas,Pará,66.60196456336357,0.0,18928,20716,0.320293,associated_with_hazard,True
+1507102,São Caetano de Odivelas,Pará,35.51416569449983,0.0,14433,17150,0.0,associated_no_accepted_event_1993_2025,True
+1500909,Augusto Corrêa,Pará,66.09091303097857,0.0,31267,44304,0.222441,associated_with_hazard,True
+1502509,Chaves,Pará,748.885019940414,0.0,17151,19848,0.339802,associated_with_hazard,True
+3520400,Ilhabela,São Paulo,37.082039047298046,0.0,34612,34612,0.36105,associated_with_hazard,True
+3550704,São Sebastião,São Paulo,15.923256469498265,0.0,81344,81344,0.432443,associated_with_hazard,True
+3506359,Bertioga,São Paulo,26.526472727944938,0.0,64183,64183,0.406928,associated_with_hazard,True
+3518701,Guarujá,São Paulo,42.61796125704333,0.0,287487,287487,0.438005,associated_with_hazard,True
+3541000,Praia Grande,São Paulo,3.6604874260122595,0.0,349895,349895,0.294167,associated_with_hazard,True
+4201406,Araranguá,Santa Catarina,7.1186849558834515,0.0,57934,71984,0.267738,associated_with_hazard,True
+3537602,Peruíbe,São Paulo,16.8082436654883,0.0,67826,68089,0.325475,associated_with_hazard,True
+2917300,Ituberá,Bahia,33.08445130432038,0.0,19876,21999,0.287083,associated_with_hazard,True
+3520426,Ilha Comprida,São Paulo,75.93010290503388,0.0,13414,13414,0.335069,associated_with_hazard,True
+3509908,Cananéia,São Paulo,101.72193398524904,0.0,12042,12290,0.35142,associated_with_hazard,True
+4109500,Guaraqueçaba,Paraná,187.09616656048027,0.0,6831,7308,0.505445,associated_with_hazard,True
+4118204,Paranaguá,Paraná,82.36208350848379,0.0,145334,145574,0.35772,associated_with_hazard,True
+4119954,Pontal do Paraná,Paraná,28.48869168285476,0.0,30362,30413,0.298846,associated_with_hazard,True
+4208807,Jaguaruna,Santa Catarina,15.894927275157979,0.0,18296,20353,0.350641,associated_with_hazard,True
+2605459,Fernando de Noronha,Pernambuco,9.899368412274116,0.0,3161,3161,,no_hazard_association,True
+1502608,Colares,Pará,37.731119063027194,0.0,12916,12916,0.162545,associated_with_hazard,True
+3520301,Iguape,São Paulo,74.68093636877137,0.0,25098,29078,0.408137,associated_with_hazard,True
+3305000,São João da Barra,Rio de Janeiro,13.249666809654228,0.0,30827,36489,0.334953,associated_with_hazard,True
+3301009,Campos dos Goytacazes,Rio de Janeiro,6.799275276747528,0.0,12174,483486,0.191218,associated_with_hazard,True
+3304151,Quissamã,Rio de Janeiro,44.45061593659627,0.0,7919,22189,0.258615,associated_with_hazard,True
+3302403,Macaé,Rio de Janeiro,19.58997813614823,0.0,231563,245856,0.336096,associated_with_hazard,True
+3301306,Casimiro de Abreu,Rio de Janeiro,4.38897436948343,0.0,22720,46635,0.286142,associated_with_hazard,True
+3300233,Armação dos Búzios,Rio de Janeiro,18.88340964907582,0.0,39919,39919,0.350561,associated_with_hazard,True
+3300704,Cabo Frio,Rio de Janeiro,15.398054015913123,0.0,220886,221296,0.382092,associated_with_hazard,True
+3510500,Caraguatatuba,São Paulo,17.585498508619096,0.0,134661,134675,0.299897,associated_with_hazard,True
+3305505,Saquarema,Rio de Janeiro,3.6220418786356863,0.0,87708,89580,0.430434,associated_with_hazard,True
+3302700,Maricá,Rio de Janeiro,3.9908044078509533,0.0,194972,197166,0.426837,associated_with_hazard,True
+3303302,Niterói,Rio de Janeiro,21.736480373972856,0.0,480647,480647,0.279088,associated_with_hazard,True
+3304557,Rio de Janeiro,Rio de Janeiro,75.31508449496019,0.0,4374900,6193495,0.274833,associated_with_hazard,True
+3302601,Mangaratiba,Rio de Janeiro,54.71198369964612,0.0,39932,39932,0.444282,associated_with_hazard,True
+3300100,Angra dos Reis,Rio de Janeiro,90.65506424370614,0.0,166027,166050,0.401956,associated_with_hazard,True
+3303807,Paraty,Rio de Janeiro,55.51893099814566,0.0,44292,44399,0.440631,associated_with_hazard,True
+3555406,Ubatuba,São Paulo,36.0622669461706,0.0,92676,92691,0.372571,associated_with_hazard,True
+3300258,Arraial do Cabo,Rio de Janeiro,10.926658620778563,0.0,30935,30935,0.406446,associated_with_hazard,True
+2109601,Rosário,Maranhão,43.21193356876956,0.0,20520,38345,0.239519,associated_with_hazard,True
+2101103,Axixá,Maranhão,20.89460739227322,0.0,11670,12102,0.306858,associated_with_hazard,True
+2110278,Santo Amaro do Maranhão,Maranhão,40.00157106328401,0.0,1060,13561,0.134754,associated_with_hazard,True
+4202073,Balneário Gaivota,Santa Catarina,13.74426943756026,0.0,15715,15715,0.434647,associated_with_hazard,True
+2204659,Ilha Grande,Piauí,5.056679486130217,0.0,8680,9423,0.127285,associated_with_hazard,True
+2207702,Parnaíba,Piauí,20.711750365647884,0.0,112123,162156,0.118977,associated_with_hazard,True
+2310209,Paracuru,Ceará,2.9545763200090747,0.0,33006,38921,0.0,associated_no_accepted_event_1993_2025,True
+1504406,Marapanim,Pará,70.43015348030728,0.0,19274,26801,0.365189,associated_with_hazard,True
+2304400,Fortaleza,Ceará,3.6717993377250924,0.0,1675622,2427546,0.0,associated_no_accepted_event_1993_2025,True
+2304459,Fortim,Ceará,1.6438250648174324,0.0,15807,17488,0.0,associated_no_accepted_event_1993_2025,True
+2100907,Araioses,Maranhão,86.4015685838245,0.0,17715,38436,0.177877,associated_with_hazard,True
+2913457,Igrapiúna,Bahia,41.30139135425772,0.0,7790,12838,0.236491,associated_with_hazard,True
+2914901,Itacaré,Bahia,7.882040377681117,0.0,17818,27606,0.148018,associated_with_hazard,True
+3205002,Serra,Espírito Santo,13.949030627374984,0.0,448882,520895,0.216402,associated_with_hazard,True
+3205200,Vila Velha,Espírito Santo,11.635601933241526,0.0,456334,464614,0.213452,associated_with_hazard,True
+3200409,Anchieta,Espírito Santo,7.058358193986964,0.0,25542,29477,0.349391,associated_with_hazard,True
+2312403,São Gonçalo do Amarante,Ceará,6.067971574459013,0.0,22668,53955,0.0,associated_no_accepted_event_1993_2025,True
+1504109,Magalhães Barata,Pará,12.817761287824958,0.0,4235,7974,0.263611,associated_with_hazard,True
+1506203,Salinópolis,Pará,51.36158117329981,0.0,44759,44759,0.346147,associated_with_hazard,True
+2102903,Carutapera,Maranhão,130.36367032689344,0.0,21233,24161,0.0,associated_no_accepted_event_1993_2025,True
+2102606,Cândido Mendes,Maranhão,87.43823707530498,0.0,4371,19940,0.161167,associated_with_hazard,True
+2112407,Turiaçu,Maranhão,108.1011209780898,0.0,25437,37274,0.238291,associated_with_hazard,True
+2111789,Serrano do Maranhão,Maranhão,13.955802356898523,0.0,2892,10137,0.199824,associated_with_hazard,True
+2109056,Porto Rico do Maranhão,Maranhão,27.84696477622927,0.0,5578,6050,0.318293,associated_with_hazard,True
+2101251,Bacabeira,Maranhão,29.81235945331417,0.0,5775,16990,0.18871,associated_with_hazard,True
+2100204,Alcântara,Maranhão,126.5610187553685,0.0,18298,18355,0.393562,associated_with_hazard,True
+2101350,Bacurituba,Maranhão,24.373982081720825,0.0,2503,5272,0.264216,associated_with_hazard,True
+2111003,São João Batista,Maranhão,39.229302003555205,0.0,1303,18979,0.155519,associated_with_hazard,True
+2102408,Cajapió,Maranhão,82.49554098156884,0.0,7299,10057,0.35798,associated_with_hazard,True
+2111300,São Luís,Maranhão,68.23686806966194,0.0,1038019,1038019,0.280474,associated_with_hazard,True
+2111201,São José de Ribamar,Maranhão,38.27293396281669,0.0,243840,243840,0.310467,associated_with_hazard,True
+2107506,Paço do Lumiar,Maranhão,3.88636350707319,0.0,145384,145384,0.269005,associated_with_hazard,True
+2110203,Santa Rita,Maranhão,1.9845728907284959,0.0,4,36789,0.0,associated_with_hazard,True
+2101905,Bequimão,Maranhão,43.03485798571118,0.0,11618,19566,0.269085,associated_with_hazard,True
+2607208,Ipojuca,Pernambuco,10.06317689537412,0.0,61658,98694,0.0,associated_no_accepted_event_1993_2025,True
+2607901,Jaboatão dos Guararapes,Pernambuco,1.4792788430741681,0.0,521717,644201,0.0,associated_no_accepted_event_1993_2025,True
+2610707,Paulista,Pernambuco,5.272752632101223,0.0,340942,341519,0.0,associated_no_accepted_event_1993_2025,True
+2607604,Ilha de Itamaracá,Pernambuco,24.745967470930847,0.0,24012,24012,0.0,associated_no_accepted_event_1993_2025,True
+2507507,João Pessoa,Paraíba,21.54334129567757,0.0,832386,832386,0.121934,associated_with_hazard,True
+2504603,Conde,Paraíba,13.257817457156605,0.0,13268,27734,0.180449,associated_with_hazard,True
+2513703,Santa Rita,Paraíba,15.730360936740835,0.0,138679,148951,0.0,associated_no_accepted_event_1993_2025,True
+2508604,Lucena,Paraíba,10.791321641559993,0.0,12403,12403,0.0,associated_no_accepted_event_1993_2025,True
+2509057,Marcação,Paraíba,5.563677371107319,0.0,8001,8751,0.184029,associated_with_hazard,True
+2501401,Baía da Traição,Paraíba,10.360819511526767,0.0,9242,9242,0.217754,associated_with_hazard,True
+2413201,Senador Georgino Avelino,Rio Grande do Norte,5.074175858073305,0.0,4065,4065,0.200653,associated_with_hazard,True
+2408201,Nísia Floresta,Rio Grande do Norte,4.206152643603817,0.0,21251,31868,0.189369,associated_with_hazard,True
+2402600,Ceará-Mirim,Rio Grande do Norte,4.1913032950646745,0.0,9260,79575,0.16213,associated_with_hazard,True
+2401859,Caiçara do Norte,Rio Grande do Norte,6.961122252102848,0.0,5694,6256,0.0,associated_no_accepted_event_1993_2025,True
+4201950,Balneário Arroio do Silva,Santa Catarina,5.2502372754245155,0.0,15765,15765,0.395732,associated_with_hazard,True
+2302057,Barroquinha,Ceará,17.83611127435167,0.0,8185,14454,0.0,associated_no_accepted_event_1993_2025,True
+2906303,Canavieiras,Bahia,30.07415566338382,0.0,27990,32663,0.248111,associated_with_hazard,True
+2903409,Belmonte,Bahia,36.868202293251585,0.0,10104,20092,0.249754,associated_with_hazard,True
+2927705,Santa Cruz Cabrália,Bahia,2.386637795817331,0.0,24723,29244,0.302006,associated_with_hazard,True
+2925303,Porto Seguro,Bahia,3.126082185912761,0.0,150434,167827,0.255039,associated_with_hazard,True
+2925501,Prado,Bahia,7.934263310642846,0.0,25237,34522,0.314029,associated_with_hazard,True
+2900801,Alcobaça,Bahia,0.9700735921690113,0.0,12289,24297,0.315952,associated_with_hazard,True
+2906907,Caravelas,Bahia,14.551458413944303,0.0,10657,21619,0.24388,associated_with_hazard,True
+3204302,Presidente Kennedy,Espírito Santo,2.713997885093255,0.0,5686,13883,0.254609,associated_with_hazard,True
+2922003,Mucuri,Bahia,42.3470686912113,0.0,10555,37290,0.280322,associated_with_hazard,True
+3201605,Conceição da Barra,Espírito Santo,23.248806604033557,0.0,15252,27366,0.245541,associated_with_hazard,True
+3203205,Linhares,Espírito Santo,26.763532296593926,0.0,5386,166694,0.129568,associated_with_hazard,True
+3200607,Aracruz,Espírito Santo,23.672873440165915,0.0,26952,94786,0.221748,associated_with_hazard,True
+3202207,Fundão,Espírito Santo,1.8221836361045687,0.0,6341,17898,0.234379,associated_with_hazard,True
+3205309,Vitória,Espírito Santo,21.43812961225148,0.0,322636,322636,0.175936,associated_with_hazard,True
+3202405,Guarapari,Espírito Santo,24.72213083984746,0.0,120091,124017,0.285058,associated_with_hazard,True
+3203320,Marataízes,Espírito Santo,18.67234600178472,0.0,41520,41520,0.356014,associated_with_hazard,True
+2923001,Nova Viçosa,Bahia,26.020967063518672,0.0,9605,39480,0.315626,associated_with_hazard,True
+4205704,Garopaba,Santa Catarina,5.142081681509692,0.0,29979,29979,0.337077,associated_with_hazard,True
+4211900,Palhoça,Santa Catarina,26.96225895171203,0.0,221990,222130,0.321724,associated_with_hazard,True
+4206009,Governador Celso Ramos,Santa Catarina,19.698668345072683,0.0,16638,16638,0.321647,associated_with_hazard,True
+4202453,Bombinhas,Santa Catarina,8.499772382370478,0.0,24956,24956,0.273927,associated_with_hazard,True
+4202008,Balneário Camboriú,Santa Catarina,5.033015565402115,0.0,136326,136326,0.130837,associated_with_hazard,True
+4212502,Penha,Santa Catarina,3.296097647851349,0.0,33389,33389,0.229737,associated_with_hazard,True
+4202057,Balneário Barra do Sul,Santa Catarina,23.0619826874943,0.0,14876,14876,0.287834,associated_with_hazard,True
+4216206,São Francisco do Sul,Santa Catarina,72.16377398692057,0.0,52658,52658,0.317983,associated_with_hazard,True
+4208450,Itapoá,Santa Catarina,8.843144342238988,0.0,30679,30679,0.323122,associated_with_hazard,True
+4109609,Guaratuba,Paraná,58.86629961276478,0.0,40665,41972,0.304095,associated_with_hazard,True
+2700508,Barra de Santo Antônio,Alagoas,5.559732700594597,0.0,16300,16348,0.0,associated_no_accepted_event_1993_2025,True
+3304755,São Francisco de Itabapoana,Rio de Janeiro,12.60649030436148,0.0,32815,44839,0.386642,associated_with_hazard,True
+2108058,Paulino Neves,Maranhão,24.285814987404585,0.0,8954,17355,0.201468,associated_with_hazard,True
+2404507,Guamaré,Rio Grande do Norte,6.333022399651335,0.0,9843,14665,0.0,associated_no_accepted_event_1993_2025,True
+4317301,Santa Vitória do Palmar,Rio Grande do Sul,111.80000787310529,0.0,2795,30912,0.234787,associated_with_hazard,True
+2614857,Tamandaré,Pernambuco,7.689149787501308,0.0,19600,23547,0.0,associated_no_accepted_event_1993_2025,True
+2613404,São José da Coroa Grande,Pernambuco,4.854156799254499,0.0,17834,17956,0.0,associated_no_accepted_event_1993_2025,True
+2703601,Japaratinga,Alagoas,2.881928707159502,0.0,8944,8944,0.0,associated_no_accepted_event_1993_2025,True
+2706505,Passo de Camaragibe,Alagoas,4.944313296310452,0.0,5034,13661,0.0,associated_no_accepted_event_1993_2025,True
+4209409,Laguna,Santa Catarina,36.16710285629478,0.0,42793,42793,0.38399,associated_with_hazard,True
+2700607,Barra de São Miguel,Alagoas,1.6839146437916166,0.0,7931,7934,0.0,associated_no_accepted_event_1993_2025,True
+2707800,Roteiro,Alagoas,4.409015374917766,0.0,6474,6474,0.0,associated_no_accepted_event_1993_2025,True
+2702702,Feliz Deserto,Alagoas,4.729390807806255,0.0,3487,3958,0.0,associated_no_accepted_event_1993_2025,True
+4315602,Rio Grande,Rio Grande do Sul,66.26550175619762,0.0,188623,190452,0.421935,associated_with_hazard,True
+2933208,Vera Cruz,Bahia,53.08771600968676,0.0,42537,42537,0.26839,associated_with_hazard,True
+2922607,Nilo Peçanha,Bahia,22.04317701412349,0.0,6282,12345,0.274842,associated_with_hazard,True
+4321501,Torres,Rio Grande do Sul,15.65525613440805,0.0,40850,41671,0.307212,associated_with_hazard,True
+4301057,Arroio do Sal,Rio Grande do Sul,5.314905008533351,0.0,11070,11070,0.41496,associated_with_hazard,True
+4313656,Palmares do Sul,Rio Grande do Sul,39.425610885419594,0.0,10953,12857,0.418606,associated_with_hazard,True
+4312500,Mostardas,Rio Grande do Sul,120.26465592611423,0.0,11668,12037,0.402897,associated_with_hazard,True
+4321352,Tavares,Rio Grande do Sul,26.464595479047304,0.0,5151,5220,0.3607,associated_with_hazard,True
+4318507,São José do Norte,Rio Grande do Sul,140.70250215039704,0.0,24947,24947,0.566342,associated_with_hazard,True
+2800704,Brejo Grande,Sergipe,10.746149947163385,0.0,4613,7859,0.0,associated_no_accepted_event_1993_2025,True
+2512903,Rio Tinto,Paraíba,13.743410856233252,0.0,3701,24404,0.122854,associated_with_hazard,True
+2509305,Mataraca,Paraíba,0.18251433589303936,0.0,3863,8343,0.157728,associated_with_hazard,True
+2401404,Baía Formosa,Rio Grande do Norte,2.3789436224108975,0.0,8755,8817,0.249045,associated_with_hazard,True
+2414209,Tibau do Sul,Rio Grande do Norte,18.051698121382024,0.0,17601,17601,0.200063,associated_with_hazard,True
+2408102,Natal,Rio Grande do Norte,0.887307443227239,0.0,722364,751406,0.141256,associated_with_hazard,True
+2403608,Extremoz,Rio Grande do Norte,1.8572179253351897,0.0,44507,61569,0.193027,associated_with_hazard,True
+2407500,Maxaranguape,Rio Grande do Norte,5.07182670488564,0.0,7993,10371,0.0,associated_no_accepted_event_1993_2025,True
+2414407,Touros,Rio Grande do Norte,5.135624081003486,0.0,21001,32894,0.0,associated_no_accepted_event_1993_2025,True
+2407203,Macau,Rio Grande do Norte,43.15220382692972,0.0,25982,27383,0.0,associated_no_accepted_event_1993_2025,True
+2404101,Galinhos,Rio Grande do Norte,17.08318044177303,0.0,1290,1672,0.0,associated_no_accepted_event_1993_2025,True
+2412559,São Miguel do Gostoso,Rio Grande do Norte,8.61065872109667,0.0,7298,10382,0.0,associated_no_accepted_event_1993_2025,True
+2401107,Areia Branca,Rio Grande do Norte,8.9288345329301,0.0,23490,24079,0.0,associated_no_accepted_event_1993_2025,True
+2410256,Porto do Mangue,Rio Grande do Norte,13.082380357629008,0.0,4040,5177,0.0,associated_no_accepted_event_1993_2025,True
+2411601,São Bento do Norte,Rio Grande do Norte,15.513858718678435,0.0,2526,3028,0.0,associated_no_accepted_event_1993_2025,True
+2409506,Pedra Grande,Rio Grande do Norte,7.952291753694244,0.0,3099,3659,0.0,associated_no_accepted_event_1993_2025,True
+2932507,Una,Bahia,23.28641392177948,0.0,11985,18049,0.0,associated_no_accepted_event_1993_2025,True
+2112506,Tutóia,Maranhão,83.63578513398835,0.0,38971,52212,0.258183,associated_with_hazard,True
+2300754,Amontada,Ceará,26.574596641430947,0.0,16088,41713,0.200118,associated_with_hazard,True
+2306553,Itarema,Ceará,31.08224135192451,0.0,35392,42857,0.191149,associated_with_hazard,True
+2300200,Acaraú,Ceará,37.518950275029354,0.0,49773,64805,0.0,associated_no_accepted_event_1993_2025,True
+2307254,Jijoca de Jericoacoara,Ceará,5.372831165056822,0.0,8931,25412,0.0,associated_no_accepted_event_1993_2025,True
+2302602,Camocim,Ceará,10.859849088447415,0.0,56264,62554,0.0,associated_no_accepted_event_1993_2025,True
+4207304,Imbituba,Santa Catarina,1.5133147364014616,0.0,52485,52489,0.371014,associated_with_hazard,True
+2305357,Icapuí,Ceará,0.5245314571701224,0.0,20344,20389,0.0,associated_no_accepted_event_1993_2025,True
+2205706,Luís Correia,Piauí,23.39023453459876,0.0,19723,30514,0.188008,associated_with_hazard,True
+2306405,Itapipoca,Ceará,21.191066299793338,0.0,9574,130429,0.0,associated_no_accepted_event_1993_2025,True
+2313500,Trairi,Ceará,29.97567561880693,0.0,38037,58274,0.0,associated_no_accepted_event_1993_2025,True
+2303709,Caucaia,Ceará,0.9683297935466803,0.0,283051,355692,0.0,associated_no_accepted_event_1993_2025,True
+2301000,Aquiraz,Ceará,10.926694338072958,0.0,54810,80554,0.0,associated_no_accepted_event_1993_2025,True
+2303501,Cascavel,Ceará,9.228698445134368,0.0,31228,72765,0.0,associated_no_accepted_event_1993_2025,True
+2302206,Beberibe,Ceará,23.60008157141176,0.0,39579,53139,0.0,associated_no_accepted_event_1993_2025,True
+2301109,Aracati,Ceará,10.65202841331525,0.0,50423,74637,0.0,associated_no_accepted_event_1993_2025,True
+2202083,Cajueiro da Praia,Piauí,25.887955079574827,0.0,7271,8243,0.181598,associated_with_hazard,True
+2803203,Itaporanga d'Ajuda,Sergipe,66.26512786728364,0.0,25872,34338,0.0,associated_no_accepted_event_1993_2025,True
+2802106,Estância,Sergipe,75.03644968883624,0.0,57169,64709,0.0,associated_no_accepted_event_1993_2025,True
+2917904,Jandaíra,Bahia,42.32771536060023,0.0,4137,9161,0.0,associated_no_accepted_event_1993_2025,True
+2908606,Conde,Bahia,17.047935168323832,0.0,19720,23665,0.0,associated_no_accepted_event_1993_2025,True
+2910602,Esplanada,Bahia,16.600042318544315,0.0,3488,32366,0.0,associated_no_accepted_event_1993_2025,True
+2910503,Entre Rios,Bahia,4.222271980780403,0.0,9759,38142,0.0,associated_no_accepted_event_1993_2025,True
+2921005,Mata de São João,Bahia,5.749887012042656,0.0,17191,42296,0.0,associated_no_accepted_event_1993_2025,True
+2503209,Cabedelo,Paraíba,9.257694088864081,0.0,66782,66782,0.0,associated_no_accepted_event_1993_2025,True
+2927408,Salvador,Bahia,42.66235577632088,0.0,2403202,2416356,0.196715,associated_with_hazard,True
+2917805,Jaguaripe,Bahia,35.443801867240566,0.0,8703,17676,0.26884,associated_with_hazard,True
+2932903,Valença,Bahia,32.22945960030376,0.0,65916,85560,0.223137,associated_with_hazard,True
+2905404,Cairu,Bahia,104.28559696500314,0.0,17106,17106,0.22785,associated_with_hazard,True
+2905800,Camamu,Bahia,36.08896797719041,0.0,21927,30603,0.233191,associated_with_hazard,True
+2920700,Maraú,Bahia,67.21513224121327,0.0,17327,24460,0.237973,associated_with_hazard,True
+2932705,Uruçuca,Bahia,0.7075649970673398,0.0,5022,21444,0.108079,associated_with_hazard,True
+2913606,Ilhéus,Bahia,42.2816948889741,0.0,162788,178354,0.0,associated_no_accepted_event_1993_2025,True
+2905701,Camaçari,Bahia,17.593042628320802,0.0,114610,300589,0.130631,associated_with_hazard,True
+2511905,Pitimbu,Paraíba,15.818170338476522,0.0,16552,16589,0.216984,associated_with_hazard,True
+2606200,Goiana,Pernambuco,50.51349792667525,0.0,73181,80881,0.157852,associated_with_hazard,True
+2606804,Igarassu,Pernambuco,11.423607351318436,0.0,112161,115783,0.0,associated_no_accepted_event_1993_2025,True
+2611606,Recife,Pernambuco,20.040365708146165,0.0,1487647,1489975,0.0,associated_no_accepted_event_1993_2025,True
+2602902,Cabo de Santo Agostinho,Pernambuco,2.791254423144719,0.0,132206,203366,0.0,associated_no_accepted_event_1993_2025,True
+2601409,Barreiros,Pernambuco,5.945616496221058,0.0,37626,40999,0.0,associated_no_accepted_event_1993_2025,True
+2704500,Maragogi,Alagoas,1.8477389659505168,0.0,29706,32034,0.0,associated_no_accepted_event_1993_2025,True
+2800308,Aracaju,Sergipe,18.95016718172199,0.0,603813,603825,0.0,associated_no_accepted_event_1993_2025,True
+2704302,Maceió,Alagoas,19.565931786387033,0.0,956710,956810,0.0,associated_no_accepted_event_1993_2025,True
+2704708,Marechal Deodoro,Alagoas,44.30735002866648,0.0,60303,60303,0.0,associated_no_accepted_event_1993_2025,True
+2703759,Jequiá da Praia,Alagoas,9.898574341571956,0.0,7790,9440,0.0,associated_no_accepted_event_1993_2025,True
+2702306,Coruripe,Alagoas,23.86125759318398,0.0,36897,50402,0.0,associated_no_accepted_event_1993_2025,True
+2706802,Piaçabuçu,Alagoas,12.301982223394246,0.0,12759,15918,0.0,associated_no_accepted_event_1993_2025,True
+2804904,Pacatuba,Sergipe,25.098553296113415,0.0,6035,12380,0.0,associated_no_accepted_event_1993_2025,True
+2805307,Pirambu,Sergipe,23.649793831411866,0.0,7810,7810,0.0,associated_no_accepted_event_1993_2025,True
+2800605,Barra dos Coqueiros,Sergipe,24.998253733222473,0.0,41447,41447,0.0,associated_no_accepted_event_1993_2025,True
+2707404,Porto de Pedras,Alagoas,2.579483269490952,0.0,8012,9326,0.0,associated_no_accepted_event_1993_2025,True
