@@ -9,11 +9,37 @@
 
 ---
 
+
+> ### Method status — 2026-07-30
+>
+> The compound-event detector was revised twice in 2026. On **2026-07-29** the
+> astronomical tide stopped being a forcing and became a conditioning variable:
+> detection moved to tide-free `zos`, with a level gate and a severity datum at
+> MHWS. On **2026-07-30** gate and datum both moved to **HAT**, and the Step 2e
+> threshold calibration was redone on the production detector, selecting
+> **q70 (Hₛ) / q99 (`zos`)** in place of q90/q90.
+>
+> Superseded products are preserved and versioned:
+> [`outputs/legacy_ssh_total_method/`](outputs/legacy_ssh_total_method/),
+> [`outputs/legacy_mhws_method/`](outputs/legacy_mhws_method/) and
+> [`outputs/legacy_threshold_calibration_ssh_total/`](outputs/legacy_threshold_calibration_ssh_total/).
+>
+> **Two audit issues block publication.** **AUD-01** — the HAT adoption went
+> ahead with one of its three pre-registered falsifiable criteria *failed*
+> (municipal ranking stability), against the explicit conclusion of the method
+> comparison; the decision and the dissent are recorded in
+> [AUD-01 §14](docs/scientific_audit/issues/AUD-01_compound_detector_tidal_phase_locking.md).
+> **AUD-02** — the recalibration *worsened* the local wave-threshold floor, which
+> now reaches 0.14 m at sheltered points, with 256 of 808 points below 1.5 m.
+> Neither is resolved.
+
+---
+
 ## Abstract
 
 Coastal communities and infrastructure along Brazil's South Atlantic Eastern Coast are increasingly exposed to compound coastal flooding, where meteorological tides (storm surges) coincide with extreme wave events. These compound hazards can amplify inundation, overtopping, erosion, and port disruption, producing severe socioeconomic impacts that are still poorly quantified at regional scale in Brazil. 
 
-This project assesses the joint behavior of sea-level surges and significant wave height using CMEMS multiyear reanalyses (GLORYS12 for sea level and WAVERYS for waves), complemented by ERA5 atmospheric forcing to characterize synoptic drivers and seasonality. We identify compound events through a storm-based threshold approach whose detection thresholds (q90/q90) are empirically calibrated using reported SC coastal disaster records as supporting evidence. Hazard characterization is complete for the full Brazilian coast (808 grid points, 1993–2025) and is integrated with population exposure from the census grid and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
+This project assesses the joint behavior of sea-level surges and significant wave height using CMEMS multiyear reanalyses (GLORYS12 for sea level and WAVERYS for waves), complemented by ERA5 atmospheric forcing to characterize synoptic drivers and seasonality. We identify compound events through a storm-based threshold approach whose detection thresholds (q70 for Hₛ, q99 for tide-free sea level) are empirically calibrated against reported SC coastal disaster records, and which requires the still water level over the shared days to exceed the local highest astronomical tide (HAT). Hazard characterization is complete for the full Brazilian coast (808 grid points, 1993–2025) and is integrated with population exposure from the census grid and social vulnerability to produce compound coastal risk indices and identify priority hotspots for adaptation planning.
 
 ---
 
@@ -169,20 +195,28 @@ The optimal threshold pair is selected by maximizing Score(θ) = w₁·R_pos −
 
 ### **STEP 3 — Hazard Characterization of Extreme and Compound Coastal Events**
 
-The most comprehensive analysis step. Applies the PU-optimal thresholds from Step 2e to the full 1993–2025 record, generates independent storm catalogs for Hₛ and SSH_total, and then runs the complete suite of hazard characterization analyses:
+The most comprehensive analysis step. Applies the PU-optimal thresholds from Step 2e to the full 1993–2025 record and runs the complete suite of hazard characterization analyses.
+
+> **Mixed state since 2026-07-30.** Sub-step **3.2 is current**: it is regenerated
+> at the recalibrated pair **q70/q99** with the HAT gate and datum, and it is the
+> sole source of the published Hazard Index. Sub-steps **3.1 and 3.3–3.8 are
+> NOT**: they read the Hₛ/`SSH_total` catalogs built at q90/q90, and re-running
+> them unchanged would mix a superseded level variable into the published
+> statistics. Rows below marked *(superseded inputs)* are in that state. See
+> AUD-01 §14, remaining uncertainty (6).
 
 | Submodule | Analysis | Key outputs |
 |-----------|----------|-------------|
-| **3.1 Storm Catalogs** | POT detection + episode clustering | Per-grid-point JSON catalogs for Hₛ and SSH_total |
-| **3.2 Compound Detection** | Temporal overlap of Hₛ/SSH_total storms | Compound events, overlap duration, peak lag, normalized intensity (excess over the local q90 threshold, rescaled domain-wide) |
-| **3.3 Duration & Persistence** | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
-| **3.4 Monthly Seasonality** | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
-| **3.5 Trend Analysis** | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
-| **3.6 Univariate EVA** | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
-| **3.7 Dependence Analysis** | Hs–SSH_total statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
-| **3.8 Site Export** | Unified JSON for results website | All metrics merged per grid point |
+| **3.1 Storm Catalogs** *(superseded inputs)* | POT detection + episode clustering at q90/q90 on Hₛ and `SSH_total` | Per-grid-point JSON catalogs for Hₛ and `SSH_total` |
+| **3.2 Compound Detection** | Temporal overlap of Hₛ and tide-free `zos` episodes, gated by `max(SWL) > HAT` | Compound events, integrated severity over the HAT datum (rescaled domain-wide), retained duration and peak-intensity diagnostics |
+| **3.3 Duration & Persistence** *(superseded inputs)* | Per-grid-point persistence statistics | Mean/p95/max duration, inter-event times, integrated intensity |
+| **3.4 Monthly Seasonality** *(superseded inputs)* | Monthly/seasonal climatology | Peak month, seasonal counts (DJF/MAM/JJA/SON) |
+| **3.5 Trend Analysis** *(superseded inputs)* | Mann–Kendall + Sen slope (8 annual series) | Slope, p-value, direction, modified MK for autocorrelation |
+| **3.6 Univariate EVA** *(superseded inputs)* | POT–GPD on storm peaks | Return levels (2, 5, 10, 20, 50 yr) with CI |
+| **3.7 Dependence Analysis** *(superseded inputs)* | Hs–SSH_total statistical dependence | Kendall's τ, Spearman's ρ, χ, χ̄ |
+| **3.8 Site Export** *(superseded inputs)* | Unified JSON for results website | All metrics merged per grid point |
 
-**Status:** ✅ Complete (full Brazilian coast; all submodules 3.1–3.8 executed)  
+**Status:** ⚠ Partial — 3.2 regenerated at q70/q99 with the HAT gate on 2026-07-30; 3.1 and 3.3–3.8 still carry the superseded q90/q90 `SSH_total` inputs  
 **Implementation:** `src/03_storm_catalog_generation/`  
 **Run:**
 ```bash
@@ -421,8 +455,8 @@ The repository currently contains:
 - **Sub-step 2e** — PU Composite Calibration (final)
 
 ✅ **STEP 3 — Hazard Characterization** (complete for full Brazilian coast)
-- Storm catalogs: 404,535 Hₛ + 324,929 SSH_total storm episodes (808 grid points, 1993–2025)
-- ~96k compound events detected; all submodules 3.2–3.8 complete (duration, seasonality, trends, EVA, dependence, site export)
+- Compound detection (Step 3.2) under the current HAT-gated method: **16,768 events** over 808 grid points, 1993–2025; 208 points and 83 municipalities carry no accepted event
+- **Steps 3.1 and 3.3–3.8 have NOT been regenerated** under the current method: they read the Hₛ/`SSH_total` catalogs built at q90/q90, and re-running them unchanged would mix a superseded level variable into the published statistics. See AUD-01 §14, remaining uncertainty (6)
 
 ✅ **STEP 4 — Exposure, Vulnerability & Risk Integration** (complete at municipal scale)
 - SVI_Coast_2022 constructed from 10 IBGE Census 2022 variables via PCA (282 coastal municipalities)

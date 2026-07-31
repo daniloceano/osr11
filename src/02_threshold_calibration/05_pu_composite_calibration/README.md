@@ -3,6 +3,20 @@
 **Part of STEP 2 — Threshold Calibration (umbrella step)**  
 **Location:** `src/02_threshold_calibration/05_pu_composite_calibration/`
 
+
+> ### ⚠ Recalibrado em 2026-07-30 — par **q70/q99**
+>
+> Este README descreve o arcabouço PU, que permanece válido. Cinco elementos
+> mudaram: o **detector pontuado** (agora Hₛ e `zos` livre de maré, com portão
+> `max(SWL) > HAT` — não mais `SSH_total`), a **grade** (121 pares, com q95 e
+> q99), o **termo de carga** (desvio bilateral de uma taxa esperada), os
+> **pesos** (0,30/0,60/0,10) e os **alphas** (0,20/0,50/0,30).
+>
+> Onde o texto abaixo diz `SSH_total`, leia `zos`; onde diz q90/q90, leia
+> q70/q99. Detalhe completo em `config/PARAMETER_DECISIONS.md`,
+> `SCIENTIFIC_NOTES.md` e AUD-01 §14. O estado anterior está preservado em
+> `outputs/legacy_threshold_calibration_ssh_total/`.
+
 ## Overview
 
 Calibration of compound event detection thresholds using a **positive-unlabeled (PU) composite score** that addresses systematic under-reporting in coastal disaster databases.

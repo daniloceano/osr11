@@ -8,6 +8,19 @@
 
 ---
 
+
+> ### ⚠ Estado misto desde 2026-07-30
+>
+> Este README descreve os **Steps 3.1 e 3.3–3.8**, que continuam operando sobre
+> os catálogos de Hₛ e `SSH_total` construídos em **q90/q90** e **não foram
+> regenerados** sob o método vigente.
+>
+> O **Step 3.2** não é mais descrito aqui. Ele foi redesenhado duas vezes — MHWS
+> em 2026-07-29, HAT em 2026-07-30 — e hoje detecta sobre Hₛ em **q70** e `zos`
+> livre de maré em **q99**, com portão e datum em **HAT**. É a única fonte do
+> índice de perigo publicado. Ver
+> `02_compound_detection/detection_hat.py`, `SCIENTIFIC_NOTES.md` e AUD-01 §14.
+
 ## Overview
 
 Step 3 is the central hazard characterization block. It first generates independent

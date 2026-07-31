@@ -1,5 +1,36 @@
 # SCIENTIFIC_NOTES — Step 3: Hazard Characterization of Extreme and Compound Coastal Events
 
+
+> ### ⚠ Estado misto desde 2026-07-30
+>
+> O **Step 3.2** foi regenerado com o par recalibrado **q70/q99**, portão e datum
+> em **HAT**, e é a única fonte do índice de perigo publicado. Os **Steps 3.1 e
+> 3.3–3.8 não foram regenerados**: leem os catálogos de Hₛ e `SSH_total`
+> construídos em q90/q90, e reexecutá-los sem alteração misturaria uma variável
+> de nível superada às estatísticas publicadas. Ver AUD-01 §14, incerteza
+> remanescente (6).
+>
+> **Detector vigente (3.2):**
+>
+> ```
+> onda   Hs  >= q70 local
+> nível  zos >= q99 local                 (livre de maré)
+> portão max(SWL) > HAT na sobreposição
+>
+> SWL(d) = [zos(d) − média local de zos] + maré_máx_diária(d)
+> HAT    = max(maré_máx_diária) em 1993–2025, por ponto
+>
+> severidade integrada = Σ_d 0,5·[norm(Hs_d − thr_hs) + norm(SWL_d − HAT)]
+> ```
+>
+> **Pressupostos.** (1) Portão e datum são o mesmo nível — o excesso só tem
+> interpretação como distância à condição que define o evento. (2) `zos` e
+> FES2022 são modelos independentes; sua soma linear ignora a interação não
+> linear maré–sobrelevação. (3) O HAT é máximo amostral de 33 anos, dependente
+> da janela e não transferível a projeções. (4) Ponto sem evento aceito recebe
+> frequência 0 e severidade 0, preservando os 808 pontos na normalização — são
+> 208 pontos e 83 municípios.
+
 ## Research Questions
 
 1. How are extreme ocean events (wave height, sea level) formally identified and cataloged along the entire Brazilian coast?
