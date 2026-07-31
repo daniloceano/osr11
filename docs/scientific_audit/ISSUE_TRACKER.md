@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 6 de 18 · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 7 (AUD-01, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-14) · **arquivadas:** 0
+**Questões abertas:** 5 de 18 · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 8 (AUD-01, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-13, AUD-14) · **arquivadas:** 0
 
 > **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
@@ -129,6 +129,50 @@
 > **O build do site não foi executado** — não há Node.js no ambiente. As
 > alterações passaram por verificação estrutural, não por compilação.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-13 fechada; quatro registros descrevem produto superseded
+>
+> **AUD-13 fechada** como `resultado-validado-mantido`, por decisão do
+> pesquisador. Nenhum valor publicado alterado, nenhuma mudança de fórmula.
+> Diagnóstico versionado em `src/exploratory/audit_AUD_13_component_contributions.py`
+> → `outputs/audit/AUD-13_component_contributions/`.
+>
+> A questão **mudou de objeto** e o registro foi reescrito contra o produto
+> vigente (§3-bis nova; §9 refeita, com os critérios de 2026-07-29 anotados um a
+> um — dois **anulados** por se tornarem insatisfazíveis, um **sem objeto**).
+> Nada foi apagado.
+>
+> - **O índice integrado é, operacionalmente, o índice de perigo.** O perigo
+>   responde por **84,7 %** da variância de log(risco) (era 51,0 %); removendo-o
+>   da fórmula, ρ = **+0,092** contra o ranking publicado. A causa não é a
+>   álgebra: o portão HAT tornou o campo de perigo quase binário, e a média
+>   geométrica pondera pela dispersão logarítmica.
+> - **O cancelamento trocou de par.** E × V — objeto declarado da questão —
+>   comprime a variância em 9 %; **H × V comprime por um fator de 3**. E as duas
+>   anticorrelações têm naturezas distintas: E × V é fato social, H × V é a
+>   interseção de um gradiente físico com um socioeconômico.
+> - **A correlação marginal vulnerabilidade × risco trocou de sinal**, de +0,297
+>   para **−0,372**, com a parcial em **+0,790**. É supressão, não
+>   degenerescência — e precisa estar dito, ou o mapa é lido como
+>   "vulnerabilidade reduz risco".
+> - **A inversão perigo → risco desapareceu**: top-20 do risco 20/20 no S/SE,
+>   contra 15/20 no N/NE. O resultado que a §2 do registro chamava de "o mais
+>   importante do trabalho" não existe mais.
+> - **Mecanismo, novo e indispensável:** o HAT médio vai de **0,49 m** (35–28°S)
+>   a **2,61 m** (2°S–7°N), enquanto o forçante enfraquece na mesma direção.
+>   208 dos 808 pontos sem evento aceito; AL 15/15, SE 7/7, CE 18/20, PE 12/13
+>   em perigo zero. Aceito como resultado — o perigo se concentra onde a
+>   vulnerabilidade é menor — **com a ressalva declarada** de que parte da
+>   magnitude da anticorrelação é produzida pela geografia do portão.
+>
+> **Alerta de manutenção:** AUD-05, AUD-07 e AUD-16 continuam com toda a
+> evidência da §3 medida sobre o produto de 2026-07-29. Em AUD-07, a
+> instabilidade que motivou o P0 caiu de ρ = 0,384 para **0,940** e migrou para
+> o eixo da agregação (aritmética contra geométrica: 0,934 → **0,550**). Em
+> AUD-16, as classes cartográficas **já foram alteradas** no código
+> (`FIXED_BOUNDARIES["Risk_Hazard"]`) e existe hoje uma quebra natural real — a
+> massa de 84 municípios em zero exato. Nenhum dos três pode ser julgado pelos
+> critérios que carrega.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -139,10 +183,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 3 | 0 | 0 | **3** |
-| **P1 — resolver ou justificar** | 9 | 2 | 4 | 0 | **3** |
+| **P1 — resolver ou justificar** | 9 | 1 | 4 | 0 | **4** |
 | **P2 — recomendado** | 3 | 1 | 1 | 0 | **1** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **6** | **5** | **0** | **7** |
+| **Total** | **18** | **5** | **5** | **0** | **8** |
 
 ---
 
@@ -162,7 +206,7 @@ ver [`README.md`](README.md).
 | **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
 | **AUD-11** | Min–Max em cadeia removido; validação integrada em curso | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |
 | **AUD-12** | Contaminação estuarina e fluvial no estuário amazônico | qualidade-dados | perigo | 2a → 3.1/3.2 | dados, interp., saídas | P1 | Não — top-10 já não depende desses pontos | `resolvido` | `resultado-validado-mantido` | 01 | [AUD-12](issues/AUD-12_estuarine_river_contamination.md) |
-| **AUD-13** | Índice integrado: dominância do perigo e cancelamento E × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `aberto` | — | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
+| **AUD-13** | Índice integrado: conduzido pelo perigo (84,7 %); cancelamento dominante passou a ser H × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `resolvido` | `resultado-validado-mantido` | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
 | **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
 | **AUD-15** | Cobertura amostral: 2 ausentes, 4 degenerados, **83 sem perigo aceito** | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `em-investigacao` | — | 04 | [AUD-15](issues/AUD-15_sample_coverage.md) |
 | **AUD-16** | Ausência de definição operacional de "hotspot" | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `aberto` | — | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
@@ -189,6 +233,11 @@ AUD-01 ◄──► AUD-06   PAR INDISSOCIÁVEL (demonstrado em 2026-07-29):
 
 AUD-01 ──► AUD-12 (contaminação estuarina)
 AUD-01, AUD-02 ──► AUD-13 (comportamento do índice)
+                   AUD-13 fechou em 2026-07-31 SEM que AUD-02 fechasse: a
+                   dependência foi resolvida por DECLARAÇÃO, não por remoção.
+                   Com rho(perigo, risco) = 0,893, o indice propaga integralmente
+                   qualquer fragilidade do limiar de onda. Se AUD-02 mudar o
+                   detector, AUD-13 tem de ser remedida (§3-bis inteira).
 AUD-11 ──► AUD-16 (definição de hotspot)
 
 Acrescentadas em 2026-07-31:
@@ -282,6 +331,9 @@ Nenhum achado da revisão de linha de base foi descartado.
 | `outputs/storm_catalog/compound/` é **misturado**, não legado: catálogo corrente de 16 768 eventos ao lado de sumário legado que reporta 96 031, sem distinção | AUD-17 §9 item **#14** | 2026-07-31 |
 | 83 municípios com `Hazard_Index_mun` exatamente 0, por associação a ponto sem evento aceito — categoria de cobertura que o método anterior não podia produzir | AUD-15 §14 e §9, critério novo | 2026-07-31 |
 | O erro de fase do nível somado é ~10× maior no Sul micromareal que no Norte macromareal — o inverso do que a revisão de linha de base previa | AUD-03 §14 | 2026-07-31 |
+| O portão HAT é monotônico em latitude — HAT médio de 0,49 m a 2,61 m do RS ao AP — e produz o gradiente de perigo por um mecanismo de maré independente do clima de tempestades | AUD-13 §3-bis.8 | 2026-07-31 |
+| A correlação marginal entre vulnerabilidade e risco é negativa (−0,372) com parcial +0,790: supressão induzida pela anticorrelação perigo–vulnerabilidade | AUD-13 §3-bis.3 e §3-bis.4 | 2026-07-31 |
+| A escolha entre média geométrica e aritmética deixou de ser quase neutra (ρ 0,934) e passou a determinar o resultado (ρ 0,550) | AUD-13 §3-bis.5; consequência para AUD-07 | 2026-07-31 |
 
 ---
 

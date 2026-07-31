@@ -1,0 +1,36 @@
+{
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "municipalities_with_risk": 280,
+  "municipalities_with_positive_risk": 196,
+  "municipalities_at_exact_zero": 84,
+  "risk_range": [
+    0.0,
+    0.566342
+  ],
+  "log_quantities_restricted_to": "Risk_Hazard > 0 (196 municipalities)",
+  "variance_decomposition_log_risk": {
+    "hazard": 0.8470772927896929,
+    "exposure": 0.35015694791822094,
+    "vulnerability": -0.1972342407079143,
+    "_total_var_log_risk": 0.12226696429792396
+  },
+  "partial_rank_correlation_risk_vs": {
+    "hazard": 0.889872053191089,
+    "exposure": 0.7527858125115864,
+    "vulnerability": 0.789766641265703
+  },
+  "cancellation": {
+    "observed_var_log_risk": 0.12226696429792396,
+    "independent_var_breaking_exposure": 0.13423820924210894,
+    "compression_ratio_breaking_exposure": 0.9108208831764589,
+    "independent_var_breaking_vulnerability": 0.3682644588821264,
+    "compression_ratio_breaking_vulnerability": 0.33200859151346723
+  },
+  "regional_composition": {
+    "top10_north_northeast": 0,
+    "top20_north_northeast": 0,
+    "top50_north_northeast": 9
+  },
+  "top50_north_northeast_share": 0.18,
+  "note": "The variance decomposition of log(Risk_Hazard) that AUD-13 section 8 asks for is undefined on the full sample: 84 municipalities sit at exact zero. It is reported on the positive-risk subset and must be read as such."
+}

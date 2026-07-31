@@ -802,7 +802,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The five paragraphs below are written to be transferable, essentially as they
+The six paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -917,6 +917,47 @@ named at the end of each paragraph.
   receives SVI = 0 and Chaves/PA SVI = 100 — which is a scale artefact, not a
   statement that one municipality has no social vulnerability.
   *(`src/exploratory/audit_AUD_09_svi_directionality.py`)*
+
+- **The integrated index is hazard-led, and the hazard field is shaped by the
+  acceptance gate (AUD-13).** Equal nominal weights of 1/3 do not imply equal
+  contribution. On the 196 municipalities with positive risk — log quantities are
+  undefined for the 84 that sit at exact zero — the hazard accounts for **84.7 %**
+  of the variance of log risk, exposure for 35.0 % and vulnerability for
+  **−19.7 %**, a negative share meaning that vulnerability *compresses* rather
+  than expands the dispersion of the index. Removing the hazard from the formula
+  leaves ρ = +0.092 against the published ranking: the integrated index is
+  operationally the hazard index, modulated by the other two layers. This follows
+  from the physics of the detector rather than from the algebra: the geometric
+  mean weights by logarithmic dispersion, and the HAT gate made the hazard field
+  nearly binary. Three consequences must be stated. **First**, the marginal rank
+  correlation between vulnerability and risk is **negative** (−0.372), which does
+  *not* mean that vulnerability reduces risk — the partial correlation,
+  controlling hazard and exposure, is **+0.790**. This is suppression, and its
+  cause is the strong hazard–vulnerability anticorrelation (ρ = −0.601), which
+  compresses the variance of log risk by a factor of three, against 9 % for the
+  exposure–vulnerability pair that earlier versions of this analysis identified.
+  **Second**, that anticorrelation is a genuine and welcome finding — compound
+  wave–surge hazard in Brazil concentrates in the S/SE, where social deprivation
+  is lowest, because the forcing is extratropical — but **part of its magnitude is
+  produced by the geography of the gate itself**: mean HAT rises from 0.49 m
+  (35–28°S) to 2.61 m (2°S–7°N) for tidal reasons unrelated to storms, so the bar
+  to clear grows fivefold in exactly the direction in which the meteorological
+  forcing weakens. The direction of the finding is sound; its strength mixes a
+  physical and a methodological gradient, and no fixed-amplitude-gate
+  counterfactual has been run to separate them. **Third**, because ρ(hazard, risk)
+  = 0.893, the index propagates in full any weakness of the quantities that define
+  the hazard, including the wave-threshold transfer that remains an open audit
+  issue. The conjunctive geometric aggregation is no longer a near-neutral choice:
+  an arithmetic mean gives ρ = 0.550 and retains 4 of the top 10. It is retained
+  on the IPCC rationale stated before the method changed, not on the ranking it
+  produces. Individual absences such as Recife are discussed in the audit record;
+  the shoreline signal there is documented as heterogeneous between adjacent
+  sectors of the same urban beach (Gregório et al., 2017) and strongly
+  anthropogenic in origin (Rocha, 2018), i.e. organised below the resolution of a
+  ~0.2° wave grid, and the local damage threshold sits below HAT rather than above
+  it. Zero means no accepted compound event in 1993–2025, never impossibility of
+  physical coastal risk.
+  *(`src/exploratory/audit_AUD_13_component_contributions.py`)*
 
 ### Current Implementation Status
 

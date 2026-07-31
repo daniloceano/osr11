@@ -1,0 +1,13 @@
+sample,pair,spearman
+all_280,hazard~exposure,0.2782950250435427
+all_280,hazard~vulnerability,-0.6010702977799944
+all_280,hazard~risk,0.8926030576056189
+all_280,exposure~vulnerability,-0.4665923854612419
+all_280,exposure~risk,0.3738123669933734
+all_280,vulnerability~risk,-0.3721489266089024
+positive_risk_196,hazard~exposure,0.314485505427983
+positive_risk_196,hazard~vulnerability,-0.702047661572026
+positive_risk_196,hazard~risk,0.7080005191564778
+positive_risk_196,exposure~vulnerability,-0.5220616946505272
+positive_risk_196,exposure~risk,0.4664649756014745
+positive_risk_196,vulnerability~risk,-0.2473572374300882

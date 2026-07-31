@@ -1,0 +1,21 @@
+sample,variant,spearman_vs_published,top10_overlap,top20_overlap
+all_280,"published (geometric H,E,V)",0.999999859544634,10,20
+all_280,"arithmetic mean H,E,V",0.5504829354167081,4,8
+all_280,hazard = frequency only,0.9396107897258112,8,19
+all_280,hazard = severity only,0.9738577002505298,4,11
+all_280,drop hazard (E x V),-0.22326383850248155,0,0
+all_280,drop exposure (H x V),0.9141535394943663,4,11
+all_280,drop vulnerability (H x E),0.9233145951816315,3,11
+all_280,hazard alone,0.8926030576056189,2,9
+all_280,exposure alone,0.3738123669933734,1,4
+all_280,vulnerability alone,-0.3721489266089024,0,0
+positive_risk_196,"published (geometric H,E,V)",0.999999601558623,10,20
+positive_risk_196,"arithmetic mean H,E,V",0.6475072107943086,4,8
+positive_risk_196,hazard = frequency only,0.8286889004968825,8,19
+positive_risk_196,hazard = severity only,0.9315365741511801,4,11
+positive_risk_196,drop hazard (E x V),0.09169253547823066,0,0
+positive_risk_196,drop exposure (H x V),0.7888208483695804,4,11
+positive_risk_196,drop vulnerability (H x E),0.782460128959624,3,11
+positive_risk_196,hazard alone,0.7080005191564778,2,9
+positive_risk_196,exposure alone,0.4664649756014745,1,5
+positive_risk_196,vulnerability alone,-0.2473572374300882,0,0
