@@ -59,7 +59,7 @@ interface ExposureLayerMeta {
   label: string;
   short_label: string;
   unit: string;
-  stage: 'normalized' | 'raw';
+  stage: 'index' | 'component' | 'raw';
   group: string;
   description: string;
   actual_field: string;
@@ -101,11 +101,12 @@ interface Props {
 }
 
 const STAGE_BADGES: Record<ExposureLayerMeta['stage'], { label: string; className: string }> = {
-  normalized: { label: 'candidate normalisation', className: 'border-blue-200 bg-blue-50 text-blue-700' },
+  index: { label: 'adopted index', className: 'border-blue-200 bg-blue-50 text-blue-700' },
+  component: { label: 'index component', className: 'border-violet-200 bg-violet-50 text-violet-700' },
   raw: { label: 'raw count', className: 'border-amber-200 bg-amber-50 text-amber-800' },
 };
 
-/** Raw counts first, then the normalisations, so the tooltip reads bottom-up
+/** Raw counts first, then the adopted components, so the tooltip reads bottom-up
  *  from the observation to the derived number. */
 type DetailField = {
   key: string;
@@ -128,9 +129,6 @@ const DETAIL_FIELDS: DetailField[] = [
   { key: 'E_inform_absolute', label: 'E — absolute half (goalposts)', decimals: 3, rule: true },
   { key: 'E_inform_relative', label: 'E — relative half (share ÷ 100)', decimals: 3 },
   { key: 'E_inform', label: 'E — INFORM (0–1)', decimals: 3 },
-  { key: 'E_log10', label: 'E — log₁₀ (0–1)', decimals: 3, rule: true },
-  { key: 'E_rank', label: 'E — rank (0–1)', decimals: 3 },
-  { key: 'E_linear', label: 'E — Min–Max of the count (0–1)', decimals: 3 },
 ];
 
 function numericValue(value: unknown): number | null {

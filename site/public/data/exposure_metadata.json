@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-31T17:06:09.822145+00:00",
+  "generated_at": "2026-07-31T17:11:55.710293+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",
@@ -47,8 +47,8 @@
       "label": "Exposure — adopted effective-population criterion",
       "short_label": "Exposure Index",
       "unit": "0–1",
-      "stage": "normalized",
-      "group": "Candidate normalisations",
+      "stage": "index",
+      "group": "Adopted exposure criterion",
       "actual_field": "derived:geomean(goalposts(log10(pop_eff), 1e2, 1e6), pop_eff/pop_municipality)",
       "decimals": 3,
       "boundaries": [
@@ -88,8 +88,8 @@
       "label": "INFORM half — absolute count between goalposts",
       "short_label": "E abs (goalposts)",
       "unit": "0–1",
-      "stage": "normalized",
-      "group": "The two halves of E (INFORM)",
+      "stage": "component",
+      "group": "Components of the adopted criterion",
       "actual_field": "derived:goalposts(log10(pop_eff), 1e2, 1e6)",
       "decimals": 3,
       "boundaries": [
@@ -129,8 +129,8 @@
       "label": "Exposure half — effective population as municipal share",
       "short_label": "Effective share",
       "unit": "%",
-      "stage": "raw",
-      "group": "The two halves of E (INFORM)",
+      "stage": "component",
+      "group": "Components of the adopted criterion",
       "actual_field": "derived:100*pop_eff/pop_municipality",
       "decimals": 1,
       "boundaries": [
@@ -163,88 +163,6 @@
         "max": 97.984196,
         "mean": 39.906747,
         "median": 37.348451
-      }
-    },
-    {
-      "key": "E_log10",
-      "label": "Exposure — Min–Max of log₁₀(population+1)",
-      "short_label": "E (log₁₀)",
-      "unit": "0–1",
-      "stage": "normalized",
-      "group": "Candidate normalisations",
-      "actual_field": "derived:minmax(log10(pop_eff+1))",
-      "decimals": 3,
-      "boundaries": [
-        0.0,
-        0.125,
-        0.25,
-        0.375,
-        0.5,
-        0.625,
-        0.75,
-        0.875,
-        1.0
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#80D900",
-        "#CCE600",
-        "#FFB200",
-        "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette shared with the hazard and risk layers",
-      "description": "Exposure read as an order of magnitude. The logarithm repairs the shape of the count before the rescaling, so every municipality occupies the scale — but it compresses real differences: Rio de Janeiro ends about 1.5 times the median municipality rather than 188 times.",
-      "stats": {
-        "count": 282,
-        "min": 0.0,
-        "max": 1.0,
-        "mean": 0.651224,
-        "median": 0.653271
-      }
-    },
-    {
-      "key": "E_rank",
-      "label": "Exposure — percentile rank of the population",
-      "short_label": "E (rank)",
-      "unit": "0–1",
-      "stage": "normalized",
-      "group": "Candidate normalisations",
-      "actual_field": "derived:rank(pop_eff, pct=True)",
-      "decimals": 3,
-      "boundaries": [
-        0.0,
-        0.125,
-        0.25,
-        0.375,
-        0.5,
-        0.625,
-        0.75,
-        0.875,
-        1.0
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#80D900",
-        "#CCE600",
-        "#FFB200",
-        "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette shared with the hazard and risk layers",
-      "description": "Exposure read as a position along the Brazilian coast. Uniform by construction, so it discriminates everywhere — and it is the only candidate under which the exposure term actually drives the integrated risk. It discards magnitude entirely.",
-      "stats": {
-        "count": 282,
-        "min": 0.003546,
-        "max": 1.0,
-        "mean": 0.501773,
-        "median": 0.501773
       }
     },
     {
@@ -333,7 +251,9 @@
   "audit_fields": {
     "note": "Present in the GeoJSON properties but not offered as a map layer.",
     "fields": [
-      "E_linear"
+      "E_linear",
+      "E_log10",
+      "E_rank"
     ]
   },
   "totals": {

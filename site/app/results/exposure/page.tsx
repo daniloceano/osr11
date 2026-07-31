@@ -7,7 +7,7 @@ import ExposureClient from './ExposureClient';
 export const metadata = {
   title: 'Coastal Population Exposure | OSR11',
   description:
-    'Resident population and occupied households within distance bands of the Brazilian coastline, from the IBGE Grade Estatistica 2022, with the candidate normalisations of the exposure term.',
+    'Adopted population-exposure criterion using a weighted effective population from cumulative 1, 2, 5 and 10 km coastal bands.',
 };
 
 export default function ExposurePage() {
@@ -47,7 +47,8 @@ export default function ExposurePage() {
               This page counts them, from the census grid. Neither how many people live near the
               coast nor how coastal a municipality is answers the question alone, so the adopted
               term uses an effective population built from all four cumulative distance bands.
-              Alternative normalisations stay on the map for comparison only.
+              The map shows the adopted index, its components and the source counts; superseded
+              alternatives remain only in the downloadable audit fields.
             </p>
           </div>
         </div>
@@ -63,8 +64,8 @@ export default function ExposurePage() {
               />
               <ModuleCard
                 color="#d94801"
-                title="E — log₁₀ and rank"
-                body="The two single-facet candidates. One leaves exposure inert in the index, the other neutralises social vulnerability."
+                title="Fixed-goalpost component"
+                body="log₁₀(pop_eff) is placed between fixed goalposts of 10² and 10⁶; this is not sample-dependent Min–Max."
               />
               <ModuleCard
                 color="#756bb1"
@@ -73,15 +74,15 @@ export default function ExposurePage() {
               />
               <ModuleCard
                 color="#737373"
-                title="Raw counts"
-                body="Population and occupied households within 10 km, on log-spaced classes, plus the absolute half of E (INFORM)."
+                title="Source counts"
+                body="The four cumulative population bands and occupied households remain available for direct inspection."
               />
             </div>
             <p className="mt-4 text-xs text-gray-500">
               Hovering a municipality shows the raw counts in every distance band —{' '}
               <span className="font-mono">1, 2, 5, 10 km</span> and the municipality as a whole —
-              each with the share of the municipal total in per cent, next to every normalised
-              value, so the derived number can always be traced back to the population behind it.
+              each with the share of the municipal total in per cent, next to the adopted index
+              components, so the result can always be traced back to the population behind it.
               It also shows <span className="font-mono">pop_eff</span>, which is a weighted
               exposure proxy rather than a literal inhabitant count.
             </p>
@@ -137,14 +138,12 @@ export default function ExposurePage() {
                   indicators. Both halves are published as their own layers.
                 </p>
                 <p>
-                  <strong className="text-gray-800">Why the normalisation is a scientific choice.</strong>{' '}
-                  Min–Max is an affine rescaling: it changes a variable&apos;s range and not its
-                  shape. The coastal population count is skewed above 7, so under Min–Max it stays
-                  that skewed inside 0–1 and about nine municipalities in ten fall below 0.05 — the
-                  term would carry a nominal weight of one third and almost no influence. The
-                  logarithm repairs the shape but compresses differences; the percentile rank
-                  discriminates everywhere but discards magnitude. The three are kept in the data
-                  file so the claim can be checked rather than taken on trust.
+                  <strong className="text-gray-800">Scaling, not sample Min–Max.</strong>{' '}
+                  The absolute component applies a logarithm and fixed goalposts of 10² and 10⁶
+                  weighted inhabitants. The relative component is pop_eff/pop_municipality. Their
+                  geometric mean is already bounded in [0,1]; it is not rescaled against the
+                  observed municipal minimum and maximum. Superseded Min–Max and rank variants are
+                  retained only as audit fields, not presented as current alternatives.
                 </p>
               </div>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">

@@ -6,22 +6,17 @@ already published for the risk layer and writes:
     site/public/data/exposure_municipalities.geojson
     site/public/data/exposure_metadata.json
 
-Three candidate normalisations of the exposure term are published side by side,
-because the choice between them is still open and is the point of the page:
+The site publishes the adopted exposure term and its auditable components:
 
-* ``E_inform`` — the INFORM recipe: log-scaled count between fixed goalposts,
-  combined with the municipal share. Recommended, and the default layer.
-* ``E_log10``  — Min--Max of log10(population + 1)
-* ``E_rank``   — percentile rank of the population
+* ``E_inform`` — the adopted fixed-goalpost index, applied to ``pop_eff``;
+* ``E_inform_absolute`` and ``E_inform_relative`` — its two components;
+* ``pop_eff`` and the four cumulative bands — the source quantities.
 
 The two halves of ``E_inform`` travel with it as ``E_inform_absolute`` and
 ``E_inform_relative`` so the pair can be inspected separately.
 
-The Min--Max of the raw count is deliberately *not* offered as a map layer. It
-is degenerate here: the count is skewed above 7, so the affine rescaling leaves
-roughly nine municipalities in ten below 0.05 and the resulting map is a single
-colour. It is kept in the feature properties as ``E_linear`` so the claim can be
-checked, but publishing it as a layer would invite it to be read as a candidate.
+The former Min--Max, log-Min--Max and rank candidates remain in feature
+properties for audit comparisons, but are not offered as current map layers.
 
 Raw counts travel with the normalised values so a reader hovering a
 municipality sees the population behind the number, in every distance band.
@@ -193,8 +188,8 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "label": "Exposure — adopted effective-population criterion",
             "short_label": "Exposure Index",
             "unit": "0–1",
-            "stage": "normalized",
-            "group": "Candidate normalisations",
+            "stage": "index",
+            "group": "Adopted exposure criterion",
             "actual_field": (
                 "derived:geomean(goalposts(log10(pop_eff), 1e2, 1e6), "
                 "pop_eff/pop_municipality)"
@@ -223,8 +218,8 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "label": "INFORM half — absolute count between goalposts",
             "short_label": "E abs (goalposts)",
             "unit": "0–1",
-            "stage": "normalized",
-            "group": "The two halves of E (INFORM)",
+            "stage": "component",
+            "group": "Components of the adopted criterion",
             "actual_field": "derived:goalposts(log10(pop_eff), 1e2, 1e6)",
             "decimals": 3,
             "boundaries": NORMALIZED_BOUNDARIES,
@@ -245,8 +240,8 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "label": "Exposure half — effective population as municipal share",
             "short_label": "Effective share",
             "unit": "%",
-            "stage": "raw",
-            "group": "The two halves of E (INFORM)",
+            "stage": "component",
+            "group": "Components of the adopted criterion",
             "actual_field": "derived:100*pop_eff/pop_municipality",
             "decimals": 1,
             "boundaries": SHARE_BOUNDARIES,
@@ -351,6 +346,10 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         },
     ]
 
+    layers = [
+        layer for layer in layers if layer["key"] not in {"E_log10", "E_rank"}
+    ]
+
     upstream: dict[str, Any] = {}
     if EXPOSURE_METADATA.exists():
         with open(EXPOSURE_METADATA, encoding="utf-8") as handle:
@@ -384,7 +383,7 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             "note": (
                 "Present in the GeoJSON properties but not offered as a map layer."
             ),
-            "fields": ["E_linear"],
+            "fields": ["E_linear", "E_log10", "E_rank"],
         },
         "totals": {
             field: int(pd.to_numeric(export[field]).sum()) for field in count_fields
