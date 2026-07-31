@@ -9,8 +9,8 @@
 | **Afeta** | dados, interpretação, documentação |
 | **Prioridade** | P2 |
 | **Bloqueia publicação?** | Não — mas exige declaração explícita entre as limitações |
-| **Status** | `aguardando-decisao` |
-| **Desfecho** | — *(proposto: `limitacao-reconhecida`)* |
+| **Status** | `resolvido` |
+| **Desfecho** | `limitacao-reconhecida` |
 | **Depende de** | — |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-05, AUD-08 |
@@ -241,4 +241,4 @@ implementação do módulo, sem quantificação.*
 | **Alterações implementadas** | Nenhuma na camada de exposição. Declaração da limitação com a direção do viés em `README.md` §4.2 e §"Conceptual Framework", no glossário do site, na página de metodologia do índice, e um parágrafo pronto para o manuscrito |
 | **Validação realizada** | O cruzamento entre exposição e produto municipal foi refeito **por código IBGE** depois que a primeira versão, unindo por nome, duplicou linhas — existem duas "Santa Rita" no conjunto, em MA e PB. Uma asserção no script agora falha se o merge duplicar |
 | **Incerteza remanescente** | (1) A sazonalidade turística real não foi medida — assumiu-se o padrão conhecido de alta temporada em DJF, sem dado de ocupação. (2) A contagem de domicílios de uso ocasional continua **não obtida**; sem ela não há estimativa de sensibilidade quantitativa, apenas o argumento de atenuação sazonal. (3) O argumento sazonal é de média anual: um evento de verão em um balneário lotado continua tendo exposição efetiva muito acima da registrada, e isso não é capturado por nenhum índice de média |
-| **Próxima decisão necessária** | Confirmar o fechamento como `limitacao-reconhecida`. Se o pesquisador quiser a estimativa de sensibilidade, ela exige uma aquisição SIDRA nova (domicílios de uso ocasional por município) com registro de proveniência — decisão de escopo, não técnica |
+| **Decisão final** | Fechada como `limitacao-reconhecida` por aval do pesquisador em 2026-07-31. Mantém-se a população residente *de jure*; eventual sensibilidade com domicílios de uso ocasional exigirá aquisição SIDRA com proveniência própria e fica como trabalho futuro |

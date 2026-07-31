@@ -9,8 +9,8 @@
 | **Afeta** | código, dados, interpretação, documentação |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Não isoladamente; exige declaração explícita da limitação no manuscrito |
-| **Status** | `aguardando-decisao` |
-| **Desfecho** | — *(proposto: `limitacao-reconhecida`)* |
+| **Status** | `resolvido` |
+| **Desfecho** | `limitacao-reconhecida` |
 | **Depende de** | — |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-01, AUD-02, AUD-12 |
@@ -254,4 +254,4 @@ python -m src.02_threshold_calibration.05_pu_composite_calibration.main
 | **Alterações implementadas** | Nenhuma no método. Declaração da limitação em `README.md` §2c, no docstring de `analysis_config.py`, nas Assumptions da página de metodologia do site, e um parágrafo pronto para o manuscrito em `README.md` → "Declared limitations for the manuscript" |
 | **Validação realizada** | O script reproduz `hat_m` e as coordenadas diretamente de `compound_metrics_hat.csv`, de modo que o portão avaliado é o mesmo do produto. A métrica por corridas foi acrescentada depois de a primeira versão usar um denominador errado (dias indeterminados sobre dias aprovados, que produzia razões acima de 1); a versão publicada usa contagens direcionadas explícitas |
 | **Incerteza remanescente** | (1) **Nenhuma comparação com nível observado.** Não há maregrafo no repositório; sem ele não é possível dizer se o `zos` do GLORYS12 acerta o nível costeiro observado, apenas se é internamente coerente. (2) O limite por interpolação linear é o **pior caso**, não o caso esperado — o valor verdadeiro está dentro do intervalo, e a variante do ponto médio preserva a ordenação com ρ = 0,93–0,98. (3) O efeito não foi medido **no nível de evento** do detector: isso exigiria reexecutar `detection_hat` com `SWL_low` e `SWL_high`, o que não foi feito. Os dias que o portão de fato avalia são os compartilhados por um episódio de onda e um de nível, um subconjunto mais extremo do que todos os dias acima do HAT, portanto provavelmente menos sujeito a inversão do que os 45–49 % reportados |
-| **Próxima decisão necessária** | Confirmar o fechamento como `limitacao-reconhecida`. A decisão científica — manter a definição — não tem alternativa com os dados disponíveis; o que resta é o aval do pesquisador sobre o texto da limitação e sobre deixar a comparação com maregrafo como trabalho futuro |
+| **Decisão final** | Fechada como `limitacao-reconhecida` por aval do pesquisador em 2026-07-31. Mantém-se a definição atual; a incerteza de fase diária permanece explicitamente declarada, e a comparação com maregrafo fica como trabalho futuro |

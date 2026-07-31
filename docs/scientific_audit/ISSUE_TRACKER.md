@@ -2,9 +2,9 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 6 de 18 · **em investigação:** 2 (AUD-15, AUD-17) · **aguardando decisão:** 6 (AUD-03, AUD-08, AUD-09, AUD-10, AUD-11, AUD-14) · **resolvidas:** 4 (AUD-01, AUD-04, AUD-06, **AUD-12**) · **arquivadas:** 0
+**Questões abertas:** 6 de 18 · **em investigação:** 5 (AUD-08, AUD-09, AUD-11, AUD-15, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 7 (AUD-01, AUD-03, AUD-04, AUD-06, AUD-10, AUD-12, AUD-14) · **arquivadas:** 0
 
-> **Três questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
+> **Sete questões foram resolvidas.** AUD-01 e AUD-06 em conjunto (método do
 > perigo); AUD-04 por reenquadramento — a associação município↔ponto é
 > julgamento de especialista, e foi arquivada como dado de entrada versionado
 > sem alterar nenhum valor. AUD-17 teve seis de seus oito itens corrigidos (correção puramente
@@ -24,7 +24,9 @@
 > ao norte de 20°S cai de **70 % para 50 %**. Dois critérios de aceitação de
 > AUD-06 permanecem não verificados, registrados no próprio registro.
 >
-> As demais 15 questões estão com situação `aberto` e desfecho vazio.
+> AUD-03, AUD-10 e AUD-14 foram encerradas como `limitacao-reconhecida` por
+> decisão do pesquisador em 2026-07-31. As seis questões com status literal
+> `aberto` e as cinco em investigação permanecem sem desfecho final.
 >
 > Relatório para coautores: [`reports/2026-07-30_relatorio_auditoria_perigo.md`](reports/2026-07-30_relatorio_auditoria_perigo.md).
 
@@ -41,8 +43,9 @@
 > pesquisador em 2026-07-31: manter todos os pontos, sem filtro, com as
 > incertezas de escala das fontes declaradas de forma geral e a modelagem de
 > alta resolução em grade não estruturada recomendada como trabalho futuro.
-> AUD-03, AUD-10 e AUD-14 seguem propostas como `limitacao-reconhecida`; AUD-09
-> fica em `aguardando-decisao` com dois critérios não verificados.
+> AUD-03, AUD-10 e AUD-14 foram posteriormente aprovadas e fechadas como
+> `limitacao-reconhecida`; AUD-09 permanece em investigação com dois critérios
+> não verificados.
 >
 > **Correção registrada:** a primeira versão desta sessão afirmou que Fernando
 > de Noronha estava fora do escopo por não haver ponto de grade apropriado.
@@ -136,10 +139,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 3 | 0 | 0 | **3** |
-| **P1 — resolver ou justificar** | 9 | 2 | 1 | 5 | **1** |
-| **P2 — recomendado** | 3 | 1 | 1 | 1 | 0 |
+| **P1 — resolver ou justificar** | 9 | 2 | 4 | 0 | **3** |
+| **P2 — recomendado** | 3 | 1 | 1 | 0 | **1** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **6** | **2** | **6** | **4** |
+| **Total** | **18** | **6** | **5** | **0** | **7** |
 
 ---
 
@@ -149,18 +152,18 @@ ver [`README.md`](README.md).
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **AUD-01** | Eventos compostos travados em fase com a sizígia ao norte de ~20°S | fragilidade-metodologica | perigo | 3.2 (orig. 2e) | dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | **06** | [AUD-01](issues/AUD-01_compound_detector_tidal_phase_locking.md) |
 | **AUD-02** | Limiares de "onda extrema" fisicamente vazios no Norte (0,20–1,05 m) | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
-| **AUD-03** | Incoerência de fase no nível somado (zos 00Z + maré máx. diária) | qualidade-dados | perigo | 2c → portão HAT / severidade | doc., interp. | P1 | Não | `aguardando-decisao` | *(proposto)* `limitacao-reconhecida` | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
+| **AUD-03** | Incoerência de fase no nível somado (zos 00Z + maré máx. diária) | qualidade-dados | perigo | 2c → portão HAT / severidade | doc., interp. | P1 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
 | **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `limitacao-reconhecida` | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Instabilidade do ranking sob agregação alternativa do perigo (ρ = 0,384) | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | **Sim** | `aberto` | — | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
 | **AUD-08** | Exposição: saturação do termo relativo e MAUP; **população efetiva implementada** | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
 | **AUD-09** | SVI: duas cargas negativas do PC1 — **sem erro de codificação**; CDF implementada | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
-| **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `aguardando-decisao` | *(proposto)* `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
+| **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
 | **AUD-11** | Min–Max em cadeia removido; validação integrada em curso | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |
 | **AUD-12** | Contaminação estuarina e fluvial no estuário amazônico | qualidade-dados | perigo | 2a → 3.1/3.2 | dados, interp., saídas | P1 | Não — top-10 já não depende desses pontos | `resolvido` | `resultado-validado-mantido` | 01 | [AUD-12](issues/AUD-12_estuarine_river_contamination.md) |
 | **AUD-13** | Índice integrado: dominância do perigo e cancelamento E × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `aberto` | — | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
-| **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `aguardando-decisao` | *(proposto)* `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
+| **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
 | **AUD-15** | Cobertura amostral: 2 ausentes, 4 degenerados, **83 sem perigo aceito** | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `em-investigacao` | — | 04 | [AUD-15](issues/AUD-15_sample_coverage.md) |
 | **AUD-16** | Ausência de definição operacional de "hotspot" | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `aberto` | — | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
 | **AUD-17** | Quatorze inconsistências documentação ↔ código ↔ saídas (8 originais + 6 de 2026-07-31) | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim, salvo correção | `em-investigacao` | — | 09, 12 | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
