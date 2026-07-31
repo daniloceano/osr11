@@ -104,6 +104,11 @@ const STAGE_BADGES: Record<RiskLayerMeta['stage'], { label: string; className: s
 };
 
 const DETAIL_FIELDS: { key: string; label: string; decimals: number }[] = [
+  { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0 },
+  { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0 },
+  { key: 'pop_5km', label: 'Population ≤5 km', decimals: 0 },
+  { key: 'pop_10km', label: 'Population ≤10 km', decimals: 0 },
+  { key: 'pop_eff', label: 'Effective population (weighted; not literal)', decimals: 1 },
   { key: 'SVI_Coast_2022', label: 'SVI_Coast_2022 (0–100)', decimals: 1 },
   { key: 'Hazard_Frequency', label: 'Hazard_Frequency (0–1)', decimals: 3 },
   { key: 'Hazard_Severity', label: 'Hazard_Severity (0–1)', decimals: 3 },

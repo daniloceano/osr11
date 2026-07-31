@@ -31,7 +31,7 @@ export default function RiskIntegrationPage() {
                 Multimetric hazard scope
               </span>
               <span className="rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs text-gray-600">
-                Municipal scale · raw and normalized stages
+                Municipal scale · fixed-anchor components
               </span>
             </div>
 
@@ -43,11 +43,11 @@ export default function RiskIntegrationPage() {
             <p className="mt-3 max-w-3xl text-sm text-gray-600">
               Municipal-scale coastal risk from its three IPCC components: the native-grid
               Hazard_Index (equal-weight compound-event frequency and mean integrated severity),
-              the resident population within 10 km of the coastline, and the coastal
-              Social Vulnerability Index. They are combined by <strong>geometric mean</strong>, which
+              weighted effective population from the cumulative 1, 2, 5 and 10 km bands, and
+              vulnerability transformed as Φ(PC1/sd). They are combined by <strong>geometric mean</strong>, which
               is conjunctive — risk requires a hazard, people exposed to it, and a susceptibility.
-              Each quantity is available <strong>before and after</strong> its Min–Max normalization,
-              so the effect of every rescaling step can be inspected directly on the map.
+              The four population bands and pop_eff are available as separate exposure layers,
+              alongside the fixed-anchor index components. No sample-dependent Min–Max is applied.
             </p>
           </div>
         </div>
@@ -59,22 +59,22 @@ export default function RiskIntegrationPage() {
               <ModuleCard
                 color="#756bb1"
                 title="SVI_Coast_2022"
-                body="IBGE/SIDRA 2022 social vulnerability index, PCA/PC1 based and normalized from 0 to 100."
+                body="Original SVI retained for audit; integration uses the monotonic Φ(PC1/sd) vulnerability scale."
               />
               <ModuleCard
                 color="#2171b5"
                 title="Hazard_Index"
-                body="Normalized equal-weight combination of native-grid compound-event frequency and mean integrated severity. Duration and peak intensity are published as diagnostics but do not enter the index."
+                body="Equal-weight combination of frequency and integrated severity using fixed anchors of 99 events and 1.0."
               />
               <ModuleCard
                 color="#31a354"
                 title="Exposure_Index"
-                body="Resident population within 10 km of the coastline, from the IBGE Grade Estatística 2022. Proximity, not modelled inundation."
+                body="Weighted combination of cumulative populations ≤1, ≤2, ≤5 and ≤10 km. Each band and pop_eff can be mapped separately."
               />
               <ModuleCard
                 color="#d94801"
                 title="Risk_Hazard"
-                body="Geometric mean of hazard, exposure and vulnerability, normalized to 0–1. Conjunctive: a component near zero pulls the index down."
+                body="Geometric mean of hazard, exposure and vulnerability, without floor or final Min–Max."
               />
             </div>
           </div>

@@ -61,7 +61,7 @@ from src.risk_integration.hazard_index import (
     NATIVE_GRID_SOURCE,
     derive_native_hazard_index as _derive_native_hazard_index,
 )
-from src.risk_integration.palettes import risk_colors
+from src.risk_integration.palettes import component_colors, risk_colors
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -399,6 +399,15 @@ def _nice_boundaries(
     return boundaries
 
 
+def _population_boundaries(series: pd.Series) -> list[float]:
+    """Log-spaced readable classes for highly skewed population quantities."""
+    upper = float(pd.to_numeric(series, errors="coerce").max())
+    ladder = [0, 100, 1_000, 5_000, 20_000, 50_000, 150_000, 400_000, 1_000_000]
+    while ladder[-1] < upper:
+        ladder.append(ladder[-1] * 3)
+    return [float(value) for value in ladder]
+
+
 #: Layer catalogue of the municipal product. Raw (pre-normalization) stages are
 #: published next to the normalized ones so the effect of each Min--Max step is
 #: visible. ``Hazard_Index_mun`` stays in the GeoJSON properties but is not
@@ -435,6 +444,56 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
             "geometric mean. This audit alias equals Risk_Hazard; no floor or "
             "final sample-dependent normalization is applied."
         ),
+    },
+    {
+        "key": "pop_eff",
+        "label": "Effective population from cumulative coastal bands",
+        "short_label": "Effective population",
+        "unit": "weighted inhabitants",
+        "stage": "input",
+        "group": "Exposure populations",
+        "actual_field": "derived:0.4*pop_1km+0.3*pop_2km+0.2*pop_5km+0.1*pop_10km",
+        "description": "Weighted exposure proxy used by the risk index; not a literal count of distinct inhabitants.",
+    },
+    {
+        "key": "pop_1km",
+        "label": "Resident population within 1 km of the coastline",
+        "short_label": "Population ≤1 km",
+        "unit": "inhabitants",
+        "stage": "input",
+        "group": "Exposure populations",
+        "actual_field": "pop_1km",
+        "description": "Literal resident count in the cumulative ≤1 km band; coefficient 0.4 in pop_eff.",
+    },
+    {
+        "key": "pop_2km",
+        "label": "Resident population within 2 km of the coastline",
+        "short_label": "Population ≤2 km",
+        "unit": "inhabitants",
+        "stage": "input",
+        "group": "Exposure populations",
+        "actual_field": "pop_2km",
+        "description": "Literal resident count in the cumulative ≤2 km band; coefficient 0.3 in pop_eff.",
+    },
+    {
+        "key": "pop_5km",
+        "label": "Resident population within 5 km of the coastline",
+        "short_label": "Population ≤5 km",
+        "unit": "inhabitants",
+        "stage": "input",
+        "group": "Exposure populations",
+        "actual_field": "pop_5km",
+        "description": "Literal resident count in the cumulative ≤5 km band; coefficient 0.2 in pop_eff.",
+    },
+    {
+        "key": "pop_10km",
+        "label": "Resident population within 10 km of the coastline",
+        "short_label": "Population ≤10 km",
+        "unit": "inhabitants",
+        "stage": "input",
+        "group": "Exposure populations",
+        "actual_field": "pop_10km",
+        "description": "Literal resident count in the cumulative ≤10 km band; coefficient 0.1 in pop_eff.",
     },
     {
         "key": "Exposure_Index",
@@ -602,15 +661,23 @@ def _current_available_layers(export: gpd.GeoDataFrame) -> list[dict[str, Any]]:
         key = definition["key"]
         if key not in export:
             continue
-        boundaries = FIXED_BOUNDARIES.get(key) or _nice_boundaries(export[key])
+        boundaries = (
+            _population_boundaries(export[key])
+            if key in {"pop_eff", *EXPOSURE_FIELDS}
+            else FIXED_BOUNDARIES.get(key) or _nice_boundaries(export[key])
+        )
         span = abs(boundaries[-1] - boundaries[0])
         layers.append(
             {
                 **definition,
                 "decimals": 0 if span >= 10 else 2 if span >= 1 else 3,
                 "boundaries": boundaries,
-                "colors": risk_colors(min(len(boundaries) - 1, 8)),
-                "palette": "risk",
+                "colors": (
+                    component_colors(len(boundaries) - 1)
+                    if key in {"pop_eff", *EXPOSURE_FIELDS}
+                    else risk_colors(min(len(boundaries) - 1, 8))
+                ),
+                "palette": "component" if key in {"pop_eff", *EXPOSURE_FIELDS} else "risk",
                 "palette_source": (
                     "green-to-red palette of the article "
                     "hazard/vulnerability/risk figure"

@@ -346,6 +346,32 @@ def build_exposure_layer() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
         },
     ]
 
+    population_band_layers = []
+    for band in ("1km", "2km", "5km", "10km"):
+        field = f"pop_{band}"
+        population_band_layers.append(
+            {
+                "key": field,
+                "label": f"Resident population within {band.replace('km', ' km')} of the coastline",
+                "short_label": f"Population ≤{band}",
+                "unit": "inhabitants",
+                "stage": "raw",
+                "group": "Cumulative population bands",
+                "actual_field": field,
+                "decimals": 0,
+                "boundaries": _count_boundaries(export[field]),
+                "colors": component_colors(len(_count_boundaries(export[field])) - 1),
+                "palette": "component",
+                "palette_source": "magma ramp shared with the hazard components",
+                "description": (
+                    f"Literal resident count in the cumulative ≤{band} band. "
+                    "The bands overlap by construction and are combined with "
+                    "weights 0.4/0.3/0.2/0.1 to obtain pop_eff."
+                ),
+                "stats": _numeric_stats(export[field]),
+            }
+        )
+    layers.extend(population_band_layers)
     layers = [
         layer for layer in layers if layer["key"] not in {"E_log10", "E_rank"}
     ]

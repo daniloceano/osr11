@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_exposure_data",
-  "generated_at": "2026-07-31T17:11:55.710293+00:00",
+  "generated_at": "2026-07-31T17:18:08.208157+00:00",
   "scope": "municipal_population_exposure",
   "source_path": "outputs/exposure/municipal_exposure.csv",
   "geometry_source": "site/public/data/risk_index_municipalities.geojson",
@@ -245,6 +245,170 @@
         "max": 1757947.0,
         "mean": 40412.315603,
         "median": 7346.5
+      }
+    },
+    {
+      "key": "pop_1km",
+      "label": "Resident population within 1 km of the coastline",
+      "short_label": "Population ≤1km",
+      "unit": "inhabitants",
+      "stage": "raw",
+      "group": "Cumulative population bands",
+      "actual_field": "pop_1km",
+      "decimals": 0,
+      "boundaries": [
+        0.0,
+        1000.0,
+        5000.0,
+        20000.0,
+        50000.0,
+        150000.0,
+        400000.0,
+        1000000.0
+      ],
+      "colors": [
+        "#fde7a9",
+        "#fea571",
+        "#f2645c",
+        "#c43c75",
+        "#8b2981",
+        "#54137d",
+        "#1a1042"
+      ],
+      "palette": "component",
+      "palette_source": "magma ramp shared with the hazard components",
+      "description": "Literal resident count in the cumulative ≤1km band. The bands overlap by construction and are combined with weights 0.4/0.3/0.2/0.1 to obtain pop_eff.",
+      "stats": {
+        "count": 282,
+        "min": 0.0,
+        "max": 574767.0,
+        "mean": 21048.468085,
+        "median": 4313.5
+      }
+    },
+    {
+      "key": "pop_2km",
+      "label": "Resident population within 2 km of the coastline",
+      "short_label": "Population ≤2km",
+      "unit": "inhabitants",
+      "stage": "raw",
+      "group": "Cumulative population bands",
+      "actual_field": "pop_2km",
+      "decimals": 0,
+      "boundaries": [
+        0.0,
+        1000.0,
+        5000.0,
+        20000.0,
+        50000.0,
+        150000.0,
+        400000.0,
+        1000000.0,
+        3000000.0
+      ],
+      "colors": [
+        "#fde7a9",
+        "#feae77",
+        "#f8765c",
+        "#dc4869",
+        "#ab337c",
+        "#7b2382",
+        "#4c117a",
+        "#1a1042"
+      ],
+      "palette": "component",
+      "palette_source": "magma ramp shared with the hazard components",
+      "description": "Literal resident count in the cumulative ≤2km band. The bands overlap by construction and are combined with weights 0.4/0.3/0.2/0.1 to obtain pop_eff.",
+      "stats": {
+        "count": 282,
+        "min": 0.0,
+        "max": 1125461.0,
+        "mean": 40912.12766,
+        "median": 9378.0
+      }
+    },
+    {
+      "key": "pop_5km",
+      "label": "Resident population within 5 km of the coastline",
+      "short_label": "Population ≤5km",
+      "unit": "inhabitants",
+      "stage": "raw",
+      "group": "Cumulative population bands",
+      "actual_field": "pop_5km",
+      "decimals": 0,
+      "boundaries": [
+        0.0,
+        1000.0,
+        5000.0,
+        20000.0,
+        50000.0,
+        150000.0,
+        400000.0,
+        1000000.0,
+        3000000.0
+      ],
+      "colors": [
+        "#fde7a9",
+        "#feae77",
+        "#f8765c",
+        "#dc4869",
+        "#ab337c",
+        "#7b2382",
+        "#4c117a",
+        "#1a1042"
+      ],
+      "palette": "component",
+      "palette_source": "magma ramp shared with the hazard components",
+      "description": "Literal resident count in the cumulative ≤5km band. The bands overlap by construction and are combined with weights 0.4/0.3/0.2/0.1 to obtain pop_eff.",
+      "stats": {
+        "count": 282,
+        "min": 0.0,
+        "max": 2327918.0,
+        "mean": 76428.758865,
+        "median": 16333.5
+      }
+    },
+    {
+      "key": "pop_10km",
+      "label": "Resident population within 10 km of the coastline",
+      "short_label": "Population ≤10km",
+      "unit": "inhabitants",
+      "stage": "raw",
+      "group": "Cumulative population bands",
+      "actual_field": "pop_10km",
+      "decimals": 0,
+      "boundaries": [
+        0.0,
+        1000.0,
+        5000.0,
+        20000.0,
+        50000.0,
+        150000.0,
+        400000.0,
+        1000000.0,
+        3000000.0,
+        9000000.0
+      ],
+      "colors": [
+        "#fde7a9",
+        "#feb67c",
+        "#fb8560",
+        "#ea5661",
+        "#c43c75",
+        "#992d80",
+        "#6e1e81",
+        "#451077",
+        "#1a1042"
+      ],
+      "palette": "component",
+      "palette_source": "magma ramp shared with the hazard components",
+      "description": "Literal resident count in the cumulative ≤10km band. The bands overlap by construction and are combined with weights 0.4/0.3/0.2/0.1 to obtain pop_eff.",
+      "stats": {
+        "count": 282,
+        "min": 4.0,
+        "max": 4374900.0,
+        "mean": 109317.861702,
+        "median": 22259.5
       }
     }
   ],
