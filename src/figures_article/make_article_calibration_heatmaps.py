@@ -6,15 +6,15 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     \centering
     \includegraphics[width=\linewidth]{outputs/article_figures/pu_composite_calibration_heatmaps.png}
     \caption{Positive-unlabeled (PU) threshold calibration across the tested
-    combinations of significant wave height ($H_s$) and total sea surface
-    height ($\mathrm{SSH}_{\mathrm{total}}$) quantiles. Panels show
+    combinations of significant wave height ($H_s$) and tide-free sea-level
+    anomaly ($\mathrm{zos}$) quantiles. Panels show
     (a) positive recall ($R_{\mathrm{pos}}$), (b) detection burden ($B$),
     (c) the soft false-positive penalty ($F_{\mathrm{soft}}/P$), and
     (d) the composite score. Colors represent relative performance within each
     panel: higher values are preferred for $R_{\mathrm{pos}}$ and the composite
     score, whereas lower values are preferred for $B$ and
     $F_{\mathrm{soft}}/P$. Cell annotations report the corresponding metric
-    values, and the cyan outline identifies the selected $q_{90}/q_{90}$
+    values, and the cyan outline identifies the selected $q_{70}/q_{99}$
     threshold pair.}
     \label{fig:pu-threshold-calibration}
 \end{figure}
@@ -35,7 +35,7 @@ import numpy as np
 import pandas as pd
 
 from config.plot_config import apply_publication_style
-from src.figures_article.calibration_common import load_score_frame
+from src.figures_article.calibration_common import load_optimal_pair, load_score_frame
 from src.figures_article.figure_io import _save_figure, validate_article_figure_outputs
 
 QUALITY_COLORS_WORSE_TO_BETTER = (
@@ -62,6 +62,7 @@ def _heatmap_panel(
     panel,
     show_xlabel,
     show_ylabel,
+    selected_pair,
     cmap_override=None,
 ):
     matrix = data.pivot(index="hs_percentile", columns="ssh_percentile", values=metric).sort_index()
@@ -72,7 +73,7 @@ def _heatmap_panel(
     image = ax.imshow(values, cmap=cmap, norm=norm, aspect="equal", origin="upper")
     ax.set_xticks(range(len(matrix.columns)), [f"q{int(v)}" for v in matrix.columns], rotation=45, ha="right")
     ax.set_yticks(range(len(matrix.index)), [f"q{int(v)}" for v in matrix.index])
-    ax.set_xlabel(r"SSH$_{total}$ quantile" if show_xlabel else "")
+    ax.set_xlabel(r"zos quantile" if show_xlabel else "")
     ax.set_ylabel(r"H$_s$ quantile" if show_ylabel else "")
     ax.set_title(title, fontweight="bold", pad=7)
     ax.grid(False)
@@ -84,8 +85,10 @@ def _heatmap_panel(
             luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
             ax.text(col, row, format(value, fmt), ha="center", va="center", fontsize=8,
                     color="black" if luminance > 0.55 else "white")
-    if 90 in matrix.index and 90 in matrix.columns:
-        row, col = list(matrix.index).index(90), list(matrix.columns).index(90)
+    selected_hs, selected_zos = selected_pair
+    if selected_hs in matrix.index and selected_zos in matrix.columns:
+        row = list(matrix.index).index(selected_hs)
+        col = list(matrix.columns).index(selected_zos)
         ax.add_patch(Rectangle((col - 0.5, row - 0.5), 1, 1, fill=False,
                                edgecolor="#00E5FF", linewidth=2.0))
     colorbar = ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.025)
@@ -96,6 +99,7 @@ def _heatmap_panel(
 def generate_calibration_heatmaps(data: pd.DataFrame | None = None) -> list[str]:
     apply_publication_style()
     data = load_score_frame() if data is None else data
+    selected_pair = load_optimal_pair()
     fig, axes = plt.subplots(2, 2, figsize=(9.0, 9.0), constrained_layout=True)
     fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.015, hspace=0.015)
     panels = (
@@ -108,7 +112,8 @@ def generate_calibration_heatmaps(data: pd.DataFrame | None = None) -> list[str]
         metric, title, higher, fmt, panel, cmap = args
         _heatmap_panel(ax, data, metric, title, higher_is_better=higher, fmt=fmt,
                        panel=panel, show_xlabel=index >= 2,
-                       show_ylabel=index % 2 == 0, cmap_override=cmap)
+                       show_ylabel=index % 2 == 0, selected_pair=selected_pair,
+                       cmap_override=cmap)
     return _save_figure(fig, "pu_composite_calibration_heatmaps")
 
 

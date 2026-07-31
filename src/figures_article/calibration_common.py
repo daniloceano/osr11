@@ -33,6 +33,7 @@ def _relative(path: Path) -> str:
 
 MUNICIPALITIES_GEOJSON = CURRENT_RISK_GEOJSON
 SCORE_DATA = ROOT / "site/public/data/tc5_score_decomposition.json"
+SCORE_SUMMARY = ROOT / "site/public/data/tc5_decomposition_summary.json"
 GRID_REFERENCE = ROOT / "outputs/preprocessing/municipality_grid_ref.csv"
 EXPANDED_EVENTS = ROOT / "data/reported events/ressaca_sc_eventos_sc_1998_2020_consolidated_expandido.csv"
 LEGACY_EVENTS = ROOT / "data/reported events/reported_events_Karine_sc.csv"
@@ -56,6 +57,13 @@ def load_score_frame() -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing score-decomposition fields: {sorted(missing)}")
     return frame
+
+
+def load_optimal_pair() -> tuple[int, int]:
+    """Read the selected production pair from the versioned TC5 summary."""
+    with SCORE_SUMMARY.open(encoding="utf-8") as handle:
+        optimal = json.load(handle)["score_optimal"]
+    return int(optimal["hs_percentile"]), int(optimal["ssh_percentile"])
 
 
 def study_municipalities() -> pd.DataFrame:
