@@ -73,7 +73,12 @@ TABLE_SPECS: dict[str, dict[str, str]] = {
             "the 33 years of record, but the 90\\% intervals of ranks 4--11 "
             "overlap, so the ordering within that band is not resolved; see the "
             "rank-uncertainty and aggregation-sensitivity tables "
-            "(AUD-07 supplementary)."
+            "(AUD-07 supplementary). Two entries carry a declared spatial-support "
+            "caveat: Mag\\'e and Paraty sit inside sheltered bays and draw their "
+            "hazard from open-shelf grid points 35 and 15 km away, so their "
+            "hazard is imported from outside the embayment that shelters them; "
+            "the recurrent flooding documented at both is fluvial and pluvial "
+            "rather than wave-driven (AUD-04, AUD-05)."
         ),
         "latex_label": "tab:top10-municipal-integrated-risk",
     },

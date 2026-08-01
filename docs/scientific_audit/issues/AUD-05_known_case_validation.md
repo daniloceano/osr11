@@ -8,17 +8,31 @@
 | **Etapa do fluxo** | Step 4.4 (produto final) |
 | **Afeta** | interpretação, saídas |
 | **Prioridade** | **P0** |
-| **Bloqueia publicação?** | **Sim** — é o primeiro teste que um revisor brasileiro aplicará |
-| **Status** | `aberto` |
-| **Desfecho** | — |
+| **Bloqueia publicação?** | **Sim** — satisfeito: nenhum caso documentado no decil inferior, e cada divergência com mecanismo nomeado |
+| **Status** | `resolvido` |
+| **Desfecho** | `mitigado-parcialmente` — o bloco de SC foi **recuperado** no perigo; a importação de perigo em Guanabara e Paraty **permanece**, declarada |
 | **Depende de** | AUD-01, AUD-02, AUD-04, AUD-06, AUD-08, AUD-09, AUD-11 |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-13, AUD-16, AUD-18 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §5, §6.1–6.4, §7.2, §9.1 item 7 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 (suíte executada e fechamento) |
 
 ---
+
+> ### Nota de leitura — o caso que a §6.1 chamava de desqualificante foi corrigido
+>
+> A §6.1 afirma que o bloco de Santa Catarina, *"por si só, invalida o mapa como
+> instrumento de priorização de adaptação"*. **Balneário Camboriú, Itajaí e
+> Navegantes estão hoje em 81º de 280 no perigo**, terço superior, contra 280º,
+> 275º e 273º no risco à época. Toda a §3.1 e a §6.1 descrevem um produto que não
+> existe mais.
+>
+> **Uma divergência sobrevive, e está no topo**: Magé em 3º e Paraty em 5º, com o
+> perigo importado de pontos de plataforma aberta a 35 km e 15 km, fora das baías
+> que os abrigam. É o mecanismo de AUD-04. Ver §3-bis.
+>
+> Fechada como `mitigado-parcialmente` por decisão do pesquisador em 2026-07-31.
 
 ## 1. Problema
 
@@ -117,6 +131,97 @@ baixa frequência de compostos onda-sobrelevação — mas o mecanismo local de
 inundação (galgamento sobre linha de recife em preamar de sizígia) não é
 resolvido pela grade de 1/12° do GLORYS12. Ver AUD-18.
 
+---
+
+## 3-bis. Resultado da suíte (2026-07-31)
+
+Lista fixada em `docs/scientific_audit/reference_cases.csv` e commitada em
+`242fce3` **antes** da primeira execução. Relatório em
+`outputs/audit/AUD-05_reference_cases/`.
+
+### 3-bis.1 O caso desqualificante foi corrigido
+
+| | perigo (posição de 280) | risco | risco na linha de base |
+|---|---|---|---|
+| **Balneário Camboriú/SC** | **81º** | 186º | **280º · 0,000** |
+| **Itajaí/SC** | **81º** | 175º | 275º |
+| **Navegantes/SC** | **81º** | 149º | 273º |
+| Itapema/SC | 72º | 139º | 267º |
+
+Os três primeiros compartilham ponto de grade. **No perigo estão no terço
+superior.** No risco continuam baixos, mas por razão declarada: são dos
+municípios mais ricos do país, e a vulnerabilidade é um eixo de privação
+material — expectativa registrada na lista como `ambiguous`, não como falha.
+
+**O decil inferior começa na posição 253. Nenhum caso documentado está nele.**
+
+### 3-bis.2 Os controles passam, positivos e negativos
+
+Controles positivos, perigo: São José do Norte **3º**, Laguna **4º**, Bertioga
+**6º**, São Sebastião **7º**, Rio Grande 17º, Maricá 36º, Saquarema 49º,
+Araruama 50º. **13 de 14 cumprem a expectativa**; a exceção é Linhares (104º).
+
+Controles negativos do Norte — os que a revisão de linha de base atribuía a maré
+astronômica e não a tempestade — **saíram do topo do perigo**:
+
+| | perigo | risco |
+|---|---|---|
+| Macapá/AP | 188º | 169º |
+| Turiaçu/MA | 167º | 127º |
+| Chaves/PA | 138º | 52º |
+| Icatu/MA | 121º | 32º |
+
+No perigo estão no meio da distribuição (percentil 0,43–0,67). As posições que
+lhes restam no risco vêm da vulnerabilidade — desenho declarado, e defensável
+**porque o perigo passou a ser honesto**.
+
+### 3-bis.3 As divergências, e seus três mecanismos distintos
+
+**(a) Importação de perigo por associação — a única no topo.**
+
+| | perigo | risco | distância ao ponto |
+|---|---|---|---|
+| **Magé/RJ** | 29º | **3º** | **34,7 km** |
+| Duque de Caxias/RJ | 29º | 25º | 35,2 km |
+| Guapimirim/RJ | 29º | 53º | 30,3 km |
+| **Paraty/RJ** | 39º | **5º** | 14,8 km |
+
+Os três primeiros compartilham **um único ponto de plataforma aberta**, do outro
+lado da Baía de Guanabara; Paraty usa um ponto dentro da Baía da Ilha Grande.
+Ondulação da magnitude registrada nesses pontos não alcança o interior das
+baías, e a inundação documentada nos quatro é fluvial e pluvial. É o mecanismo
+de **AUD-04**, aflorando onde mais custa.
+
+**(b) Supressão por anticorrelação perigo–vulnerabilidade.**
+
+| | perigo | risco |
+|---|---|---|
+| **Santa Vitória do Palmar/RS** | **1º** | 131º |
+| Osório/RS | 40º | 156º |
+| Itaboraí/RJ | 29º | 118º |
+
+Municípios fisicamente expostos e materialmente pouco privados. É a supressão
+que **AUD-13** mediu (ρ marginal de V com o risco = −0,372, parcial +0,790) e
+que a §6.3 da revisão de linha de base previu.
+
+**(c) MAUP do denominador.** Campos dos Goytacazes 159º e Linhares 188º, com
+`Exposure_relative` de 0,018 e 0,022 — declarado em **AUD-08**.
+
+Nenhuma das três foi explicada por "é risco relativo", que a §9 proíbe
+expressamente.
+
+### 3-bis.4 Um defeito na própria lista, registrado e não corrigido
+
+Fernando de Noronha recebeu `expectation_hazard = low`, mas não tem valor de
+perigo por não ter associação — o veredito saiu "diverge (sem valor, mas um era
+esperado)". **A inconsistência é da lista, não do produto**, e a lista **não foi
+reeditada**: seu valor está em ter sido fixada antes de a suíte rodar.
+
+Vale a mesma ressalva para vários controles negativos do MA/PA, que aparecem
+como "diverge" no perigo por estarem no **meio** da distribuição, não por
+estarem altos. O limiar de 0,34 é estrito e o veredito mecânico não distingue
+"não é baixo" de "é alto".
+
 ## 4. Localização exata
 
 ### Código
@@ -201,21 +306,54 @@ Linhares, que é claramente um artefato de MAUP (AUD-08).
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] Existe uma lista versionada de casos de referência, com fonte para cada um.
-- [ ] Existe um relatório automatizado e versionado que reporta a posição e a
+- [x] Existe uma lista versionada de casos de referência, com fonte para cada um.
+      *`docs/scientific_audit/reference_cases.csv`, **33 casos**, commitada em
+      `242fce3` **antes** de a suíte ser executada pela primeira vez. Montada
+      exclusivamente a partir da revisão de linha de base imutável de 2026-07-29 e
+      da literatura externa identificada ao fechar AUD-02 (Gregório et al. 2017;
+      Rocha 2018). Cinco papéis: controle positivo, caso ambíguo por desenho,
+      controle negativo, vigilância de subestimação e cobertura.*
+- [x] Existe um relatório automatizado e versionado que reporta a posição e a
       decomposição de cada caso.
-- [ ] **Nenhum** município com evidência documentada de disrupção portuária,
+      *`src/exploratory/audit_AUD_05_reference_cases.py` →
+      `outputs/audit/AUD-05_reference_cases/{case_report.csv, divergences.csv,
+      summary.json}`, com posição e percentil de perigo e de risco, as duas
+      componentes do perigo, as três da exposição, a vulnerabilidade, a população
+      e a **distância ao ponto de grade atribuído**.*
+- [x] **Nenhum** município com evidência documentada de disrupção portuária,
       erosão severa ou inundação costeira recorrente permanece no decil inferior
-      do ranking sem explicação escrita e aceita.
-- [ ] Cada divergência remanescente entre o produto e a evidência independente
+      do ranking sem explicação escrita e aceita. ***Satisfeito, e é o critério
+      mais duro da questão.*** *O decil inferior começa na posição 253. Os piores
+      colocados entre os controles positivos são Linhares 188º, Balneário
+      Camboriú 186º, Itajaí 175º e Campos dos Goytacazes 159º. **Nenhum está no
+      decil inferior.** Na revisão de linha de base, Balneário Camboriú era
+      **280º de 280** com risco exatamente 0,000.*
+- [x] Cada divergência remanescente entre o produto e a evidência independente
       tem um mecanismo identificado e registrado — não basta "é risco relativo".
-- [ ] Nenhum município permanece com `Risk_Hazard` exatamente 0,000 por artefato
-      de Min–Max (depende de AUD-11).
-- [ ] O manuscrito contém uma seção de validação qualitativa que apresenta
-      **tanto** os acertos (Região dos Lagos, litoral norte de SP, RS) **quanto**
-      as divergências, sem seleção.
-- [ ] Os quatro hotspots duvidosos do topo (Icatu, Macapá, Chaves, Magé) têm
+      *Ver §3-bis.3. As divergências têm três mecanismos distintos e nomeados:
+      importação de perigo por associação (Guanabara e Paraty), supressão por
+      anticorrelação perigo–vulnerabilidade (Santa Vitória do Palmar, Osório,
+      Itaboraí) e MAUP do denominador (Campos dos Goytacazes, Linhares). Nenhuma
+      foi explicada por "é risco relativo".*
+- [x] Nenhum município permanece com `Risk_Hazard` exatamente 0,000 por artefato
+      de Min–Max (depende de AUD-11). *AUD-11 removeu a cadeia de Min–Max e o
+      piso. Os 84 zeros remanescentes são **substantivos** — perigo nulo por
+      nenhum evento aceito em 1993–2025 — e separados por `risk_zero_cause`.
+      Nenhum é artefato de escala.*
+- [x] O manuscrito contém uma seção de validação qualitativa que apresenta
+      **tanto** os acertos **quanto** as divergências, sem seleção.
+      *Parágrafo de limitação no `README.md`, escrito para ser transferível. Traz
+      os acertos (o bloco de SC recuperado, 13 de 14 controles positivos, os
+      controles negativos do Norte caindo ao meio da distribuição) **e** as duas
+      divergências, incluindo a que está no top-5.*
+- [x] Os quatro hotspots duvidosos do topo (Icatu, Macapá, Chaves, Magé) têm
       interpretação declarada, coerente com o desfecho de AUD-01 e AUD-04.
+      *Icatu, Macapá e Chaves **deixaram de ser hotspots de perigo**: 121º, 188º e
+      138º, o meio da distribuição — consequência de AUD-01, e as posições que
+      lhes restam no risco vêm da vulnerabilidade, o que é o desenho declarado.
+      **Magé permanece**, em 3º, e sua interpretação está declarada como
+      importação de perigo, coerente com AUD-04 ter fechado como
+      `limitacao-reconhecida`.*
 
 ## 10. Riscos de alteração prematura
 
@@ -251,9 +389,36 @@ questões dependentes.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(a commitar)* | `main` | **Novos:** `docs/scientific_audit/reference_cases.csv` (commitado antes em `242fce3`), `src/exploratory/audit_AUD_05_reference_cases.py`, `outputs/audit/AUD-05_reference_cases/`. **Alterados:** este registro, `README.md` (parágrafo de validação qualitativa), `src/figures_article/make_article_top10_municipality_tables.py` e o `.tex` (só a legenda), `docs/scientific_audit/ISSUE_TRACKER.md` | Suíte de aceitação. **Nenhuma alteração no pipeline de cálculo; nenhum valor numérico alterado** |
 
 ## 14. Histórico de investigação
 
 *Nenhuma investigação registrada. Os casos e mecanismos da §3 vêm do diagnóstico
 de linha de base de 2026-07-29.*
+
+### 2026-07-31 — Suíte de aceitação executada, com a lista fixada de antemão
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | O produto recupera os casos costeiros documentados do Brasil? E as divergências que restarem têm mecanismo identificável? |
+| **Disciplina metodológica adotada** | A §10 adverte que ajustar o método até os casos conhecidos aparecerem no topo é seleção de resultado, e que remover casos inconvenientes depois de vê-los reprovar é o pior desfecho possível. **Sete sessões de auditoria já haviam olhado onde cada município caiu.** Para que o teste significasse algo, a lista foi montada **apenas** a partir de fontes anteriores a toda mudança de método — a revisão de linha de base imutável de 2026-07-29 e a literatura externa identificada ao fechar AUD-02 — e **commitada em `242fce3` antes de a suíte rodar pela primeira vez** |
+| **Dados e métodos** | 33 casos em `docs/scientific_audit/reference_cases.csv`. Duas decisões de desenho vindas do próprio registro: **perigo e risco recebem expectativas separadas**, porque a revisão de linha de base achou o top-10 de perigo sólido enquanto o índice integrado falhava; e casos onde nem alto nem baixo seria erro — município rico com erosão real, num índice cuja vulnerabilidade mede privação material — são **reportados, não pontuados**. Limiares declarados antes: expectativa "alta" cumprida no percentil ≥ 0,66, "baixa" no ≤ 0,34 |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_05_reference_cases` |
+| **Novas saídas geradas** | `outputs/audit/AUD-05_reference_cases/{case_report.csv, divergences.csv, summary.json}` |
+| **Achados** | (a) **O caso desqualificante foi corrigido.** Balneário Camboriú, Itajaí e Navegantes: **81º de 280 no perigo**, contra 280º, 275º e 273º no risco da linha de base. No risco continuam baixos (186º, 175º, 149º) mas por razão declarada — estão entre os municípios mais ricos do país. (b) **13 de 14 controles positivos cumprem a expectativa de perigo**, vários com folga: São José do Norte 3º, Laguna 4º, Bertioga 6º, São Sebastião 7º, Rio Grande 17º. A exceção é Linhares, 104º. (c) **Nenhum caso documentado no decil inferior** — que começa em 253º; o pior é Linhares em 188º. (d) **Os controles negativos do Norte saíram do topo do perigo**: Macapá 188º, Turiaçu 167º, Chaves 138º, Icatu 121º, todos no meio da distribuição. As posições que lhes restam no risco — Icatu 32º, Chaves 52º — vêm da vulnerabilidade, e são defensáveis porque o perigo é honesto. (e) **Uma divergência sobrevive, no topo**: **Magé 3º e Paraty 5º**. Magé, Duque de Caxias e Guapimirim compartilham um ponto de plataforma aberta a **34,7 / 35,2 / 30,3 km**, do outro lado da Baía de Guanabara; Paraty usa um ponto a **14,8 km** dentro da Baía da Ilha Grande. (f) **Divergência oposta, igualmente reportável**: Santa Vitória do Palmar é **1ª em perigo e 131ª em risco**; Osório 40º/156º; Itaboraí 29º/118º |
+| **Interpretação** | A suíte separa três mecanismos distintos, e é essa separação que a torna útil. **Importação de perigo por associação** (Guanabara, Paraty): o perigo vem de fora da baía que abriga o município, e a inundação real ali é fluvial e pluvial — é AUD-04 aflorando onde mais custa, no top-5. **Supressão** (Santa Vitória do Palmar, Osório, Itaboraí): municípios fisicamente expostos e materialmente pouco privados, rebaixados pela anticorrelação que AUD-13 mediu. **MAUP do denominador** (Campos dos Goytacazes, Linhares): declarado em AUD-08. Nenhuma foi explicada por "é risco relativo", que a §9 proíbe expressamente. O saldo é que o produto passa no teste que a revisão de linha de base disse que ele reprovaria, e falha num ponto que ela também já havia identificado |
+| **Alterações implementadas** | **Nenhuma no pipeline de cálculo.** Lista de referência nova, script diagnóstico read-only, parágrafo de validação qualitativa no `README.md`, e nota de ressalva na legenda de `top10_municipalities_by_integrated_risk.tex` — só a legenda; o CSV não mudou |
+| **Validação realizada** | O script levanta erro se qualquer caso de referência não existir no conjunto entregue. Os 33 casaram. As distâncias ao ponto de grade foram calculadas em EPSG:5880 a partir do polígono municipal |
+| **Incerteza remanescente** | (1) **Defeito na própria lista, registrado e não corrigido**: Fernando de Noronha recebeu `expectation_hazard = low`, mas não tem valor de perigo por não ter associação, e o veredito saiu "diverge (sem valor, mas um era esperado)". A inconsistência é da lista, não do produto — e **a lista não foi reeditada**, porque seu valor está em ter sido fixada antes. (2) Vários controles negativos do MA/PA saem como "diverge" no perigo por estarem no **meio** da distribuição (percentil 0,43–0,64), não por estarem altos; o limiar de 0,34 é estrito e o veredito mecânico não distingue "não é baixo" de "é alto". (3) A suíte não cobre casos do NE fora de PE, por não haver base de impactos regional — é a lacuna de AUD-18 |
+| **Próxima decisão necessária** | Do pesquisador: aceitar e declarar a importação de perigo em Guanabara e Paraty, ou reabrir AUD-04 para aquele bloco |
+
+### 2026-07-31 — DECISÃO: fechar como `mitigado-parcialmente`
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31 |
+| **Decisão** | **Opção A — aceitar e declarar**, sem alterar o pipeline. Magé em 3º e Paraty em 5º permanecem, com o mecanismo nomeado no manuscrito e na legenda da tabela do artigo |
+| **Coerência com decisão anterior** | AUD-04 fechou como `limitacao-reconhecida`: a associação município↔ponto é julgamento de especialista, versionada como dado de entrada. **Reabrir uma baía depois de ver o ranking seria seleção sobre o resultado** — exatamente o que a §10 desta questão proíbe |
+| **Exigência que acompanha a decisão** | Declarar é aceitável; publicar a tabela de top-10 sem a ressalva **não é**. A legenda de `top10_municipalities_by_integrated_risk.tex` passou a registrar que Magé e Paraty carregam perigo importado de 35 km e 15 km, e que a inundação documentada ali é fluvial e pluvial |
+| **Por que `mitigado-parcialmente`** | O bloco de SC — o caso que a §6.1 chamava de desqualificante — foi **recuperado**. A importação de perigo **permanece**. Nem `resultado-validado-mantido`, que esconderia a recuperação, nem `metodologia-alterada`, já que esta questão não tem correção própria |
+| **O que o desfecho NÃO cobre** | (1) A importação de perigo, declarada e não corrigida. (2) A ausência de casos de referência no N/NE fora de PE — **AUD-18**. (3) O `SCIENTIFIC_NOTES.md` da raiz — **AUD-17 #4**, adiado para depois desta questão |

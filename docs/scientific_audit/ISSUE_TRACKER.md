@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 1 (AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 16 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-08, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 0 de 18 · **em investigação:** 1 (AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 17 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-05, AUD-06, AUD-07, AUD-08, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
 
 > ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
 >
@@ -507,6 +507,53 @@
 >
 > **Restam AUD-05 (aberta) e AUD-17 (em investigação, só o item #4).**
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-05 fechada: **nenhuma questão aberta**
+>
+> **AUD-05 fechada** como `mitigado-parcialmente`. Lista de referência fixada em
+> `docs/scientific_audit/reference_cases.csv` e **commitada em `242fce3` antes**
+> de a suíte rodar pela primeira vez — a §10 do registro adverte que ajustar o
+> método até os casos conhecidos aparecerem no topo é seleção de resultado, e
+> sete sessões já haviam olhado onde cada município caiu. **Nenhuma alteração no
+> pipeline de cálculo.**
+>
+> - **O caso que a revisão de linha de base chamava de desqualificante foi
+>   corrigido.** Balneário Camboriú, Itajaí e Navegantes estão em **81º de 280 no
+>   perigo**, terço superior, contra **280º, 275º e 273º** no risco à época — e
+>   Balneário Camboriú tinha risco **exatamente 0,000**. No risco continuam
+>   baixos, por serem dos municípios mais ricos do país, o que a lista registrava
+>   de antemão como expectativa `ambiguous`.
+> - **Nenhum caso documentado no decil inferior**, que começa em 253º. O pior é
+>   Linhares em 188º. Era o critério mais duro da questão.
+> - **13 de 14 controles positivos** cumprem a expectativa de perigo: São José do
+>   Norte 3º, Laguna 4º, Bertioga 6º, São Sebastião 7º, Rio Grande 17º.
+> - **Os controles negativos do Norte saíram do topo do perigo**: Macapá 188º,
+>   Turiaçu 167º, Chaves 138º, Icatu 121º — meio da distribuição. As posições que
+>   lhes restam no risco vêm da vulnerabilidade, e são defensáveis **porque o
+>   perigo passou a ser honesto**.
+> - **Uma divergência sobrevive, e está no top-5.** **Magé 3º e Paraty 5º**, com
+>   o perigo importado de pontos de plataforma aberta a **34,7 km** e **14,8 km**,
+>   fora das baías que os abrigam; Duque de Caxias e Guapimirim usam o mesmo
+>   ponto de Magé. A inundação documentada nos quatro é fluvial e pluvial. É o
+>   mecanismo de **AUD-04**.
+> - **Divergência oposta, igualmente declarada**: **Santa Vitória do Palmar é 1ª
+>   em perigo e 131ª em risco**; Osório 40º/156º; Itaboraí 29º/118º — a supressão
+>   que AUD-13 mediu.
+>
+> **Decisão do pesquisador: aceitar e declarar**, coerente com AUD-04 ter fechado
+> como `limitacao-reconhecida` — reabrir uma baía depois de ver o ranking seria
+> seleção sobre o resultado. A ressalva que acompanha a decisão foi implementada:
+> a legenda de `top10_municipalities_by_integrated_risk.tex` passou a registrar a
+> importação de perigo em Magé e Paraty. Só a legenda; o CSV não mudou.
+>
+> **Defeito registrado na própria lista, não corrigido:** Fernando de Noronha
+> recebeu expectativa de perigo `low` mas não tem valor por não ter associação. A
+> inconsistência é da lista; ela **não foi reeditada**, porque seu valor está em
+> ter sido fixada antes.
+>
+> **Situação: nenhuma questão aberta.** Resta **AUD-17** em investigação, com um
+> único item — o `SCIENTIFIC_NOTES.md` da raiz, adiado por decisão do pesquisador
+> para depois de AUD-08 e AUD-05, ambas agora fechadas.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -516,11 +563,11 @@ ver [`README.md`](README.md).
 
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
-| **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
+| **P0 — bloqueia publicação** | 6 | 0 | 0 | 0 | **6** |
 | **P1 — resolver ou justificar** | 9 | 0 | 1 | 0 | **8** |
 | **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **1** | **1** | **0** | **16** |
+| **Total** | **18** | **0** | **1** | **0** | **17** |
 
 ---
 
@@ -532,7 +579,7 @@ ver [`README.md`](README.md).
 | **AUD-02** | Limiar de onda é percentil local: mede raridade, não severidade; **8 dos 20 primeiros abaixo de 1,5 m** | fragilidade-metodologica | perigo | 2e → 3.1/3.2 | dados, interp., saídas, doc. | **P0** | Sim — satisfeito por qualificação explícita | `resolvido` | `limitacao-reconhecida` | — | [AUD-02](issues/AUD-02_hs_threshold_transfer.md) |
 | **AUD-03** | Incoerência de fase no nível somado (zos 00Z + maré máx. diária) | qualidade-dados | perigo | 2c → portão HAT / severidade | doc., interp. | P1 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-03](issues/AUD-03_ssh_total_phase_coherence.md) |
 | **AUD-04** | Transferência grade → município: regra não reproduzível e suporte inadequado | **erro-implementacao** | perigo → integração | 4.1 | código, dados, interp., saídas, doc. | **P0** | **Sim** | `resolvido` | `limitacao-reconhecida` | — | [AUD-04](issues/AUD-04_grid_to_municipality_transfer.md) |
-| **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
+| **AUD-05** | Suíte executada: **bloco de SC recuperado** (perigo 81º de 280); importação de perigo em Guanabara e Paraty permanece, declarada | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Ranking robusto no topo e à ponderação; **não interpretável abaixo da posição ~20** — 94 municípios com < 10 eventos | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | Sim — satisfeito por publicação da sensibilidade e dos ICs | `resolvido` | `resultado-validado-mantido` | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
 | **AUD-08** | Exposição: **saturação eliminada** pela população efetiva (59 no teto → 0); MAUP permanece, medido e declarado | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |

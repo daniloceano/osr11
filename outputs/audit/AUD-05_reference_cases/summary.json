@@ -1,0 +1,209 @@
+{
+  "sources": {
+    "product": "site/public/data/risk_index_municipalities.geojson",
+    "reference_cases": "docs/scientific_audit/reference_cases.csv"
+  },
+  "list_provenance": "Built only from the immutable baseline review of 2026-07-29 and the external literature identified while closing AUD-02, and committed before this script was first run.",
+  "thresholds": {
+    "high_expectation_met_at_or_above_percentile": 0.66,
+    "low_expectation_met_at_or_below_percentile": 0.34
+  },
+  "n_cases": 32,
+  "by_role": {
+    "positive_control": 14,
+    "negative_control": 10,
+    "ambiguous_case": 3,
+    "underestimation_watch": 3,
+    "coverage": 2
+  },
+  "hazard_verdicts": {
+    "meets": 18,
+    "diverges": 10,
+    "not scored (expectation is ambiguous by design)": 3,
+    "diverges (no value, but one was expected)": 1
+  },
+  "risk_verdicts": {
+    "not scored (expectation is ambiguous by design)": 13,
+    "meets": 11,
+    "diverges": 8
+  },
+  "n_diverging_on_either": 16,
+  "diverging": [
+    {
+      "municipality": "Fernando de Noronha",
+      "state": "PE",
+      "role": "coverage",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges (no value, but one was expected)",
+      "hazard_rank": NaN,
+      "expectation_risk": "absent",
+      "verdict_risk": "meets",
+      "risk_rank": NaN
+    },
+    {
+      "municipality": "Macapá",
+      "state": "AP",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "meets",
+      "hazard_rank": 188.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 169.0
+    },
+    {
+      "municipality": "Apicum-Açu",
+      "state": "MA",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 181.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 172.0
+    },
+    {
+      "municipality": "Axixá",
+      "state": "MA",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 121.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 77.0
+    },
+    {
+      "municipality": "Icatu",
+      "state": "MA",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 121.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 32.0
+    },
+    {
+      "municipality": "Turiaçu",
+      "state": "MA",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 167.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 127.0
+    },
+    {
+      "municipality": "Chaves",
+      "state": "PA",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 138.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 52.0
+    },
+    {
+      "municipality": "Duque de Caxias",
+      "state": "RJ",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 29.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 25.0
+    },
+    {
+      "municipality": "Guapimirim",
+      "state": "RJ",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 29.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 53.0
+    },
+    {
+      "municipality": "Magé",
+      "state": "RJ",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 29.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 3.0
+    },
+    {
+      "municipality": "Paraty",
+      "state": "RJ",
+      "role": "negative_control",
+      "expectation_hazard": "low",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 39.0,
+      "expectation_risk": "ambiguous",
+      "verdict_risk": "not scored (expectation is ambiguous by design)",
+      "risk_rank": 5.0
+    },
+    {
+      "municipality": "Linhares",
+      "state": "ES",
+      "role": "positive_control",
+      "expectation_hazard": "high",
+      "verdict_hazard": "diverges",
+      "hazard_rank": 104.0,
+      "expectation_risk": "low",
+      "verdict_risk": "meets",
+      "risk_rank": 188.0
+    },
+    {
+      "municipality": "Campos dos Goytacazes",
+      "state": "RJ",
+      "role": "positive_control",
+      "expectation_hazard": "high",
+      "verdict_hazard": "meets",
+      "hazard_rank": 80.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 159.0
+    },
+    {
+      "municipality": "Itaboraí",
+      "state": "RJ",
+      "role": "underestimation_watch",
+      "expectation_hazard": "high",
+      "verdict_hazard": "meets",
+      "hazard_rank": 29.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 118.0
+    },
+    {
+      "municipality": "Osório",
+      "state": "RS",
+      "role": "underestimation_watch",
+      "expectation_hazard": "high",
+      "verdict_hazard": "meets",
+      "hazard_rank": 40.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 156.0
+    },
+    {
+      "municipality": "Santa Vitória do Palmar",
+      "state": "RS",
+      "role": "underestimation_watch",
+      "expectation_hazard": "high",
+      "verdict_hazard": "meets",
+      "hazard_rank": 1.0,
+      "expectation_risk": "low",
+      "verdict_risk": "diverges",
+      "risk_rank": 131.0
+    }
+  ]
+}

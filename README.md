@@ -851,7 +851,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The eleven paragraphs below are written to be transferable, essentially as they
+The twelve paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -1216,6 +1216,47 @@ named at the end of each paragraph.
   coarsely aggregated. The distortion is in the **reporting unit and the
   denominator**, not in the population data.
   *(`src/exploratory/audit_AUD_08_exposure_support.py`)*
+
+- **Qualitative validation against reference cases: what the index recovers and
+  what it does not (AUD-05).** Thirty-three municipalities with independent
+  evidence were fixed as a reference list **before** the comparison was run, drawn
+  only from sources predating every method change, and committed to version
+  control first; hazard and integrated risk carry separate expectations, and
+  cases where neither a high nor a low value would be an error — a wealthy
+  municipality with real erosion, on an index whose vulnerability layer measures
+  material deprivation — are reported rather than scored. **The index recovers the
+  case that earlier versions of this analysis identified as disqualifying.**
+  Balneário Camboriú, Itajaí and Navegantes, which the initial review placed at
+  ranks 280, 275 and 273 of 280 with Balneário Camboriú at exactly 0.000, now sit
+  at **rank 81 of 280 on hazard**, in the upper third; their integrated risk
+  remains low, but for a stated reason rather than an artefact — they are among
+  the wealthiest coastal municipalities in the country. **No municipality with
+  documented disruption, severe erosion or recurrent coastal flooding remains in
+  the bottom decile.** Thirteen of fourteen positive controls meet their hazard
+  expectation, several strongly: São José do Norte 3rd, Laguna 4th, Bertioga 6th,
+  São Sebastião 7th, Rio Grande 17th. The negative controls also behave: Macapá,
+  Turiaçu, Chaves and Icatu, whose events the initial review attributed to
+  astronomical tide rather than storms, now fall to hazard ranks 188, 167, 138 and
+  121 — the middle of the distribution, no longer physical hotspots. **One
+  divergence survives, and it is at the top of the ranking.** Magé ranks 3rd and
+  Paraty 5th on integrated risk, and both sit inside sheltered bays: Magé, Duque
+  de Caxias and Guapimirim share a single open-shelf grid point **35 km away**
+  across Guanabara Bay, and Paraty draws from a point 15 km inside Baía da Ilha
+  Grande. Swell of the magnitude recorded at those points does not reach the inner
+  bays, and the flooding documented at all four is fluvial and pluvial rather than
+  wave-driven. This is the point-to-municipality association limitation declared
+  elsewhere in this section, surfacing where it matters most, and it is **declared
+  rather than corrected**: the association is expert judgement, versioned as an
+  input, and re-drawing it for one bay after seeing the ranking would be selection
+  on the outcome. Readers and the top-ten table should treat those two entries as
+  carrying imported hazard. A second, opposite divergence is equally worth stating:
+  **Santa Vitória do Palmar ranks 1st on hazard and 131st on integrated risk**,
+  with Osório at 40th and 156th and Itaboraí at 29th and 118th — physically
+  exposed municipalities with low material deprivation, depressed by the same
+  suppression structure described above. The index is a social-risk prioritisation,
+  and these are the cases where that framing costs the most.
+  *(`src/exploratory/audit_AUD_05_reference_cases.py`,
+  `docs/scientific_audit/reference_cases.csv`)*
 
 ### Current Implementation Status
 
