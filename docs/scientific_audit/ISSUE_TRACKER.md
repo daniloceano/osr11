@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 3 (AUD-08, AUD-09, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 14 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 2 (AUD-08, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 15 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
 
 > ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
 >
@@ -435,6 +435,35 @@
 >
 > **Resta apenas AUD-05**, mais AUD-08, AUD-09 e AUD-17 em investigação.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-09 fechada: o critério estava sendo julgado sobre a escala errada
+>
+> **AUD-09 fechada** como `resultado-validado-mantido`. Diagnóstico em
+> `src/exploratory/audit_AUD_09_scale_alternatives.py` →
+> `outputs/audit/AUD-09_scale_alternatives/`. **O SVI não foi tocado.**
+>
+> - **Há duas escalas, e o registro as tratava como uma.** O que **entra no
+>   risco** é `Φ(PC1/sd)`, faixa 0,0122–0,9948, **sem âncora exata** — critério
+>   atingido. O que é **publicado como camada** é `SVI_Coast_2022`, o Min–Max
+>   0–100 preservado por proveniência, que **ainda põe Balneário Camboriú em
+>   0,0000 e Chaves/PA em 100,0000** e imprime `100.000` na primeira linha da
+>   tabela do artigo. É deliberado, e passou a estar declarado.
+> - **As alternativas ficaram menos consequentes, não mais.** Posto percentílico:
+>   **ρ = 0,991** no risco, contra **0,958** sob o pipeline anterior; deslocamento
+>   máximo 66, contra 108. Aditivo com direção imposta: **0,978**, contra 0,941.
+>   Min–Max do PC1: 0,976, e **reintroduz** âncora em 0 e em 1. Remover o piso e o
+>   Min–Max final tornou o produto **menos** sensível à escala da vulnerabilidade.
+> - **A comparação com Lima et al. (2024) não será feita.** Decisão do
+>   pesquisador de não buscar material externo: a referência é do censo de 2010 e
+>   exige o suplementar do artigo. Fica como **lacuna declarada de validação
+>   externa da camada de vulnerabilidade** — mesma natureza da de AUD-18 para o
+>   detector, e declarada pelo mesmo padrão.
+>
+> Corrigido também o parágrafo de limitação de AUD-09 no `README.md`, que
+> afirmava as âncoras exatas sem distinguir as duas escalas — resíduo sinalizado
+> em 2026-07-31 e até agora não tratado.
+>
+> **Restam AUD-05 (aberta), AUD-08 e AUD-17 (em investigação).**
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -445,10 +474,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
-| **P1 — resolver ou justificar** | 9 | 0 | 3 | 0 | **6** |
+| **P1 — resolver ou justificar** | 9 | 0 | 2 | 0 | **7** |
 | **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **1** | **3** | **0** | **14** |
+| **Total** | **18** | **1** | **2** | **0** | **15** |
 
 ---
 
@@ -464,7 +493,7 @@ ver [`README.md`](README.md).
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Ranking robusto no topo e à ponderação; **não interpretável abaixo da posição ~20** — 94 municípios com < 10 eventos | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | Sim — satisfeito por publicação da sensibilidade e dos ICs | `resolvido` | `resultado-validado-mantido` | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
 | **AUD-08** | Exposição: saturação do termo relativo e MAUP; **população efetiva implementada** | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
-| **AUD-09** | SVI: duas cargas negativas do PC1 — **sem erro de codificação**; CDF implementada | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
+| **AUD-09** | SVI: sem erro de codificação; **duas escalas distintas** — `V` sem âncora exata, camada publicada com 0 e 100 | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `resultado-validado-mantido` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
 | **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
 | **AUD-11** | Ancoragem amostral **reduzida 26×, não eliminada**: `sd(PC1)` continua da amostra e é material em escala de domínio | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |
 | **AUD-12** | Contaminação estuarina e fluvial no estuário amazônico | qualidade-dados | perigo | 2a → 3.1/3.2 | dados, interp., saídas | P1 | Não — top-10 já não depende desses pontos | `resolvido` | `resultado-validado-mantido` | 01 | [AUD-12](issues/AUD-12_estuarine_river_contamination.md) |

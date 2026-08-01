@@ -1,0 +1,42 @@
+{
+  "vulnerability_entering_the_risk": {
+    "field": "Vulnerability_CDF_PC1",
+    "formula": "Phi(PC1 / sd(PC1, ddof=0))",
+    "min": 0.01224,
+    "max": 0.994764,
+    "n_exactly_zero": 0,
+    "n_exactly_one": 0,
+    "verdict": "No exact anchor. The criterion is met on the risk path."
+  },
+  "svi_published_as_a_layer": {
+    "field": "SVI_Coast_2022",
+    "formula": "Min-Max of PC1, 0-100 (original, preserved for traceability)",
+    "min": 0.0,
+    "max": 100.0,
+    "at_exactly_zero": [
+      {
+        "municipality_name": "Balneário Camboriú",
+        "state": "SC"
+      }
+    ],
+    "at_exactly_hundred": [
+      {
+        "municipality_name": "Chaves",
+        "state": "PA"
+      }
+    ],
+    "surfaces_in": {
+      "article_table_first_row": [
+        {
+          "Rank": 1,
+          "Municipality": "Chaves",
+          "State": "Pará",
+          "UF": "PA",
+          "SVI": 100.0
+        }
+      ],
+      "note": "The article SVI table prints 100.000 for the top municipality and the map layer spans 0-100, so the Min-Max artefact is visible to a reader even though it no longer reaches the risk."
+    },
+    "verdict": "Exact anchors persist here by deliberate choice: the delivered SVI was preserved unchanged for traceability and provenance. It must be declared, not silently carried."
+  }
+}

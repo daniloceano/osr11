@@ -1,0 +1,96 @@
+{
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "note": "The record's alternative-scale numbers (percentile rank at rho = 0.958 on risk, maximum displacement 108) were measured under the superseded pipeline, with a 0.01 floor and a final Min-Max. They are re-measured here against the published product.",
+  "alternatives": [
+    {
+      "scale": "Phi(PC1/sd) — published",
+      "spearman_with_published_vulnerability": 1.0,
+      "spearman_on_risk": 0.999999859544634,
+      "top20_overlap": 20,
+      "max_rank_shift": 1,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 0,
+      "min": 0.012240297413987722,
+      "max": 0.9947642378048297
+    },
+    {
+      "scale": "Min-Max of PC1 (the original SVI/100)",
+      "spearman_with_published_vulnerability": 1.0,
+      "spearman_on_risk": 0.9763823665724348,
+      "top20_overlap": 18,
+      "max_rank_shift": 50,
+      "n_exactly_zero": 1,
+      "n_exactly_one": 1,
+      "min": 0.0,
+      "max": 1.0
+    },
+    {
+      "scale": "percentile rank of PC1",
+      "spearman_with_published_vulnerability": 1.0,
+      "spearman_on_risk": 0.9911416198915252,
+      "top20_overlap": 19,
+      "max_rank_shift": 66,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 1,
+      "min": 0.0035460992907801418,
+      "max": 1.0
+    },
+    {
+      "scale": "additive z-score, direction imposed",
+      "spearman_with_published_vulnerability": 0.9410373310155197,
+      "spearman_on_risk": 0.9776640838327675,
+      "top20_overlap": 14,
+      "max_rank_shift": 76,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 0,
+      "min": 0.013873103869386583,
+      "max": 0.9989249058600401
+    }
+  ],
+  "exact_anchors": {
+    "vulnerability_entering_the_risk": {
+      "field": "Vulnerability_CDF_PC1",
+      "formula": "Phi(PC1 / sd(PC1, ddof=0))",
+      "min": 0.01224,
+      "max": 0.994764,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 0,
+      "verdict": "No exact anchor. The criterion is met on the risk path."
+    },
+    "svi_published_as_a_layer": {
+      "field": "SVI_Coast_2022",
+      "formula": "Min-Max of PC1, 0-100 (original, preserved for traceability)",
+      "min": 0.0,
+      "max": 100.0,
+      "at_exactly_zero": [
+        {
+          "municipality_name": "Balneário Camboriú",
+          "state": "SC"
+        }
+      ],
+      "at_exactly_hundred": [
+        {
+          "municipality_name": "Chaves",
+          "state": "PA"
+        }
+      ],
+      "surfaces_in": {
+        "article_table_first_row": [
+          {
+            "Rank": 1,
+            "Municipality": "Chaves",
+            "State": "Pará",
+            "UF": "PA",
+            "SVI": 100.0
+          }
+        ],
+        "note": "The article SVI table prints 100.000 for the top municipality and the map layer spans 0-100, so the Min-Max artefact is visible to a reader even though it no longer reaches the risk."
+      },
+      "verdict": "Exact anchors persist here by deliberate choice: the delivered SVI was preserved unchanged for traceability and provenance. It must be declared, not silently carried."
+    }
+  },
+  "lima_et_al_2024_comparison": {
+    "status": "not performed, and not planned",
+    "reason": "The reference SVI-Coast is built on the 2010 census and is not held in this repository; obtaining it requires the supplementary material of the published article. The researcher decided on 2026-07-31 not to pursue external material."
+  }
+}

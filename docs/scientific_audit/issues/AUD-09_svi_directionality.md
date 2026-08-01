@@ -8,17 +8,34 @@
 | **Etapa do fluxo** | Step 4.3 |
 | **Afeta** | dados, interpretação, saídas, documentação |
 | **Prioridade** | P1 |
-| **Bloqueia publicação?** | Sim, salvo qualificação explícita — as cargas do PC1 precisam ser publicadas e a inversão discutida |
-| **Status** | `em-investigacao` |
-| **Desfecho** | — |
+| **Bloqueia publicação?** | Sim — satisfeito: cargas publicadas, inversão discutida, escalas separadas e lacuna externa declarada |
+| **Status** | `resolvido` |
+| **Desfecho** | `resultado-validado-mantido` — nenhum indicador está invertido, o SVI não foi recalculado, e o que restava era de escala e de nomenclatura |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-11 |
 | **Relacionado a** | AUD-10, AUD-13 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.3, §8 item 7, §9.2 item 11 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-31 |
+| **Última atualização** | 2026-07-31 (verificação das escalas e fechamento) |
 
 ---
+
+> ### Nota de leitura — duas escalas, e o registro as confunde
+>
+> **O que entra no risco** é `Vulnerability_CDF_PC1 = Φ(PC1/sd(PC1))`, faixa
+> 0,0122–0,9948, **sem âncora exata**.
+>
+> **O que é publicado como camada** é `SVI_Coast_2022`, o Min–Max 0–100 do mesmo
+> PC1, preservado por rastreabilidade — e **ainda com Balneário Camboriú em
+> 0,0000 e Chaves/PA em 100,0000**, impresso como `100.000` na tabela do artigo.
+>
+> Os números de alternativas de escala da §9 e da §14 (posto percentílico
+> ρ = 0,958 no risco, deslocamento 108) são do pipeline **anterior**, com piso e
+> Min–Max final. Remedidos: **ρ = 0,991**, deslocamento 66. Ver §3-bis.
+>
+> Fechada como `resultado-validado-mantido` por decisão do pesquisador em
+> 2026-07-31, que também decidiu **não buscar material externo** — a comparação
+> com Lima et al. (2024) fica como lacuna declarada.
 
 ## 1. Problema
 
@@ -115,6 +132,69 @@ Auditoria registrada em `src/04_risk_integration/external_svi/README.md`
 reproduz os valores publicados **exatamente** (r = +1,000000, max|Δ| = 0,0000).
 PC1 explica **50,5 %** da variância dos dez indicadores padronizados. Esta
 questão **não** é sobre erro de cálculo.
+
+---
+
+## 3-bis. As duas escalas, e o custo das alternativas (2026-07-31)
+
+Gerada por `src/exploratory/audit_AUD_09_scale_alternatives.py` →
+`outputs/audit/AUD-09_scale_alternatives/`.
+
+### 3-bis.1 Âncoras exatas: onde acabaram e onde continuam
+
+| | escala | faixa | em 0 exato | em 1 / 100 exato |
+|---|---|---|---|---|
+| **Entra no risco** | `Φ(PC1/sd(PC1))` | 0,0122 – 0,9948 | **0** | **0** |
+| **Publicado como camada** | `SVI_Coast_2022` (Min–Max 0–100) | 0,0000 – 100,0000 | **1** (Balneário Camboriú/SC) | **1** (Chaves/PA) |
+
+O critério 6 exigia que nenhum município recebesse âncora exata por artefato de
+Min–Max. **No caminho do risco isso foi atingido.** Na camada publicada não, e
+por escolha deliberada: o SVI entregue foi preservado sem recálculo, por
+proveniência — ele é produto de coautora externa. O que faltava não era corrigir,
+era **declarar a distinção**, porque a âncora é visível ao leitor: a camada de
+mapa vai de 0 a 100 e a primeira linha de
+`outputs/article_figures/tables/top10_municipalities_by_svi.csv` imprime
+`100.000`.
+
+### 3-bis.2 As alternativas ficaram **menos** consequentes, não mais
+
+Efeito de trocar a escala de vulnerabilidade, sobre o risco publicado:
+
+| escala | ρ com `V` | **ρ no risco** | top-20 | desloc. máx | 0 exatos | 1 exatos |
+|---|---|---|---|---|---|---|
+| **`Φ(PC1/sd)` — publicada** | 1,000 | 1,000 | 20/20 | 1 | 0 | 0 |
+| posto percentílico do PC1 | 1,000 | **0,991** | 19/20 | 66 | 0 | **1** |
+| aditivo, direção imposta | 0,941 | **0,978** | 14/20 | 76 | 0 | 0 |
+| Min–Max do PC1 (o SVI/100 original) | 1,000 | 0,976 | 18/20 | 50 | **1** | **1** |
+
+Os números do registro são do pipeline anterior, com piso de 0,01 e Min–Max
+final: posto percentílico dava **ρ = 0,958** no risco e deslocamento de **108**
+posições. Hoje dá **0,991** e **66**. A afirmação da §14 de que a alternativa
+"**não é neutra**, portanto a escolha depende de AUD-11" continua verdadeira em
+espécie, mas o custo caiu pela metade — a remoção do piso e do Min–Max final
+tornou o produto **menos** sensível à escala da vulnerabilidade.
+
+As três escalas derivadas de PC1 têm ρ = 1,000 entre si na **ordenação da
+vulnerabilidade** — são transformações monótonas do mesmo componente — e diferem
+no **risco** apenas porque a média geométrica é não linear. Só o índice aditivo
+com direção imposta muda a própria ordenação (ρ = 0,941), e ainda assim custa
+menos no risco (0,978) do que custava antes (0,941).
+
+> **Nota de precisão.** A escala publicada devolve deslocamento máximo de **1**
+> posição contra ela mesma, não 0: o `Risk_Hazard` do GeoJSON é arredondado a
+> seis casas, e o recálculo desempata um par quase idêntico. É ruído de
+> arredondamento, não discrepância.
+
+### 3-bis.3 A comparação externa não será feita
+
+O critério 7 pedia comparação com o SVI-Coast de Lima et al. (2024) **ou** o
+registro de por que não foi possível. O pesquisador decidiu em 2026-07-31 **não
+buscar material externo**. A referência é do censo de **2010**, não está no
+repositório, e obtê-la exige o material suplementar do artigo.
+
+Fica como **lacuna declarada de validação externa da camada de vulnerabilidade** —
+a mesma natureza da lacuna de AUD-18 para o detector, e declarada pelo mesmo
+padrão: nomeada, não omitida.
 
 ## 4. Localização exata
 
@@ -236,18 +316,25 @@ que cada indicador contribua na direção certa.
 - [x] A redundância entre indicadores está quantificada e discutida.
       *|r| médio fora da diagonal entre os dez: **0,424**; dentro do bloco de
       saneamento: **0,377**. Declarado em `README.md` → limitações.*
-- [ ] Nenhum município recebe SVI exatamente 0 ou 100 por artefato de Min–Max,
+- [x] Nenhum município recebe SVI exatamente 0 ou 100 por artefato de Min–Max,
       **ou** está demonstrado que o piso de 0,01 neutraliza completamente o efeito
-      no produto final (**requer AUD-11**). *Os dois extremos exatos persistem
-      (Balneário Camboriú = 0, Chaves/PA = 100) e estão declarados como artefato
-      de escala. A alternativa por posto percentílico foi medida (ρ = 1,000 com
-      o SVI publicado por construção, mas ρ = 0,958 no risco final, deslocamento
-      máximo de 108 posições), portanto **não é neutra** e a escolha depende de
-      AUD-11. Critério **não verificado**.*
-- [ ] Existe comparação com o SVI-Coast de referência (Lima et al. 2024), ou está
-      registrado por que não foi possível. **Não realizada.** O índice de
-      referência é do censo de 2010 e não está no repositório; obtê-lo exige
-      acesso ao material suplementar do artigo. Critério **não verificado**.
+      no produto final (**requer AUD-11**). **Satisfeito no caminho do risco;
+      persiste, declaradamente, na camada publicada.** *AUD-11 fechou e o piso
+      deixou de existir. **`Vulnerability_CDF_PC1`, que é o que entra no risco,
+      não tem âncora exata**: faixa 0,0122–0,9948, zero municípios em 0 ou 1.
+      **`SVI_Coast_2022`, preservado por rastreabilidade, continua em 0–100 e
+      ainda põe Balneário Camboriú em 0,0000 e Chaves/PA em 100,0000** — visível
+      na camada de mapa e impresso como `100.000` na primeira linha de
+      `top10_municipalities_by_svi.csv`. É escolha deliberada de proveniência, e
+      está declarada como tal no `README.md`, com a distinção entre as duas
+      escalas explicitada. `outputs/audit/AUD-09_scale_alternatives/`.*
+- [x] Existe comparação com o SVI-Coast de referência (Lima et al. 2024), ou está
+      registrado por que não foi possível. **Registrado por que não foi feita, e
+      não será.** *O índice de referência é do censo de 2010, não está no
+      repositório, e obtê-lo exige o material suplementar do artigo. O
+      pesquisador decidiu em 2026-07-31 **não buscar material externo**. Fica
+      como lacuna declarada de validação externa da camada de vulnerabilidade, no
+      `README.md` e no parágrafo de limitação — não como pendência aberta.*
 
 ## 10. Riscos de alteração prematura
 
@@ -292,6 +379,7 @@ Se apenas as cargas forem publicadas: nenhum produto muda.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
+| 2026-07-31 | *(a commitar)* | `main` | **Novos:** `src/exploratory/audit_AUD_09_scale_alternatives.py`, `outputs/audit/AUD-09_scale_alternatives/`. **Alterados:** este registro (§3-bis, §9, §13, §14 e nota de leitura), `README.md` (parágrafo de limitação de AUD-09 reescrito), `docs/scientific_audit/ISSUE_TRACKER.md` | Verificação das escalas + declaração. **O SVI não foi tocado; nenhum valor numérico publicado alterado** |
 | 2026-07-31 | *(não commitado)* | `main` | `src/exploratory/audit_AUD_09_svi_directionality.py` (novo), `README.md` (§4.3 reescrita com as cargas; limitações do manuscrito), `site/content/*.ts` e páginas do site (enquadramento social, contagem 281→282) | Diagnóstico + documentação. **O SVI não foi alterado; nenhum valor numérico publicado mudou** |
 
 ## 14. Histórico de investigação
@@ -327,3 +415,28 @@ diagnósticos de direcionalidade da §3 vêm da revisão de linha de base de
 | **O que NÃO muda** | O PCA, as dez variáveis, as cargas, o sinal do componente. **O SVI não é recalculado**, apenas reescalado. Nenhuma conclusão da entrada de 2026-07-31 sobre direcionalidade é afetada |
 | **Documentação exigida** | O pesquisador pediu que a mudança fique **muito bem documentada**. O mínimo: (a) `README.md` §4.3 explicando por que o PC1 não tem escala natural (média 0, sd 2,247, faixa −5,06 a +5,75, 48 % negativo) e por que a CDF foi escolhida em vez de Min–Max ou posto percentílico; (b) docstring do módulo que implementar; (c) `risk_index_metadata.json` com a fórmula e a razão; (d) página do site correspondente; (e) parágrafo no manuscrito |
 | **Critério que continua aberto** | A comparação com o SVI-Coast de Lima et al. (2024) permanece não realizada. AUD-09 **não fecha** por causa dela |
+
+### 2026-07-31 — Verificação das escalas e fechamento
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Depois do fechamento de AUD-11, algum município ainda recebe âncora exata por artefato de escala? E quanto custam hoje as alternativas de escala da vulnerabilidade, medidas contra o produto atual em vez do superseded? |
+| **Dados e métodos** | `site/public/data/risk_index_municipalities.geojson` (282 entregues, 280 com risco) e `outputs/article_figures/tables/top10_municipalities_by_svi.csv`. Quatro escalas de vulnerabilidade construídas sobre os 282 e alinhadas por código IBGE aos 280 com risco — o script **levanta erro** se o alinhamento deixar qualquer NaN. Risco recomposto com `H` e `E` fixos |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_09_scale_alternatives` |
+| **Novas saídas geradas** | `outputs/audit/AUD-09_scale_alternatives/{vulnerability_scale_alternatives.csv, exact_anchor_audit.json, summary.json}` |
+| **Achados** | (a) **O critério 6 estava sendo julgado sobre a escala errada.** O que entra no risco é `Φ(PC1/sd)`, faixa 0,0122–0,9948, **zero âncoras exatas** — critério atingido. O que continua com 0,0000 e 100,0000 é `SVI_Coast_2022`, a camada preservada por rastreabilidade, e isso é **visível ao leitor**: a tabela do artigo imprime `100.000` na primeira linha. (b) **As alternativas ficaram menos consequentes, não mais.** Posto percentílico: **ρ = 0,991** no risco, contra 0,958 sob o pipeline anterior; deslocamento máximo 66, contra 108. Aditivo com direção imposta: **0,978**, contra 0,941. Min–Max do PC1: 0,976, e **reintroduz** uma âncora em 0 e outra em 1. (c) As três escalas derivadas de PC1 têm ρ = 1,000 entre si na ordenação da vulnerabilidade — são monótonas do mesmo componente — e só divergem no risco porque a média geométrica é não linear |
+| **Interpretação** | A remoção do piso e do Min–Max final (AUD-11) tornou o produto **menos** sensível à escala da vulnerabilidade, e não mais. Isso reforça o desfecho já indicado pela auditoria de direcionalidade: não há erro a corrigir, o SVI não deve ser recalculado, e a escolha de escala é de segunda ordem. O que faltava era **separar duas coisas que o registro tratava como uma**: a escala que entra no risco, hoje sem âncora, e a escala publicada como camada, que mantém as âncoras por proveniência. Declarar essa distinção é o que fecha o critério, porque o leitor vê as duas |
+| **Alterações implementadas** | Script novo. Parágrafo de limitação de AUD-09 no `README.md` reescrito para separar as duas escalas, reportar o custo das alternativas e declarar a lacuna externa. **Nenhum valor numérico publicado alterado; o SVI não foi tocado** |
+| **Validação realizada** | O alinhamento por código IBGE é verificado por asserção. A escala publicada reproduz o risco publicado com deslocamento máximo de 1 posição, atribuível ao arredondamento a seis casas do GeoJSON |
+| **Incerteza remanescente** | (1) **Sem comparação com Lima et al. (2024)** — decisão de não buscar material externo. (2) A redundância entre os dez indicadores continua **quantificada mas não tratada**: quatro medem saneamento. (3) `pop_house` continua publicado pré-normalizado, divergindo da definição do manuscrito — pendência de **AUD-17** |
+| **Próxima decisão necessária** | Nenhuma |
+
+### 2026-07-31 — DECISÃO: fechar como `resultado-validado-mantido`
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31 |
+| **Decisão** | Fechar. **Não buscar material externo** — a comparação com Lima et al. (2024) fica como lacuna declarada de validação externa da camada de vulnerabilidade, nomeada no `README.md`, e não como pendência aberta |
+| **Por que `resultado-validado-mantido`** | A questão nasceu como "dois indicadores estão invertidos". A auditoria de direcionalidade demonstrou que **não há indicador invertido**, que a inversão global do sinal do PC1 **nunca disparou**, e que impor direção antes do PCA é um no-op matemático. O SVI **não foi recalculado** em momento algum. O que restou — nomenclatura, escala e âncoras — foi declarado, não corrigido |
+| **O que fica declarado** | (1) O índice é um eixo de **privação material** (r = +0,940 com pobreza), não de suscetibilidade costeira. (2) `pop_rent` e `pop_agevul` entram com carga negativa, e isso é resultado empírico legítimo. (3) As duas escalas são distintas, e a publicada mantém âncoras exatas por proveniência. (4) A validação externa não foi feita |
+| **O que o desfecho NÃO cobre** | (1) A redundância do bloco de saneamento, quantificada e não tratada. (2) `pop_house` pré-normalizado — **AUD-17**. (3) A suíte de casos conhecidos — **AUD-05** |

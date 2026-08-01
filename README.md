@@ -993,10 +993,26 @@ named at the end of each paragraph.
   vulnerable-age share sums two tails that move oppositely with income. Forcing
   the sign of either input before the PCA is a mathematical no-op. Redundancy is
   real: mean |r| among the ten is 0.42, and four of them measure basic
-  sanitation. Finally, the Min–Max anchors are exact — Balneário Camboriú
-  receives SVI = 0 and Chaves/PA SVI = 100 — which is a scale artefact, not a
-  statement that one municipality has no social vulnerability.
-  *(`src/exploratory/audit_AUD_09_svi_directionality.py`)*
+  sanitation. Two scales must be kept apart. What **enters the risk** is
+  `Vulnerability_CDF_PC1 = Φ(PC1/sd(PC1))`, which spans 0.0122–0.9948 and has
+  **no exact anchor**. What is **published as a map layer and in the article SVI
+  table** is the original `SVI_Coast_2022`, the 0–100 Min–Max of the same PC1,
+  preserved unchanged for traceability and provenance — and it still puts
+  **Balneário Camboriú at exactly 0 and Chaves/PA at exactly 100**. Those two
+  values are a **scale artefact of the Min–Max**, not a statement that one
+  municipality has no social vulnerability and another has the maximum
+  conceivable; they no longer propagate to the risk, but they are visible to a
+  reader, and the article table prints 100.000 in its first row. The choice of
+  scale is not critical to the ranking: substituting a percentile rank of PC1
+  gives ρ = 0.991 on the published risk, an additive index with the conceptual
+  direction imposed on all ten indicators gives ρ = 0.978, and the original
+  Min–Max gives ρ = 0.976 — but only Φ avoids reintroducing an exact anchor.
+  **No comparison against the reference SVI-Coast of Lima et al. (2024) was
+  performed**: it is built on the 2010 census, is not held here, and obtaining it
+  requires the supplementary material of that article. This is a declared gap in
+  the external validation of the vulnerability layer, not an oversight.
+  *(`src/exploratory/audit_AUD_09_svi_directionality.py`,
+  `src/exploratory/audit_AUD_09_scale_alternatives.py`)*
 
 - **The integrated index is hazard-led, and the hazard field is shaped by the
   acceptance gate (AUD-13).** Equal nominal weights of 1/3 do not imply equal
