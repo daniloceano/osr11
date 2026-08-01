@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 4 (AUD-08, AUD-09, AUD-11, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 13 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 3 (AUD-08, AUD-09, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 14 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
 
 > ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
 >
@@ -395,6 +395,46 @@
 >
 > **Resta uma única questão aberta: AUD-05**, e nenhuma questão P2 em aberto.
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-11 fechada: a decisão não cumpriu tudo o que prometeu
+>
+> **AUD-11 fechada** como `mitigado-parcialmente` — não `metodologia-alterada`, e
+> a distinção é o achado. Diagnóstico em
+> `src/exploratory/audit_AUD_11_scale_anchoring.py` →
+> `outputs/audit/AUD-11_scale_anchoring/`. Nenhum valor publicado alterado.
+>
+> A entrada de decisão de AUD-11 afirma que, com âncoras fixas, "nenhum valor
+> publicado passará a depender de qual município ou qual ponto está no conjunto".
+> **Verdade para perigo e exposição; falso para a vulnerabilidade**:
+> `V = Φ(PC1/sd(PC1))` estima `sd(PC1)` **da amostra entregue**.
+>
+> - **No nível do município a melhoria é grande e real.** Leave-one-out
+>   recalculando `sd` dentro de cada subamostra: pior caso **Chaves/PA**, que
+>   desloca qualquer outro em no máximo **0,0036** e nenhum posto em mais de
+>   **3**. Contra **0,0945** sob Min–Max — **redução de 26×**.
+> - **No nível de domínio a dependência é material.** Excluir AP+PA+MA muda
+>   `sd(PC1)` em −16,6 % (ρ = 0,991); excluir **todo o N/NE** muda em **−57,5 %**
+>   e reordena os 104 restantes a **ρ = 0,696**, com deslocamento de até 0,292.
+> - **Nenhum município em 1,000** (máximo 0,566) e os **84 em 0,000 são
+>   substantivos**. O esquema de Min–Max, por contraste, produz um município em
+>   1,000 **por construção**.
+> - **Comparação dos quatro esquemas**: âncoras fixas (adotado) · Min–Max
+>   ρ = 0,998 mas com âncoras exatas · posto percentílico ρ = 0,638 · z-score
+>   truncado ρ = 0,592. As âncoras fixas são o único esquema testado que preserva
+>   a magnitude **e** dispensa a ancoragem em indivíduos.
+> - **Declarado** em `README.md` §4.4 e no campo
+>   `integrated_risk_formula.interpretation` dos metadados publicados: o índice é
+>   de **priorização relativa**, condicional ao domínio de 282 municípios, e
+>   qualquer análise de subconjunto tem de **recalcular a escala**, não fatiar
+>   estes valores.
+>
+> **Correção a um registro anterior.** A §3-bis.1 de AUD-07 afirmava que "com
+> âncoras fixas, o valor de um município não depende da amostra", apoiada num
+> bootstrap que devolveu 0,0. Aquele bootstrap reamostrava **valores publicados
+> sem recalcular `sd(PC1)`** — demonstrava uma tautologia. Corrigido no registro.
+> A conclusão de AUD-07 sobre o **desenho** do bootstrap continua válida.
+>
+> **Resta apenas AUD-05**, mais AUD-08, AUD-09 e AUD-17 em investigação.
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -405,10 +445,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
-| **P1 — resolver ou justificar** | 9 | 0 | 4 | 0 | **5** |
+| **P1 — resolver ou justificar** | 9 | 0 | 3 | 0 | **6** |
 | **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **1** | **4** | **0** | **13** |
+| **Total** | **18** | **1** | **3** | **0** | **14** |
 
 ---
 
@@ -426,7 +466,7 @@ ver [`README.md`](README.md).
 | **AUD-08** | Exposição: saturação do termo relativo e MAUP; **população efetiva implementada** | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
 | **AUD-09** | SVI: duas cargas negativas do PC1 — **sem erro de codificação**; CDF implementada | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
 | **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
-| **AUD-11** | Min–Max em cadeia removido; validação integrada em curso | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |
+| **AUD-11** | Ancoragem amostral **reduzida 26×, não eliminada**: `sd(PC1)` continua da amostra e é material em escala de domínio | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |
 | **AUD-12** | Contaminação estuarina e fluvial no estuário amazônico | qualidade-dados | perigo | 2a → 3.1/3.2 | dados, interp., saídas | P1 | Não — top-10 já não depende desses pontos | `resolvido` | `resultado-validado-mantido` | 01 | [AUD-12](issues/AUD-12_estuarine_river_contamination.md) |
 | **AUD-13** | Índice integrado: conduzido pelo perigo (84,7 %); cancelamento dominante passou a ser H × V | analise-sensibilidade | integração | 4.4 | interp., saídas, doc. | P1 | Sim, salvo qualificação | `resolvido` | `resultado-validado-mantido` | 01, 02 | [AUD-13](issues/AUD-13_integrated_index_behaviour.md) |
 | **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |

@@ -435,6 +435,25 @@ An exact zero caused by hazard means **no compound event met the acceptance
 criteria in 1993–2025**; it does not mean that physical coastal risk is
 impossible. Missing association is a separate, explicit coverage category.
 
+> **How `Risk_Hazard` may and may not be read (AUD-11).** It is a **relative
+> prioritisation index among the Brazilian coastal municipalities analysed
+> here** — not absolute risk, not a probability, and **not comparable with other
+> studies or with a future revision of this one**. Hazard and exposure now use
+> fixed anchors and therefore do not depend on which municipalities are in the
+> set. **One dependence survives**: `sd(PC1)` in the vulnerability factor is
+> estimated from the delivered sample, so restricting the domain rescales it for
+> everyone. The two scales of that residual differ sharply. Removing a single
+> municipality moves any other by at most **0.0036** — the worst case is
+> Chaves/PA, which alone shifts `sd(PC1)` by 1 % — against **0.0945** under the
+> superseded Min–Max chain, a **26-fold reduction**, and no removal changes any
+> rank by more than three positions. But excluding a whole region is a different
+> matter: dropping the North and Northeast changes `sd(PC1)` by **−57 %** and
+> reorders the remaining 104 municipalities at **ρ = 0.70**, with a maximum
+> displacement of 0.29 in the index. The published values are conditional on the
+> 282-municipality domain, and any subset analysis must recompute the scale
+> rather than slice these values.
+> *(`src/exploratory/audit_AUD_11_scale_anchoring.py`)*
+
 The exposure recipe follows the Index for Risk Management
 ([INFORM, JRC](https://drmkc.jrc.ec.europa.eu/inform-index/INFORM-Risk/Methodology)),
 which treats the same problem for its physical-exposure indicators: log for a

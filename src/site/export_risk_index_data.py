@@ -1048,6 +1048,19 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
                 "event in 1993-2025, not impossibility of physical risk."
             ),
             "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)",
+            "interpretation": (
+                "A relative prioritisation index among the Brazilian coastal "
+                "municipalities analysed here. It is not absolute risk, not a "
+                "probability, and not a quantity comparable with other studies "
+                "or with a future revision of this one. Hazard and exposure use "
+                "fixed anchors and so do not depend on which municipalities are "
+                "present, but the vulnerability factor does: sd(PC1) is "
+                "estimated from the delivered sample, so restricting the domain "
+                "rescales it. Removing one municipality moves any other by at "
+                "most 0.0036 (26x less than the superseded Min-Max chain), but "
+                "excluding the whole North/Northeast changes sd(PC1) by -57% "
+                "and reorders the remainder at rho = 0.70 (AUD-11)."
+            ),
         },
         "integrated_risk_normalization": {
             "method": "none",

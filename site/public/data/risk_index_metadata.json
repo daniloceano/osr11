@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-07-31T18:28:49.405308+00:00",
+  "generated_at": "2026-08-01T01:55:52.930587+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -1185,7 +1185,8 @@
     "aggregation": "geometric mean of three components",
     "clip_floor": null,
     "rationale": "Conjunctive: the IPCC framework defines risk as emerging from the interaction of hazard, exposure and vulnerability, which implies that the absence of any one of them removes the potential for adverse consequences. An arithmetic mean would allow a large population to compensate for the absence of a physical driver. Exact hazard zeros mean no accepted compound event in 1993-2025, not impossibility of physical risk.",
-    "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)"
+    "superseded": "norm_municipal((SVI_Coast_2022/100) * Hazard_Index)",
+    "interpretation": "A relative prioritisation index among the Brazilian coastal municipalities analysed here. It is not absolute risk, not a probability, and not a quantity comparable with other studies or with a future revision of this one. Hazard and exposure use fixed anchors and so do not depend on which municipalities are present, but the vulnerability factor does: sd(PC1) is estimated from the delivered sample, so restricting the domain rescales it. Removing one municipality moves any other by at most 0.0036 (26x less than the superseded Min-Max chain), but excluding the whole North/Northeast changes sd(PC1) by -57% and reorders the remainder at rho = 0.70 (AUD-11)."
   },
   "integrated_risk_normalization": {
     "method": "none",

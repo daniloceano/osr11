@@ -8,17 +8,33 @@
 | **Etapa do fluxo** | Step 4.4 |
 | **Afeta** | código, interpretação, saídas, documentação |
 | **Prioridade** | P1 |
-| **Bloqueia publicação?** | Sim, salvo qualificação explícita — o índice não pode ser lido como risco absoluto e isso não está declarado |
-| **Status** | `em-investigacao` |
-| **Desfecho** | — |
+| **Bloqueia publicação?** | Sim — satisfeito pela declaração do caráter relativo e da dependência residual |
+| **Status** | `resolvido` |
+| **Desfecho** | `mitigado-parcialmente` — a ancoragem amostral foi reduzida em 26× no nível do município, mas **não eliminada**: `sd(PC1)` continua estimado da amostra e é material em escala de domínio |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05, AUD-16 |
 | **Relacionado a** | AUD-06, AUD-07, AUD-09, AUD-13, AUD-15 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §4.3, §4.4, §8 item 9, §9.2 item 8 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 (verificação dos critérios e fechamento) |
 
 ---
+
+> ### Nota de leitura — a decisão desta questão não cumpriu inteiramente o que prometeu
+>
+> A entrada de decisão da §14 afirma que, com âncoras fixas, "nenhum valor
+> publicado passará a depender de qual município ou qual ponto está no conjunto".
+> **Isso é verdade para perigo e exposição, e falso para a vulnerabilidade**:
+> `V = Φ(PC1/sd(PC1))` estima `sd(PC1)` **da amostra entregue**
+> ([`export_risk_index_data.py:158`](../../../src/site/export_risk_index_data.py)).
+>
+> A consequência tem duas escalas muito diferentes, e ambas foram medidas:
+> remover **um** município move qualquer outro em no máximo **0,0036** — 26×
+> menos que sob Min–Max —, mas excluir **uma região inteira** move até **0,292**
+> e reordena o restante a **ρ = 0,70**. Ver §14, entrada de 2026-07-31.
+>
+> Fechada como `mitigado-parcialmente`, não como `metodologia-alterada`: o
+> objeto da questão foi reduzido, não removido.
 
 ## 1. Problema
 
@@ -210,20 +226,56 @@ mesmo argumento se aplica ao perigo e ao risco, e não foi aplicado.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] A análise de influência município-a-município está executada, versionada e
+> **Nota.** Dois destes critérios pareciam ter perdido o objeto com a adoção das
+> âncoras fixas. **Não perderam** — ver §14. Foram executados, e é deles que sai
+> o achado principal do fechamento.
+
+- [x] A análise de influência município-a-município está executada, versionada e
       publicada; os municípios com influência acima do limiar estão listados.
-- [ ] Os quatro esquemas de normalização estão comparados quantitativamente.
-- [ ] A decisão está tomada: manter Min–Max com a limitação declarada, ou migrar
+      *`outputs/audit/AUD-11_scale_anchoring/leave_one_out_influence.csv`, os 282,
+      **recalculando `sd(PC1)` dentro de cada reamostra** — sem isso o teste é
+      vazio. Pior caso **Chaves/PA**: desloca qualquer outro município em no
+      máximo **0,0036** e nenhum posto em mais de **3** posições. Contra
+      **0,0945** sob a cadeia de Min–Max: redução de **26×**.*
+- [x] Os quatro esquemas de normalização estão comparados quantitativamente.
+      *`normalization_scheme_comparison.csv`: âncoras fixas (publicado) · Min–Max
+      por componente seguido de Min–Max (ρ = 0,998, mas produz **1 município em
+      exatamente 1,000** e continua ancorado em indivíduos) · posto percentílico
+      (ρ = 0,638) · z-score truncado (ρ = 0,592). A escolha adotada preserva
+      quase integralmente a ordenação do Min–Max **sem** as âncoras exatas, e as
+      duas alternativas livres de ancoragem destroem a informação de magnitude.*
+- [x] A decisão está tomada: manter Min–Max com a limitação declarada, ou migrar
       para posto/balizas fixas. Se migrar, a escolha das balizas está justificada.
-- [ ] **Nenhum município recebe `Risk_Hazard` exatamente 0,000 nem 1,000 como
+      *Migrou para âncoras fixas, implementado em 2026-07-31. Balizas
+      justificadas: 99 eventos = 3/ano (nenhum ponto satura; máximo 98) e
+      severidade 1,0 = um dia de critério pleno no excesso diário máximo do
+      domínio (máximo observado 0,948).*
+- [x] **Nenhum município recebe `Risk_Hazard` exatamente 0,000 nem 1,000 como
       artefato de escala**, ou está demonstrado que o valor é substantivo.
-- [ ] O `README.md` §4.4, os metadados publicados e as legendas das figuras
+      ***Demonstrado.*** *Zero em exatamente 1,000: **nenhum** — o máximo é
+      0,566. Em 0,000: **84**, e são substantivos, não artefato —
+      `risk_zero_cause` os separa em perigo nulo (82), perigo e exposição nulos
+      (1) e exposição nula (1). "Zero" significa nenhum evento composto aceito em
+      1993–2025. O contraste é direto: o esquema de Min–Max produz 1 município em
+      1,000 **por construção**.*
+- [x] O `README.md` §4.4, os metadados publicados e as legendas das figuras
       declaram que `Risk_Hazard` é um **índice de priorização relativa** dentro do
       conjunto de municípios costeiros brasileiros analisados, e **não** risco
       absoluto, probabilidade ou quantidade comparável entre estudos.
-- [ ] O teste de mudança de domínio (§8.5) está executado e reportado.
-- [ ] A inconsistência dos metadados sobre `Hazard_Index_mun` está corrigida
-      (AUD-17).
+      *Acrescentado em 2026-07-31: bloco em `README.md` §4.4 e campo
+      `integrated_risk_formula.interpretation` nos metadados publicados
+      (`risk_index_metadata.json`, regenerado — o GeoJSON não mudou). As legendas
+      das figuras já traziam "comparative among coastal municipalities and do not
+      represent absolute expected damage". **Os três declaram também a dependência
+      residual de `sd(PC1)`**, que é a parte que faltava.*
+- [x] O teste de mudança de domínio (§8.5) está executado e reportado.
+      ***E não era um teste vazio.*** *`domain_change_tests.csv`: excluir AP+PA+MA
+      muda `sd(PC1)` em **−16,6 %** (ρ = 0,991, desloc. máx. 27); excluir todo o
+      **N/NE** muda em **−57,5 %** e reordena os 104 restantes a **ρ = 0,696**,
+      com deslocamento de até 0,292 no índice. Reportado no `README.md` e nos
+      metadados.*
+- [x] A inconsistência dos metadados sobre `Hazard_Index_mun` está corrigida
+      (AUD-17). *Corrigida em 2026-07-29, commit `e2680ed`; ver AUD-17 §9 item #3.*
 
 ## 10. Riscos de alteração prematura
 
@@ -268,7 +320,7 @@ metadados e legendas.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(a commitar)* | `main` | **Novos:** `src/exploratory/audit_AUD_11_scale_anchoring.py`, `outputs/audit/AUD-11_scale_anchoring/`. **Alterados:** este registro (§9, §13, §14 e nota de leitura), `README.md` (§4.4), `src/site/export_risk_index_data.py` (`integrated_risk_formula.interpretation`), `site/public/data/risk_index_metadata.json` (regenerado; **GeoJSON inalterado**), `docs/scientific_audit/issues/AUD-07_*.md` (correção da §3-bis.1), `docs/scientific_audit/ISSUE_TRACKER.md` | Verificação dos critérios + declaração. **Nenhum valor numérico publicado alterado** |
 
 ## 14. Histórico de investigação
 
@@ -332,3 +384,28 @@ absoluta.
 | **Alterações implementadas** | **Nenhuma no código.** Por instrução do pesquisador, esta sessão apenas documenta; a implementação será feita em sessão própria |
 | **Incerteza remanescente** | (1) A baliza de frequência (99 eventos / 33 anos) não foi comparada com nenhuma referência externa da literatura — foi escolhida por não saturar. (2) O efeito sobre a definição de hotspot (AUD-16) não foi avaliado: com 84 municípios em zero exato, qualquer corte por percentil muda de significado. (3) Os 83 municípios de perigo nulo passam a **empatar** em zero, e a ordenação interna deles desaparece |
 | **Próxima decisão necessária** | Nenhuma de estrutura. A banda de distância foi decidida em AUD-08 §14 (2026-07-31): média ponderada de 1/5/10 km com pesos decrescentes. Falta apenas **confirmar os pesos exatos** — recomendação: pesos de anel 1,00 / 0,50 / 0,20, equivalentes a w = 0,50 / 0,30 / 0,20 |
+
+### 2026-07-31 — Verificação dos critérios: dois que pareciam vazios não eram
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Os sete critérios da §9 podem ser confrontados depois da implementação? Em particular: a análise de influência (§8.1) e o teste de mudança de domínio (§8.5) ainda têm objeto, agora que a ancoragem amostral foi substituída por âncoras fixas? |
+| **Dados e métodos** | `site/public/data/risk_index_municipalities.geojson` (282 entregues, 280 com risco). Caminho de **recálculo**: `V = Φ(PC1/sd)` com `sd` reestimado dentro de cada subamostra, e `Risk = (H·E·V)^(1/3)`. Leave-one-out sobre os 282; quatro testes de exclusão de domínio; e comparação ponta a ponta de quatro esquemas de normalização. O script **levanta erro** se o recálculo com a amostra completa não reproduzir o risco publicado |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_11_scale_anchoring` |
+| **Novas saídas geradas** | `outputs/audit/AUD-11_scale_anchoring/{leave_one_out_influence.csv, domain_change_tests.csv, normalization_scheme_comparison.csv, summary.json}` |
+| **Achados** | (a) **A promessa da decisão não se cumpriu inteiramente.** Perigo e exposição usam âncoras fixas e são de fato independentes do conjunto, mas `sd(PC1)` é estimado da amostra, logo a vulnerabilidade — e portanto o risco — depende de quem está no conjunto. (b) **No nível do município a melhoria é grande e real**: pior caso Chaves/PA, deslocamento máximo de **0,0036** e de **3** postos, contra **0,0945** sob Min–Max — **redução de 26×**. (c) **No nível de domínio a dependência é material**: excluir AP+PA+MA muda `sd(PC1)` em −16,6 % (ρ = 0,991, desloc. máx. 27 postos, 0,066 no índice); excluir **todo o N/NE** muda em **−57,5 %** e reordena os 104 restantes a **ρ = 0,696**, com deslocamento de até **0,292**. (d) **Nenhum município em 1,000** — máximo 0,566 — e os **84 em 0,000 são substantivos**, separados por `risk_zero_cause`; o esquema de Min–Max, por contraste, produz um município em 1,000 **por construção**. (e) Entre os quatro esquemas, Min–Max preserva a ordenação (ρ = 0,998) mas mantém as âncoras exatas, enquanto posto percentílico (ρ = 0,638) e z-score truncado (ρ = 0,592) removem a ancoragem ao custo da magnitude. As âncoras fixas são o único esquema testado que consegue as duas coisas |
+| **Interpretação** | O desfecho não é `metodologia-alterada` nem `resultado-validado-mantido`: é `mitigado-parcialmente`, e a distinção importa. A questão foi criada porque o valor de um município dependia de dois municípios específicos; isso acabou. O que **não** acabou é a dependência do **domínio**, que migrou de "quais são os extremos" para "qual é a dispersão de PC1". É uma dependência mais fraca, mais estável e mais defensável — mas continua existindo, e num trabalho cujo próprio artigo discute recortes regionais ela precisa estar declarada. A regra prática que sai daqui: **os valores publicados são condicionais ao domínio de 282 municípios; qualquer análise de subconjunto tem de recalcular a escala, não fatiar estes valores** |
+| **Alterações implementadas** | Script novo. `README.md` §4.4 e `integrated_risk_formula.interpretation` nos metadados publicados passaram a declarar o caráter relativo do índice **e** a dependência residual. Metadados regenerados pelo exportador; **o GeoJSON não mudou**. Nenhum valor numérico publicado alterado |
+| **Validação realizada** | O recálculo com a amostra completa reproduz o risco publicado a 1e-5, verificado por asserção no script; `V` reproduz o campo publicado a 5e-07. Reexecução do script devolve saídas idênticas |
+| **Incerteza remanescente** | (1) **A dependência de `sd(PC1)` não foi removida**, apenas medida e declarada. Removê-la exigiria uma escala de vulnerabilidade com âncora externa — por exemplo `sd` fixado de uma referência nacional —, o que não foi avaliado. (2) Os testes de domínio usam recortes por unidade federativa, que são escolhas grosseiras; não há varredura sistemática de subconjuntos. (3) A comparação de esquemas usa as componentes atuais como entrada, portanto mede o efeito da **normalização**, não o de um pipeline inteiramente alternativo |
+| **Correção de um registro anterior** | A entrada de AUD-07 de 2026-07-31 afirma que "com âncoras fixas, o valor de um município não depende da amostra", apoiada num bootstrap que devolveu deslocamento **0,0**. Aquele bootstrap reamostrava os **valores publicados sem recalcular `sd(PC1)`**, de modo que demonstrava uma tautologia, não a propriedade. A afirmação é **forte demais** e foi corrigida em AUD-07 §3-bis.1. A conclusão de AUD-07 sobre o **desenho do bootstrap** — reamostrar municípios não é o teste certo, reamostrar anos é — permanece válida |
+
+### 2026-07-31 — DECISÃO: fechar como `mitigado-parcialmente`
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31 |
+| **Decisão** | Fechar sem alterar o método. A dependência residual de `sd(PC1)` fica **medida e declarada** no `README.md` §4.4, nos metadados publicados e neste registro, em vez de removida |
+| **Por que não `metodologia-alterada`** | Esse desfecho descreveria uma mudança que resolvesse a questão. A mudança foi feita e resolveu **parte** dela: a ancoragem em municípios individuais acabou, a ancoragem no domínio não |
+| **Trabalho futuro nomeado** | Uma escala de vulnerabilidade com `sd` de âncora externa — nacional, não amostral — eliminaria o resíduo. Não avaliada |
+| **O que o desfecho NÃO cobre** | (1) A remoção do resíduo. (2) A suíte de casos conhecidos — **AUD-05**, última questão aberta |

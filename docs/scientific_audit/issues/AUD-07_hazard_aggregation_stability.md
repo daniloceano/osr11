@@ -136,11 +136,22 @@ dentro de cada reamostra" — existia porque o Min–Max ancorava o perigo e o r
 nos próprios extremos observados, de modo que remover um município deslocava
 todos os outros (AUD-11 §3.2 mediu até 0,094).
 
-Com as âncoras fixas de AUD-11, **o valor de um município não depende de quem
-mais está no conjunto**. Medido, não assumido: em 200 reamostragens de
-municípios, o deslocamento máximo de posto relativo é **exatamente 0,0**. Só
-`sd(PC1)` é estimado da amostra, e Φ é monótona, logo os postos de
-vulnerabilidade — e portanto os do risco — são invariantes.
+Com as âncoras fixas de AUD-11, a dependência do conjunto caiu drasticamente. Em
+200 reamostragens de municípios o deslocamento máximo de posto relativo é
+**exatamente 0,0**.
+
+> **Correção de 2026-07-31 (de AUD-11).** A redação original desta seção
+> concluía daí que "o valor de um município **não depende** da amostra". **É
+> forte demais.** O bootstrap acima reamostra os **valores publicados sem
+> recalcular `sd(PC1)`**, e portanto demonstra uma tautologia, não a propriedade.
+> `sd(PC1)` **é** estimado da amostra, de modo que a vulnerabilidade — e com ela
+> o risco — depende de quem está no conjunto. AUD-11 mediu: remover **um**
+> município move qualquer outro em até **0,0036** (26× menos que sob Min–Max),
+> mas excluir **todo o N/NE** move até **0,292** e reordena o restante a
+> **ρ = 0,696**. Ver AUD-11 §14.
+>
+> **O que esta seção conclui continua válido**: reamostrar municípios não é o
+> teste certo para a incerteza de posto deste produto, e reamostrar **anos** é.
 
 **Reportar intervalos por esse desenho produziria "incerteza quase nula" como
 artefato do desenho, não como evidência de robustez.** O critério foi

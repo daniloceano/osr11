@@ -1,0 +1,5 @@
+scheme,spearman_vs_published,top20_overlap,n_exactly_zero,n_exactly_one,min,max,anchored_on_individual_municipalities
+fixed anchors (published),1.0,20,84,0,0.0,0.566342,False
+"Min-Max per component, then Min-Max",0.9982765761342836,18,85,1,0.0,1.0,True
+percentile rank per component,0.638368974804087,5,0,0,0.08964238284704469,0.7236110566968027,False
+clipped z-score per component,0.5923192683121257,11,0,0,0.31270107321193447,0.6427469482707397,False

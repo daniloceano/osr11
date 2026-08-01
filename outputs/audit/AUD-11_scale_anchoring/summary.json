@@ -1,0 +1,111 @@
+{
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "sd_pc1_full_sample": 2.247130998623936,
+  "residual_sample_dependence": {
+    "where": "Vulnerability_CDF_PC1 = Phi(PC1 / sd(PC1)), sd estimated from the delivered sample",
+    "hazard_and_exposure": "none — fixed anchors",
+    "note": "The stated aim of AUD-11 was that no published value would depend on set membership. One dependence survives, and it is material at domain scale even though it is small at the scale of a single municipality."
+  },
+  "leave_one_out": {
+    "worst_municipality": "Chaves/PA",
+    "max_absolute_risk_shift": 0.0035596370035477776,
+    "legacy_minmax_max_displacement": 0.0945,
+    "improvement_factor": 26.547650759281026,
+    "max_rank_shift_any_removal": 3
+  },
+  "exact_anchors": {
+    "n_risk_exactly_zero": 84,
+    "n_risk_exactly_one": 0,
+    "risk_max": 0.566342,
+    "zero_causes": {
+      "hazard_zero_no_accepted_event_1993_2025": 82,
+      "hazard_zero_and_exposure_below_absolute_goalpost": 1,
+      "exposure_zero_below_absolute_goalpost": 1
+    },
+    "verdict": "No municipality sits at an exact anchor as a scale artefact. The zeros are substantive: they mean the associated grid point accepted no compound event in 1993-2025. Nothing reaches 1."
+  },
+  "domain_change": [
+    {
+      "case": "exclude AP+PA+MA (the record's test)",
+      "n_remaining": 226,
+      "sd_pc1": 1.8745899176939407,
+      "sd_change_percent": -16.578520840935674,
+      "spearman_vs_published": 0.9914442027908736,
+      "median_rank_shift": 3.0,
+      "max_rank_shift": 27,
+      "max_absolute_risk_shift": 0.0656026420465439
+    },
+    {
+      "case": "exclude the whole North/Northeast",
+      "n_remaining": 104,
+      "sd_pc1": 0.9559181142989023,
+      "sd_change_percent": -57.46050787051254,
+      "spearman_vs_published": 0.6956150645471034,
+      "median_rank_shift": 14.0,
+      "max_rank_shift": 73,
+      "max_absolute_risk_shift": 0.29164129085820933
+    },
+    {
+      "case": "exclude the South/Southeast",
+      "n_remaining": 176,
+      "sd_pc1": 1.6114043858567073,
+      "sd_change_percent": -28.2905897856656,
+      "spearman_vs_published": 0.9989553363051503,
+      "median_rank_shift": 0.0,
+      "max_rank_shift": 17,
+      "max_absolute_risk_shift": 0.033445252780610835
+    },
+    {
+      "case": "exclude the 84 exact-zero municipalities",
+      "n_remaining": 196,
+      "sd_pc1": 2.4553006660448173,
+      "sd_change_percent": 9.263797595616685,
+      "spearman_vs_published": 0.9947545182265842,
+      "median_rank_shift": 4.0,
+      "max_rank_shift": 18,
+      "max_absolute_risk_shift": 0.03083889042487531
+    }
+  ],
+  "scheme_comparison": [
+    {
+      "scheme": "fixed anchors (published)",
+      "spearman_vs_published": 1.0,
+      "top20_overlap": 20,
+      "n_exactly_zero": 84,
+      "n_exactly_one": 0,
+      "min": 0.0,
+      "max": 0.566342,
+      "anchored_on_individual_municipalities": false
+    },
+    {
+      "scheme": "Min-Max per component, then Min-Max",
+      "spearman_vs_published": 0.9982765761342836,
+      "top20_overlap": 18,
+      "n_exactly_zero": 85,
+      "n_exactly_one": 1,
+      "min": 0.0,
+      "max": 1.0,
+      "anchored_on_individual_municipalities": true
+    },
+    {
+      "scheme": "percentile rank per component",
+      "spearman_vs_published": 0.638368974804087,
+      "top20_overlap": 5,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 0,
+      "min": 0.08964238284704469,
+      "max": 0.7236110566968027,
+      "anchored_on_individual_municipalities": false
+    },
+    {
+      "scheme": "clipped z-score per component",
+      "spearman_vs_published": 0.5923192683121257,
+      "top20_overlap": 11,
+      "n_exactly_zero": 0,
+      "n_exactly_one": 0,
+      "min": 0.31270107321193447,
+      "max": 0.6427469482707397,
+      "anchored_on_individual_municipalities": false
+    }
+  ]
+}
