@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 2 (AUD-08, AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 15 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 1 de 18 (AUD-05) · **em investigação:** 1 (AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 16 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-06, AUD-07, AUD-08, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
 
 > ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
 >
@@ -464,6 +464,49 @@
 >
 > **Restam AUD-05 (aberta), AUD-08 e AUD-17 (em investigação).**
 
+> ### Sessão de 2026-07-31 (cont.) — AUD-08 fechada: um defeito eliminado, o outro não
+>
+> **AUD-08 fechada** como `mitigado-parcialmente`. Diagnóstico em
+> `src/exploratory/audit_AUD_08_exposure_support.py` →
+> `outputs/audit/AUD-08_exposure_support/`. Nenhum valor publicado alterado.
+>
+> Dos dois defeitos que criaram a questão, **um foi eliminado por construção e o
+> outro permanece** — e a decisão de população efetiva os separou na prática, sem
+> que ninguém tivesse medido.
+>
+> - **A saturação acabou.** Sob `pop_10km`, **59 de 282** municípios encostavam
+>   no teto do termo relativo e 92 passavam de 0,99, mediana 0,899. Sob
+>   `pop_eff`: **zero e zero**, mediana **0,373**. Os 59 que saturavam hoje se
+>   espalham. Toda a §3.1 do registro descreve um defeito que não existe mais.
+> - **`pop_eff` é o único suporte que evita os dois modos de falha.** `pop_1km`
+>   deixa 14 municípios sem residente contado; `pop_10km` satura um quinto da
+>   amostra; `pop_eff` não faz nem um nem outro. Escada versionada:
+>   ρ com o publicado de 0,924 (`pop_1km`) a 0,986 (`pop_5km`).
+> - **O MAUP continua, e é direcional.** Removendo o termo relativo:
+>   **Itaboraí/RJ 118º → 9º**, **Campos dos Goytacazes 159º → 72º**,
+>   Araruama/RJ 67º → 11º, **Rio de Janeiro 100º → 51º**, Osório/RS 156º → 122º.
+>   Campos tem 483 486 habitantes municipais para 8 825 de população efetiva
+>   costeira: absoluto 0,486 contra relativo **0,018**.
+> - **A terceira opção do critério 3 fica fechada pelo contrafactual**: remover o
+>   termo relativo não corrige o viés, **troca-o de sinal** — e um índice que
+>   ordena metrópoles por tamanho é o que o pareamento INFORM existe para evitar.
+>   O ranking de municípios grandes e parcialmente interiores passa a ser
+>   declarado como **piso**.
+> - **O critério 5 diagnosticava o MAUP no lugar errado.** Pedia suporte mais
+>   fino que o municipal; a população **já** é contada na Grade Estatística do
+>   IBGE a **200 m urbano / 1 km rural**, mais fino que setor censitário. O MAUP
+>   está no **denominador**, não na contagem — e foi medido lá.
+>
+> **A declaração de MAUP não existia em lugar nenhum** do `README.md`, só a de
+> proximidade-não-inundação. Acrescentada como parágrafo de limitação.
+>
+> **Erro corrigido durante o diagnóstico:** a primeira versão do contrafactual
+> incluía os municípios de risco nulo e mostrava Recife e Olinda "ganhando" 80
+> posições. Artefato de empate — os 84 zeros formam um bloco único. O cálculo
+> passou a excluí-los.
+>
+> **Restam AUD-05 (aberta) e AUD-17 (em investigação, só o item #4).**
+
 Vocabulário controlado de `Tipo`, `Prioridade`, `Status` e `Desfecho`:
 ver [`README.md`](README.md).
 
@@ -474,10 +517,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 1 | 0 | 0 | **5** |
-| **P1 — resolver ou justificar** | 9 | 0 | 2 | 0 | **7** |
+| **P1 — resolver ou justificar** | 9 | 0 | 1 | 0 | **8** |
 | **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **1** | **2** | **0** | **15** |
+| **Total** | **18** | **1** | **1** | **0** | **16** |
 
 ---
 
@@ -492,7 +535,7 @@ ver [`README.md`](README.md).
 | **AUD-05** | Validação contra casos costeiros conhecidos (suíte de aceitação) | lacuna-validacao | integração | 4.4 | interp., saídas | **P0** | **Sim** | `aberto` | — | 01, 02, 04, 06, 08, 09, 11 | [AUD-05](issues/AUD-05_known_case_validation.md) |
 | **AUD-06** | Duração: faixa trivial (1,26–2,51 d) amplificada a peso 1/3 | fragilidade-metodologica | perigo | 3.2 → 4.4 | código, interp., saídas | **P0** | **Sim** | `resolvido` | `metodologia-alterada` | 01 | [AUD-06](issues/AUD-06_duration_component_validity.md) |
 | **AUD-07** | Ranking robusto no topo e à ponderação; **não interpretável abaixo da posição ~20** — 94 municípios com < 10 eventos | analise-sensibilidade | perigo → integração | 4.4 | interp., saídas, doc. | **P0** | Sim — satisfeito por publicação da sensibilidade e dos ICs | `resolvido` | `resultado-validado-mantido` | — | [AUD-07](issues/AUD-07_hazard_aggregation_stability.md) |
-| **AUD-08** | Exposição: saturação do termo relativo e MAUP; **população efetiva implementada** | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim, salvo qualificação | `em-investigacao` | — | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
+| **AUD-08** | Exposição: **saturação eliminada** pela população efetiva (59 no teto → 0); MAUP permanece, medido e declarado | fragilidade-metodologica | exposição | 4.2 → 4.4 | código, interp., saídas | P1 | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | — | [AUD-08](issues/AUD-08_exposure_spatial_support.md) |
 | **AUD-09** | SVI: sem erro de codificação; **duas escalas distintas** — `V` sem âncora exata, camada publicada com 0 e 100 | fragilidade-metodologica | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `resultado-validado-mantido` | — | **11** | [AUD-09](issues/AUD-09_svi_directionality.md) |
 | **AUD-10** | Camada de vulnerabilidade física ausente, apesar de declarada | inconsistencia-documental | vulnerabilidade | 4.3 | interp., doc. | P1 | Sim, salvo qualificação | `resolvido` | `limitacao-reconhecida` | — | [AUD-10](issues/AUD-10_physical_vulnerability_missing.md) |
 | **AUD-11** | Ancoragem amostral **reduzida 26×, não eliminada**: `sd(PC1)` continua da amostra e é material em escala de domínio | risco-interpretacao | integração | 4.4 | código, interp., saídas, doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `mitigado-parcialmente` | — | [AUD-11](issues/AUD-11_minmax_chain_and_sample_anchoring.md) |

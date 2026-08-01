@@ -1,0 +1,6 @@
+band,n_exposure_zero,spearman_vs_published,median_rank_shift,top20_overlap
+pop_1km,30,0.9239953090689365,24.0,15
+pop_2km,13,0.9633079028717354,12.5,19
+pop_5km,4,0.985773391431174,9.0,17
+pop_10km,1,0.9759665401585192,17.0,15
+pop_eff,2,0.999999859544634,0.0,20

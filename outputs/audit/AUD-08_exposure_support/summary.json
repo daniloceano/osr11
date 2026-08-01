@@ -1,0 +1,211 @@
+{
+  "source": "site/public/data/risk_index_municipalities.geojson",
+  "saturation": {
+    "verdict": "Dissolved by the effective-population decision. Under pop_10km the relative term hit its ceiling in 59 of 282 municipalities and exceeded 0.99 in 92; under pop_eff neither happens once.",
+    "by_band": [
+      {
+        "band": "pop_1km",
+        "median_ratio": 0.11387329771339916,
+        "n_above_0.99": 0,
+        "n_at_ceiling": 0,
+        "n_zero_population": 14,
+        "share_at_ceiling": 0.0
+      },
+      {
+        "band": "pop_2km",
+        "median_ratio": 0.3073429078877606,
+        "n_above_0.99": 4,
+        "n_at_ceiling": 2,
+        "n_zero_population": 5,
+        "share_at_ceiling": 0.0070921985815602835
+      },
+      {
+        "band": "pop_5km",
+        "median_ratio": 0.6714773315813367,
+        "n_above_0.99": 36,
+        "n_at_ceiling": 18,
+        "n_zero_population": 2,
+        "share_at_ceiling": 0.06382978723404255
+      },
+      {
+        "band": "pop_10km",
+        "median_ratio": 0.8991903480039245,
+        "n_above_0.99": 92,
+        "n_at_ceiling": 59,
+        "n_zero_population": 0,
+        "share_at_ceiling": 0.20921985815602837
+      },
+      {
+        "band": "pop_eff",
+        "median_ratio": 0.37348451215336864,
+        "n_above_0.99": 0,
+        "n_at_ceiling": 0,
+        "n_zero_population": 0,
+        "share_at_ceiling": 0.0
+      }
+    ],
+    "residual_discrimination": {
+      "n_formerly_at_ceiling_under_pop_10km": 59,
+      "their_ratio_under_pop_eff_min": 0.10936051899907322,
+      "their_ratio_under_pop_eff_median": 0.690878878802841,
+      "their_ratio_under_pop_eff_max": 0.9798419561652005,
+      "their_ratio_under_pop_eff_iqr": 0.28924341126766784,
+      "n_of_them_still_at_ceiling": 0
+    }
+  },
+  "maup": {
+    "note": "The record asks to compare against a census-sector support. The population is already counted on the IBGE statistical grid at 200 m urban / 1 km rural, which is finer than a census sector, so the support of the count is not where the MAUP lives. It lives in the reporting unit and in the municipal denominator.",
+    "median_share_of_municipal_population_in_pop_eff": 0.37348451215336864,
+    "counterfactual_without_relative_term": {
+      "spearman_vs_published": 0.976881747388488,
+      "top20_overlap": 14
+    },
+    "named_cases": [
+      {
+        "rank_published": 159,
+        "rank_without_relative_term": 72,
+        "municipality_name": "Campos dos Goytacazes",
+        "state": "RJ",
+        "pop_municipality": 483486,
+        "pop_eff": 8825.1,
+        "Exposure_absolute": 0.48643,
+        "Exposure_relative": 0.018253,
+        "Exposure_Index": 0.094228,
+        "Risk_Hazard": 0.191218,
+        "positions_gained": 87
+      },
+      {
+        "rank_published": 188,
+        "rank_without_relative_term": 164,
+        "municipality_name": "Linhares",
+        "state": "ES",
+        "pop_municipality": 166694,
+        "pop_eff": 3622.9,
+        "Exposure_absolute": 0.389764,
+        "Exposure_relative": 0.021734,
+        "Exposure_Index": 0.092038,
+        "Risk_Hazard": 0.129568,
+        "positions_gained": 24
+      }
+    ],
+    "ten_most_penalised": [
+      {
+        "municipality_name": "Itaboraí",
+        "state": "RJ",
+        "rank_published": 118,
+        "rank_without_relative_term": 9,
+        "positions_gained": 109,
+        "Exposure_relative": 0.013364
+      },
+      {
+        "municipality_name": "Campos dos Goytacazes",
+        "state": "RJ",
+        "rank_published": 159,
+        "rank_without_relative_term": 72,
+        "positions_gained": 87,
+        "Exposure_relative": 0.018253
+      },
+      {
+        "municipality_name": "Araruama",
+        "state": "RJ",
+        "rank_published": 67,
+        "rank_without_relative_term": 11,
+        "positions_gained": 56,
+        "Exposure_relative": 0.083221
+      },
+      {
+        "municipality_name": "Araranguá",
+        "state": "SC",
+        "rank_published": 106,
+        "rank_without_relative_term": 57,
+        "positions_gained": 49,
+        "Exposure_relative": 0.106161
+      },
+      {
+        "municipality_name": "Rio de Janeiro",
+        "state": "RJ",
+        "rank_published": 100,
+        "rank_without_relative_term": 51,
+        "positions_gained": 49,
+        "Exposure_relative": 0.223529
+      },
+      {
+        "municipality_name": "Rosário",
+        "state": "MA",
+        "rank_published": 126,
+        "rank_without_relative_term": 85,
+        "positions_gained": 41,
+        "Exposure_relative": 0.063878
+      },
+      {
+        "municipality_name": "Tracuateua",
+        "state": "PA",
+        "rank_published": 163,
+        "rank_without_relative_term": 123,
+        "positions_gained": 40,
+        "Exposure_relative": 0.026795
+      },
+      {
+        "municipality_name": "Guapimirim",
+        "state": "RJ",
+        "rank_published": 53,
+        "rank_without_relative_term": 13,
+        "positions_gained": 40,
+        "Exposure_relative": 0.107772
+      },
+      {
+        "municipality_name": "Paço do Lumiar",
+        "state": "MA",
+        "rank_published": 103,
+        "rank_without_relative_term": 64,
+        "positions_gained": 39,
+        "Exposure_relative": 0.149095
+      },
+      {
+        "municipality_name": "Osório",
+        "state": "RS",
+        "rank_published": 156,
+        "rank_without_relative_term": 122,
+        "positions_gained": 34,
+        "Exposure_relative": 0.055272
+      }
+    ]
+  },
+  "band_ladder": [
+    {
+      "band": "pop_1km",
+      "n_exposure_zero": 30,
+      "spearman_vs_published": 0.9239953090689365,
+      "median_rank_shift": 24.0,
+      "top20_overlap": 15
+    },
+    {
+      "band": "pop_2km",
+      "n_exposure_zero": 13,
+      "spearman_vs_published": 0.9633079028717354,
+      "median_rank_shift": 12.5,
+      "top20_overlap": 19
+    },
+    {
+      "band": "pop_5km",
+      "n_exposure_zero": 4,
+      "spearman_vs_published": 0.985773391431174,
+      "median_rank_shift": 9.0,
+      "top20_overlap": 17
+    },
+    {
+      "band": "pop_10km",
+      "n_exposure_zero": 1,
+      "spearman_vs_published": 0.9759665401585192,
+      "median_rank_shift": 17.0,
+      "top20_overlap": 15
+    },
+    {
+      "band": "pop_eff",
+      "n_exposure_zero": 2,
+      "spearman_vs_published": 0.999999859544634,
+      "median_rank_shift": 0.0,
+      "top20_overlap": 20
+    }
+  ]
+}

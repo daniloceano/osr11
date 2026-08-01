@@ -851,7 +851,7 @@ See `site/DEPLOYMENT.md` for full deployment instructions and `site/README.md` f
 
 ### Declared limitations for the manuscript
 
-The ten paragraphs below are written to be transferable, essentially as they
+The eleven paragraphs below are written to be transferable, essentially as they
 stand, into the Limitations section of the manuscript. Each closes an audit
 issue in `docs/scientific_audit/`; the numbers are reproducible from the scripts
 named at the end of each paragraph.
@@ -1181,6 +1181,41 @@ named at the end of each paragraph.
   (which spans two orders of magnitude across the domain), and the sources that
   could partially test it have been identified but not yet used.
   *(reconnaissance recorded in `docs/scientific_audit/issues/AUD-18_independent_validation_gap.md` §3-bis)*
+
+- **The municipal unit distorts exposure, and the denominator is where it shows
+  (AUD-08).** Exposure pairs an absolute half against a relative half, following
+  the INFORM recommendation that an index should reward both the number of people
+  at risk and their weight within the unit. The relative half divides the
+  effective coastal population by the **whole municipal population**, and that is
+  a textbook modifiable-areal-unit problem: it partly measures how coastal a
+  municipality happens to be, which is a property of the administrative outline
+  rather than of risk. The **saturation** that earlier versions of this analysis
+  reported has been removed rather than declared: under a single 10 km band the
+  ratio reached its ceiling in **59 of 282** municipalities and exceeded 0.99 in
+  92, so the relative half barely discriminated; under the effective population it
+  reaches the ceiling **zero** times, with a median of 0.373. The effective
+  population is also the only support tested that avoids both failure modes at
+  once — a 1 km band leaves 14 municipalities with no counted residents at all,
+  a 10 km band saturates a fifth of the sample, `pop_eff` does neither. **The
+  MAUP itself remains**, and it is directional: dropping the relative half
+  entirely would move **Itaboraí/RJ from 118th to 9th**, **Campos dos
+  Goytacazes/RJ — which contains the Farol de São Tomé, one of the most
+  documented erosion cases in the country — from 159th to 72nd**, Araruama/RJ
+  from 67th to 11th and Linhares/ES from 188th to 164th. Those are large
+  municipalities whose population sits inland: Campos has 483,486 residents but
+  an effective coastal population of 8,825, giving a relative term of 0.018
+  against an absolute term of 0.486. The relative half is nevertheless **kept**,
+  because the counterfactual moves the index the other way into a different
+  distortion — the city of Rio de Janeiro also gains 49 positions, and an index
+  that ranks metropolises first by virtue of their size is the outcome the INFORM
+  pairing exists to prevent. The reader should therefore treat the ranking of
+  large, partly inland municipalities as a **lower bound**. One clarification on
+  the spatial support, because it is often assumed to be the problem: the
+  population is counted on the IBGE statistical grid at **200 m in urban and 1 km
+  in rural areas**, which is finer than a census sector, so the count is not
+  coarsely aggregated. The distortion is in the **reporting unit and the
+  denominator**, not in the population data.
+  *(`src/exploratory/audit_AUD_08_exposure_support.py`)*
 
 ### Current Implementation Status
 

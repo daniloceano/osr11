@@ -8,17 +8,34 @@
 | **Etapa do fluxo** | Step 4.2 → Step 4.4 |
 | **Afeta** | código, interpretação, saídas |
 | **Prioridade** | P1 |
-| **Bloqueia publicação?** | Sim, salvo qualificação explícita — o termo penaliza sistematicamente municípios com erosão costeira documentada |
-| **Status** | `em-investigacao` |
-| **Desfecho** | — |
+| **Bloqueia publicação?** | Sim — satisfeito: saturação eliminada, MAUP medido e declarado com casos nomeados |
+| **Status** | `resolvido` |
+| **Desfecho** | `mitigado-parcialmente` — a saturação foi **eliminada** pela população efetiva; o MAUP **permanece**, medido e declarado como viés direcional |
 | **Depende de** | — |
 | **Bloqueia** | AUD-05 |
 | **Relacionado a** | AUD-13, AUD-14, AUD-15 |
 | **Origem** | `baseline/2026-07-29_initial_review.md` §3.2, §6.2, §8 item 6, §9.2 itens 10 e 15 |
 | **Criado em** | 2026-07-29 |
-| **Última atualização** | 2026-07-29 |
+| **Última atualização** | 2026-07-31 (medição contra o produto atual e fechamento) |
 
 ---
+
+> ### Nota de leitura — dos dois defeitos da §1, um foi eliminado e o outro não
+>
+> **A saturação acabou.** Sob `pop_10km`, 59 de 282 municípios encostavam no
+> teto do termo relativo e 92 passavam de 0,99. Sob `pop_eff`: **zero e zero**,
+> mediana 0,373. Toda a §3.1 descreve um defeito que a decisão de 2026-07-31
+> dissolveu — e que nunca havia sido remedido.
+>
+> **O MAUP continua**, e a população efetiva não o toca. Removê-lo do índice
+> levaria Itaboraí/RJ de 118º a **9º** e Campos dos Goytacazes de 159º a **72º**
+> — mas também o Rio de Janeiro em 49 posições, que é a distorção oposta.
+>
+> **O critério 5 diagnostica o MAUP no lugar errado**: pede suporte mais fino que
+> o municipal, quando a população já é contada em grade de 200 m/1 km. O MAUP
+> está no **denominador**, não na contagem. Ver §3-bis.
+>
+> Fechada como `mitigado-parcialmente` por decisão do pesquisador em 2026-07-31.
 
 ## 1. Problema
 
@@ -207,22 +224,55 @@ para compor `Risk_Hazard`. Ver AUD-17, inconsistência #2.
 
 ## 9. Critérios objetivos de resolução
 
-- [ ] A escada de bandas (1/2/5/10 km) foi executada e seu efeito no ranking está
-      quantificado e publicado.
-- [ ] A saturação do termo relativo está quantificada, e está demonstrado se a
-      metade absoluta compensa ou não a perda de discriminação.
-- [ ] Está decidido e justificado: manter [0, 1], adotar balizas realistas, ou
-      remover o termo relativo. A justificativa referencia a metodologia INFORM e
-      declara o desvio, se houver.
-- [ ] Os casos de Campos dos Goytacazes e Linhares têm a contribuição de cada
+- [x] A escada de bandas (1/2/5/10 km) foi executada e seu efeito no ranking está
+      quantificado e publicado. *`outputs/audit/AUD-08_exposure_support/band_ladder.csv`,
+      contra o produto atual. ρ com o publicado: `pop_1km` 0,924 (com **30**
+      municípios de exposição nula), `pop_2km` 0,963 (13), `pop_5km` 0,986 (4),
+      `pop_10km` 0,976 (1), `pop_eff` 1,000 (2, e por construção). O registro
+      chamava este de "o teste de robustez mais barato do repositório e ainda não
+      feito"; agora está versionado.*
+- [x] A saturação do termo relativo está quantificada, e está demonstrado se a
+      metade absoluta compensa ou não a perda de discriminação. **A pergunta
+      mudou de objeto: a saturação foi eliminada, não compensada.** *Sob
+      `pop_10km`, 59 de 282 municípios no teto exato e 92 acima de 0,99, mediana
+      0,899. Sob `pop_eff`: **nenhum** no teto, **nenhum** acima de 0,99, mediana
+      **0,373**. Os 59 que antes saturavam hoje se espalham. A metade absoluta
+      não precisa compensar nada — o defeito nº 1 da §1 deste registro foi
+      **dissolvido** pela decisão de população efetiva, e ninguém havia medido.*
+- [x] Está decidido e justificado: manter [0, 1], adotar balizas realistas, ou
+      remover o termo relativo. **Mantido [0, 1], e agora com justificativa
+      medida.** *O motivo que levaria a balizas realistas era a saturação, que
+      não existe mais — o intervalo natural [0, 1] passou a ser percorrido sem
+      encostar no teto, que é a condição sob a qual o pareamento INFORM (Box 2)
+      funciona como projetado. Remover o termo relativo foi testado e **movimenta
+      o índice para outra distorção**: favorece as metrópoles, com a cidade do
+      Rio de Janeiro ganhando 49 posições. Declarado no `README.md`.*
+- [x] Os casos de Campos dos Goytacazes e Linhares têm a contribuição de cada
       componente decomposta, e a posição resultante é aceita explicitamente ou
-      corrigida.
-- [ ] Existe pelo menos uma estimativa da magnitude do efeito MAUP, por
-      comparação com um suporte espacial mais fino (setor censitário) em ao menos
-      um estado.
-- [ ] O manuscrito declara que a exposição é **proximidade, não inundação
-      modelada**, e que a unidade municipal introduz MAUP.
-- [ ] A docstring falsa de `exposure_index.py` L47–48 está corrigida (AUD-17).
+      corrigida. **Decompostos; posições aceitas, com o viés declarado.**
+      *Campos dos Goytacazes: 483 486 habitantes, `pop_eff` 8 825,
+      `Exposure_absolute` 0,486 contra `Exposure_relative` **0,018**,
+      `Exposure_Index` 0,094 — **159º**, subiria a **72º** sem o termo relativo.
+      Linhares: `pop_eff` 3 623, relativo 0,022, **188º** → 164º. Os dois subiram
+      em relação ao produto de 2026-07-29 (266º e 272º), mas o mecanismo
+      permanece. `denominator_penalty.csv` lista os mais penalizados.*
+- [x] Existe pelo menos uma estimativa da magnitude do efeito MAUP, por
+      comparação com um suporte espacial mais fino. **Feita, com o critério
+      reformulado — o enunciado original diagnostica o MAUP no lugar errado.**
+      *A população **já** é contada na Grade Estatística do IBGE a **200 m em
+      área urbana e 1 km em rural**, suporte **mais fino que setor censitário**;
+      não há o que refinar na contagem. O MAUP está na **unidade de reporte e no
+      denominador**, e é isso que foi medido: mediana de 0,373 da população
+      municipal dentro de `pop_eff`, e o contrafactual sem o termo relativo dá
+      ρ = 0,977 com deslocamentos de até **+109 posições** (Itaboraí/RJ).*
+- [x] O manuscrito declara que a exposição é **proximidade, não inundação
+      modelada**, e que a unidade municipal introduz MAUP. *A primeira metade já
+      constava do glossário do `README.md`; **a segunda não constava em lugar
+      nenhum** e foi acrescentada em 2026-07-31 como parágrafo de limitação, com
+      os casos nomeados e o viés declarado como **piso**, não como estimativa
+      centrada.*
+- [x] A docstring falsa de `exposure_index.py` L47–48 está corrigida (AUD-17).
+      *Corrigida em 2026-07-29, commit `e2680ed`.*
 
 ## 10. Riscos de alteração prematura
 
@@ -263,7 +313,7 @@ python -m src.figures_article.make_article_top10_municipality_tables
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
-| — | — | — | — | *nenhuma alteração até o momento* |
+| 2026-07-31 | *(a commitar)* | `main` | **Novos:** `src/exploratory/audit_AUD_08_exposure_support.py`, `outputs/audit/AUD-08_exposure_support/`. **Alterados:** este registro (§9, §13, §14 e nota de leitura), `README.md` (parágrafo de limitação novo), `docs/scientific_audit/ISSUE_TRACKER.md` | Remedição + declaração do MAUP. **Nenhum valor numérico publicado alterado** |
 
 ## 14. Histórico de investigação
 
@@ -385,3 +435,36 @@ esquemas com decaimento real.
 | **Não testado** | A banda de 2 km existe em `municipal_exposure.csv` e não entra no esquema. Um esquema de quatro bandas não foi avaliado |
 | **Alterações implementadas** | Nenhuma. Documentação apenas; implementação em sessão própria |
 | **Confirmação pendente** | Os pesos exatos. O pesquisador decidiu a **estrutura** (média ponderada, pesos decrescentes); A é a recomendação, mas B, C ou D são igualmente implementáveis |
+
+> **Nota de 2026-07-31.** O esquema implementado foi de **quatro** bandas —
+> `pop_eff = 0,4·pop_1km + 0,3·pop_2km + 0,2·pop_5km + 0,1·pop_10km`, pesos de
+> anel 1,0 / 0,6 / 0,3 / 0,1 — e não o de três recomendado acima. A ressalva
+> "**Não testado:** a banda de 2 km existe e não entra no esquema; um esquema de
+> quatro bandas não foi avaliado" ficou, portanto, **superada pela
+> implementação**.
+
+### 2026-07-31 — Remedição: a saturação acabou, o MAUP não
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Os dois defeitos da §1 sobrevivem à população efetiva? E qual é a magnitude do MAUP, medida onde ele de fato está? |
+| **Dados e métodos** | `site/public/data/risk_index_municipalities.geojson` (282 entregues, 280 com risco). Saturação do termo relativo nas cinco opções de suporte; escada de bandas com a receita publicada aplicada a cada uma; e contrafactual sem o termo relativo, com o perigo e a vulnerabilidade fixos |
+| **Scripts executados** | `python -m src.exploratory.audit_AUD_08_exposure_support` |
+| **Novas saídas geradas** | `outputs/audit/AUD-08_exposure_support/{saturation_by_band.csv, band_ladder.csv, denominator_penalty.csv, summary.json}` |
+| **Achados** | (a) **A saturação foi eliminada.** `pop_10km`: mediana 0,899, 92 acima de 0,99, **59 no teto exato**. `pop_eff`: mediana **0,373**, **0** e **0**. Os 59 que saturavam hoje se espalham. (b) **`pop_eff` é o único suporte testado que evita os dois modos de falha ao mesmo tempo**: `pop_1km` deixa 14 municípios sem residente contado (30 com exposição nula, contando a baliza de 100 habitantes), `pop_10km` satura um quinto da amostra, `pop_eff` não faz nem um nem outro. (c) **O MAUP permanece e é direcional.** Sem o termo relativo: **Itaboraí/RJ 118º → 9º (+109)**, **Campos dos Goytacazes 159º → 72º (+87)**, Araruama/RJ 67º → 11º, Araranguá/SC 106º → 57º, **Rio de Janeiro 100º → 51º**, Guapimirim/RJ 53º → 13º, Osório/RS 156º → 122º. ρ global 0,977, top-20 14/20. (d) Campos dos Goytacazes tem `Exposure_absolute` = 0,486 contra `Exposure_relative` = **0,018**: 483 486 habitantes municipais para 8 825 de população efetiva costeira |
+| **Interpretação** | O registro tratava saturação e MAUP como duas faces do mesmo problema. **São separáveis, e a decisão de 2026-07-31 separou-os na prática**: a média ponderada das bandas resolveu inteiramente o primeiro e não tocou no segundo. Isso muda o desfecho de "escolher entre manter [0,1], adotar balizas realistas ou remover o termo relativo" para "manter, agora que a razão para mexer nas balizas desapareceu". O contrafactual fecha a terceira opção: remover o termo relativo não corrige o viés, **troca-o de sinal** — Campos sobe 87 posições, mas o Rio de Janeiro sobe 49, e um índice que ordena metrópoles por tamanho é exatamente o que o pareamento INFORM existe para evitar. O que resta é declarar o viés como **piso**: a posição de municípios grandes e parcialmente interiores é um limite inferior |
+| **Achado metodológico sobre o próprio critério 5** | Ele pede comparação com "suporte espacial mais fino (setor censitário)". A população **já** é contada na Grade Estatística do IBGE a 200 m urbano / 1 km rural, que é **mais fino que setor censitário**. Não há refinamento a fazer na contagem, e não existe setor censitário no repositório. O MAUP deste produto está na **unidade de reporte e no denominador municipal** — foi assim que o medi, e o critério foi reformulado em vez de declarado impossível |
+| **Alterações implementadas** | Script novo e parágrafo de limitação no `README.md` — a declaração de MAUP **não existia em lugar nenhum**, apenas a de proximidade-não-inundação. **Nenhum valor numérico publicado alterado** |
+| **Validação realizada** | A receita de exposição do script reproduz `Exposure_absolute`, `Exposure_relative` e `Exposure_Index` publicados; a escada com `pop_eff` devolve ρ = 1,000 e deslocamento mediano 0, como tem de ser. Uma primeira versão do contrafactual incluía os municípios de risco nulo e mostrava Recife e Olinda "ganhando" 80 posições — **artefato de empate**, já que os 84 zeros formam um bloco único e a movimentação vinha de onde o bloco começa. Corrigido: o cálculo passou a excluí-los |
+| **Incerteza remanescente** | (1) **O MAUP não foi eliminado**, apenas medido e declarado. (2) A magnitude reportada é a do contrafactual extremo — remover o termo por inteiro —, e não uma estimativa de quanto o índice "deveria" mudar; serve como cota, não como correção. (3) Nenhuma unidade de reporte alternativa foi testada: manter o município é herança do SVI e da associação, não escolha desta questão |
+| **Próxima decisão necessária** | Do pesquisador: aceitar as posições de Campos dos Goytacazes e Linhares com o viés declarado, ou reabrir a forma do termo relativo |
+
+### 2026-07-31 — DECISÃO: fechar como `mitigado-parcialmente`
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31 |
+| **Decisão** | **Manter o termo relativo e as posições resultantes**, com o viés declarado no manuscrito. Nenhuma alteração de fórmula |
+| **Por que `mitigado-parcialmente`** | Dos dois defeitos que criaram a questão, um foi **eliminado** — a saturação, por construção, pela população efetiva — e o outro **permanece**. Nem `resultado-validado-mantido`, que sugeriria que nada precisou mudar, nem `metodologia-alterada`, que sugeriria que a mudança resolveu a questão |
+| **O que fica declarado** | O ranking de municípios grandes e parcialmente interiores é **piso**, não estimativa centrada; Campos dos Goytacazes e Linhares são nomeados; e a distorção está no **denominador**, não no suporte da contagem, que já é de 200 m/1 km |
+| **O que o desfecho NÃO cobre** | (1) A eliminação do MAUP, que exigiria trocar a unidade de reporte — herança do SVI e da associação, fora do alcance desta questão. (2) A suíte de casos conhecidos — **AUD-05**, última questão aberta, e onde Campos dos Goytacazes reaparece como caso de referência |
