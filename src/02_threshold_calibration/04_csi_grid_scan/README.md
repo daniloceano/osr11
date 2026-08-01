@@ -100,7 +100,9 @@ Audit tables:
 - `tab_TC4_event_threshold_audit.csv` — event/grid association, local physical thresholds, full reference-period coverage, window maxima and dates, same-day diagnostic values, capture day and status
 - `tab_TC4_grid_threshold_audit.csv` — one row per unique grid point, proving the spatial variability of the q90 physical thresholds
 
-The percentile pair (currently q90/q90) is selected globally, but its physical
-thresholds in metres are computed independently from the full finite climatology
-at every associated grid point. Capture requires both local thresholds to be met
+The percentile pair that **this diagnostic** selects (q90/q90) is chosen
+globally, but its physical thresholds in metres are computed independently from
+the full finite climatology at every associated grid point. Note that q90/q90 is
+**not** the operating pair of the project: Step 2e runs its own independent sweep
+and selected **q70 (Hₛ) / q99 (tide-free `zos`)**, which is what Step 3 uses. Capture requires both local thresholds to be met
 on the same admissible day. No cross-grid median is used in event classification.

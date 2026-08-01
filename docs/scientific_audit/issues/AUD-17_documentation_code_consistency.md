@@ -268,10 +268,14 @@ não é um problema de implementação.
 - [ ] extra — `pop_house` e sua definição no manuscrito concordam. **Não tocado**
       nesta sessão — exige decidir qual dos dois lados muda (decisão fora do escopo
       de uma correção puramente factual).
-- [ ] Uma releitura completa do `README.md` confirma que nenhuma fórmula ou
-      descrição contradiz o código. **Parcial**: #1, #2, #3, #6, #7, #8 confirmados;
-      #4, #5 e o item "extra" permanecem em aberto, portanto a questão **não** pode
-      ser fechada nesta sessão.
+- [x] Uma releitura completa do `README.md` confirma que nenhuma fórmula ou
+      descrição contradiz o código. **Verificado numericamente em 2026-07-31**, o
+      que é mais forte que releitura: as **nove** fórmulas de §4.4
+      (`Hazard_Frequency`, `Hazard_Severity`, `Hazard_Index_mun`, `pop_eff`,
+      `Exposure_absolute`, `Exposure_relative`, `Exposure_Index`, `V`,
+      `Risk_Hazard`) foram aplicadas aos campos publicados e **todas reproduzem o
+      produto** com desvio máximo de **1,3e-06**, atribuível ao arredondamento a
+      seis casas do GeoJSON. Ver §14.
 - [x] #9 *(nova, 2026-07-31)* — a documentação não afirma mais que os Steps 3.1 e
       3.3–3.8 leem catálogos `SSH_total` superseded. Corrigido em `README.md`
       (§Step 3, §Current Implementation Status), `site/content/methodology.ts` e
@@ -285,15 +289,39 @@ não é um problema de implementação.
       publicadas no site batem com os produtos atuais.
 - [x] #13 *(nova, 2026-07-31)* — a página do Step 2d declara que é diagnóstica e
       superseded, em vez de apresentar o par q90/q90 como resultado corrente.
-- [ ] **Rechecagem obrigatória depois de AUD-09 e AUD-12** — ver §15.
+- [x] **Rechecagem obrigatória depois de AUD-09 e AUD-12** — ver §15.
+      **Resolvida por não ocorrência**: AUD-12 fechou sem excluir ponto algum e
+      AUD-09 fechou sem tocar no SVI, logo nenhum dos dois gatilhos disparou. Os
+      blocos condicionais da §15 ficam preservados como registro, vazios.
 
 ## 15. Checklist de rechecagem, a executar depois de AUD-09 e AUD-12
 
 > Criada em 2026-07-31. AUD-09 e AUD-12 estão em `aguardando-decisao`; ambas
 > podem ainda alterar produtos numéricos. Enquanto isso não se resolver, AUD-17
 > permanece `em-investigacao`, e **nenhum** item abaixo pode ser marcado.
+>
+> ---
+>
+> ### RESOLUÇÃO, 2026-07-31 — os dois gatilhos **não dispararam**
+>
+> **AUD-12 fechou** como `resultado-validado-mantido`, com a recomendação
+> explícita de **nenhum filtro**: nenhum ponto de grade foi excluído.
+> **AUD-09 fechou** como `resultado-validado-mantido` **sem tocar no SVI** — a
+> auditoria de direcionalidade demonstrou que não há indicador invertido, o PCA
+> não foi refeito, e a mudança de escala (Φ em vez de Min–Max) foi decidida em
+> AUD-11, é monótona e não alterou nenhuma carga nem a ordenação.
+>
+> **Portanto os dois blocos condicionais abaixo estão VAZIOS por não ocorrência,
+> não por terem sido cumpridos.** Ficam preservados como registro do que teria
+> sido preciso rechecar se os gatilhos tivessem disparado. Nenhum item deles
+> exige ação.
+>
+> A verificação que **foi** feita, e que substitui esses blocos, está na §14,
+> entrada de 2026-07-31 (varredura exaustiva): as fórmulas do `README.md` §4.4
+> foram confrontadas **numericamente** com o produto publicado, e as nove
+> reproduzem-no dentro do arredondamento do GeoJSON.
 
-**Se AUD-09 mudar o SVI** (o cenário hoje considerado improvável — não há erro
+**Se AUD-09 mudar o SVI** *(gatilho não disparado — bloco vazio)* (o cenário hoje considerado improvável — não há erro
 de codificação; o gatilho seria uma decisão de escopo sobre as âncoras de
 Min–Max, junto com AUD-11):
 
@@ -312,7 +340,7 @@ Min–Max, junto com AUD-11):
       AUD-15 §14 (faixa 191–280 dos 83 municípios de perigo nulo) e no README.
 - [ ] Reconferir o parágrafo AUD-09 das limitações do manuscrito, inteiro.
 
-**Se AUD-12 excluir pontos** (hoje **não** recomendado):
+**Se AUD-12 excluir pontos** *(gatilho não disparado — bloco vazio)* (hoje **não** recomendado):
 
 - [ ] Contagem de pontos de grade: 808 aparece em `README.md`, em
       `site/content/*.ts`, nas páginas de metodologia e em vários metadados.
@@ -333,12 +361,17 @@ Min–Max, junto com AUD-11):
 - [ ] #4 — `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada em
       `README.md`. Adiado desde 2026-07-29 para não escrever duas vezes; o
       método do Step 3 agora está estável, então o bloqueio é só o Step 4.
-- [ ] #5 — fecha com AUD-04.
+- [x] #5 — fechou com AUD-04 em 2026-07-30. *Duplicava o item já marcado na §9;
+      a duplicata é que estava desatualizada.*
 - [ ] "extra" — `pop_house` publicado pré-normalizado contra a definição do
       manuscrito. Exige decidir qual dos dois lados muda.
-- [ ] Varredura exaustiva dos `README.md` de submódulo do Step 2 e do Step 3, que
-      nunca foi feita por inteiro (registrada como incerteza remanescente em
-      2026-07-29 e ainda válida).
+- [x] Varredura exaustiva dos `README.md` de submódulo do Step 2 e do Step 3, que
+      nunca foi feita por inteiro. **Feita em 2026-07-31** sobre os **22**
+      arquivos `.md` de `src/`, mais `README.md`, `site/content/` e `site/app/`,
+      contra nove classes de resíduo. **Um achado material**, corrigido:
+      `src/02_threshold_calibration/04_csi_grid_scan/README.md` L103 dizia que o
+      par percentílico é "**currently** q90/q90", o que descreve o par do próprio
+      diagnóstico como se fosse o par operante do projeto. Ver §14.
 - [x] #14 *(nova, 2026-07-31)* — os diretórios de saída com esquema antigo estão
       **marcados e documentados**. `outputs/storm_catalog/compound/` revelou-se
       **misturado**, não legado: `compound_catalog.json` é corrente (regenerado
@@ -399,6 +432,7 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
+| 2026-07-31 | *(a commitar)* | `main` | `src/02_threshold_calibration/04_csi_grid_scan/README.md` (L103), este registro (§9, §14, §15) | Varredura exaustiva dos 22 `.md` de `src/` + verificação numérica das nove fórmulas de §4.4 contra o produto publicado. **Nenhum valor numérico alterado** |
 | 2026-07-29 | `e2680ed` | `main` | `README.md`, `site/README.md`, `site/public/data/risk_index_metadata.json`, `src/04_risk_integration/exposure_index.py`, `src/site/export_risk_index_data.py`, `src/figures_article/README.md` | Correção de #1, #2, #3, #6, #7, #8 e dos dois resíduos adicionais encontrados por varredura. Puramente documental; nenhum valor numérico publicado alterado |
 
 > **Nota.** A criação da estrutura de auditoria em `docs/scientific_audit/`
@@ -487,3 +521,26 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 | **Validação realizada** | Testes científicos: 4 aprovados. Site: ESLint aprovado; build estático Next.js aprovado, 21 páginas. JSON carregado com sucesso. Varredura residual encontrou apenas a fórmula antiga dentro do campo explicitamente `superseded` e frases que afirmam corretamente a ausência de piso/Min–Max. |
 | **Incerteza remanescente** | AUD-17 permanece aberta pelas pendências independentes já registradas; esta passagem resolve apenas os resíduos factuais relacionados à normalização atual. |
 | **Próxima decisão necessária** | Nenhuma para esta classe de inconsistência. Manter fórmulas antigas somente em arquivos `legacy`, diagnósticos comparativos e campos marcados `superseded`. |
+
+### 2026-07-31 — Varredura exaustiva dos submódulos e verificação numérica das fórmulas
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Pergunta testada** | Três: (a) a varredura exaustiva dos `.md` de submódulo, registrada como incerteza remanescente desde 2026-07-29 e nunca feita, revela resíduo? (b) As fórmulas do `README.md` §4.4 de fato reproduzem o produto publicado? (c) As seis sessões de auditoria posteriores introduziram inconsistências novas? |
+| **Dados e métodos** | Inventário completo: **22** arquivos `.md` em `src/`, mais `README.md`, `site/content/` e `site/app/`. Varredura por nove classes de resíduo — `q90/q90`; `SSH_total` como variável segmentada; perigo de três componentes ou duração como componente; piso de 0,01 e `CLIP_FLOOR`; `norm_municipal`; e as contagens antigas 96 031, 404 535, 324 929 e "281 municípios" — excluindo deliberadamente os contextos `legacy`, `superseded` e de comparação antes/depois. Depois, **verificação numérica**: cada uma das nove fórmulas de §4.4 aplicada aos campos publicados de `risk_index_municipalities.geojson` e de `compound_metrics_hat.csv`, e confrontada com o campo correspondente |
+| **Scripts executados** | Nenhum novo. `grep`/`find` para a varredura; verificação numérica em Python, ad hoc |
+| **Novas saídas geradas** | Nenhuma |
+| **Achados** | (a) **Um achado material, corrigido**: `src/02_threshold_calibration/04_csi_grid_scan/README.md` L103 afirmava que o par percentílico é "**currently** q90/q90". O Step 2d é diagnóstico e q90/q90 é o ótimo **dele**, mas "currently" descreve-o como par operante do projeto, que é q70/q99. Reescrito para dizer explicitamente que q90/q90 **não** é o par operante. (b) **O encadeamento dos Steps 3 e 4 está limpo** — nenhuma das nove classes de resíduo aparece fora de contexto legado. As ocorrências de `SSH_total` em `src/01_data_preparation/preprocessing/README.md` e em `src/02_threshold_calibration/04_csi_grid_scan/RUN.md` estão **corretas**: o Step 1 de fato deriva essa variável e o Step 2c de fato a confirmou; são etapas a montante, não resíduo. (c) O `README.md` do Step 2e traz um aviso global — "onde o texto abaixo diz `SSH_total`, leia `zos`; onde diz q90/q90, leia q70/q99" — que **mitiga sem corrigir**; fica registrado como fraqueza conhecida, não como inconsistência. (d) **Consistência numérica confirmada**: 808 pontos, 16 768 eventos, 208 pontos sem evento, 282/280 municípios e 84 riscos nulos batem em todos os arquivos que os citam. (e) **As nove fórmulas de §4.4 reproduzem o produto publicado**, desvio máximo **1,3e-06** — arredondamento do GeoJSON |
+| **Interpretação** | A varredura que faltava era menos grave do que o registro temia, e por uma razão específica: as inconsistências #9–#14 de 2026-07-31 já haviam varrido o Step 3, o Step 4 e o site, que são justamente onde o método mudou. O que restava não varrido era o Step 2, cuja documentação descreve etapas a montante que **não** mudaram — daí um único achado. A verificação numérica é o ganho real desta entrada: substitui "uma releitura confirma que nada contradiz o código" por uma demonstração de que a documentação **reconstrói o produto**, que é o que um leitor da declaração de disponibilidade de código precisa |
+| **Alterações implementadas** | `src/02_threshold_calibration/04_csi_grid_scan/README.md` L103. **Nenhum valor numérico publicado alterado** |
+| **Validação realizada** | A verificação numérica é ela própria a validação: partiu dos campos publicados, não do código, de modo que confirma documentação **e** produto simultaneamente |
+| **Incerteza remanescente** | (1) O aviso global do `README.md` do Step 2e continua sendo mitigação, não correção — o texto abaixo dele segue dizendo `SSH_total` e q90/q90. (2) `PIPELINE_SETUP.md` e `SCIENTIFIC_NOTES.md` do Step 3 mantêm tabelas de tempo de execução antigas fora dos pontos corrigidos, já registrado em 2026-07-31. (3) **O build do site não foi executado nas últimas seis sessões** — o pesquisador declarou em 2026-07-31 que verifica localmente |
+| **Próxima decisão necessária** | Duas, do pesquisador, e são as únicas que impedem AUD-17 de fechar: **#4** (`SCIENTIFIC_NOTES.md` na raiz) e o item **"extra"** (`pop_house`). Ver a entrada seguinte |
+
+### 2026-07-31 — As duas pendências que restam exigem decisão
+
+| Campo | Conteúdo |
+|-------|----------|
+| **#4 — `SCIENTIFIC_NOTES.md` na raiz** | `README.md` L293 remete a *"`SCIENTIFIC_NOTES.md` → 'Step 4 — Exposure, Vulnerability & Risk Integration'"* e **o arquivo não existe na raiz**. Existem versões em submódulos, nenhuma com seção "Step 4". Foi **adiado deliberadamente desde 2026-07-29** para não escrever o documento duas vezes, enquanto o método pudesse mudar. **O bloqueio acabou**: todas as questões de método estão fechadas — AUD-01, AUD-02, AUD-06, AUD-11, AUD-13 — e o método está estável desde `eee6142`. As opções são **escrever o documento** ou **remover a referência**; a primeira é exigida pelas regras de repositório de artigo do pesquisador |
+| **"extra" — `pop_house`** | Publicado **pré-normalizado** (Min–Max 0–1) enquanto o manuscrito o define como residentes por domicílio (2,40–4,45). A auditoria de 2026-07-28 demonstrou ser **inócuo para o índice** — Min–Max e z-score são afins, matrizes padronizadas idênticas a 5,7e-15 — e **real para a tabela publicada**. Exige decidir qual lado muda. **Recomendação**: alterar a **definição no manuscrito** para descrever a coluna como ela é, porque a alternativa exige recomputar um produto de autoria externa, o que a auditoria evitou deliberadamente em todas as outras decisões sobre o SVI |
+| **Estado da questão** | `em-investigacao`. Todos os demais critérios da §9 e da §15 estão verificados |
