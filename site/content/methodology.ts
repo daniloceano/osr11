@@ -171,7 +171,8 @@ export const methodologySteps: MethodStep[] = [
         description:
           'Ten IBGE Census 2022 variables (pop_house, pop_rent, pop_poverty, pop_agevul, pop_nonwhite, pop_illiterate, '
           + 'pop_nowater, pop_nosewage, pop_nogarbage, pop_nopaving) standardized with StandardScaler, submitted to PCA. '
-          + 'PC1 sign adjusted so higher values = higher vulnerability. Normalized 0–100.',
+          + 'The pipeline flips the PC1 sign only if its mean correlation with the inputs is negative; audited in 2026-07-31, that condition never triggered (mean correlation +0.468), so the delivered component is PC1 as extracted. '
+          + 'SVI_Coast_2022 is that component rescaled 0–100 by Min–Max and is published as a layer; what enters the risk index is Phi(PC1/sd(PC1)), which has no exact anchors.',
         status: 'done',
       },
       {

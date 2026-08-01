@@ -2,7 +2,11 @@
 
 **Última atualização:** 2026-07-31
 **Origem:** [`baseline/2026-07-29_initial_review.md`](baseline/2026-07-29_initial_review.md)
-**Questões abertas:** 0 de 18 · **em investigação:** 1 (AUD-17) · **aguardando decisão:** 0 · **resolvidas:** 17 (AUD-01, AUD-02, AUD-03, AUD-04, AUD-05, AUD-06, AUD-07, AUD-08, AUD-09, AUD-10, AUD-11, AUD-12, AUD-13, AUD-14, AUD-15, AUD-16, AUD-18) · **arquivadas:** 0
+**Questões abertas:** 0 de 18 · **em investigação:** 0 · **aguardando decisão:** 0 · **resolvidas:** 18 — **todas** · **arquivadas:** 0
+
+> **A auditoria está encerrada.** Dezoito questões abertas pela revisão
+> independente de 2026-07-29, dezoito com desfecho registrado. Relatório para
+> coautores: [`reports/2026-08-01_relatorio_auditoria_completa.md`](reports/2026-08-01_relatorio_auditoria_completa.md).
 
 > ### Nota de sessão de 2026-07-30 — histórica, não é o estado atual
 >
@@ -564,10 +568,10 @@ ver [`README.md`](README.md).
 | Prioridade | Total | aberto | em-investigação | aguardando-decisão | resolvido |
 |---|---|---|---|---|---|
 | **P0 — bloqueia publicação** | 6 | 0 | 0 | 0 | **6** |
-| **P1 — resolver ou justificar** | 9 | 0 | 1 | 0 | **8** |
+| **P1 — resolver ou justificar** | 9 | 0 | 0 | 0 | **9** |
 | **P2 — recomendado** | 3 | 0 | 0 | 0 | **3** |
 | **P3 — opcional** | 0 | — | — | — | — |
-| **Total** | **18** | **0** | **1** | **0** | **17** |
+| **Total** | **18** | **0** | **0** | **0** | **18** |
 
 ---
 
@@ -591,7 +595,7 @@ ver [`README.md`](README.md).
 | **AUD-14** | População sazonal invisível (censo *de jure*) | qualidade-dados | exposição | 4.2 | interp., doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-14](issues/AUD-14_seasonal_population.md) |
 | **AUD-15** | Cobertura: **Içara não tem frente de mar** — ausência correta; 4 degenerados, 83 sem perigo aceito, fronteira de zero instável | qualidade-dados | integração | 4.1/4.2/4.4 | dados, interp., saídas, doc. | P2 | Não | `resolvido` | `limitacao-reconhecida` | — | [AUD-15](issues/AUD-15_sample_coverage.md) |
 | **AUD-16** | **Não existem hotspots discretos** (Silverman p = 0,56 nos positivos); definição adotada é por intervalo de posto | risco-interpretacao | integração | 4.4/4.5 | interp., saídas, doc. | P2 | Não | `resolvido` | `resultado-validado-mantido` | 11 | [AUD-16](issues/AUD-16_hotspot_definition.md) |
-| **AUD-17** | Quatorze inconsistências doc ↔ código ↔ saídas; varredura exaustiva feita. **Restam só #4 e `pop_house`, ambos aguardando decisão** | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim, salvo correção | `em-investigacao` | — | ~~09, 12~~ *(gatilhos não dispararam)* | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
+| **AUD-17** | Quatorze inconsistências doc ↔ código ↔ saídas; varredura exaustiva feita. **Restam só #4 e `pop_house`, ambos aguardando decisão** | **inconsistencia-documental** | transversal | 3 + 4 + README + site | doc., saídas | P1 | Sim — corrigido | `resolvido` | `erro-confirmado-corrigido` | ~~09, 12~~ *(gatilhos não dispararam)* | [AUD-17](issues/AUD-17_documentation_code_consistency.md) |
 | **AUD-18** | Calibração é 100 % catarinense; busca por base no N/NE dá **negativo qualificado** — não é irremediável, é não explorada | lacuna-validacao | transversal | 2d/2e → 3 → 4 | dados, interp., doc. | P1 | Sim — satisfeito por declaração | `resolvido` | `limitacao-reconhecida` | — | [AUD-18](issues/AUD-18_independent_validation_gap.md) |
 
 ---

@@ -76,7 +76,7 @@ export const specificObjectives: ProjectObjective[] = [
   {
     label: 'Social vulnerability index',
     description:
-      'Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 282 coastal municipalities. Variables covering crowding, poverty, age vulnerability, race, literacy, and basic infrastructure are standardized with StandardScaler and submitted to PCA; PC1 (adjusted to increase with vulnerability) is normalized to 0–100.',
+      'Construct a Social Vulnerability Index (SVI_Coast_2022) from 2022 IBGE Census data for 282 coastal municipalities. Variables covering crowding, poverty, age vulnerability, race, literacy, and basic infrastructure are standardized with StandardScaler and submitted to PCA. The pipeline flips the PC1 sign only if its mean correlation with the inputs is negative, and that condition never triggered (mean correlation +0.468), so the delivered component is PC1 as extracted. SVI_Coast_2022 is that component rescaled 0–100 by Min–Max; the risk index uses Phi(PC1/sd(PC1)) instead, which has no exact anchors.',
   },
   {
     label: 'Coastal risk mapping',

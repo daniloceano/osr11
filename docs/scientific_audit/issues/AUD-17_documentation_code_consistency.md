@@ -9,8 +9,8 @@
 | **Afeta** | documentação, saídas (metadados publicados) |
 | **Prioridade** | P1 |
 | **Bloqueia publicação?** | Sim, salvo correção — o README, como está, leva o leitor a reconstruir uma fórmula errada |
-| **Status** | `em-investigacao` |
-| **Desfecho** | — |
+| **Status** | `resolvido` |
+| **Desfecho** | `erro-confirmado-corrigido` — quatorze inconsistências verificadas por inspeção e corrigidas; em todos os casos o **código era a fonte confiável** |
 | **Depende de** | — |
 | **Bloqueia** | — |
 | **Relacionado a** | AUD-04, AUD-08, AUD-09, AUD-10, AUD-11, AUD-15 |
@@ -253,7 +253,14 @@ não é um problema de implementação.
       corretamente seu uso como fator do risco; **o JSON publicado foi corrigido**
       e validado como JSON íntegro. *(Correção aplicada diretamente ao arquivo
       publicado, não por regeneração completa — ver §14 sobre o motivo.)*
-- [ ] #4 — existe `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada,
+- [x] #4 — existe `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada.
+      **Escrito em 2026-08-01**, com as nove seções obrigatórias de
+      `~/.claude/rules/scientific_notes_rules.md` e a seção "Step 4 — Exposure,
+      Vulnerability & Risk Integration" que o `README.md` L483 remete. Adiado
+      desde 2026-07-29 para não escrever duas vezes enquanto o método pudesse
+      mudar; o bloqueio caiu quando AUD-01, 02, 06, 11 e 13 fecharam.
+      *(Enunciado original abaixo, preservado.)*
+- [x] #4 *(enunciado original)* — existe `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada,
       seguindo as seções obrigatórias de `~/.claude/rules/scientific_notes_rules.md`;
       **ou** a referência foi removida do README. **Adiado deliberadamente** — ver §10.
 - [x] #5 — remetido a AUD-04, **fechado em 2026-07-30**: o `README.md` §4.1 passou a descrever o método real da associação (inspeção visual em SIG, arbitrando proximidade e atividade de eventos) em vez da regra determinística que nunca existiu.
@@ -366,7 +373,7 @@ Min–Max, junto com AUD-11):
 
 **Independente das duas** — pendências herdadas que continuam abertas:
 
-- [ ] #4 — `SCIENTIFIC_NOTES.md` na raiz, com a seção "Step 4" referenciada em
+- [x] #4 — `SCIENTIFIC_NOTES.md` na raiz, **escrito em 2026-08-01**. Enunciado em
       `README.md`. Adiado desde 2026-07-29 para não escrever duas vezes; o
       método do Step 3 agora está estável, então o bloqueio é só o Step 4.
 - [x] #5 — fechou com AUD-04 em 2026-07-30. *Duplicava o item já marcado na §9;

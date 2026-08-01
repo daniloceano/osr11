@@ -24,14 +24,23 @@
 > [`outputs/legacy_mhws_method/`](outputs/legacy_mhws_method/) and
 > [`outputs/legacy_threshold_calibration_ssh_total/`](outputs/legacy_threshold_calibration_ssh_total/).
 >
-> **Two audit issues block publication.** **AUD-01** — the HAT adoption went
-> ahead with one of its three pre-registered falsifiable criteria *failed*
-> (municipal ranking stability), against the explicit conclusion of the method
-> comparison; the decision and the dissent are recorded in
-> [AUD-01 §14](docs/scientific_audit/issues/AUD-01_compound_detector_tidal_phase_locking.md).
-> **AUD-02** — the recalibration *worsened* the local wave-threshold floor, which
-> now reaches 0.14 m at sheltered points, with 256 of 808 points below 1.5 m.
-> Neither is resolved.
+> **The scientific audit is closed: no issue remains open.** Of the eighteen
+> issues raised by the independent review of 2026-07-29, seventeen are resolved
+> and one — the root `SCIENTIFIC_NOTES.md`, written in this cycle — was the last
+> item of AUD-17. The audit did not end by agreeing with the reviewer: two issues
+> changed the method (AUD-01, AUD-06), three were mitigated without being
+> eliminated (AUD-05, AUD-08, AUD-11), five were examined and the result kept
+> (AUD-07, AUD-09, AUD-12, AUD-13, AUD-16) and seven remain as **declared
+> limitations** (AUD-02, AUD-03, AUD-04, AUD-10, AUD-14, AUD-15, AUD-18). Those
+> declarations are the twelve paragraphs of "Declared limitations for the
+> manuscript" below, written to be transferable as they stand. Two of them carry
+> a caveat the reader should meet early: the wave criterion is a **local
+> percentile**, so its absolute value spans 0.14–2.40 m along the coast, and
+> **Magé and Paraty**, ranked 3rd and 5th, draw their hazard from open-shelf grid
+> points 35 and 15 km outside the bays that shelter them. Full record:
+> [`docs/scientific_audit/ISSUE_TRACKER.md`](docs/scientific_audit/ISSUE_TRACKER.md);
+> report for co-authors:
+> [`docs/scientific_audit/reports/2026-08-01_relatorio_auditoria_completa.md`](docs/scientific_audit/reports/2026-08-01_relatorio_auditoria_completa.md).
 
 ---
 
@@ -471,7 +480,7 @@ entirely coastal ones.
 - `Exposure_Index`, `Exposure_absolute`, `Exposure_relative`
 - `Risk_Hazard_raw` / `Risk_Hazard` — identical geometric mean of `Hazard_Index_mun`, `Exposure_Index` and `V`; no floor or final Min–Max
 
-> **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound/compound_metrics.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and unaudited; see `src/04_risk_integration/external_svi/README.md`. (4) Frequency is negatively correlated with mean duration and intensity, so the equal-weight average represents an explicit compensatory index rather than three mutually reinforcing signals. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
+> **Notes.** (1) The hazard is implemented in `src/04_risk_integration/hazard_index.py` and reads the versioned `outputs/storm_catalog/compound_hat/compound_metrics_hat.csv`; the exposure in `src/04_risk_integration/exposure_index.py` and `municipal_exposure.py`; the external municipal file supplies only SVI, geometry and the pre-associated grid coordinates. (2) The export produces a single product; the delivered hazard/risk DBF columns are ignored. (3) The SVI script was obtained from its author and audited — the index reproduces exactly — but the point-to-municipality association remains external and is versioned as an input rather than re-derived here (AUD-04); see `src/04_risk_integration/external_svi/README.md`. (4) Since the method change of 2026-07-31 the hazard carries **two** components, frequency and integrated severity, and they now **reinforce** each other (ρ = +0.60, against −0.55 for the superseded three-component version that included duration), so the equal-weight average is no longer a compensatory index. See `SCIENTIFIC_NOTES.md` → "Step 4 — Exposure, Vulnerability & Risk Integration".
 
 **Status:** ✅ Complete  
 **Website panels:** `/results/hazard-characterization` leads with the coastal Hazard Index map (three current layers drawn on the Natural Earth coastline) and keeps the metric explorer below it. `/results/risk-integration` displays the fixed-anchor hazard, weighted exposure, transformed vulnerability and their geometric-mean risk; the `*_raw` aliases are retained for audit but equal their published counterparts because no second Min–Max is applied. `/methodology/hazard-index` is the step-by-step reference for the index construction, and `/methodology/compound-detection` tells the same story as a continuous narrative from the storm catalogs to the composite index.
@@ -1218,7 +1227,7 @@ named at the end of each paragraph.
   *(`src/exploratory/audit_AUD_08_exposure_support.py`)*
 
 - **Qualitative validation against reference cases: what the index recovers and
-  what it does not (AUD-05).** Thirty-three municipalities with independent
+  what it does not (AUD-05).** Thirty-two municipalities with independent
   evidence were fixed as a reference list **before** the comparison was run, drawn
   only from sources predating every method change, and committed to version
   control first; hazard and integrated risk carry separate expectations, and
