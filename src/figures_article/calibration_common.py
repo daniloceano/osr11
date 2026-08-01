@@ -85,6 +85,22 @@ def study_municipalities() -> pd.DataFrame:
     return events.drop_duplicates("name_key")[["name_key", "municipality", "sector"]]
 
 
+def municipality_event_counts() -> pd.Series:
+    """Return reported-disaster occurrence counts per municipality.
+
+    Reuses the canonical combined positive-event set built for Step 2e
+    threshold calibration (union of the expanded and legacy databases,
+    deduplicated on exact municipality×date matches — 147 unique pairs across
+    27 municipalities), so the counts driving this figure match the events
+    that actually underpin the calibration.
+    """
+    from src.pu_composite_calibration.utils import load_combined_events
+
+    combined, _ = load_combined_events(EXPANDED_EVENTS, LEGACY_EVENTS)
+    combined["name_key"] = combined["municipality"].map(normalise_name)
+    return combined.groupby("name_key").size().rename("event_count")
+
+
 def load_map_data() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDataFrame]:
     study = study_municipalities()
     brazil_municipalities = gpd.read_file(MUNICIPALITIES_GEOJSON).to_crs("EPSG:4326")
