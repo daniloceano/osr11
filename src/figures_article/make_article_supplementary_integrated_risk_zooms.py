@@ -7,19 +7,24 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     \includegraphics[width=\textwidth]{outputs/article_figures/supplementary_integrated_risk_zooms.png}
     \caption{Regional detail of the integrated compound coastal-risk index
     for municipalities along (a) the coast from Rio Grande do Sul to Rio de
-    Janeiro, (b) Esp\'irito Santo to Natal, (c) Natal to Piau\'i, and
-    (d) Piau\'i to Par\'a. The integrated index is the geometric mean of the
+    Janeiro, (b) Esp\'irito Santo to Rio Grande do Norte, (c) Piau\'i to
+    Par\'a, and (d) Rio Grande do Norte to Piau\'i. The integrated index is the
+    geometric mean of the
     fixed-anchor municipal Hazard Index, population exposure, and social
     vulnerability transformed with the standard-normal CDF, without a floor
     or final Min--Max normalization. All panels use the same discrete class
     limits and green-to-red palette as the integrated-risk panel in the main
-    figure, allowing direct comparison between regions.
+    figure, allowing direct comparison between regions. The darkest green is
+    reserved for the isolated zero class; positive values begin with the next
+    green class.
     Coastal municipalities from neighboring states that intersect the fixed
     map windows are also colored. White lines delimit coastal municipalities,
     light-gray lines delimit Brazilian states, and dark-gray lines delimit
-    countries. Gray shading denotes land, the darker-gray coastal polygon
-    denotes a municipality without a valid integrated-risk value, and light
-    blue denotes the ocean. The index is comparative among Brazilian coastal
+    countries. Gray shading denotes land, contrasting taupe coastal polygons
+    denote municipalities without a valid integrated-risk value, and light
+    blue denotes the ocean and estuarine channels. A 200-km scale bar is shown
+    in every panel, and the locator inset identifies the four fixed windows
+    along the Brazilian coast. The index is comparative among Brazilian coastal
     municipalities and does not represent absolute expected damage.}
     \label{fig:supplementary-integrated-risk-zooms}
 \end{figure*}
@@ -93,12 +98,31 @@ RISK_BOUNDARIES = np.array([0.0, 1e-6, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 
 LAND_COLOR = "#ddddda"
 OCEAN_COLOR = "#e9f3f7"
-NO_DATA_COLOR = "#c7c7c4"
+NO_DATA_COLOR = "#968d80"
+ZERO_EVENT_COLOR = RISK_COLORS[0]
 MUNICIPAL_BOUNDARY_COLOR = "#f8fafc"
 STATE_BORDER_COLOR = "#92928e"
 COUNTRY_BORDER_COLOR = "#555553"
 COAST_COLOR = "#334155"
 GRID_COLOR = "#9aa9b0"
+LOCATOR_COLORS = ("#b91c1c", "#1d4ed8", "#b45309", "#6d28d9")
+
+
+def _map_aspect(extent: tuple[float, float, float, float]) -> float:
+    """Approximate projected width/height for a PlateCarree regional window."""
+    west, east, south, north = extent
+    mean_latitude = np.deg2rad((south + north) / 2.0)
+    return (east - west) * np.cos(mean_latitude) / (north - south)
+
+
+def _row_layout(
+    extents: tuple[
+        tuple[float, float, float, float],
+        tuple[float, float, float, float],
+    ],
+) -> tuple[tuple[float, float], float]:
+    aspects = tuple(_map_aspect(extent) for extent in extents)
+    return aspects, sum(aspects)
 
 
 def _relative(path: Path) -> str:
@@ -301,6 +325,110 @@ def _draw_context(
     )
 
 
+def _draw_scale_bar(
+    axis: plt.Axes,
+    extent: tuple[float, float, float, float],
+    distance_km: int = 200,
+) -> None:
+    """Draw the same geodesic-distance approximation in every regional panel."""
+    west, east, south, north = extent
+    latitude = south + 0.075 * (north - south)
+    km_per_degree_lon = 111.32 * np.cos(np.deg2rad(latitude))
+    length_degrees = distance_km / km_per_degree_lon
+    x_end = east - 0.055 * (east - west)
+    x_start = x_end - length_degrees
+    crs = ccrs.PlateCarree()
+    axis.plot(
+        [x_start, x_end],
+        [latitude, latitude],
+        color="#111827",
+        linewidth=2.4,
+        solid_capstyle="butt",
+        transform=crs,
+        zorder=9,
+    )
+    axis.plot(
+        [x_start, x_start, x_end, x_end],
+        [latitude - 0.04, latitude + 0.04, latitude + 0.04, latitude - 0.04],
+        color="#111827",
+        linewidth=1.0,
+        transform=crs,
+        zorder=9,
+    )
+    axis.text(
+        (x_start + x_end) / 2,
+        latitude + 0.025 * (north - south),
+        f"{distance_km} km",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#111827",
+        transform=crs,
+        zorder=9,
+    )
+
+
+def _draw_locator(axis: plt.Axes) -> None:
+    crs = ccrs.PlateCarree()
+    locator = axis.inset_axes(
+        [0.53, 0.20, 0.38, 0.36],
+        projection=crs,
+    )
+    land, countries, _ = _natural_earth_context()
+    locator.set_facecolor(OCEAN_COLOR)
+    locator.add_geometries(
+        land,
+        crs=crs,
+        facecolor=LAND_COLOR,
+        edgecolor=COUNTRY_BORDER_COLOR,
+        linewidth=0.3,
+        zorder=1,
+    )
+    locator.add_geometries(
+        countries,
+        crs=crs,
+        facecolor="none",
+        edgecolor=COUNTRY_BORDER_COLOR,
+        linewidth=0.35,
+        zorder=2,
+    )
+    locator.set_extent((-75.0, -32.0, -36.0, 7.0), crs=crs)
+    for label, extent, color in zip(
+        "ABCD",
+        (
+            SOUTH_SOUTHEAST_EXTENT,
+            EAST_NORTHEAST_EXTENT,
+            NORTH_EXTENT,
+            NORTHEAST_EXTENT,
+        ),
+        LOCATOR_COLORS,
+    ):
+        west, east, south, north = extent
+        locator.add_geometries(
+            [box(west, south, east, north)],
+            crs=crs,
+            facecolor="none",
+            edgecolor=color,
+            linewidth=1.2,
+            zorder=3,
+        )
+        locator.text(
+            (west + east) / 2,
+            (south + north) / 2,
+            label,
+            transform=crs,
+            ha="center",
+            va="center",
+            fontsize=6.5,
+            fontweight="bold",
+            color=color,
+            zorder=4,
+        )
+    locator.set_title("Location", fontsize=7, pad=2)
+    locator.set_xticks([])
+    locator.set_yticks([])
+
+
 def _plot_region(
     axis: plt.Axes,
     municipalities: gpd.GeoDataFrame,
@@ -351,12 +479,13 @@ def _plot_region(
     if not zeros.empty:
         zeros.plot(
             ax=axis,
-            color="#9ca3af",
+            color=ZERO_EVENT_COLOR,
             edgecolor=MUNICIPAL_BOUNDARY_COLOR,
             linewidth=0.32,
             zorder=3.1,
         )
     _draw_context(axis, coastline)
+    _draw_scale_bar(axis, extent)
     axis.set_extent(extent, crs=ccrs.PlateCarree())
     return {
         "panel": panel_label,
@@ -366,6 +495,8 @@ def _plot_region(
             regional["state"].dropna().astype(str).unique().tolist()
         ),
         "extent": list(extent),
+        "map_aspect_ratio": round(_map_aspect(extent), 6),
+        "scale_bar_km": 200,
         "municipality_count": int(len(regional)),
         "valid_risk_count": int(valid[RISK_KEY].notna().sum()),
         "missing_risk_municipalities": regional.loc[
@@ -396,12 +527,25 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
             "integrated_risk_normalization"
         ),
         "panels": panels,
-        "layout": {"rows": 2, "columns": 2},
+        "layout": {
+            "rows": 2,
+            "columns": 2,
+            "cell_sizing": "derived from each extent's latitude-corrected map aspect",
+        },
         "colorbar": {
             "type": "discrete",
             "boundaries": RISK_BOUNDARIES.tolist(),
-            "colors": list(RISK_COLORS),
+            "colors": list(RISK_COLORS[:7]),
             "label": "Integrated risk index (0-1)",
+            "tick_labels": [
+                "0",
+                *[f"{value:g}" for value in RISK_BOUNDARIES[2:]],
+            ],
+            "zero_class": {
+                "interval": [0.0, 1e-6],
+                "upper_bound_exclusive": True,
+                "color": ZERO_EVENT_COLOR,
+            },
             "shared_between_panels": True,
             "scale_matches_main_figure": True,
         },
@@ -410,6 +554,13 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
             "land_color": LAND_COLOR,
             "ocean_color": OCEAN_COLOR,
             "no_data_municipality_color": NO_DATA_COLOR,
+            "zero_accepted_event_color": ZERO_EVENT_COLOR,
+            "estuarine_channel_color": OCEAN_COLOR,
+            "locator_inset": {
+                "host_panel": "A",
+                "extent": [-75.0, -32.0, -36.0, 7.0],
+                "panel_rectangle_colors": list(LOCATOR_COLORS),
+            },
             "coastline": _relative(COASTLINE_PATH),
             "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
             "brazilian_state_boundaries": (
@@ -429,12 +580,20 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
 def main() -> None:
     municipalities, coastline = _read_inputs()
     cmap = ListedColormap(
-        ["#9ca3af", *RISK_COLORS[:6]],
+        list(RISK_COLORS[:7]),
         name="composite_score_inverted_green_to_red_integrated_risk",
     )
     norm = BoundaryNorm(RISK_BOUNDARIES, cmap.N, clip=True)
 
-    figure = plt.figure(figsize=(13.2, 11.2), constrained_layout=False)
+    top_widths, top_aspect_sum = _row_layout(
+        (SOUTH_SOUTHEAST_EXTENT, EAST_NORTHEAST_EXTENT)
+    )
+    bottom_widths, bottom_aspect_sum = _row_layout(
+        (NORTH_EXTENT, NORTHEAST_EXTENT)
+    )
+    row_heights = (1.0 / top_aspect_sum, 1.0 / bottom_aspect_sum)
+
+    figure = plt.figure(figsize=(13.2, 12.8), constrained_layout=False)
     outer_grid = figure.add_gridspec(
         2,
         1,
@@ -442,19 +601,20 @@ def main() -> None:
         right=0.985,
         top=0.96,
         bottom=0.11,
-        hspace=0.12,
+        height_ratios=row_heights,
+        hspace=0.075,
     )
     top_grid = outer_grid[0, 0].subgridspec(
         1,
         2,
-        width_ratios=(1.0, 0.45),
-        wspace=0.08,
+        width_ratios=top_widths,
+        wspace=0.045,
     )
     bottom_grid = outer_grid[1, 0].subgridspec(
         1,
         2,
-        width_ratios=(1.0, 1.58),
-        wspace=0.08,
+        width_ratios=bottom_widths,
+        wspace=0.045,
     )
     axes = [
         figure.add_subplot(top_grid[0, 0], projection=ccrs.PlateCarree()),
@@ -480,7 +640,7 @@ def main() -> None:
             coastline,
             states=EAST_NORTHEAST_STATES,
             extent=EAST_NORTHEAST_EXTENT,
-            title="Espírito Santo–Natal",
+            title="Espírito Santo–Rio Grande do Norte",
             panel_label="B",
             cmap=cmap,
             norm=norm,
@@ -489,9 +649,9 @@ def main() -> None:
             axes[2],
             municipalities,
             coastline,
-            states=NORTHEAST_STATES,
-            extent=NORTHEAST_EXTENT,
-            title="Natal–Piauí",
+            states=NORTH_STATES,
+            extent=NORTH_EXTENT,
+            title="Piauí–Pará",
             panel_label="C",
             cmap=cmap,
             norm=norm,
@@ -500,14 +660,15 @@ def main() -> None:
             axes[3],
             municipalities,
             coastline,
-            states=NORTH_STATES,
-            extent=NORTH_EXTENT,
-            title="Piauí–Pará",
+            states=NORTHEAST_STATES,
+            extent=NORTHEAST_EXTENT,
+            title="Rio Grande do Norte–Piauí",
             panel_label="D",
             cmap=cmap,
             norm=norm,
         ),
     ]
+    _draw_locator(axes[0])
 
     mappable = ScalarMappable(norm=norm, cmap=cmap)
     mappable.set_array([])
@@ -524,7 +685,7 @@ def main() -> None:
     colorbar.set_label("Integrated risk index (0–1)", fontsize=10)
     colorbar.ax.tick_params(labelsize=9, length=3)
     colorbar.ax.set_xticklabels(
-        ["No accepted event", *[f"{value:g}" for value in RISK_BOUNDARIES[2:]]]
+        ["0", *[f"{value:g}" for value in RISK_BOUNDARIES[2:]]]
     )
     colorbar.outline.set_linewidth(0.75)
 
