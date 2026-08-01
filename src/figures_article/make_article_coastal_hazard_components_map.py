@@ -527,7 +527,7 @@ def main() -> None:
     figure, axes = plt.subplots(
         1,
         3,
-        figsize=(15.6, 7.2),
+        figsize=(10.8, 7.2),
         constrained_layout=False,
         subplot_kw={"projection": ccrs.PlateCarree()},
     )
@@ -536,7 +536,7 @@ def main() -> None:
         right=0.985,
         top=0.955,
         bottom=0.145,
-        wspace=0.035,
+        wspace=0.01,
     )
     panels: list[dict[str, Any]] = []
     for index, (axis, panel_spec) in enumerate(
