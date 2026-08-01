@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-08-01T01:55:52.930587+00:00",
+  "generated_at": "2026-08-01T02:36:42.002173+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -56,7 +56,7 @@
       "grid_lat": "grid_lat",
       "grid_lon": "grid_lon",
       "PC1": "PC1",
-      "pop_house": "pop_house",
+      "pop_house": "pop_house_",
       "pop_rent": "pop_rent",
       "pop_poverty": "pop_povert",
       "pop_agevul": "pop_agevul",
@@ -1137,7 +1137,7 @@
         "ddof": 0,
         "population": 282
       },
-      "pc1_reproduction_max_abs_difference": 5.911958134596773e-06,
+      "pc1_reproduction_max_abs_difference": 6.137553133278573e-06,
       "spearman_with_original_svi_fraction": 1.0,
       "original_field_preserved": "SVI_Coast_2022",
       "indicator_sign_changes": "none; negative PCA loadings are empirical"

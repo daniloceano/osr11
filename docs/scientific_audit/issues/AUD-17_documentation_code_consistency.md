@@ -265,8 +265,16 @@ não é um problema de implementação.
 - [x] #8 — o mapa de estrutura do `README.md` reflete a árvore real de
       `src/03_storm_catalog_generation/` e de `src/04_risk_integration/`,
       verificado contra a saída de `find src -name '*.py'`.
-- [ ] extra — `pop_house` e sua definição no manuscrito concordam. **Não tocado**
-      nesta sessão — exige decidir qual dos dois lados muda (decisão fora do escopo
+- [x] extra — `pop_house` e sua definição no manuscrito concordam.
+      **Resolvido em 2026-07-31**, e sem tocar em produto de autoria externa: o
+      shapefile entregue já carregava **as duas** versões — `pop_house_` com a
+      razão crua (2,4011–4,4543) e `pop_house` com o Min–Max dela. O exportador
+      escolhia a reescalada; passou a ler a crua. Reexportar alterou **essa
+      propriedade e nenhuma outra**, e a checagem de reprodução do PC1 do próprio
+      exportador passou. Ver §14. *(Texto original do critério: exigia decidir
+      qual dos dois lados muda — a decisão deixou de ser necessária quando se
+      constatou que o valor correto já estava entregue.)*
+- [x] extra *(registro do enunciado original)* — exigia decidir qual dos dois lados muda (decisão fora do escopo
       de uma correção puramente factual).
 - [x] Uma releitura completa do `README.md` confirma que nenhuma fórmula ou
       descrição contradiz o código. **Verificado numericamente em 2026-07-31**, o
@@ -432,6 +440,7 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 
 | Data | Commit | Ramo | Arquivos alterados | Natureza |
 |------|--------|------|--------------------|----------|
+| 2026-07-31 | *(a commitar)* | `main` | `src/site/export_risk_index_data.py`, `site/public/data/*` (regenerados), `README.md` §4.3, `src/04_risk_integration/external_svi/README.md`, este registro | Resolução de `pop_house`: exportador passa a ler a coluna crua. Uma única propriedade do GeoJSON alterada |
 | 2026-07-31 | *(a commitar)* | `main` | `src/02_threshold_calibration/04_csi_grid_scan/README.md` (L103), este registro (§9, §14, §15) | Varredura exaustiva dos 22 `.md` de `src/` + verificação numérica das nove fórmulas de §4.4 contra o produto publicado. **Nenhum valor numérico alterado** |
 | 2026-07-29 | `e2680ed` | `main` | `README.md`, `site/README.md`, `site/public/data/risk_index_metadata.json`, `src/04_risk_integration/exposure_index.py`, `src/site/export_risk_index_data.py`, `src/figures_article/README.md` | Correção de #1, #2, #3, #6, #7, #8 e dos dois resíduos adicionais encontrados por varredura. Puramente documental; nenhum valor numérico publicado alterado |
 
@@ -544,3 +553,16 @@ As demais correções (#1, #2, #6, #7, #8) são de texto sem efeito em produto.
 | **#4 — `SCIENTIFIC_NOTES.md` na raiz** | `README.md` L293 remete a *"`SCIENTIFIC_NOTES.md` → 'Step 4 — Exposure, Vulnerability & Risk Integration'"* e **o arquivo não existe na raiz**. Existem versões em submódulos, nenhuma com seção "Step 4". Foi **adiado deliberadamente desde 2026-07-29** para não escrever o documento duas vezes, enquanto o método pudesse mudar. **O bloqueio acabou**: todas as questões de método estão fechadas — AUD-01, AUD-02, AUD-06, AUD-11, AUD-13 — e o método está estável desde `eee6142`. As opções são **escrever o documento** ou **remover a referência**; a primeira é exigida pelas regras de repositório de artigo do pesquisador |
 | **"extra" — `pop_house`** | Publicado **pré-normalizado** (Min–Max 0–1) enquanto o manuscrito o define como residentes por domicílio (2,40–4,45). A auditoria de 2026-07-28 demonstrou ser **inócuo para o índice** — Min–Max e z-score são afins, matrizes padronizadas idênticas a 5,7e-15 — e **real para a tabela publicada**. Exige decidir qual lado muda. **Recomendação**: alterar a **definição no manuscrito** para descrever a coluna como ela é, porque a alternativa exige recomputar um produto de autoria externa, o que a auditoria evitou deliberadamente em todas as outras decisões sobre o SVI |
 | **Estado da questão** | `em-investigacao`. Todos os demais critérios da §9 e da §15 estão verificados |
+
+### 2026-07-31 — DECISÃO e resolução de `pop_house`: o valor correto já estava entregue
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Quem decidiu** | Danilo Couto de Souza (PI), 2026-07-31, sobre três opções apresentadas |
+| **Fato que mudou a recomendação** | A recomendação inicial era **alterar a definição no manuscrito**, sob a premissa de que corrigir a coluna exigiria recomputar produto de autoria externa. **A premissa era falsa.** O shapefile entregue carrega o indicador **duas vezes**: `pop_house_` com a razão crua (2,4011 – 4,4543 residentes por domicílio, mediana 2,8830) e `pop_house` com o Min–Max dela (0 – 1, mediana 0,2347). O exportador escolhia a reescalada |
+| **Decisão** | **Opção A** — apontar o exportador para a coluna crua e publicar `pop_house` como residentes por domicílio |
+| **Por que é seguro** | Min–Max e z-score são ambas afins, logo o `StandardScaler` do PCA absorve a reescala. Verificado antes de mexer: PC1 recomputado com a coluna reescalada difere do entregue em 7,1e-15, com a crua em 7,6e-15, e as **duas reproduções diferem entre si em 2,7e-15**. A checagem de reprodução do PC1 embutida no exportador passou depois da troca, o que confirma o mesmo em produção |
+| **Efeito medido na reexportação** | Comparação campo a campo do GeoJSON antes e depois: mesmas colunas, mesma ordem de municípios, e **uma única coluna alterada — `pop_house`**. `PC1`, `Vulnerability_CDF_PC1`, `SVI_Coast_2022`, as demais nove variáveis, exposição, perigo e risco: **idênticos**. `pop_house` não é camada selecionável de mapa nem aparece em figura do artigo |
+| **Defeito de implementação encontrado no caminho** | A primeira tentativa **não surtiu efeito**, e a razão é um defeito próprio: `support_field_map` resolvia cada campo com `(key, *candidates)`, antepondo o nome de saída à lista de candidatos. Isso torna a tupla de candidatos **não autoritativa** — qualquer preferência declarada é silenciosamente sobrescrita quando existe uma coluna homônima ao nome de saída, que é exatamente o caso aqui. Corrigido para usar `candidates` diretamente, alinhando com `SOURCE_LAYER_SPECS`, que já se comportava assim. Verificado que nenhum outro campo muda de origem: todos os demais têm a própria chave dentro da tupla ou não são nome de coluna |
+| **Alterações implementadas** | `src/site/export_risk_index_data.py` (candidatos de `pop_house` e resolução de `support_field_map`), `site/public/data/risk_index_municipalities.geojson` e metadados regenerados, `README.md` §4.3 (descrição do indicador), `src/04_risk_integration/external_svi/README.md` (nota de auditoria marcada como resolvida). **O shapefile entregue não foi modificado** — as duas colunas permanecem nele |
+| **Incerteza remanescente** | Nenhuma para este item. O manuscrito passa a concordar com a coluna publicada sem que nenhum dos dois precise ser reescrito |

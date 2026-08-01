@@ -369,7 +369,7 @@ The SVI was built from 10 socioeconomic and infrastructure variables from the 20
 |----------|-------------|------------:|-------------:|
 | `pop_poverty` | Proportion of households up to ½ minimum wage per capita | **+0.418** | +0.940 |
 | `pop_illiterate` | Illiteracy rate (15+) | +0.371 | +0.833 |
-| `pop_house` | Mean residents per occupied household (published Min–Max rescaled to 0–1) | +0.350 | +0.787 |
+| `pop_house` | Mean residents per occupied household (2.40–4.45) | +0.350 | +0.787 |
 | `pop_nogarbage` | Proportion of households without waste collection | +0.349 | +0.783 |
 | `pop_nonwhite` | Proportion not self-declared white | +0.347 | +0.780 |
 | `pop_nosewage` | Proportion without adequate sewage | +0.320 | +0.719 |

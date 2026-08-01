@@ -114,7 +114,17 @@ SUPPORT_FIELD_CANDIDATES: dict[str, tuple[str, ...]] = {
     "grid_lat": ("grid_lat",),
     "grid_lon": ("grid_lon",),
     "PC1": ("PC1",),
-    "pop_house": ("pop_house",),
+    # The delivered shapefile carries this indicator twice: ``pop_house_`` holds
+    # the raw ratio of residents per occupied household (2.40--4.45), which is
+    # what the manuscript defines, while ``pop_house`` holds that same column
+    # after an intermediate Min--Max rescale to [0, 1] applied inside the
+    # external SVI script. Publishing the rescaled one under the raw one's name
+    # made the exported value contradict its own definition and reintroduced
+    # exact 0/1 anchors into a table of raw indicators. The raw column is
+    # preferred here. This does not touch the index: Min--Max and the z-score are
+    # both affine, so ``StandardScaler`` absorbs the rescale and PC1 reproduces
+    # identically either way (verified, maximum difference 2.7e-15). See AUD-17.
+    "pop_house": ("pop_house_", "pop_house"),
     "pop_rent": ("pop_rent",),
     "pop_poverty": ("pop_povert", "pop_poverty"),
     "pop_agevul": ("pop_agevul",),
@@ -838,10 +848,15 @@ def build_site_risk_data() -> tuple[gpd.GeoDataFrame, dict[str, Any]]:
             )
         layer_field_map[spec.key] = field
 
+    # The candidate tuple is authoritative, exactly as it is for
+    # ``SOURCE_LAYER_SPECS`` above. Prepending ``key`` here would silently
+    # override any deliberate preference: ``pop_house`` resolves to two columns
+    # in the delivered shapefile, and the exported value must be the one the
+    # tuple names first, not the one that happens to share the output name.
     support_field_map = {
         key: field
         for key, candidates in SUPPORT_FIELD_CANDIDATES.items()
-        if (field := _resolve_field(source_fields, (key, *candidates))) is not None
+        if (field := _resolve_field(source_fields, candidates)) is not None
     }
 
     read_fields = sorted(set(layer_field_map.values()) | set(support_field_map.values()))

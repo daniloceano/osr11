@@ -47,12 +47,21 @@ step. Two consequences, and only the second matters:
   without the intermediate Min–Max are identical to 5.7e-15. An earlier
   suspicion in this repository — that the variable might have entered the PCA
   with a different weight from the other nine — was **wrong**.
-- *For the published table: real.* The value distributed as `pop_house` is the
+- *For the published table: real.* The value distributed as `pop_house` was the
   rescaled one (0–1), while the manuscript's Table of SVI variables defines it
   as "total population divided by the number of occupied permanent households",
   which is the raw 2.40–4.45 residents per household. The shapefile carries the
-  raw value separately as `pop_house_`. Either the manuscript definition or the
-  published column should be changed so they agree.
+  raw value separately as `pop_house_`.
+
+> **Resolved on 2026-07-31 (AUD-17).** The site exporter now reads
+> `pop_house_`, so the published `pop_house` carries the raw ratio
+> (2.4011–4.4543) and agrees with the manuscript definition. **Nothing else
+> changed**: re-exporting altered that one property and no other, and the
+> exporter's own PC1 reproduction check passed, confirming in production what
+> the bullet above establishes in principle — Min–Max and the z-score are both
+> affine, so the standardisation absorbs the rescale (maximum difference between
+> the two reproductions: 2.7e-15). The delivered shapefile was **not** modified;
+> both columns remain in it.
 
 **What this script does not cover.** It contains no geoprocessing at all — no
 `geopandas`, no shapefile, no `grid_lat`/`grid_lon`. The association between the
