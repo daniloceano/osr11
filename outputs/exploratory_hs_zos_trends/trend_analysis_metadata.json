@@ -1,0 +1,403 @@
+{
+  "generated_at": "2026-08-02T17:03:07.514383+00:00",
+  "period": [
+    "1993-01-01",
+    "2025-12-31"
+  ],
+  "hs_source": "WAVERYS VHM0, remote 3-hourly raw files aggregated to daily maximum",
+  "zos_source": "GLORYS12 zos daily point extracts",
+  "prime_definition": "variable - local 1993-2025 temporal mean",
+  "star_definition": "prime anomaly - local 1993-2025 monthly climatology",
+  "trend_estimator": "Theil-Sen slope fitted to annual means, 95% slope interval",
+  "full_coast_trend_points": 808,
+  "full_coast_trends_table": "outputs/exploratory_hs_zos_trends/data/coastal_trends_all_808_points.csv",
+  "points": [
+    {
+      "slug": "rio_grande",
+      "label": "Rio Grande",
+      "requested_latitude": -32.4,
+      "requested_longitude": -52.2,
+      "native_latitude": -32.400002,
+      "native_longitude": -52.200012,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.311235
+    },
+    {
+      "slug": "florianopolis",
+      "label": "Florianópolis",
+      "requested_latitude": -27.8,
+      "requested_longitude": -48.4,
+      "native_latitude": -27.799999,
+      "native_longitude": -48.399994,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.571132
+    },
+    {
+      "slug": "santos",
+      "label": "Santos",
+      "requested_latitude": -24.0,
+      "requested_longitude": -46.4,
+      "native_latitude": -24.0,
+      "native_longitude": -46.399994,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.187622
+    },
+    {
+      "slug": "sul_bahia",
+      "label": "Sul da Bahia (Belmonte)",
+      "requested_latitude": -16.0,
+      "requested_longitude": -38.8,
+      "native_latitude": -16.0,
+      "native_longitude": -38.799988,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.072126
+    },
+    {
+      "slug": "recife",
+      "label": "Recife",
+      "requested_latitude": -8.2,
+      "requested_longitude": -34.8,
+      "native_latitude": -8.2,
+      "native_longitude": -34.799988,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.571074
+    },
+    {
+      "slug": "natal",
+      "label": "Natal",
+      "requested_latitude": -5.8,
+      "requested_longitude": -35.0,
+      "native_latitude": -5.8,
+      "native_longitude": -35.0,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 1.546017
+    },
+    {
+      "slug": "sao_luis",
+      "label": "São Luís",
+      "requested_latitude": -2.4,
+      "requested_longitude": -44.2,
+      "native_latitude": -2.4,
+      "native_longitude": -44.200012,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 0.613397
+    },
+    {
+      "slug": "macapa",
+      "label": "Macapá",
+      "requested_latitude": 0.8,
+      "requested_longitude": -50.2,
+      "native_latitude": 0.8,
+      "native_longitude": -50.200012,
+      "n_daily_values": 12053,
+      "local_mean_hs_m": 0.382376
+    }
+  ],
+  "trends": {
+    "Hs′": {
+      "rio_grande": {
+        "slope_m_per_year": -0.007069559027443599,
+        "slope_mm_per_year": -7.069559027443599,
+        "intercept": 14.218412818638688,
+        "low_slope_mm_per_year": -9.774122314544503,
+        "high_slope_mm_per_year": -2.993607305936073,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "florianopolis": {
+        "slope_m_per_year": 0.00200513698630137,
+        "slope_mm_per_year": 2.0051369863013697,
+        "intercept": -4.022739545176611,
+        "low_slope_mm_per_year": 0.44618395303326835,
+        "high_slope_mm_per_year": 4.003496840011549,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "santos": {
+        "slope_m_per_year": 0.0020215460239039846,
+        "slope_mm_per_year": 2.0215460239039844,
+        "intercept": -4.061230535149357,
+        "low_slope_mm_per_year": 0.7277397260273973,
+        "high_slope_mm_per_year": 3.2465753424657535,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sul_bahia": {
+        "slope_m_per_year": 0.001026152632373158,
+        "slope_mm_per_year": 1.026152632373158,
+        "intercept": -2.059255291414424,
+        "low_slope_mm_per_year": -0.29093281148075684,
+        "high_slope_mm_per_year": 2.3995433789954337,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "recife": {
+        "slope_m_per_year": 0.0023776255707762565,
+        "slope_mm_per_year": 2.3776255707762566,
+        "intercept": -4.777038431819587,
+        "low_slope_mm_per_year": 0.5862145370162436,
+        "high_slope_mm_per_year": 3.780821917808218,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "natal": {
+        "slope_m_per_year": 0.0011149771689497722,
+        "slope_mm_per_year": 1.1149771689497723,
+        "intercept": -2.2466086314591536,
+        "low_slope_mm_per_year": -0.4657534246575341,
+        "high_slope_mm_per_year": 3.3017922641771733,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sao_luis": {
+        "slope_m_per_year": 0.0010550579557428875,
+        "slope_mm_per_year": 1.0550579557428874,
+        "intercept": -2.1191998786401514,
+        "low_slope_mm_per_year": -0.25950046161139806,
+        "high_slope_mm_per_year": 2.684931506849315,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "macapa": {
+        "slope_m_per_year": 9.142712777902537e-05,
+        "slope_mm_per_year": 0.09142712777902537,
+        "intercept": -0.17838203873875869,
+        "low_slope_mm_per_year": -0.817591137061157,
+        "high_slope_mm_per_year": 1.127380928077088,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      }
+    },
+    "zos′": {
+      "rio_grande": {
+        "slope_m_per_year": 0.0034635910717146874,
+        "slope_mm_per_year": 3.463591071714687,
+        "intercept": -6.959425543165013,
+        "low_slope_mm_per_year": 2.416304146794424,
+        "high_slope_mm_per_year": 4.5263548190258955,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "florianopolis": {
+        "slope_m_per_year": 0.003299673998139315,
+        "slope_mm_per_year": 3.299673998139315,
+        "intercept": -6.632683732848287,
+        "low_slope_mm_per_year": 2.4165323718811837,
+        "high_slope_mm_per_year": 4.0643268826175225,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "santos": {
+        "slope_m_per_year": 0.0038884234752511754,
+        "slope_mm_per_year": 3.8884234752511753,
+        "intercept": -7.821850189443266,
+        "low_slope_mm_per_year": 3.0149266500745364,
+        "high_slope_mm_per_year": 5.01041131640891,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sul_bahia": {
+        "slope_m_per_year": 0.0035058121245502313,
+        "slope_mm_per_year": 3.505812124550231,
+        "intercept": -7.049763432898238,
+        "low_slope_mm_per_year": 3.0714166926438824,
+        "high_slope_mm_per_year": 3.9228681656629245,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "recife": {
+        "slope_m_per_year": 0.0033857708184482304,
+        "slope_mm_per_year": 3.3857708184482305,
+        "intercept": -6.805784984728478,
+        "low_slope_mm_per_year": 2.95862316932172,
+        "high_slope_mm_per_year": 3.694965578620509,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "natal": {
+        "slope_m_per_year": 0.0032807206454215053,
+        "slope_mm_per_year": 3.280720645421505,
+        "intercept": -6.593788639396636,
+        "low_slope_mm_per_year": 2.8965537364215814,
+        "high_slope_mm_per_year": 3.61195091884303,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sao_luis": {
+        "slope_m_per_year": 0.003906424519502094,
+        "slope_mm_per_year": 3.9064245195020937,
+        "intercept": -7.845319059826789,
+        "low_slope_mm_per_year": 3.3953583684481985,
+        "high_slope_mm_per_year": 4.404422900595962,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "macapa": {
+        "slope_m_per_year": 0.004681107510737428,
+        "slope_mm_per_year": 4.681107510737428,
+        "intercept": -9.398314490134922,
+        "low_slope_mm_per_year": 4.0555973546379,
+        "high_slope_mm_per_year": 5.2227063793433866,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      }
+    },
+    "Hs*": {
+      "rio_grande": {
+        "slope_m_per_year": -0.007068903799969166,
+        "slope_mm_per_year": -7.068903799969166,
+        "intercept": 14.217054683863422,
+        "low_slope_mm_per_year": -9.765081886700914,
+        "high_slope_mm_per_year": -2.993607305936073,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "florianopolis": {
+        "slope_m_per_year": 0.0020051369863013702,
+        "slope_mm_per_year": 2.00513698630137,
+        "intercept": -4.022855273366864,
+        "low_slope_mm_per_year": 0.43106762134730836,
+        "high_slope_mm_per_year": 3.9791885180138653,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "santos": {
+        "slope_m_per_year": 0.0020221216146428115,
+        "slope_mm_per_year": 2.0221216146428116,
+        "intercept": -4.061965006139113,
+        "low_slope_mm_per_year": 0.7277397260273972,
+        "high_slope_mm_per_year": 3.2465753424657544,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sul_bahia": {
+        "slope_m_per_year": 0.0010218525766470972,
+        "slope_mm_per_year": 1.0218525766470972,
+        "intercept": -2.0507436571013207,
+        "low_slope_mm_per_year": -0.27485885715532493,
+        "high_slope_mm_per_year": 2.4127647311769875,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "recife": {
+        "slope_m_per_year": 0.002412646957726091,
+        "slope_mm_per_year": 2.4126469577260914,
+        "intercept": -4.8475837147827985,
+        "low_slope_mm_per_year": 0.5464480874316939,
+        "high_slope_mm_per_year": 3.780821917808218,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "natal": {
+        "slope_m_per_year": 0.0011186726737871175,
+        "slope_mm_per_year": 1.1186726737871175,
+        "intercept": -2.254089375320701,
+        "low_slope_mm_per_year": -0.46575342465753483,
+        "high_slope_mm_per_year": 3.292823991343001,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sao_luis": {
+        "slope_m_per_year": 0.001055057955742887,
+        "slope_mm_per_year": 1.055057955742887,
+        "intercept": -2.119196996523573,
+        "low_slope_mm_per_year": -0.2589355033902232,
+        "high_slope_mm_per_year": 2.684931506849315,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "macapa": {
+        "slope_m_per_year": 9.142712777902544e-05,
+        "slope_mm_per_year": 0.09142712777902544,
+        "intercept": -0.17838739390168867,
+        "low_slope_mm_per_year": -0.8220000017329094,
+        "high_slope_mm_per_year": 1.1263789133789621,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      }
+    },
+    "zos*": {
+      "rio_grande": {
+        "slope_m_per_year": 0.003470356697777923,
+        "slope_mm_per_year": 3.470356697777923,
+        "intercept": -6.973035681385424,
+        "low_slope_mm_per_year": 2.416304146794423,
+        "high_slope_mm_per_year": 4.5263548190258955,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "florianopolis": {
+        "slope_m_per_year": 0.003299673998139315,
+        "slope_mm_per_year": 3.299673998139315,
+        "intercept": -6.632700421397394,
+        "low_slope_mm_per_year": 2.420573417412828,
+        "high_slope_mm_per_year": 4.0643268826175225,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "santos": {
+        "slope_m_per_year": 0.0038854446029396184,
+        "slope_mm_per_year": 3.8854446029396184,
+        "intercept": -7.81580248870903,
+        "low_slope_mm_per_year": 3.0149266500745364,
+        "high_slope_mm_per_year": 5.014801233499626,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sul_bahia": {
+        "slope_m_per_year": 0.0035070448261381917,
+        "slope_mm_per_year": 3.5070448261381917,
+        "intercept": -7.052256101044176,
+        "low_slope_mm_per_year": 3.075854418360541,
+        "high_slope_mm_per_year": 3.9255308010929193,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "recife": {
+        "slope_m_per_year": 0.003385770818448229,
+        "slope_mm_per_year": 3.385770818448229,
+        "intercept": -6.80576079991447,
+        "low_slope_mm_per_year": 2.9586231693217195,
+        "high_slope_mm_per_year": 3.6934997554715365,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "natal": {
+        "slope_m_per_year": 0.003280119532428058,
+        "slope_mm_per_year": 3.280119532428058,
+        "intercept": -6.592587720617297,
+        "low_slope_mm_per_year": 2.895077779787044,
+        "high_slope_mm_per_year": 3.6130092906858584,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "sao_luis": {
+        "slope_m_per_year": 0.003902646303850795,
+        "slope_mm_per_year": 3.902646303850795,
+        "intercept": -7.837748775142795,
+        "low_slope_mm_per_year": 3.395358368448199,
+        "high_slope_mm_per_year": 4.401148504779234,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      },
+      "macapa": {
+        "slope_m_per_year": 0.004680846638074972,
+        "slope_mm_per_year": 4.680846638074972,
+        "intercept": -9.397788115526893,
+        "low_slope_mm_per_year": 4.055597354637901,
+        "high_slope_mm_per_year": 5.2227063793433866,
+        "first_year": 1993.0,
+        "last_year": 2025.0
+      }
+    }
+  },
+  "outputs": [
+    "outputs/exploratory_hs_zos_trends/hs_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/hs_prime_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/hs_timeseries_2020_2025.png",
+    "outputs/exploratory_hs_zos_trends/hs_prime_timeseries_2020_2025.png",
+    "outputs/exploratory_hs_zos_trends/hs_star_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/zos_star_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/hs_zos_trend_maps.png"
+  ]
+}

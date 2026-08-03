@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-08-02T17:02:59.936748+00:00",
+  "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
+  "source_product": "GLOBAL_MULTIYEAR_PHY_001_030 (GLORYS12V1)",
+  "temporal_resolution": "daily mean",
+  "full_period": [
+    "1993-01-01",
+    "2025-12-31"
+  ],
+  "recent_period": [
+    "2020-01-01",
+    "2025-12-31"
+  ],
+  "zos_definition": "sea_surface_height_above_geoid",
+  "zos_prime_definition": "zos - local mean(zos) over 1993-01-01 to 2025-12-31",
+  "shared_y_limits_within_each_figure": false,
+  "locator_map": "Brazilian coast with native GLORYS12 points keyed A-H",
+  "trend": {
+    "estimator": "Theil-Sen slope fitted to annual means",
+    "displayed_on": "1993-2025 figures only",
+    "reported_unit": "mm per year"
+  },
+  "points": [
+    {
+      "slug": "rio_grande",
+      "label": "Rio Grande",
+      "requested_latitude": -32.4,
+      "requested_longitude": -52.2,
+      "native_latitude": -32.41666793823242,
+      "native_longitude": -52.16666793823242,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.116725,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/rio_grande.nc"
+    },
+    {
+      "slug": "florianopolis",
+      "label": "Florianópolis",
+      "requested_latitude": -27.8,
+      "requested_longitude": -48.4,
+      "native_latitude": -27.83333396911621,
+      "native_longitude": -48.41666793823242,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.092337,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/florianopolis.nc"
+    },
+    {
+      "slug": "santos",
+      "label": "Santos",
+      "requested_latitude": -24.0,
+      "requested_longitude": -46.4,
+      "native_latitude": -24.0,
+      "native_longitude": -46.41666793823242,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.08905,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/santos.nc"
+    },
+    {
+      "slug": "sul_bahia",
+      "label": "Sul da Bahia (Belmonte)",
+      "requested_latitude": -16.0,
+      "requested_longitude": -38.8,
+      "native_latitude": -16.0,
+      "native_longitude": -38.83333206176758,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.176062,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/sul_bahia.nc"
+    },
+    {
+      "slug": "recife",
+      "label": "Recife",
+      "requested_latitude": -8.2,
+      "requested_longitude": -34.8,
+      "native_latitude": -8.166666984558105,
+      "native_longitude": -34.83333206176758,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.191391,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/recife.nc"
+    },
+    {
+      "slug": "natal",
+      "label": "Natal",
+      "requested_latitude": -5.8,
+      "requested_longitude": -35.0,
+      "native_latitude": -5.833333492279053,
+      "native_longitude": -35.0,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.184965,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/natal.nc"
+    },
+    {
+      "slug": "sao_luis",
+      "label": "São Luís",
+      "requested_latitude": -2.4,
+      "requested_longitude": -44.2,
+      "native_latitude": -2.4166667461395264,
+      "native_longitude": -44.16666793823242,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.248943,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/sao_luis.nc"
+    },
+    {
+      "slug": "macapa",
+      "label": "Macapá",
+      "requested_latitude": 0.8,
+      "requested_longitude": -50.2,
+      "native_latitude": 0.8333333134651184,
+      "native_longitude": -50.16666793823242,
+      "n_daily_values": 12053,
+      "local_mean_zos_m": 0.394598,
+      "source_file": "outputs/exploratory_hs_zos_trends/data/zos_points/macapa.nc"
+    }
+  ],
+  "outputs": [
+    "outputs/exploratory_hs_zos_trends/zos_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/zos_prime_timeseries_1993_2025.png",
+    "outputs/exploratory_hs_zos_trends/zos_timeseries_2020_2025.png",
+    "outputs/exploratory_hs_zos_trends/zos_prime_timeseries_2020_2025.png"
+  ]
+}
