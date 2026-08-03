@@ -231,7 +231,6 @@ def _build_coastal_segments(
 def _setup_axis(
     axis: plt.Axes,
     *,
-    title: str,
     panel_label: str,
     draw_left_labels: bool,
     draw_bottom_labels: bool,
@@ -264,7 +263,6 @@ def _setup_axis(
     grid.bottom_labels = draw_bottom_labels
     grid.xlabel_style = {"size": 8.5, "color": "#374151"}
     grid.ylabel_style = {"size": 8.5, "color": "#374151"}
-    axis.set_title(title, fontsize=10.5, fontweight="bold", pad=6)
     axis.text(
         0.018,
         0.975,
@@ -334,7 +332,6 @@ def _plot_segment_field(
 ) -> dict[str, Any]:
     _setup_axis(
         axis,
-        title=title,
         panel_label=panel_label,
         draw_left_labels=draw_left_labels,
         draw_bottom_labels=draw_bottom_labels,
@@ -527,7 +524,7 @@ def main() -> None:
     figure, axes = plt.subplots(
         1,
         3,
-        figsize=(15.6, 7.2),
+        figsize=(10.8, 7.2),
         constrained_layout=False,
         subplot_kw={"projection": ccrs.PlateCarree()},
     )
@@ -536,7 +533,7 @@ def main() -> None:
         right=0.985,
         top=0.955,
         bottom=0.145,
-        wspace=0.035,
+        wspace=0.01,
     )
     panels: list[dict[str, Any]] = []
     for index, (axis, panel_spec) in enumerate(

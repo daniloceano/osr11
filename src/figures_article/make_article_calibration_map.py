@@ -6,9 +6,11 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     \centering
     \includegraphics[width=\linewidth]{outputs/article_figures/santa_catarina_study_area_and_grid_points.png}
     \caption{Santa Catarina coastal study area and municipality--grid
-    association used in the threshold-calibration analysis. Colored polygons
-    identify the study municipalities grouped into five coastal sectors
-    (North, Central-north, Central, Central-south, and South). Open circles
+    association used in the threshold-calibration analysis. Municipality
+    polygons are shaded by the number of reported coastal-disaster
+    occurrences (combined expanded and legacy databases, 1998--2020), and the
+    coastline is colored by the five coastal sectors it belongs to (North,
+    Central-north, Central, Central-south, and South). Open circles
     indicate the nearest ocean grid points, and gray lines connect each
     municipality to its assigned grid point. Gray shading denotes land and the
     light-blue background denotes the ocean. Numbered municipalities are:
@@ -36,13 +38,19 @@ import cartopy.feature as cfeature
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
 from shapely.geometry import Point, Polygon, box
 from shapely.ops import polygonize, unary_union
 
 from config.plot_config import SECTOR_COLORS, apply_publication_style
-from src.figures_article.calibration_common import COASTLINE_SHP, SECTOR_ORDER, load_map_data
+from src.figures_article.calibration_common import (
+    COASTLINE_SHP,
+    SECTOR_ORDER,
+    load_map_data,
+    municipality_event_counts,
+)
 from src.figures_article.figure_io import _save_figure, validate_article_figure_outputs
 
 MAP_EXTENT = (-50.25, -47.95, -29.45, -25.75)
@@ -50,6 +58,8 @@ GEOMETRY_CRS = "EPSG:31982"
 COAST_MATCH_TOLERANCE_METRES = 2_000
 LAND_COLOR = "#D8D8D4"
 OCEAN_COLOR = "#EAF3F8"
+EVENT_COUNT_BOUNDARIES = (0.5, 1.5, 4.5, 9.5, 19.5, 29.5)
+EVENT_COUNT_LABELS = ("1", "2–4", "5–9", "10–19", "20–29")
 MUNICIPALITY_MAP_IDS = {
     "Itapoá": 1,
     "São Francisco do Sul": 2,
@@ -97,6 +107,29 @@ def _coastline_from_municipal_geometry(
     return gpd.GeoSeries([aligned], crs=GEOMETRY_CRS).to_crs("EPSG:4326")
 
 
+def _coastline_by_sector(municipalities: gpd.GeoDataFrame) -> dict[str, gpd.GeoSeries]:
+    """Split the study-municipality coastline into per-sector segments.
+
+    Each sector's municipalities are dissolved before intersecting with the
+    ocean buffer, so shared inland municipal borders are removed first and
+    only the true shoreline belonging to that sector survives the
+    intersection with the coastal reference.
+    """
+    reference = gpd.read_file(COASTLINE_SHP, bbox=MAP_EXTENT).to_crs(GEOMETRY_CRS)
+    coastal_zone = reference.geometry.union_all().buffer(COAST_MATCH_TOLERANCE_METRES)
+    projected = municipalities.to_crs(GEOMETRY_CRS)
+    segments = {}
+    for sector in SECTOR_ORDER:
+        subset = projected[projected["sector"] == sector]
+        if subset.empty:
+            continue
+        boundary = subset.geometry.union_all().boundary
+        segments[sector] = gpd.GeoSeries(
+            [boundary.intersection(coastal_zone)], crs=GEOMETRY_CRS
+        ).to_crs("EPSG:4326")
+    return segments
+
+
 def _shared_state_boundaries(
     brazil_municipalities: gpd.GeoDataFrame,
 ) -> gpd.GeoSeries:
@@ -136,9 +169,17 @@ def _regional_land_geometry(
 def generate_calibration_map() -> list[str]:
     apply_publication_style()
     municipalities, grid, brazil_municipalities = load_map_data()
+    event_counts = municipality_event_counts()
+    municipalities["event_count"] = municipalities["name_key"].map(event_counts)
+    missing_counts = municipalities.loc[
+        municipalities["event_count"].isna(), "municipality_name"
+    ].tolist()
+    if missing_counts:
+        raise ValueError(f"Missing reported-event counts for municipalities: {missing_counts}")
+
     projection = ccrs.PlateCarree()
     fig = plt.figure(figsize=(7.2, 8.4))
-    ax = fig.add_axes([0.08, 0.06, 0.84, 0.86], projection=projection)
+    ax = fig.add_axes([0.06, 0.06, 0.76, 0.86], projection=projection)
     ax.set_extent(MAP_EXTENT, crs=projection)
     ax.set_facecolor(OCEAN_COLOR)
     coastline = _coastline_from_municipal_geometry(brazil_municipalities)
@@ -148,18 +189,42 @@ def generate_calibration_map() -> list[str]:
 
     ax.add_geometries(brazil_municipalities.geometry, crs=projection, facecolor=LAND_COLOR,
                       edgecolor="#B8B8B2", linewidth=0.25, zorder=1)
-    for sector in SECTOR_ORDER:
-        subset = municipalities[municipalities["sector"] == sector]
-        if not subset.empty:
-            ax.add_geometries(subset.geometry, crs=projection, facecolor=SECTOR_COLORS[sector],
-                              edgecolor="white", linewidth=0.65, alpha=0.88, zorder=3)
+
+    count_cmap = ListedColormap(
+        plt.get_cmap("YlOrRd")([0.18, 0.36, 0.54, 0.72, 0.90]),
+        name="reported_occurrences_discrete",
+    )
+    count_norm = BoundaryNorm(EVENT_COUNT_BOUNDARIES, count_cmap.N, clip=True)
+    for row in municipalities.itertuples():
+        ax.add_geometries([row.geometry], crs=projection,
+                          facecolor=count_cmap(count_norm(row.event_count)),
+                          edgecolor="white", linewidth=0.65, zorder=3)
+
     # Both line layers are derived from the same municipal polygons as the fills.
     # This guarantees exact spatial coincidence at publication resolution.
     state_boundaries = _shared_state_boundaries(brazil_municipalities)
     ax.add_geometries(state_boundaries, crs=projection, facecolor="none",
                       edgecolor="#73777A", linewidth=1.0, zorder=3.4)
-    ax.add_geometries(coastline, crs=projection, facecolor="none",
-                      edgecolor="#22272B", linewidth=0.9, zorder=3.5)
+    sector_coastlines = _coastline_by_sector(municipalities)
+    for sector, segment in sector_coastlines.items():
+        ax.add_geometries(segment, crs=projection, facecolor="none",
+                          edgecolor=SECTOR_COLORS[sector], linewidth=1.8, zorder=3.5)
+
+    colorbar_ax = fig.add_axes([0.855, 0.14, 0.03, 0.32])
+    colorbar = fig.colorbar(
+        ScalarMappable(norm=count_norm, cmap=count_cmap),
+        cax=colorbar_ax,
+        boundaries=EVENT_COUNT_BOUNDARIES,
+        ticks=[
+            (lower + upper) / 2
+            for lower, upper in zip(
+                EVENT_COUNT_BOUNDARIES[:-1], EVENT_COUNT_BOUNDARIES[1:]
+            )
+        ],
+        spacing="uniform",
+        label="Reported disaster occurrences (1998–2020)",
+    )
+    colorbar.ax.set_yticklabels(EVENT_COUNT_LABELS)
 
     unique_points = grid.drop_duplicates(["grid_lat", "grid_lon"])
     for _, row in grid.iterrows():
@@ -196,7 +261,10 @@ def generate_calibration_map() -> list[str]:
     inset.add_geometries(sc_boundary.geometry, crs=projection, facecolor="none",
                          edgecolor="#D7191C", linewidth=2.6, zorder=4)
 
-    sector_handles = [Patch(facecolor=SECTOR_COLORS[s], edgecolor="none", label=s) for s in SECTOR_ORDER]
+    sector_handles = [
+        Line2D([], [], color=SECTOR_COLORS[s], linewidth=2.2, label=f"{s} coastline")
+        for s in SECTOR_ORDER
+    ]
     symbol_handles = [
         Line2D([], [], marker="o", linestyle="none", markerfacecolor="white",
                markeredgecolor="black", markersize=5, label="Ocean grid point"),
