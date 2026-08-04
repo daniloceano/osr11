@@ -1,5 +1,17 @@
 {
-  "generated_at": "2026-07-31T00:14:25.732214+00:00",
+  "generated_at": "2026-08-04T19:47:22.459127+00:00",
+  "coverage_additions": [
+    {
+      "municipality": "Natal",
+      "state": "RN",
+      "reason": "The automatic strata leave the entire Northeast without a point, the sector between Bahia and Maranhao. That sector is also where AUD-18 records the absence of an independent impact database, so a monitoring point there carries diagnostic value beyond coverage.",
+      "included": true
+    }
+  ],
+  "selection_method_counts": {
+    "stratified_medoid": 9,
+    "coverage_addition": 1
+  },
   "implementation": "src/site/select_timeseries_points.py",
   "candidate_source": "data/external/municipal_grid_association/municipal_grid_association.csv",
   "candidate_count": 122,

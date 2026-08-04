@@ -151,19 +151,52 @@ ACCEPTANCE_Q90 = {
 ACCEPTANCE_PCT = 0.90
 
 
+#: Versioned copy of the threshold pair. ``outputs/threshold_calibration/`` is
+#: excluded by .gitignore, so the runtime table can silently fall out of date on
+#: a machine that never re-ran Step 2e — and because it is the sole authorised
+#: threshold source, a stale copy produces a catalogue that disagrees with the
+#: published one without raising anything. Found in exactly that state on
+#: 2026-08-04. The archive is the reference the runtime table is checked against.
+ARCHIVED_PAIR_FILE = (
+    ROOT / "outputs" / "current_method_hat" / "tab_TC5_optimal_pair_pu.csv"
+)
+
+
 def load_threshold_pair(source: Path = OPTIMAL_PAIR_FILE) -> tuple[float, float]:
-    """Read the Step 2e threshold pair.
+    """Read the Step 2e threshold pair, verified against the versioned archive.
 
     ``tab_TC5_optimal_pair_pu.csv`` is the sole authorised threshold source for
     Step 3, as declared in
     ``src/03_storm_catalog_generation/config/analysis_config.py``.
+
+    Raises when the runtime table and the archive disagree: continuing would
+    build a catalogue on thresholds other than the published ones, and nothing
+    downstream would notice.
     """
     if not source.exists():
         raise FileNotFoundError(
             f"Step 2e threshold pair not found: {source}. Run Step 2e first."
         )
     row = pd.read_csv(source).iloc[0]
-    return float(row["thr_hs_pct"]), float(row["thr_ssh_pct"])
+    pair = (float(row["thr_hs_pct"]), float(row["thr_ssh_pct"]))
+
+    if ARCHIVED_PAIR_FILE.exists():
+        archived_row = pd.read_csv(ARCHIVED_PAIR_FILE).iloc[0]
+        archived = (
+            float(archived_row["thr_hs_pct"]),
+            float(archived_row["thr_ssh_pct"]),
+        )
+        if pair != archived:
+            raise ValueError(
+                "The Step 2e threshold pair on disk disagrees with the versioned "
+                f"archive: runtime {pair} vs archive {archived}.\n"
+                f"  runtime: {source}\n"
+                f"  archive: {ARCHIVED_PAIR_FILE}\n"
+                "The runtime table is not under version control and may be stale. "
+                "Recover it, or re-run Step 2e and refresh the archive "
+                "deliberately."
+            )
+    return pair
 
 
 def _event_descriptors(

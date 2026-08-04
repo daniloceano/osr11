@@ -87,7 +87,31 @@ FEATURES = (
     "Hazard_Severity",
 )
 STRATIFY_BY = "surge_q99_over_swing"
-DEFAULT_K = 8
+
+#: Points added on top of the automatic selection to cover a coastal sector the
+#: stratified rule leaves unrepresented. The rule stratifies on the physical
+#: regime, not on geography, so a sector whose regime resembles another's can end
+#: up with no point at all — which is what happened between Bahia and Maranhao,
+#: leaving Ceara, Rio Grande do Norte, Paraiba, Pernambuco, Alagoas, Sergipe and
+#: Piaui without one.
+#:
+#: These are deliberate, named and justified additions, kept separate from the
+#: automatic set and flagged in the output so that no reader mistakes the
+#: combined list for a purely algorithmic selection. Adding a point never removes
+#: or displaces an automatically selected one.
+COVERAGE_ADDITIONS: tuple[dict[str, str], ...] = (
+    {
+        "municipality": "Natal",
+        "state": "RN",
+        "reason": (
+            "The automatic strata leave the entire Northeast without a point, "
+            "the sector between Bahia and Maranhao. That sector is also where "
+            "AUD-18 records the absence of an independent impact database, so a "
+            "monitoring point there carries diagnostic value beyond coverage."
+        ),
+    },
+)
+DEFAULT_K = 9
 #: Fixed so that the selection is reproducible bit for bit.
 RANDOM_STATE = 0
 
@@ -237,6 +261,42 @@ def select_points(table: pd.DataFrame, k: int) -> pd.DataFrame:
     return selected
 
 
+def _append_coverage_additions(
+    table: pd.DataFrame, selected: pd.DataFrame
+) -> pd.DataFrame:
+    """Add the named coverage points and renumber the set by latitude."""
+    rows = [selected]
+    for addition in COVERAGE_ADDITIONS:
+        match = table[
+            (table["nearest_municipality"] == addition["municipality"])
+            & (table["state"] == addition["state"])
+        ]
+        if match.empty:
+            raise ValueError(
+                f"Coverage addition {addition['municipality']}/{addition['state']} "
+                "is not among the candidate points"
+            )
+        if len(match) > 1:
+            raise ValueError(
+                f"Coverage addition {addition['municipality']}/{addition['state']} "
+                f"matches {len(match)} candidates; the name is ambiguous"
+            )
+        already = selected[
+            (selected["grid_lat"] == match["grid_lat"].iloc[0])
+            & (selected["grid_lon"] == match["grid_lon"].iloc[0])
+        ]
+        if not already.empty:
+            continue
+        row = match.copy()
+        row["selection_method"] = "coverage_addition"
+        rows.append(row)
+
+    combined = pd.concat(rows, ignore_index=True)
+    combined = combined.sort_values("grid_lat").reset_index(drop=True)
+    combined["point_id"] = [f"p{i:02d}" for i in range(1, len(combined) + 1)]
+    return combined
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--k", type=int, default=DEFAULT_K)
@@ -249,6 +309,8 @@ def main() -> None:
 
     table = build_candidate_table()
     selected = select_points(table, args.k)
+    selected["selection_method"] = "stratified_medoid"
+    selected = _append_coverage_additions(table, selected)
 
     columns = [
         "point_id",
@@ -264,6 +326,7 @@ def main() -> None:
         "stratum_surge_over_swing_min",
         "stratum_surge_over_swing_max",
         "distance_to_centroid_z",
+        "selection_method",
         *FEATURES,
         "surge_q99_anomaly_cm",
         "springneap_swing_cm",
@@ -298,6 +361,16 @@ def main() -> None:
     selected.to_csv(OUTPUT_CSV, index=False)
     metadata = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "coverage_additions": [
+            {**addition, "included": bool(
+                (selected["nearest_municipality"] == addition["municipality"]).any()
+            )}
+            for addition in COVERAGE_ADDITIONS
+        ],
+        "selection_method_counts": {
+            method: int(count)
+            for method, count in selected["selection_method"].value_counts().items()
+        },
         "implementation": "src/site/select_timeseries_points.py",
         "candidate_source": str(ASSOCIATION.relative_to(ROOT)),
         "candidate_count": int(len(table)),

@@ -1,0 +1,22 @@
+{
+  "dataset": "Step 2e optimal threshold pair (OSR11, current method)",
+  "why_archived": "outputs/threshold_calibration/ is excluded by .gitignore, so this table was not under version control. It is declared in src/03_storm_catalog_generation/config/analysis_config.py as the sole authorised threshold source for Step 3, which makes a stale copy able to silently produce a catalogue that disagrees with the published one. That is exactly what was found on 2026-08-04: the working copy still held the superseded q90/q90 pair while the published catalogue had been generated with q70/q99.",
+  "threshold_pair": {
+    "thr_hs_pct": 0.7,
+    "thr_ssh_pct": 0.99
+  },
+  "scoring": {
+    "H": "28.0",
+    "M": "119.0",
+    "U": "831.0",
+    "R_pos": "0.1905",
+    "B": "0.1482",
+    "F_soft": "420.4189",
+    "Score": "-0.317803"
+  },
+  "recovered_from": "Institutional processing server (MASTER/IAG-USP), where the raw-data processing and the Step 2e recalibration of 2026-07-30 were run: outputs/threshold_calibration/tables/",
+  "recovered_on": "2026-08-04",
+  "sha256": "a83fbaf8b14a94a5f7bf639ecee225632563ab28fed12d6d21d7fa99e15642cf",
+  "runtime_path": "outputs/threshold_calibration/tables/tab_TC5_optimal_pair_pu.csv",
+  "verification": "load_threshold_pair() in detection_hat.py compares the runtime table against this archive on every read and raises if they disagree."
+}
