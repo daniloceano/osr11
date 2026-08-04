@@ -423,6 +423,11 @@ def _population_boundaries(series: pd.Series) -> list[float]:
 #: in the published calculation: the integrated risk, its three factors, and the
 #: quantities each factor is built from.
 #:
+#: The population bands are not offered either. They feed ``pop_eff``, which
+#: feeds the exposure index, but three nested levels of input made the exposure
+#: section of the site harder to read than the quantity it documents. They stay
+#: in the GeoJSON properties and in the detail panel.
+#:
 #: Nothing pre-normalization is offered any more. The Min--Max chain was removed
 #: (AUD-11), which left ``Risk_Hazard_raw``, ``Hazard_Index_raw`` and
 #: ``Hazard_Index_mun`` numerically identical to their normalized counterparts --
@@ -448,56 +453,6 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
             "pulls the whole index down, which is the property the IPCC risk "
             "framework implies."
         ),
-    },
-    {
-        "key": "pop_eff",
-        "label": "Effective population from cumulative coastal bands",
-        "short_label": "Effective population",
-        "unit": "weighted inhabitants",
-        "stage": "input",
-        "group": "Exposure populations",
-        "actual_field": "derived:0.4*pop_1km+0.3*pop_2km+0.2*pop_5km+0.1*pop_10km",
-        "description": "Weighted exposure proxy used by the risk index; not a literal count of distinct inhabitants.",
-    },
-    {
-        "key": "pop_1km",
-        "label": "Resident population within 1 km of the coastline",
-        "short_label": "Population ≤1 km",
-        "unit": "inhabitants",
-        "stage": "input",
-        "group": "Exposure populations",
-        "actual_field": "pop_1km",
-        "description": "Literal resident count in the cumulative ≤1 km band; coefficient 0.4 in pop_eff.",
-    },
-    {
-        "key": "pop_2km",
-        "label": "Resident population within 2 km of the coastline",
-        "short_label": "Population ≤2 km",
-        "unit": "inhabitants",
-        "stage": "input",
-        "group": "Exposure populations",
-        "actual_field": "pop_2km",
-        "description": "Literal resident count in the cumulative ≤2 km band; coefficient 0.3 in pop_eff.",
-    },
-    {
-        "key": "pop_5km",
-        "label": "Resident population within 5 km of the coastline",
-        "short_label": "Population ≤5 km",
-        "unit": "inhabitants",
-        "stage": "input",
-        "group": "Exposure populations",
-        "actual_field": "pop_5km",
-        "description": "Literal resident count in the cumulative ≤5 km band; coefficient 0.2 in pop_eff.",
-    },
-    {
-        "key": "pop_10km",
-        "label": "Resident population within 10 km of the coastline",
-        "short_label": "Population ≤10 km",
-        "unit": "inhabitants",
-        "stage": "input",
-        "group": "Exposure populations",
-        "actual_field": "pop_10km",
-        "description": "Literal resident count in the cumulative ≤10 km band; coefficient 0.1 in pop_eff.",
     },
     {
         "key": "Exposure_Index",
