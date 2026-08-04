@@ -228,6 +228,9 @@ def _setup_axis(
     title: str,
     panel_label: str,
     draw_left_labels: bool = True,
+    draw_bottom_labels: bool = True,
+    graticule_step: float | None = None,
+    label_size: float = 9,
 ) -> None:
     crs = ccrs.PlateCarree()
     land, _, _ = _natural_earth_context()
@@ -242,8 +245,11 @@ def _setup_axis(
     axis.set_extent(extent, crs=crs)
 
     west, east, south, north = extent
-    longitude_step = 3.0 if east - west > 13.0 else 2.0
-    latitude_step = 3.0 if north - south > 10.0 else 2.0
+    # ``graticule_step`` overrides the automatic spacing. The multipanel figure
+    # asks for a coarser graticule so the bottom labels stop crowding once the
+    # panels are pushed together.
+    longitude_step = graticule_step or (3.0 if east - west > 13.0 else 2.0)
+    latitude_step = graticule_step or (3.0 if north - south > 10.0 else 2.0)
     longitudes = np.arange(
         np.ceil(west / longitude_step) * longitude_step,
         east + 0.01,
@@ -268,10 +274,14 @@ def _setup_axis(
     grid.top_labels = False
     grid.right_labels = False
     grid.left_labels = draw_left_labels
-    grid.xlabel_style = {"size": 9, "color": "#374151"}
-    grid.ylabel_style = {"size": 9, "color": "#374151"}
+    grid.bottom_labels = draw_bottom_labels
+    grid.xlabel_style = {"size": label_size, "color": "#374151"}
+    grid.ylabel_style = {"size": label_size, "color": "#374151"}
 
-    axis.set_title(title, loc="center", fontsize=11, fontweight="bold", pad=7)
+    # An empty title is a request to draw none, so a figure can rely on the
+    # panel letters alone and recover the vertical space.
+    if title:
+        axis.set_title(title, loc="center", fontsize=11, fontweight="bold", pad=7)
     axis.text(
         0.018,
         0.975,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31T22:56:09.339890+00:00",
+  "generated_at": "2026-08-04T18:56:28.961644+00:00",
   "risk_data": {
     "source_path": "site/public/data/risk_index_municipalities.geojson",
     "metadata_path": "site/public/data/risk_index_metadata.json",
@@ -36,7 +36,7 @@
         "grid_lat": "grid_lat",
         "grid_lon": "grid_lon",
         "PC1": "PC1",
-        "pop_house": "pop_house",
+        "pop_house": "pop_house_",
         "pop_rent": "pop_rent",
         "pop_poverty": "pop_povert",
         "pop_agevul": "pop_agevul",
@@ -137,7 +137,7 @@
       "tolerance_degrees": 0.001,
       "preserve_topology": true,
       "coordinates_before": 876786,
-      "coordinates_after": 46977
+      "coordinates_after": 47730
     }
   },
   "ocean_hazard": {

@@ -419,15 +419,24 @@ def _population_boundaries(series: pd.Series) -> list[float]:
     return [float(value) for value in ladder]
 
 
-#: Layer catalogue of the municipal product. Raw (pre-normalization) stages are
-#: published next to the normalized ones so the effect of each Min--Max step is
-#: visible. ``Hazard_Index_mun`` stays in the GeoJSON properties but is not
-#: offered as a map layer.
+#: Layer catalogue of the municipal product. Every layer offered here takes part
+#: in the published calculation: the integrated risk, its three factors, and the
+#: quantities each factor is built from.
+#:
+#: Nothing pre-normalization is offered any more. The Min--Max chain was removed
+#: (AUD-11), which left ``Risk_Hazard_raw``, ``Hazard_Index_raw`` and
+#: ``Hazard_Index_mun`` numerically identical to their normalized counterparts --
+#: verified equal at all 280 municipalities -- so offering them as separate map
+#: layers only implied a distinction that no longer exists. ``SVI_Coast_2022``
+#: and ``mean_overlap_duration`` are likewise no longer offered: the first was
+#: superseded as the vulnerability factor, the second left the hazard index
+#: (AUD-06). All five remain in the GeoJSON properties and in the municipality
+#: detail panel, so nothing is lost -- they simply stop being map layers.
 CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
     {
         "key": "Risk_Hazard",
         "label": "Integrated coastal risk",
-        "short_label": "Risk (0–1)",
+        "short_label": "Integrated risk",
         "unit": "0–1",
         "stage": "normalized",
         "group": "Integrated risk",
@@ -438,22 +447,6 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
             "by construction — a component near zero "
             "pulls the whole index down, which is the property the IPCC risk "
             "framework implies."
-        ),
-    },
-    {
-        "key": "Risk_Hazard_raw",
-        "label": "Integrated coastal risk (before normalization)",
-        "short_label": "Risk (raw)",
-        "unit": "dimensionless product",
-        "stage": "raw",
-        "group": "Integrated risk",
-        "actual_field": (
-            "derived:(Hazard_Index_mun*Exposure_Index*Vulnerability_CDF_PC1)^(1/3)"
-        ),
-        "description": (
-            "The geometric mean of the three components before the municipal "
-            "geometric mean. This audit alias equals Risk_Hazard; no floor or "
-            "final sample-dependent normalization is applied."
         ),
     },
     {
@@ -569,32 +562,6 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         ),
     },
     {
-        "key": "Hazard_Index_raw",
-        "label": "Hazard components mean (before normalization)",
-        "short_label": "Hazard (raw)",
-        "unit": "dimensionless mean",
-        "stage": "raw",
-        "group": "Physical hazard",
-        "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Severity)",
-        "description": (
-            "The equal-weight mean of the two fixed-anchor components. It is "
-            "identical to the final Hazard Index and retained as an audit alias."
-        ),
-    },
-    {
-        "key": "Hazard_Index_mun",
-        "label": "Hazard transferred to municipalities",
-        "short_label": "Hazard (municipal)",
-        "unit": "0–1",
-        "stage": "normalized",
-        "group": "Physical hazard",
-        "actual_field": "transferred:Hazard_Index",
-        "description": (
-            "The fixed-anchor Hazard Index transferred directly from the native "
-            "grid. No municipal Min-Max is applied."
-        ),
-    },
-    {
         "key": "Hazard_Frequency",
         "label": "Normalized compound-event frequency",
         "short_label": "Frequency",
@@ -608,27 +575,14 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
     },
     {
         "key": "Hazard_Severity",
-        "label": "Normalized compound-event duration",
-        "short_label": "Duration",
+        "label": "Normalized compound-event integrated severity",
+        "short_label": "Severity",
         "unit": "0–1",
         "stage": "component",
         "group": "Physical hazard",
         "actual_field": "transferred:min(fillna(mean_integrated_severity,0)/1,1)",
         "description": (
             "Mean integrated severity divided by the fixed 1.0 anchor; no-event NaN is zero."
-        ),
-    },
-    {
-        "key": "mean_overlap_duration",
-        "label": "Normalized compound-event intensity",
-        "short_label": "Intensity",
-        "unit": "0–1",
-        "stage": "component",
-        "group": "Physical hazard",
-        "actual_field": "transferred:mean_overlap_duration (diagnostic, not an index component)",
-        "description": (
-            "Mean compound intensity, Min-Max normalized across the native "
-            "ocean grid."
         ),
     },
     {
@@ -640,20 +594,6 @@ CURRENT_LAYER_DEFINITIONS: tuple[dict[str, str], ...] = (
         "group": "Social vulnerability",
         "actual_field": "derived:Phi(PC1/sd(PC1,ddof=0))",
         "description": "Monotonic fixed-reference transform used in risk integration; the original SVI is preserved for audit.",
-    },
-    {
-        "key": "SVI_Coast_2022",
-        "label": "Social Vulnerability Index",
-        "short_label": "SVI",
-        "unit": "0–100",
-        "stage": "input",
-        "group": "Social vulnerability",
-        "actual_field": "SVI_Coast_2022",
-        "description": (
-            "Ten IBGE/SIDRA 2022 socioeconomic and infrastructure variables "
-            "standardized, reduced by PCA, sign-adjusted so higher means more "
-            "vulnerable, and normalized to 0-100."
-        ),
     },
 )
 

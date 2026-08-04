@@ -1,6 +1,6 @@
 {
   "generated_by": "src.site.export_risk_index_data",
-  "generated_at": "2026-08-01T02:36:42.002173+00:00",
+  "generated_at": "2026-08-04T18:51:21.455064+00:00",
   "source_path": "outputs/risk_index/risk_index.shp",
   "source_mode": "original_shapefile",
   "upstream_source_path": "outputs/risk_index/risk_index.shp",
@@ -31,7 +31,7 @@
     "tolerance_degrees": 0.001,
     "preserve_topology": true,
     "coordinates_before": 876786,
-    "coordinates_after": 46977
+    "coordinates_after": 47730
   },
   "field_aliases": {
     "layers": {
@@ -146,7 +146,7 @@
     {
       "key": "Risk_Hazard",
       "label": "Integrated coastal risk",
-      "short_label": "Risk (0–1)",
+      "short_label": "Integrated risk",
       "unit": "0–1",
       "stage": "normalized",
       "group": "Integrated risk",
@@ -169,43 +169,6 @@
         "#80D900",
         "#FFB200",
         "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
-      "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 0.566342,
-        "mean": 0.195208,
-        "median": 0.222789
-      }
-    },
-    {
-      "key": "Risk_Hazard_raw",
-      "label": "Integrated coastal risk (before normalization)",
-      "short_label": "Risk (raw)",
-      "unit": "dimensionless product",
-      "stage": "raw",
-      "group": "Integrated risk",
-      "actual_field": "derived:(Hazard_Index_mun*Exposure_Index*Vulnerability_CDF_PC1)^(1/3)",
-      "description": "The geometric mean of the three components before the municipal geometric mean. This audit alias equals Risk_Hazard; no floor or final sample-dependent normalization is applied.",
-      "decimals": 3,
-      "boundaries": [
-        0.0,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#CCE600",
-        "#FFB200",
         "#FF4000",
         "#FF0000"
       ],
@@ -581,88 +544,6 @@
       }
     },
     {
-      "key": "Hazard_Index_raw",
-      "label": "Hazard components mean (before normalization)",
-      "short_label": "Hazard (raw)",
-      "unit": "dimensionless mean",
-      "stage": "raw",
-      "group": "Physical hazard",
-      "actual_field": "transferred:mean(Hazard_Frequency,Hazard_Severity)",
-      "description": "The equal-weight mean of the two fixed-anchor components. It is identical to the final Hazard Index and retained as an audit alias.",
-      "decimals": 3,
-      "boundaries": [
-        0.0,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#80D900",
-        "#CCE600",
-        "#FFB200",
-        "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
-      "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 0.798648,
-        "mean": 0.200518,
-        "median": 0.068376
-      }
-    },
-    {
-      "key": "Hazard_Index_mun",
-      "label": "Hazard transferred to municipalities",
-      "short_label": "Hazard (municipal)",
-      "unit": "0–1",
-      "stage": "normalized",
-      "group": "Physical hazard",
-      "actual_field": "transferred:Hazard_Index",
-      "description": "The fixed-anchor Hazard Index transferred directly from the native grid. No municipal Min-Max is applied.",
-      "decimals": 3,
-      "boundaries": [
-        0.0,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#80D900",
-        "#CCE600",
-        "#FFB200",
-        "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
-      "stats": {
-        "count": 280,
-        "min": 0.0,
-        "max": 0.798648,
-        "mean": 0.200518,
-        "median": 0.068376
-      }
-    },
-    {
       "key": "Hazard_Frequency",
       "label": "Normalized compound-event frequency",
       "short_label": "Frequency",
@@ -705,8 +586,8 @@
     },
     {
       "key": "Hazard_Severity",
-      "label": "Normalized compound-event duration",
-      "short_label": "Duration",
+      "label": "Normalized compound-event integrated severity",
+      "short_label": "Severity",
       "unit": "0–1",
       "stage": "component",
       "group": "Physical hazard",
@@ -777,47 +658,6 @@
         "max": 0.994764,
         "mean": 0.496351,
         "median": 0.531667
-      }
-    },
-    {
-      "key": "SVI_Coast_2022",
-      "label": "Social Vulnerability Index",
-      "short_label": "SVI",
-      "unit": "0–100",
-      "stage": "input",
-      "group": "Social vulnerability",
-      "actual_field": "SVI_Coast_2022",
-      "description": "Ten IBGE/SIDRA 2022 socioeconomic and infrastructure variables standardized, reduced by PCA, sign-adjusted so higher means more vulnerable, and normalized to 0-100.",
-      "decimals": 0,
-      "boundaries": [
-        0.0,
-        12.5,
-        25.0,
-        37.5,
-        50.0,
-        62.5,
-        75.0,
-        87.5,
-        100.0
-      ],
-      "colors": [
-        "#008000",
-        "#33B200",
-        "#80D900",
-        "#CCE600",
-        "#FFB200",
-        "#FF8000",
-        "#FF4000",
-        "#FF0000"
-      ],
-      "palette": "risk",
-      "palette_source": "green-to-red palette of the article hazard/vulnerability/risk figure",
-      "stats": {
-        "count": 282,
-        "min": 0.0,
-        "max": 100.0,
-        "mean": 46.773424,
-        "median": 48.425629
       }
     }
   ],
@@ -1137,7 +977,7 @@
         "ddof": 0,
         "population": 282
       },
-      "pc1_reproduction_max_abs_difference": 6.137553133278573e-06,
+      "pc1_reproduction_max_abs_difference": 6.1375531328344834e-06,
       "spearman_with_original_svi_fraction": 1.0,
       "original_field_preserved": "SVI_Coast_2022",
       "indicator_sign_changes": "none; negative PCA loadings are empirical"
