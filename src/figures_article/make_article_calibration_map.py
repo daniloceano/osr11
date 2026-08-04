@@ -35,6 +35,7 @@ if str(ROOT) not in sys.path:
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from cartopy.io import shapereader
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
@@ -210,7 +211,14 @@ def generate_calibration_map() -> list[str]:
         ax.add_geometries(segment, crs=projection, facecolor="none",
                           edgecolor=SECTOR_COLORS[sector], linewidth=1.8, zorder=3.5)
 
-    colorbar_ax = fig.add_axes([0.855, 0.14, 0.03, 0.32])
+    map_position = ax.get_position()
+    colorbar_height = 0.32
+    colorbar_ax = fig.add_axes([
+        map_position.x1 + 0.015,
+        map_position.y0 + (map_position.height - colorbar_height) / 2,
+        0.03,
+        colorbar_height,
+    ])
     colorbar = fig.colorbar(
         ScalarMappable(norm=count_norm, cmap=count_cmap),
         cax=colorbar_ax,
@@ -257,6 +265,24 @@ def generate_calibration_map() -> list[str]:
     inset.add_feature(cfeature.LAND.with_scale("110m"), facecolor="#C8C8C8",
                       edgecolor="#555555", linewidth=0.35, zorder=1)
     inset.add_feature(cfeature.BORDERS.with_scale("110m"), edgecolor="#666666", linewidth=0.35, zorder=2)
+    state_boundaries_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_1_states_provinces_lines",
+    )
+    brazilian_state_boundaries = [
+        record.geometry
+        for record in shapereader.Reader(state_boundaries_path).records()
+        if record.attributes.get("ADM0_NAME") == "Brazil"
+    ]
+    inset.add_geometries(
+        brazilian_state_boundaries,
+        crs=projection,
+        facecolor="none",
+        edgecolor="#666666",
+        linewidth=0.35,
+        zorder=2,
+    )
     sc_boundary = brazil_municipalities[brazil_municipalities["state"] == "SC"].dissolve()
     inset.add_geometries(sc_boundary.geometry, crs=projection, facecolor="none",
                          edgecolor="#D7191C", linewidth=2.6, zorder=4)
@@ -274,7 +300,13 @@ def generate_calibration_map() -> list[str]:
               bbox_to_anchor=(0.015, 0.68), ncol=1, fontsize=10.0,
               frameon=True, framealpha=0.92, borderpad=0.55,
               labelspacing=0.35, handlelength=1.5)
-    return _save_figure(fig, "santa_catarina_study_area_and_grid_points")
+    # The projected map fills the intended canvas vertically. Disabling the
+    # global tight crop preserves every grid label and the full southern edge.
+    return _save_figure(
+        fig,
+        "santa_catarina_study_area_and_grid_points",
+        bbox_inches=None,
+    )
 
 
 def main() -> None:

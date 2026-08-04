@@ -44,13 +44,24 @@ def _relative(path: Path) -> str:
         return str(path)
 
 
-def _save_figure(fig: plt.Figure, stem: str) -> list[str]:
+def _save_figure(
+    fig: plt.Figure,
+    stem: str,
+    *,
+    bbox_inches: str | None = "tight",
+) -> list[str]:
     """Save one article figure using the repository-wide PNG-only policy."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     if ORDINAL_FILENAME_PATTERN.match(stem):
         raise ValueError(f"Article figure stem must be semantic, not ordinal: {stem!r}")
     path = OUT_DIR / f"{stem}.{ARTICLE_FIGURE_FORMAT}"
-    fig.savefig(path, dpi=ARTICLE_FIGURE_DPI, bbox_inches="tight", facecolor="white")
+    with plt.rc_context({"savefig.bbox": bbox_inches}):
+        fig.savefig(
+            path,
+            dpi=ARTICLE_FIGURE_DPI,
+            bbox_inches=bbox_inches,
+            facecolor="white",
+        )
     plt.close(fig)
     return [_relative(path)]
 

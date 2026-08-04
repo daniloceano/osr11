@@ -103,27 +103,6 @@ const STAGE_BADGES: Record<RiskLayerMeta['stage'], { label: string; className: s
   input: { label: 'input layer', className: 'border-gray-200 bg-gray-50 text-gray-600' },
 };
 
-const DETAIL_FIELDS: { key: string; label: string; decimals: number }[] = [
-  { key: 'pop_1km', label: 'Population ≤1 km', decimals: 0 },
-  { key: 'pop_2km', label: 'Population ≤2 km', decimals: 0 },
-  { key: 'pop_5km', label: 'Population ≤5 km', decimals: 0 },
-  { key: 'pop_10km', label: 'Population ≤10 km', decimals: 0 },
-  { key: 'pop_eff', label: 'Effective population (weighted; not literal)', decimals: 1 },
-  { key: 'SVI_Coast_2022', label: 'SVI_Coast_2022 (0–100)', decimals: 1 },
-  { key: 'Hazard_Frequency', label: 'Hazard_Frequency (0–1)', decimals: 3 },
-  { key: 'Hazard_Severity', label: 'Hazard_Severity (0–1)', decimals: 3 },
-  { key: 'Hazard_Index_raw', label: 'Hazard_Index_raw (mean of the three)', decimals: 3 },
-  { key: 'Hazard_Index', label: 'Hazard_Index (0–1)', decimals: 3 },
-  { key: 'Hazard_Index_mun', label: 'Hazard_Index_mun (0–1)', decimals: 3 },
-  { key: 'Exposure_absolute', label: 'Exposure — absolute half', decimals: 3 },
-  { key: 'Exposure_relative', label: 'Exposure — municipal share', decimals: 3 },
-  { key: 'Exposure_Index', label: 'Exposure_Index (0–1)', decimals: 3 },
-  { key: 'Risk_Hazard_raw', label: 'Risk_Hazard_raw (geometric mean)', decimals: 3 },
-  { key: 'Risk_Hazard', label: 'Risk_Hazard (0–1)', decimals: 3 },
-  { key: 'compound_c', label: 'compound_c (events)', decimals: 0 },
-  { key: 'mean_overl', label: 'mean_overl (days)', decimals: 2 },
-  { key: 'mean_compo', label: 'mean_compo (dimensionless)', decimals: 3 },
-];
 
 const MAX_ZOOM = 14;
 
@@ -159,6 +138,20 @@ function numericValue(value: unknown): number | null {
 
 export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
   const layers = metadata.available_layers;
+  // The hover panel mirrors the published layers instead of carrying its own
+  // list. The two used to drift: it still offered Hazard_Index_raw,
+  // Hazard_Index_mun, Risk_Hazard_raw and SVI_Coast_2022 after those stopped
+  // being layers, and showed nineteen rows where the calculation has eight.
+  const detailFields = useMemo(
+    () =>
+      layers.map((entry) => ({
+        key: entry.key,
+        label: entry.short_label,
+        unit: entry.unit,
+        decimals: entry.decimals,
+      })),
+    [layers],
+  );
   const [selectedKey, setSelectedKey] = useState<string>(
     layers.find((layer) => layer.key === 'Risk_Hazard')?.key ?? layers[0]?.key ?? '',
   );
@@ -465,7 +458,7 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
                 {activeFeature.properties.state ? ` · ${activeFeature.properties.state}` : ''}
               </div>
               <div className="space-y-0.5 border-t border-gray-100 pt-1.5 text-xs text-gray-700">
-                {DETAIL_FIELDS.map((field) => {
+                {detailFields.map((field) => {
                   if (!(field.key in activeFeature.properties)) return null;
                   return (
                     <div
@@ -476,6 +469,7 @@ export default function RiskIntegrationMap({ data, metadata, basemap }: Props) {
                       <span className="font-mono">
                         {formatValue(numericValue(activeFeature.properties[field.key]), field.decimals)}
                       </span>
+                      {field.unit ? <span className="text-gray-400"> {field.unit}</span> : null}
                     </div>
                   );
                 })}

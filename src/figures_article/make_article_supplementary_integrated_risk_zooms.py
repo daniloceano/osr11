@@ -94,7 +94,8 @@ NORTHEAST_EXTENT = (-42.5, -34.5, -7.5, -1.5)
 NORTH_EXTENT = (-52.8, -40.0, -4.3, 1.8)
 CONTEXT_EXTENT = (-56.0, -33.0, -35.5, 3.0)
 
-RISK_BOUNDARIES = np.array([0.0, 1e-6, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+RISK_CLASS_COUNT = 8
+ZERO_CLASS_EPSILON = 1e-6
 
 LAND_COLOR = "#ddddda"
 OCEAN_COLOR = "#e9f3f7"
@@ -130,6 +131,18 @@ def _relative(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
+
+
+def _integrated_risk_boundaries(values: pd.Series) -> np.ndarray:
+    """Match the data-scaled classes of the main integrated-risk panel."""
+    observed_maximum = float(values.max(skipna=True))
+    intervals = RISK_CLASS_COUNT - 1
+    step = np.floor(observed_maximum / intervals * 100.0) / 100.0
+    if not np.isfinite(step) or step <= 0:
+        raise ValueError("Integrated-risk values do not define positive classes")
+    return np.concatenate(
+        ([0.0, ZERO_CLASS_EPSILON], step * np.arange(1, intervals + 1))
+    )
 
 
 def _numeric_stats(series: pd.Series) -> dict[str, float | int | None]:
@@ -517,7 +530,10 @@ def _plot_region(
     }
 
 
-def _write_metadata(panels: list[dict[str, Any]]) -> None:
+def _write_metadata(
+    panels: list[dict[str, Any]],
+    risk_boundaries: np.ndarray,
+) -> None:
     source_metadata: dict[str, Any] = {}
     if RISK_METADATA_PATH.exists():
         source_metadata = json.loads(RISK_METADATA_PATH.read_text(encoding="utf-8"))
@@ -544,12 +560,12 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
         },
         "colorbar": {
             "type": "discrete",
-            "boundaries": RISK_BOUNDARIES.tolist(),
-            "colors": list(RISK_COLORS[:7]),
+            "boundaries": risk_boundaries.tolist(),
+            "colors": list(RISK_COLORS[: len(risk_boundaries) - 1]),
             "label": "Integrated risk index (0-1)",
             "tick_labels": [
                 "0",
-                *[f"{value:g}" for value in RISK_BOUNDARIES[2:]],
+                *[f"{value:g}" for value in risk_boundaries[2:]],
             ],
             "zero_class": {
                 "interval": [0.0, 1e-6],
@@ -589,11 +605,12 @@ def _write_metadata(panels: list[dict[str, Any]]) -> None:
 
 def main() -> None:
     municipalities, coastline = _read_inputs()
+    risk_boundaries = _integrated_risk_boundaries(municipalities[RISK_KEY])
     cmap = ListedColormap(
-        list(RISK_COLORS[:7]),
+        list(RISK_COLORS[: len(risk_boundaries) - 1]),
         name="composite_score_inverted_green_to_red_integrated_risk",
     )
-    norm = BoundaryNorm(RISK_BOUNDARIES, cmap.N, clip=True)
+    norm = BoundaryNorm(risk_boundaries, cmap.N, clip=True)
 
     top_widths, top_aspect_sum = _row_layout(
         (SOUTH_SOUTHEAST_EXTENT, EAST_NORTHEAST_EXTENT)
@@ -687,27 +704,28 @@ def main() -> None:
         mappable,
         cax=colorbar_axis,
         orientation="horizontal",
-        boundaries=RISK_BOUNDARIES,
-        ticks=[RISK_BOUNDARIES[1] / 2, *RISK_BOUNDARIES[2:]],
+        boundaries=risk_boundaries,
+        ticks=[risk_boundaries[1] / 2, *risk_boundaries[2:]],
         spacing="uniform",
         drawedges=True,
     )
     colorbar.set_label("Integrated risk index (0–1)", fontsize=10)
     colorbar.ax.tick_params(labelsize=9, length=3)
     colorbar.ax.set_xticklabels(
-        ["0", *[f"{value:g}" for value in RISK_BOUNDARIES[2:]]]
+        ["0", *[f"{value:g}" for value in risk_boundaries[2:]]]
     )
     colorbar.outline.set_linewidth(0.75)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    figure.savefig(
-        OUTPUT_PATH,
-        dpi=ARTICLE_DPI,
-        bbox_inches="tight",
-        facecolor="white",
-    )
+    with plt.rc_context({"savefig.bbox": None}):
+        figure.savefig(
+            OUTPUT_PATH,
+            dpi=ARTICLE_DPI,
+            bbox_inches=None,
+            facecolor="white",
+        )
     plt.close(figure)
-    _write_metadata(panels)
+    _write_metadata(panels, risk_boundaries)
     print(_relative(OUTPUT_PATH))
 
 

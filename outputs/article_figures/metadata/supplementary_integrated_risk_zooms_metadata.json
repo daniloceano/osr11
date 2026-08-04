@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-01T02:21:49.512484+00:00",
+  "generated_at": "2026-08-04T21:18:48.468454+00:00",
   "output": "outputs/article_figures/supplementary_integrated_risk_zooms.png",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
@@ -189,12 +189,13 @@
     "boundaries": [
       0.0,
       1e-06,
-      0.1,
-      0.2,
-      0.3,
+      0.08,
+      0.16,
+      0.24,
+      0.32,
       0.4,
-      0.5,
-      0.6
+      0.48,
+      0.56
     ],
     "colors": [
       "#008000",
@@ -203,17 +204,19 @@
       "#CCE600",
       "#FFB200",
       "#FF8000",
-      "#FF4000"
+      "#FF4000",
+      "#FF0000"
     ],
     "label": "Integrated risk index (0-1)",
     "tick_labels": [
       "0",
-      "0.1",
-      "0.2",
-      "0.3",
+      "0.08",
+      "0.16",
+      "0.24",
+      "0.32",
       "0.4",
-      "0.5",
-      "0.6"
+      "0.48",
+      "0.56"
     ],
     "zero_class": {
       "interval": [
