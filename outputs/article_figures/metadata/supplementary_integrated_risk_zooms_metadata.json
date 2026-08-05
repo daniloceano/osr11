@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-04T21:18:48.468454+00:00",
+  "generated_at": "2026-08-05T00:00:34.962795+00:00",
   "output": "outputs/article_figures/supplementary_integrated_risk_zooms.png",
   "source": "site/public/data/risk_index_municipalities.geojson",
   "source_metadata": "site/public/data/risk_index_metadata.json",
@@ -36,6 +36,14 @@
         "RJ"
       ],
       "states_with_visible_municipalities": [
+        "ES",
+        "PR",
+        "RJ",
+        "RS",
+        "SC",
+        "SP"
+      ],
+      "state_labels": [
         "ES",
         "PR",
         "RJ",
@@ -90,6 +98,17 @@
         "RN",
         "SE"
       ],
+      "state_labels": [
+        "AL",
+        "BA",
+        "CE",
+        "ES",
+        "PB",
+        "PE",
+        "RJ",
+        "RN",
+        "SE"
+      ],
       "extent": [
         -42.5,
         -34.0,
@@ -118,6 +137,13 @@
         "PA"
       ],
       "states_with_visible_municipalities": [
+        "AP",
+        "CE",
+        "MA",
+        "PA",
+        "PI"
+      ],
+      "state_labels": [
         "AP",
         "CE",
         "MA",
@@ -154,6 +180,13 @@
       "states_with_visible_municipalities": [
         "CE",
         "MA",
+        "PB",
+        "PE",
+        "PI",
+        "RN"
+      ],
+      "state_labels": [
+        "CE",
         "PB",
         "PE",
         "PI",
@@ -249,11 +282,30 @@
         "#1d4ed8",
         "#b45309",
         "#6d28d9"
-      ]
+      ],
+      "brazil_outline": "Natural Earth 50m admin_0_countries",
+      "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines"
     },
     "coastline": "data/ne_10m_coastline/ne_10m_coastline.shp",
     "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
-    "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines"
+    "brazilian_state_boundaries": "Natural Earth 10m admin_1_states_provinces_lines",
+    "state_abbreviation_labels": {
+      "font_size": 13,
+      "excluded_states": [
+        "MG"
+      ]
+    }
+  },
+  "font_sizes": {
+    "graticule_labels": 14,
+    "panel_titles": 14,
+    "panel_letters": 16,
+    "scale_bars": 12,
+    "state_labels": 13,
+    "locator_labels": 10,
+    "locator_title": 11,
+    "colorbar_label": 15,
+    "colorbar_ticks": 13
   },
   "output_format": "PNG",
   "dpi": 300

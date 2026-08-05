@@ -24,7 +24,14 @@ Suggested LaTeX figure block (requires ``\usepackage{graphicx}``)
     denote municipalities without a valid integrated-risk value, and light
     blue denotes the ocean and estuarine channels. A 200-km scale bar is shown
     in every panel, and the locator inset identifies the four fixed windows
-    along the Brazilian coast. The index is comparative among Brazilian coastal
+    along the Brazilian coast, with Brazilian state divisions and the national
+    outline. Bold abbreviations identify the visible states in each regional
+    panel, except Minas Gerais; Maranh\~ao is also omitted from panel (d).
+    The abbreviations are: AL, Alagoas; AP, Amap\'a; BA, Bahia; CE, Cear\'a;
+    ES, Esp\'irito Santo; MA, Maranh\~ao; PA, Par\'a; PB, Para\'iba; PE,
+    Pernambuco; PI, Piau\'i; PR, Paran\'a; RJ, Rio de Janeiro; RN, Rio Grande
+    do Norte; RS, Rio Grande do Sul; SC, Santa Catarina; SE, Sergipe; and SP,
+    S\~ao Paulo. The index is comparative among Brazilian coastal
     municipalities and does not represent absolute expected damage.}
     \label{fig:supplementary-integrated-risk-zooms}
 \end{figure*}
@@ -53,6 +60,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FixedLocator
@@ -107,6 +115,15 @@ COUNTRY_BORDER_COLOR = "#555553"
 COAST_COLOR = "#334155"
 GRID_COLOR = "#9aa9b0"
 LOCATOR_COLORS = ("#b91c1c", "#1d4ed8", "#b45309", "#6d28d9")
+GRATICULE_LABEL_SIZE = 14
+TITLE_FONT_SIZE = 14
+PANEL_LABEL_SIZE = 16
+SCALE_LABEL_SIZE = 12
+STATE_LABEL_SIZE = 13
+LOCATOR_LABEL_SIZE = 10
+LOCATOR_TITLE_SIZE = 11
+COLORBAR_LABEL_SIZE = 15
+COLORBAR_TICK_SIZE = 13
 
 
 def _map_aspect(extent: tuple[float, float, float, float]) -> float:
@@ -207,6 +224,20 @@ def _natural_earth_context() -> tuple[
     return land, countries, brazil_states
 
 
+@lru_cache(maxsize=1)
+def _brazil_geometry() -> object:
+    """Return Brazil's complete national outline for the locator inset."""
+    country_path = shapereader.natural_earth(
+        resolution="50m",
+        category="cultural",
+        name="admin_0_countries",
+    )
+    for record in shapereader.Reader(country_path).records():
+        if record.attributes.get("ADMIN") == "Brazil":
+            return record.geometry
+    raise RuntimeError("Brazil geometry not found in Natural Earth countries")
+
+
 def _read_inputs() -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     if not RISK_PATH.exists():
         raise FileNotFoundError(RISK_PATH)
@@ -243,7 +274,7 @@ def _setup_axis(
     draw_left_labels: bool = True,
     draw_bottom_labels: bool = True,
     graticule_step: float | None = None,
-    label_size: float = 9,
+    label_size: float = GRATICULE_LABEL_SIZE,
 ) -> None:
     crs = ccrs.PlateCarree()
     land, _, _ = _natural_earth_context()
@@ -294,7 +325,19 @@ def _setup_axis(
     # An empty title is a request to draw none, so a figure can rely on the
     # panel letters alone and recover the vertical space.
     if title:
-        axis.set_title(title, loc="center", fontsize=11, fontweight="bold", pad=7)
+        axis.text(
+            0.5,
+            1.012,
+            title,
+            transform=axis.transAxes,
+            ha="center",
+            va="bottom",
+            fontsize=TITLE_FONT_SIZE,
+            fontweight="bold",
+            color="#111827",
+            clip_on=False,
+            zorder=10,
+        )
     axis.text(
         0.018,
         0.975,
@@ -302,7 +345,7 @@ def _setup_axis(
         transform=axis.transAxes,
         ha="left",
         va="top",
-        fontsize=11,
+        fontsize=PANEL_LABEL_SIZE,
         fontweight="bold",
         bbox={
             "boxstyle": "round,pad=0.25",
@@ -384,7 +427,7 @@ def _draw_scale_bar(
         f"{distance_km} km",
         ha="center",
         va="bottom",
-        fontsize=8,
+        fontsize=SCALE_LABEL_SIZE,
         color="#111827",
         transform=crs,
         zorder=9,
@@ -397,7 +440,7 @@ def _draw_locator(axis: plt.Axes) -> None:
         [0.53, 0.20, 0.38, 0.36],
         projection=crs,
     )
-    land, countries, _ = _natural_earth_context()
+    land, countries, brazil_states = _natural_earth_context()
     locator.set_facecolor(OCEAN_COLOR)
     locator.add_geometries(
         land,
@@ -414,6 +457,22 @@ def _draw_locator(axis: plt.Axes) -> None:
         edgecolor=COUNTRY_BORDER_COLOR,
         linewidth=0.35,
         zorder=2,
+    )
+    locator.add_geometries(
+        brazil_states,
+        crs=crs,
+        facecolor="none",
+        edgecolor=STATE_BORDER_COLOR,
+        linewidth=0.45,
+        zorder=2.2,
+    )
+    locator.add_geometries(
+        [_brazil_geometry()],
+        crs=crs,
+        facecolor="none",
+        edgecolor=COUNTRY_BORDER_COLOR,
+        linewidth=0.9,
+        zorder=2.4,
     )
     locator.set_extent((-75.0, -32.0, -36.0, 7.0), crs=crs)
     for label, extent, color in zip(
@@ -442,14 +501,99 @@ def _draw_locator(axis: plt.Axes) -> None:
             transform=crs,
             ha="center",
             va="center",
-            fontsize=6.5,
+            fontsize=LOCATOR_LABEL_SIZE,
             fontweight="bold",
             color=color,
             zorder=4,
         )
-    locator.set_title("Location", fontsize=7, pad=2)
+    locator.set_title("Location", fontsize=LOCATOR_TITLE_SIZE, pad=2)
     locator.set_xticks([])
     locator.set_yticks([])
+
+
+def _draw_state_labels(
+    axis: plt.Axes,
+    regional: gpd.GeoDataFrame,
+    map_window: object,
+    panel_label: str,
+) -> None:
+    """Label visible states slightly inland, excluding Minas Gerais."""
+    crs = ccrs.PlateCarree()
+    continental_reference = np.array([-52.0, -10.0])
+    for state, subset in regional.groupby("state", sort=True):
+        abbreviation = str(state).strip()
+        if (
+            not abbreviation
+            or abbreviation == "MG"
+            or (panel_label == "D" and abbreviation == "MA")
+        ):
+            continue
+        visible_geometry = subset.geometry.union_all().intersection(map_window)
+        if visible_geometry.is_empty:
+            continue
+        point = visible_geometry.representative_point()
+        west, south, east, north = map_window.bounds
+        x_padding = 0.035 * (east - west)
+        y_padding = 0.045 * (north - south)
+        inland_vector = continental_reference - np.array([point.x, point.y])
+        inland_distance = float(np.hypot(*inland_vector))
+        shift = 0.03 * min(east - west, north - south)
+        if inland_distance > 0:
+            inland_vector *= shift / inland_distance
+        label_x = point.x + inland_vector[0]
+        label_y = point.y + inland_vector[1]
+        if panel_label == "A" and abbreviation in {"ES", "PR", "SC", "RS"}:
+            label_x -= 0.35
+            if abbreviation == "RS":
+                label_x, label_y = -51.0, -30.0
+        elif panel_label == "B":
+            if abbreviation == "CE":
+                label_x -= 0.60
+            elif abbreviation == "SE":
+                label_y += 0.25
+            else:
+                label_x -= 0.30
+                if abbreviation == "RN":
+                    label_y -= 0.25
+        elif panel_label == "C":
+            label_y -= 0.15
+            if abbreviation == "PI":
+                label_y += 1.00
+            elif abbreviation == "CE":
+                label_x += 0.75
+            elif abbreviation == "AP":
+                label_x -= 1.00
+            elif abbreviation == "PA":
+                label_y -= 0.50
+            elif abbreviation == "MA":
+                label_x -= 0.50
+        elif panel_label == "D":
+            label_x -= 0.45 if abbreviation == "PI" else 0.25
+            if abbreviation == "PI":
+                label_x += 0.25
+            if abbreviation in {"PI", "CE", "RN"}:
+                label_y -= 0.50
+        if panel_label == "D" and abbreviation == "PB":
+            label_y = south + 0.12 * (north - south)
+        elif panel_label == "D" and abbreviation == "PE":
+            label_y = south + 0.055 * (north - south)
+        label_x = float(np.clip(label_x, west + x_padding, east - x_padding))
+        label_y = float(np.clip(label_y, south + y_padding, north - y_padding))
+        label = axis.text(
+            label_x,
+            label_y,
+            abbreviation,
+            transform=crs,
+            ha="center",
+            va="center",
+            fontsize=STATE_LABEL_SIZE,
+            fontweight="bold",
+            color="#111827",
+            zorder=9.5,
+        )
+        label.set_path_effects(
+            [path_effects.withStroke(linewidth=2.4, foreground="white")]
+        )
 
 
 def _plot_region(
@@ -509,6 +653,7 @@ def _plot_region(
         )
     _draw_context(axis, coastline)
     _draw_scale_bar(axis, extent)
+    _draw_state_labels(axis, regional, map_window, panel_label)
     axis.set_extent(extent, crs=ccrs.PlateCarree())
     return {
         "panel": panel_label,
@@ -516,6 +661,11 @@ def _plot_region(
         "focus_states": list(states),
         "states_with_visible_municipalities": sorted(
             regional["state"].dropna().astype(str).unique().tolist()
+        ),
+        "state_labels": sorted(
+            state
+            for state in regional["state"].dropna().astype(str).unique().tolist()
+            if state != "MG" and not (panel_label == "D" and state == "MA")
         ),
         "extent": list(extent),
         "map_aspect_ratio": round(_map_aspect(extent), 6),
@@ -586,12 +736,31 @@ def _write_metadata(
                 "host_panel": "A",
                 "extent": [-75.0, -32.0, -36.0, 7.0],
                 "panel_rectangle_colors": list(LOCATOR_COLORS),
+                "brazil_outline": "Natural Earth 50m admin_0_countries",
+                "brazilian_state_boundaries": (
+                    "Natural Earth 10m admin_1_states_provinces_lines"
+                ),
             },
             "coastline": _relative(COASTLINE_PATH),
             "country_boundaries": "Natural Earth 10m admin_0_boundary_lines_land",
             "brazilian_state_boundaries": (
                 "Natural Earth 10m admin_1_states_provinces_lines"
             ),
+            "state_abbreviation_labels": {
+                "font_size": STATE_LABEL_SIZE,
+                "excluded_states": ["MG"],
+            },
+        },
+        "font_sizes": {
+            "graticule_labels": GRATICULE_LABEL_SIZE,
+            "panel_titles": TITLE_FONT_SIZE,
+            "panel_letters": PANEL_LABEL_SIZE,
+            "scale_bars": SCALE_LABEL_SIZE,
+            "state_labels": STATE_LABEL_SIZE,
+            "locator_labels": LOCATOR_LABEL_SIZE,
+            "locator_title": LOCATOR_TITLE_SIZE,
+            "colorbar_label": COLORBAR_LABEL_SIZE,
+            "colorbar_ticks": COLORBAR_TICK_SIZE,
         },
         "output_format": "PNG",
         "dpi": ARTICLE_DPI,
@@ -629,7 +798,7 @@ def main() -> None:
         top=0.96,
         bottom=0.11,
         height_ratios=row_heights,
-        hspace=0.075,
+        hspace=0.13,
     )
     top_grid = outer_grid[0, 0].subgridspec(
         1,
@@ -709,8 +878,10 @@ def main() -> None:
         spacing="uniform",
         drawedges=True,
     )
-    colorbar.set_label("Integrated risk index (0–1)", fontsize=10)
-    colorbar.ax.tick_params(labelsize=9, length=3)
+    colorbar.set_label(
+        "Integrated risk index (0–1)", fontsize=COLORBAR_LABEL_SIZE
+    )
+    colorbar.ax.tick_params(labelsize=COLORBAR_TICK_SIZE, length=3)
     colorbar.ax.set_xticklabels(
         ["0", *[f"{value:g}" for value in risk_boundaries[2:]]]
     )
