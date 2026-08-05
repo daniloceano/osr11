@@ -238,6 +238,36 @@ def _brazil_geometry() -> object:
     raise RuntimeError("Brazil geometry not found in Natural Earth countries")
 
 
+@lru_cache(maxsize=1)
+def _south_america_country_geometries() -> tuple[object, ...]:
+    """Return complete outlines for the sovereign states of South America."""
+    country_path = shapereader.natural_earth(
+        resolution="50m",
+        category="cultural",
+        name="admin_0_countries",
+    )
+    return tuple(
+        record.geometry
+        for record in shapereader.Reader(country_path).records()
+        if record.attributes.get("CONTINENT") == "South America"
+    )
+
+
+@lru_cache(maxsize=1)
+def _all_brazil_state_boundaries() -> tuple[object, ...]:
+    """Return every Brazilian state boundary without the coastal-map filter."""
+    state_path = shapereader.natural_earth(
+        resolution="10m",
+        category="cultural",
+        name="admin_1_states_provinces_lines",
+    )
+    return tuple(
+        record.geometry
+        for record in shapereader.Reader(state_path).records()
+        if record.attributes.get("ADM0_NAME") == "Brazil"
+    )
+
+
 def _read_inputs() -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     if not RISK_PATH.exists():
         raise FileNotFoundError(RISK_PATH)
@@ -440,26 +470,25 @@ def _draw_locator(axis: plt.Axes) -> None:
         [0.53, 0.20, 0.38, 0.36],
         projection=crs,
     )
-    land, countries, brazil_states = _natural_earth_context()
+    land, _, _ = _natural_earth_context()
     locator.set_facecolor(OCEAN_COLOR)
     locator.add_geometries(
         land,
         crs=crs,
         facecolor=LAND_COLOR,
-        edgecolor=COUNTRY_BORDER_COLOR,
-        linewidth=0.3,
+        edgecolor="none",
         zorder=1,
     )
     locator.add_geometries(
-        countries,
+        _south_america_country_geometries(),
         crs=crs,
         facecolor="none",
-        edgecolor=COUNTRY_BORDER_COLOR,
-        linewidth=0.35,
+        edgecolor=STATE_BORDER_COLOR,
+        linewidth=0.45,
         zorder=2,
     )
     locator.add_geometries(
-        brazil_states,
+        _all_brazil_state_boundaries(),
         crs=crs,
         facecolor="none",
         edgecolor=STATE_BORDER_COLOR,
@@ -737,6 +766,9 @@ def _write_metadata(
                 "extent": [-75.0, -32.0, -36.0, 7.0],
                 "panel_rectangle_colors": list(LOCATOR_COLORS),
                 "brazil_outline": "Natural Earth 50m admin_0_countries",
+                "south_america_country_outlines": (
+                    "Natural Earth 50m admin_0_countries"
+                ),
                 "brazilian_state_boundaries": (
                     "Natural Earth 10m admin_1_states_provinces_lines"
                 ),
