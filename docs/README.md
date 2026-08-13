@@ -15,6 +15,7 @@ de cada `src/0N_*/`).
 | Caminho | O que é |
 |---------|---------|
 | `scientific_audit/` | Auditoria científica e metodológica dos resultados de risco costeiro: revisão preservada, rastreador central de questões e registros detalhados por questão |
+| `DATA_SOURCES.md` (em inglês) | Lista dos dados externos reproduzíveis efetivamente usados nos produtos finais (ID, tipo, acesso, documentação), para a seção de dados do paper |
 
 ---
 
