@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software in your research, please cite it using the metadata
+  from this file.
+title: >-
+  OSR11: Compound Flooding Events in the South Atlantic Eastern Coast
+type: software
+authors:
+  - given-names: Danilo Couto
+    family-names: de Souza
+    email: danilo.oceano@usp.br
+    affiliation: >-
+      Institute of Astronomy, Geophysics and Atmospheric Sciences, University
+      of Sao Paulo
+  - given-names: Carolina Barnez
+    family-names: Gramcianinov
+  - given-names: Ricardo
+    family-names: de Camargo
+  - given-names: Karine Bastos
+    family-names: Leal
+    affiliation: National Institute for Space Research
+abstract: >-
+  This software identifies compound coastal flooding events along the Brazilian
+  coast by combining tide-free sea-level extremes, significant-wave-height
+  extremes, and an astronomical-tide level gate. It characterizes compound
+  hazards from 1993 to 2025 and integrates hazard, population exposure, and
+  social vulnerability to produce municipal coastal risk indices and identify
+  priority hotspots for adaptation planning.
+keywords:
+  - compound flooding
+  - coastal hazards
+  - storm surge
+  - ocean waves
+  - coastal risk
+  - social vulnerability
+  - Brazil
+repository-code: "https://github.com/daniloceano/osr11"
